@@ -1,314 +1,52 @@
 <!DOCTYPE html><html lang="en"><head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Field Crew — Redesign</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="_system.css">
-<template id="__bundler_thumbnail" data-bg-color="#FFFFFF"><svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg"><rect width="1200" height="800" fill="#FFFFFF"></rect><rect x="60" y="60" width="80" height="80" rx="12" fill="#004D40"></rect><text x="100" y="115" text-anchor="middle" font-family="Inter" font-weight="800" font-size="28" fill="#D4960A">S</text><rect x="200" y="80" width="200" height="20" rx="3" fill="#0A2540"></rect><g><rect x="200" y="180" width="300" height="200" rx="6" fill="#FAFBFC" stroke="#EFF2F5"></rect><circle cx="240" cy="220" r="14" fill="#004D40"></circle><rect x="266" y="212" width="120" height="10" rx="3" fill="#0A2540"></rect><rect x="266" y="228" width="100" height="8" rx="3" fill="#697386"></rect><rect x="220" y="260" width="260" height="100" rx="6" fill="#E6F0EE"></rect></g><g><rect x="520" y="180" width="300" height="200" rx="6" fill="#FAFBFC" stroke="#EFF2F5"></rect><circle cx="560" cy="220" r="14" fill="#3F6FA6"></circle><rect x="586" y="212" width="120" height="10" rx="3" fill="#0A2540"></rect><rect x="586" y="228" width="100" height="8" rx="3" fill="#697386"></rect></g><g><rect x="840" y="180" width="300" height="200" rx="6" fill="#FAFBFC" stroke="#EFF2F5"></rect><circle cx="880" cy="220" r="14" fill="#697386"></circle><rect x="906" y="212" width="120" height="10" rx="3" fill="#0A2540"></rect></g><text x="600" y="780" text-anchor="middle" font-family="Inter" font-weight="500" font-size="14" fill="#697386">Field Crew · Loading…</text></svg></template>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Field Crew</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/css/module.css">
 <style>
-.crew-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 16px;
-}
-.crew-card {
-  background: #fff; border: var(--hair); border-radius: 8px;
-  overflow: hidden;
-  transition: border-color .12s, box-shadow .12s;
-}
-.crew-card:hover { border-color: var(--ink-4); box-shadow: 0 4px 12px rgba(10,37,64,0.05); }
-.cc-head {
-  padding: 14px 16px;
-  display: flex; align-items: center; gap: 12px;
-  border-bottom: var(--hair);
-}
-.cc-color-bar { width: 4px; height: 28px; border-radius: 2px; flex-shrink: 0; }
-.cc-name { font-weight: 600; font-size: 14px; }
-.cc-id { font-size: 11px; color: var(--ink-3); font-family: 'SF Mono', monospace; }
-.cc-status {
-  margin-left: auto;
-  display: inline-flex; align-items: center; gap: 6px;
-  font-size: 12px; font-weight: 500;
-}
-.cc-body { padding: 14px 16px; }
-.cc-job {
-  display: flex; align-items: flex-start; gap: 10px;
-  font-size: 13px;
-  padding-bottom: 12px;
-  margin-bottom: 12px;
-  border-bottom: var(--hair);
-}
-.cc-job:last-child { border-bottom: 0; margin-bottom: 0; padding-bottom: 0; }
-.cc-job-time {
-  flex-shrink: 0; width: 56px;
-  font-size: 11px; color: var(--ink-3);
-  font-variant-numeric: tabular-nums;
-}
-.cc-job-body { min-width: 0; flex: 1; }
-.cc-job-t { font-weight: 500; }
-.cc-job-s { font-size: 11px; color: var(--ink-3); margin-top: 2px; }
-.cc-foot {
-  padding: 12px 16px;
-  background: var(--surface-2);
-  border-top: var(--hair);
-  display: flex; align-items: center; gap: 12px;
-  font-size: 11px; color: var(--ink-3);
-}
-.cc-foot .mem { display: flex; align-items: center; gap: 4px; }
-.cc-foot .mem svg { color: var(--ink-4); }
-.cc-foot .right { margin-left: auto; }
-.cc-mini-bar {
-  height: 4px; border-radius: 999px;
-  background: var(--surface-3);
-  margin-top: 8px;
-  overflow: hidden;
-}
-.cc-mini-bar .fill { height: 100%; border-radius: 999px; }
+.crew-card { border:1px solid var(--line); border-radius: var(--r); padding: 14px; display: flex; flex-direction: column; gap: 6px; }
+.crew-head { display:flex; align-items:center; justify-content:space-between; }
+.dot { width: 8px; height: 8px; border-radius: 999px; display: inline-block; margin-right: 6px; }
+.in { background: var(--ok); } .out { background: var(--ink-4); }
 </style>
+</head><body>
+<div class="wrap">
+  <div class="page-bar"><div class="page-title">Field Crew</div></div>
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="_aesthetic.css">
-<style id="__layoutheader_strip">
-/* LayoutHeader covers logo, top bar, and sidebar — module renders only its page content. */
-.app { display: block !important; grid-template-columns: none !important; grid-template-rows: none !important; }
-.app > main.page, .app > .main { display: block; }
-</style></head>
-<body>
-
-<div class="app" data-screen-label="Field Crew">
-  
-  
-  
-
-  <main class="page">
-    <div class="wrap">
-
-      <div class="page-bar">
-        <div class="page-title-row">
-          <div class="page-title">Field Crew</div>
-          <span class="muted">6 teams · 11 members · Sat May 16, 2026</span>
-        </div>
-        <div class="page-actions">
-          <button class="range-picker">All locations <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
-          <button class="btn btn-secondary">Export roster</button>
-          <button class="btn btn-primary">+ New team</button>
-        </div>
-      </div>
-
-      <nav class="subtabs">
-        <button class="subtab active">Live <span class="live"></span></button>
-        <button class="subtab">Teams <span class="count">6</span></button>
-        <button class="subtab">Members <span class="count">11</span></button>
-        <button class="subtab">Vehicles <span class="count">6</span></button>
-        <button class="subtab">Performance</button>
-      </nav>
-
-      <!-- Stats strip -->
-      <div class="stat-group" style="margin-bottom:32px;">
-        <div class="stat-col">
-          <div class="stat-eyebrow">Teams active</div>
-          <div class="stat-number">4 <span class="small">/ 6</span></div>
-          <div class="stat-delta"><span class="live-dot"></span>2 on the road</div>
-        </div>
-        <div class="stat-col">
-          <div class="stat-eyebrow">Jobs in progress</div>
-          <div class="stat-number">3</div>
-          <div class="stat-delta">5 completed today</div>
-        </div>
-        <div class="stat-col">
-          <div class="stat-eyebrow">Hours worked today</div>
-          <div class="stat-number">24<span class="small">.5h</span></div>
-          <div class="stat-delta">across all teams</div>
-        </div>
-        <div class="stat-col">
-          <div class="stat-eyebrow">Avg crew utilization</div>
-          <div class="stat-number">82<span class="small">%</span></div>
-          <div class="stat-delta"><span class="pct up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"></polyline></svg>4 pts</span>vs last week</div>
-        </div>
-      </div>
-
-      <div class="section-head">
-        <div class="section-title">Today's teams</div>
-        <div class="fchips">
-          <button class="fchip active">All <span class="fc-count">6</span></button>
-          <button class="fchip">On move <span class="fc-count">2</span></button>
-          <button class="fchip">En route <span class="fc-count">1</span></button>
-          <button class="fchip">At depot <span class="fc-count">2</span></button>
-          <button class="fchip">Off <span class="fc-count">1</span></button>
-        </div>
-      </div>
-
-      <div class="crew-grid">
-        <!-- Truck 1 — on move -->
+  <section class="section">
+    <h3 class="section-title">Crews</h3>
+    <div class="cards" data-bind="crews">
+      <template>
         <div class="crew-card">
-          <div class="cc-head">
-            <div class="cc-color-bar" style="background:var(--terra);"></div>
-            <div>
-              <div class="cc-name">Truck 1</div>
-              <div class="cc-id">team-001</div>
-            </div>
-            <div class="cc-status" style="color:var(--terra);"><span class="live-dot"></span>On move</div>
+          <div class="crew-head">
+            <strong>{{name}}</strong>
+            <span class="section-sub"><span class="dot in"></span>last ping {{lastPing}}</span>
           </div>
-          <div class="cc-body">
-            <div class="cc-job">
-              <div class="cc-job-time">7:00 AM</div>
-              <div class="cc-job-body">
-                <div class="cc-job-t">Alice Johnson · 3BR move</div>
-                <div class="cc-job-s">Toronto → Hamilton · 4h · in progress</div>
-                <div class="cc-mini-bar"><div class="fill" style="width:62%;background:var(--terra);"></div></div>
-              </div>
-            </div>
-            <div class="cc-job">
-              <div class="cc-job-time">1:00 PM</div>
-              <div class="cc-job-body">
-                <div class="cc-job-t">Joaquin Lopez · in-home survey</div>
-                <div class="cc-job-s">North York · 1h estimate</div>
-              </div>
-            </div>
-          </div>
-          <div class="cc-foot">
-            <div class="mem"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"></circle><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path></svg> A. Haylton, J. Mungai</div>
-            <div class="right num">26 ft</div>
-          </div>
+          <div class="section-sub">Members: {{members}}</div>
+          <div class="section-sub">Location: {{location}}</div>
+          <div class="section-sub">Current job: {{currentJobId|num}}</div>
         </div>
-
-        <!-- Van 1 — on move -->
-        <div class="crew-card">
-          <div class="cc-head">
-            <div class="cc-color-bar" style="background:var(--info);"></div>
-            <div>
-              <div class="cc-name">Van 1</div>
-              <div class="cc-id">team-002</div>
-            </div>
-            <div class="cc-status" style="color:var(--info);"><span class="live-dot" style="background:var(--info);"></span>En route</div>
-          </div>
-          <div class="cc-body">
-            <div class="cc-job">
-              <div class="cc-job-time">11:00 AM</div>
-              <div class="cc-job-body">
-                <div class="cc-job-t">Sara Patel · box delivery</div>
-                <div class="cc-job-s">Mississauga · 30 boxes · arriving in 12 min</div>
-              </div>
-            </div>
-            <div class="cc-job">
-              <div class="cc-job-time">2:00 PM</div>
-              <div class="cc-job-body">
-                <div class="cc-job-t">Marcus Lee · packing prep</div>
-                <div class="cc-job-s">Etobicoke · 2 packers, 2h</div>
-              </div>
-            </div>
-          </div>
-          <div class="cc-foot">
-            <div class="mem"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"></circle><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path></svg> D. James, P. Rai</div>
-            <div class="right num">14 ft</div>
-          </div>
-        </div>
-
-        <!-- Truck 3 — commercial -->
-        <div class="crew-card">
-          <div class="cc-head">
-            <div class="cc-color-bar" style="background:var(--teal);"></div>
-            <div>
-              <div class="cc-name">Truck 3</div>
-              <div class="cc-id">team-003</div>
-            </div>
-            <div class="cc-status" style="color:var(--teal);"><span class="live-dot" style="background:var(--teal);"></span>On site</div>
-          </div>
-          <div class="cc-body">
-            <div class="cc-job">
-              <div class="cc-job-time">9:00 AM</div>
-              <div class="cc-job-body">
-                <div class="cc-job-t">Northside Co. · office relocation</div>
-                <div class="cc-job-s">Downtown · 6h · in progress</div>
-                <div class="cc-mini-bar"><div class="fill" style="width:45%;background:var(--teal);"></div></div>
-              </div>
-            </div>
-          </div>
-          <div class="cc-foot">
-            <div class="mem"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"></circle><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path></svg> F. Waite, G. Sabados, G. Sigh</div>
-            <div class="right num">26 ft</div>
-          </div>
-        </div>
-
-        <!-- Truck 2 — at depot -->
-        <div class="crew-card">
-          <div class="cc-head">
-            <div class="cc-color-bar" style="background:var(--ink-3);"></div>
-            <div>
-              <div class="cc-name">Truck 2</div>
-              <div class="cc-id">team-004</div>
-            </div>
-            <div class="cc-status" style="color:var(--ink-3);"><span class="dot-mini" style="background:var(--ink-3);"></span>At depot</div>
-          </div>
-          <div class="cc-body">
-            <div class="cc-job">
-              <div class="cc-job-time">2:00 PM</div>
-              <div class="cc-job-body">
-                <div class="cc-job-t">Survey · J. Lopez</div>
-                <div class="cc-job-s">North York · 1h estimate · upcoming</div>
-              </div>
-            </div>
-            <div style="font-size:11px;color:var(--ink-3);margin-top:6px;">Loading boxes · departs 1:15 PM</div>
-          </div>
-          <div class="cc-foot">
-            <div class="mem"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"></circle><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path></svg> A. Zu (driver only)</div>
-            <div class="right num">22 ft</div>
-          </div>
-        </div>
-
-        <!-- Truck 4 — at depot -->
-        <div class="crew-card">
-          <div class="cc-head">
-            <div class="cc-color-bar" style="background:var(--plum);"></div>
-            <div>
-              <div class="cc-name">Truck 4</div>
-              <div class="cc-id">team-005</div>
-            </div>
-            <div class="cc-status" style="color:var(--ink-3);"><span class="dot-mini" style="background:var(--ink-3);"></span>At depot</div>
-          </div>
-          <div class="cc-body">
-            <div style="font-size:13px;color:var(--ink-3);text-align:center;padding:20px 0;">
-              <div style="color:var(--ink);font-weight:500;margin-bottom:4px;">Available for assignment</div>
-              <button class="btn btn-secondary btn-sm" style="margin-top:8px;">Assign job</button>
-            </div>
-          </div>
-          <div class="cc-foot">
-            <div class="mem"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"></circle><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path></svg> G. Ann (helper)</div>
-            <div class="right num">14 ft</div>
-          </div>
-        </div>
-
-        <!-- Truck 5 — off -->
-        <div class="crew-card" style="opacity:0.7;">
-          <div class="cc-head">
-            <div class="cc-color-bar" style="background:var(--ink-4);"></div>
-            <div>
-              <div class="cc-name">Truck 5</div>
-              <div class="cc-id">team-006</div>
-            </div>
-            <div class="cc-status" style="color:var(--ink-4);"><span class="dot-mini" style="background:var(--ink-4);"></span>Off today</div>
-          </div>
-          <div class="cc-body">
-            <div style="font-size:13px;color:var(--ink-3);text-align:center;padding:20px 0;">
-              <div style="color:var(--ink);font-weight:500;margin-bottom:4px;">Out of service</div>
-              <div style="font-size:11px;">Routine maintenance · back Monday</div>
-            </div>
-          </div>
-          <div class="cc-foot">
-            <div class="mem">No members assigned</div>
-            <div class="right num">14 ft</div>
-          </div>
-        </div>
-      </div>
-
+      </template>
     </div>
-  </main>
+  </section>
+
+  <section class="section">
+    <h3 class="section-title">Active jobs</h3>
+    <table class="tbl">
+      <thead><tr><th>#</th><th>Customer</th><th>Status</th><th>Crew</th></tr></thead>
+      <tbody data-bind="jobs">
+        <template>
+          <tr>
+            <td>{{id|num}}</td>
+            <td>{{customer}}</td>
+            <td><span class="tag {{status}}">{{status}}</span></td>
+            <td>{{crewId|num}}</td>
+          </tr>
+        </template>
+      </tbody>
+    </table>
+  </section>
 </div>
-<button class="ai-fab"><span class="dot"></span>Ask Service1 AI</button>
 <script src="../../core/event-bus.js"></script>
 <script src="../../core/state-store.js"></script>
 <script src="../../core/schema.js"></script>
@@ -316,7 +54,6 @@
 <script src="../../core/communication.mock.js"></script>
 <script src="../../core/communication.api.js"></script>
 <script src="../../core/communication.js"></script>
+<script src="../../core/render.js"></script>
 <script src="./module.js"></script>
-
-
 </body></html>

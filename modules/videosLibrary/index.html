@@ -1,162 +1,26 @@
 <!DOCTYPE html><html lang="en"><head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Video Library — Redesign</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="_system.css">
-<template id="__bundler_thumbnail" data-bg-color="#FFFFFF"><svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg"><rect width="1200" height="800" fill="#FFFFFF"></rect><rect x="60" y="60" width="80" height="80" rx="12" fill="#004D40"></rect><text x="100" y="115" text-anchor="middle" font-family="Inter" font-weight="800" font-size="28" fill="#D4960A">S</text><rect x="200" y="80" width="260" height="22" rx="3" fill="#0A2540"></rect><rect x="200" y="160" width="940" height="580" rx="6" fill="#FAFBFC" stroke="#EFF2F5"></rect><text x="600" y="790" text-anchor="middle" font-family="Inter" font-weight="500" font-size="14" fill="#697386">Video Library · Loading…</text></svg></template>
-
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="_aesthetic.css">
-<style id="__layoutheader_strip">
-/* LayoutHeader covers logo, top bar, and sidebar — module renders only its page content. */
-.app { display: block !important; grid-template-columns: none !important; grid-template-rows: none !important; }
-.app > main.page, .app > .main { display: block; }
-</style></head>
-<body>
-<div class="app" data-screen-label="Video Library">
-  
-  
-  
-  <main class="page">
-    <div class="wrap">
-      <div class="page-bar">
-        <div class="page-title-row"><div class="page-title">Video Library</div><span class="muted">68 videos · training, ops, safety</span></div>
-        <div class="page-actions"><button class="btn btn-secondary">Categories</button><button class="btn btn-primary">+ Upload video</button></div>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Videos Library</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/css/module.css">
+<style>
+.video-card { border: 1px solid var(--line); border-radius: var(--r); padding: 12px; display: flex; flex-direction: column; gap: 6px; }
+.thumb { background: var(--surface-2); height: 120px; border-radius: 4px; }
+</style>
+</head><body>
+<div class="wrap">
+  <div class="page-bar"><div class="page-title">Videos Library</div></div>
+  <div class="cards" data-bind="videos">
+    <template>
+      <div class="video-card">
+        <div class="thumb"></div>
+        <div style="font-weight:600">{{title}}</div>
+        <div class="section-sub">{{category}} · {{duration|duration}}</div>
+        <div class="section-sub">Uploaded {{uploaded|date}}</div>
       </div>
-      <nav class="subtabs">
-        <button class="subtab active">All <span class="count">68</span></button>
-        <button class="subtab">Training <span class="count">22</span></button>
-        <button class="subtab">Operations <span class="count">18</span></button>
-        <button class="subtab">Safety <span class="count">14</span></button>
-        <button class="subtab">Quality <span class="count">8</span></button>
-        <button class="subtab">Customer-facing <span class="count">6</span></button>
-      </nav>
-      <div class="toolbar">
-        <input class="search-input" placeholder="Search videos…">
-        <div class="grow"></div>
-        <div class="seg"><button class="active">Newest</button><button>Most viewed</button><button>Longest</button></div>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;">
-        <a href="#" style="display:flex;flex-direction:column;background:#fff;border:var(--hair);border-radius:8px;overflow:hidden;color:inherit;">
-  <div style="aspect-ratio:16/9;position:relative;background:linear-gradient(135deg,#A8C0BB,#4E6A5F);display:flex;align-items:center;justify-content:center;">
-    <div style="width:48px;height:48px;border-radius:999px;background:rgba(255,255,255,0.92);display:flex;align-items:center;justify-content:center;color:var(--ink);"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20"></polygon></svg></div>
-    <div style="position:absolute;bottom:8px;right:8px;background:rgba(10,37,64,0.78);color:#fff;padding:2px 7px;border-radius:3px;font-size:11px;font-weight:600;font-variant-numeric:tabular-nums;">4:32</div>
-    <div style="position:absolute;top:8px;left:8px;background:var(--gold);color:#fff;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">New</div>
+    </template>
   </div>
-  <div style="padding:14px;">
-    <div style="font-weight:600;font-size:13px;margin-bottom:4px;line-height:1.35;">Pre-load truck inspection walkthrough</div>
-    <div style="font-size:11px;color:var(--ink-3);display:flex;align-items:center;gap:8px;">
-      <span>Operations</span><span>·</span><span>124 views</span>
-    </div>
-  </div>
-</a><a href="#" style="display:flex;flex-direction:column;background:#fff;border:var(--hair);border-radius:8px;overflow:hidden;color:inherit;">
-  <div style="aspect-ratio:16/9;position:relative;background:linear-gradient(135deg,#D4C3A1,#A88E5E);display:flex;align-items:center;justify-content:center;">
-    <div style="width:48px;height:48px;border-radius:999px;background:rgba(255,255,255,0.92);display:flex;align-items:center;justify-content:center;color:var(--ink);"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20"></polygon></svg></div>
-    <div style="position:absolute;bottom:8px;right:8px;background:rgba(10,37,64,0.78);color:#fff;padding:2px 7px;border-radius:3px;font-size:11px;font-weight:600;font-variant-numeric:tabular-nums;">8:14</div>
-    
-  </div>
-  <div style="padding:14px;">
-    <div style="font-weight:600;font-size:13px;margin-bottom:4px;line-height:1.35;">Handling fragile items — proper wrapping</div>
-    <div style="font-size:11px;color:var(--ink-3);display:flex;align-items:center;gap:8px;">
-      <span>Operations</span><span>·</span><span>218 views</span>
-    </div>
-  </div>
-</a><a href="#" style="display:flex;flex-direction:column;background:#fff;border:var(--hair);border-radius:8px;overflow:hidden;color:inherit;">
-  <div style="aspect-ratio:16/9;position:relative;background:linear-gradient(135deg,#C9D3CB,#7E9389);display:flex;align-items:center;justify-content:center;">
-    <div style="width:48px;height:48px;border-radius:999px;background:rgba(255,255,255,0.92);display:flex;align-items:center;justify-content:center;color:var(--ink);"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20"></polygon></svg></div>
-    <div style="position:absolute;bottom:8px;right:8px;background:rgba(10,37,64,0.78);color:#fff;padding:2px 7px;border-radius:3px;font-size:11px;font-weight:600;font-variant-numeric:tabular-nums;">3:08</div>
-    
-  </div>
-  <div style="padding:14px;">
-    <div style="font-weight:600;font-size:13px;margin-bottom:4px;line-height:1.35;">How to use the customer portal</div>
-    <div style="font-size:11px;color:var(--ink-3);display:flex;align-items:center;gap:8px;">
-      <span>Customer onboarding</span><span>·</span><span>412 views</span>
-    </div>
-  </div>
-</a><a href="#" style="display:flex;flex-direction:column;background:#fff;border:var(--hair);border-radius:8px;overflow:hidden;color:inherit;">
-  <div style="aspect-ratio:16/9;position:relative;background:linear-gradient(135deg,#8FA39A,#3E5A4F);display:flex;align-items:center;justify-content:center;">
-    <div style="width:48px;height:48px;border-radius:999px;background:rgba(255,255,255,0.92);display:flex;align-items:center;justify-content:center;color:var(--ink);"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20"></polygon></svg></div>
-    <div style="position:absolute;bottom:8px;right:8px;background:rgba(10,37,64,0.78);color:#fff;padding:2px 7px;border-radius:3px;font-size:11px;font-weight:600;font-variant-numeric:tabular-nums;">12:48</div>
-    <div style="position:absolute;top:8px;left:8px;background:var(--gold);color:#fff;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">New</div>
-  </div>
-  <div style="padding:14px;">
-    <div style="font-weight:600;font-size:13px;margin-bottom:4px;line-height:1.35;">Long-distance move handoff protocol</div>
-    <div style="font-size:11px;color:var(--ink-3);display:flex;align-items:center;gap:8px;">
-      <span>Operations</span><span>·</span><span>64 views</span>
-    </div>
-  </div>
-</a><a href="#" style="display:flex;flex-direction:column;background:#fff;border:var(--hair);border-radius:8px;overflow:hidden;color:inherit;">
-  <div style="aspect-ratio:16/9;position:relative;background:linear-gradient(135deg,#B5BFC9,#586976);display:flex;align-items:center;justify-content:center;">
-    <div style="width:48px;height:48px;border-radius:999px;background:rgba(255,255,255,0.92);display:flex;align-items:center;justify-content:center;color:var(--ink);"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20"></polygon></svg></div>
-    <div style="position:absolute;bottom:8px;right:8px;background:rgba(10,37,64,0.78);color:#fff;padding:2px 7px;border-radius:3px;font-size:11px;font-weight:600;font-variant-numeric:tabular-nums;">6:22</div>
-    
-  </div>
-  <div style="padding:14px;">
-    <div style="font-weight:600;font-size:13px;margin-bottom:4px;line-height:1.35;">Driver safety: 360 walkaround</div>
-    <div style="font-size:11px;color:var(--ink-3);display:flex;align-items:center;gap:8px;">
-      <span>Safety</span><span>·</span><span>188 views</span>
-    </div>
-  </div>
-</a><a href="#" style="display:flex;flex-direction:column;background:#fff;border:var(--hair);border-radius:8px;overflow:hidden;color:inherit;">
-  <div style="aspect-ratio:16/9;position:relative;background:linear-gradient(135deg,#CDB69C,#896C4B);display:flex;align-items:center;justify-content:center;">
-    <div style="width:48px;height:48px;border-radius:999px;background:rgba(255,255,255,0.92);display:flex;align-items:center;justify-content:center;color:var(--ink);"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20"></polygon></svg></div>
-    <div style="position:absolute;bottom:8px;right:8px;background:rgba(10,37,64,0.78);color:#fff;padding:2px 7px;border-radius:3px;font-size:11px;font-weight:600;font-variant-numeric:tabular-nums;">2:14</div>
-    
-  </div>
-  <div style="padding:14px;">
-    <div style="font-weight:600;font-size:13px;margin-bottom:4px;line-height:1.35;">Submitting your daily check-in</div>
-    <div style="font-size:11px;color:var(--ink-3);display:flex;align-items:center;gap:8px;">
-      <span>Training</span><span>·</span><span>512 views</span>
-    </div>
-  </div>
-</a><a href="#" style="display:flex;flex-direction:column;background:#fff;border:var(--hair);border-radius:8px;overflow:hidden;color:inherit;">
-  <div style="aspect-ratio:16/9;position:relative;background:linear-gradient(135deg,#9CB0A8,#506660);display:flex;align-items:center;justify-content:center;">
-    <div style="width:48px;height:48px;border-radius:999px;background:rgba(255,255,255,0.92);display:flex;align-items:center;justify-content:center;color:var(--ink);"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20"></polygon></svg></div>
-    <div style="position:absolute;bottom:8px;right:8px;background:rgba(10,37,64,0.78);color:#fff;padding:2px 7px;border-radius:3px;font-size:11px;font-weight:600;font-variant-numeric:tabular-nums;">5:46</div>
-    
-  </div>
-  <div style="padding:14px;">
-    <div style="font-weight:600;font-size:13px;margin-bottom:4px;line-height:1.35;">Damage claim photo standards</div>
-    <div style="font-size:11px;color:var(--ink-3);display:flex;align-items:center;gap:8px;">
-      <span>Quality</span><span>·</span><span>96 views</span>
-    </div>
-  </div>
-</a><a href="#" style="display:flex;flex-direction:column;background:#fff;border:var(--hair);border-radius:8px;overflow:hidden;color:inherit;">
-  <div style="aspect-ratio:16/9;position:relative;background:linear-gradient(135deg,#BFCBD3,#6B7C88);display:flex;align-items:center;justify-content:center;">
-    <div style="width:48px;height:48px;border-radius:999px;background:rgba(255,255,255,0.92);display:flex;align-items:center;justify-content:center;color:var(--ink);"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20"></polygon></svg></div>
-    <div style="position:absolute;bottom:8px;right:8px;background:rgba(10,37,64,0.78);color:#fff;padding:2px 7px;border-radius:3px;font-size:11px;font-weight:600;font-variant-numeric:tabular-nums;">18:30</div>
-    
-  </div>
-  <div style="padding:14px;">
-    <div style="font-weight:600;font-size:13px;margin-bottom:4px;line-height:1.35;">Office relocation playbook</div>
-    <div style="font-size:11px;color:var(--ink-3);display:flex;align-items:center;gap:8px;">
-      <span>Commercial</span><span>·</span><span>48 views</span>
-    </div>
-  </div>
-</a><a href="#" style="display:flex;flex-direction:column;background:#fff;border:var(--hair);border-radius:8px;overflow:hidden;color:inherit;">
-  <div style="aspect-ratio:16/9;position:relative;background:linear-gradient(135deg,#C0B5A8,#86755F);display:flex;align-items:center;justify-content:center;">
-    <div style="width:48px;height:48px;border-radius:999px;background:rgba(255,255,255,0.92);display:flex;align-items:center;justify-content:center;color:var(--ink);"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20"></polygon></svg></div>
-    <div style="position:absolute;bottom:8px;right:8px;background:rgba(10,37,64,0.78);color:#fff;padding:2px 7px;border-radius:3px;font-size:11px;font-weight:600;font-variant-numeric:tabular-nums;">3:52</div>
-    
-  </div>
-  <div style="padding:14px;">
-    <div style="font-weight:600;font-size:13px;margin-bottom:4px;line-height:1.35;">How to log a near-miss</div>
-    <div style="font-size:11px;color:var(--ink-3);display:flex;align-items:center;gap:8px;">
-      <span>Safety</span><span>·</span><span>142 views</span>
-    </div>
-  </div>
-</a>
-      </div>
-    </div>
-  </main>
 </div>
-<button class="ai-fab"><span class="dot"></span>Ask Service1 AI</button>
 <script src="../../core/event-bus.js"></script>
 <script src="../../core/state-store.js"></script>
 <script src="../../core/schema.js"></script>
@@ -164,7 +28,6 @@
 <script src="../../core/communication.mock.js"></script>
 <script src="../../core/communication.api.js"></script>
 <script src="../../core/communication.js"></script>
+<script src="../../core/render.js"></script>
 <script src="./module.js"></script>
-
-
 </body></html>

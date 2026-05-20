@@ -1,127 +1,79 @@
 <!DOCTYPE html><html lang="en"><head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Settings — Redesign</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="_system.css">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Settings</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/css/module.css">
 <style>
-.settings-layout { display: grid; grid-template-columns: 220px 1fr; gap: 40px; padding: 24px 28px 56px; max-width: 1280px; margin: 0 auto; }
-.settings-nav { position: sticky; top: 16px; align-self: start; }
-.settings-nav-group { margin-bottom: 20px; }
-.settings-nav-group .gh { font-size: 11px; color: var(--ink-3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; padding: 0 10px 6px; }
-.settings-nav a { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 5px; font-size: 13px; color: var(--ink-2); font-weight: 500; cursor: pointer; }
-.settings-nav a:hover { background: var(--surface-2); color: var(--ink); }
-.settings-nav a.active { background: var(--terra-soft); color: var(--terra); font-weight: 600; }
-.settings-main { min-width: 0; }
-.s-section { background: #fff; border: var(--hair); border-radius: 8px; padding: 24px; margin-bottom: 20px; }
-.s-section-head { margin-bottom: 18px; }
-.s-section-title { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
-.s-section-desc { font-size: 13px; color: var(--ink-3); margin-top: 4px; }
-.s-row { display: grid; grid-template-columns: 200px 1fr; gap: 16px; padding: 14px 0; border-top: var(--hair); align-items: center; }
-.s-row:first-child { border-top: 0; padding-top: 0; }
-.s-label { font-size: 13px; font-weight: 500; color: var(--ink); }
-.s-label .help { font-size: 12px; color: var(--ink-3); font-weight: 400; margin-top: 2px; }
-.s-control input[type="text"], .s-control input[type="email"] { width: 100%; max-width: 340px; height: 32px; padding: 0 10px; border: var(--hair); border-radius: 6px; font-size: 13px; outline: none; }
-.s-control input:focus { border-color: var(--terra); box-shadow: 0 0 0 3px var(--terra-soft); }
-.s-toggle { position: relative; display: inline-block; width: 36px; height: 20px; background: var(--line-2); border-radius: 999px; cursor: pointer; transition: background .15s; vertical-align: middle; }
-.s-toggle.on { background: var(--terra); }
-.s-toggle::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: #fff; border-radius: 999px; transition: left .15s; }
-.s-toggle.on::after { left: 18px; }
-.notif-row { display: flex; gap: 24px; }
-.notif-row > span { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; }
+.layout { display: grid; grid-template-columns: 220px 1fr; gap: 32px; }
+.nav-group { margin-bottom: 16px; }
+.nav-group .title { font-size: 11px; font-weight: 600; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+.nav-item { display: block; padding: 6px 10px; border-radius: var(--r); color: var(--ink-2); font-size: 13px; cursor: pointer; }
+.nav-item:hover { background: var(--surface-2); }
+.nav-item.active { background: var(--terra); color: #fff; }
+.row { display: grid; grid-template-columns: 1fr 110px 110px 110px; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); align-items: center; }
+.row:first-child { border-top: 0; }
+.row .hd { font-weight: 600; }
+@media (max-width: 800px) { .layout { grid-template-columns: 1fr; } }
 </style>
+</head><body>
+<div class="wrap">
+  <div class="page-bar"><div class="page-title">Settings</div></div>
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="_aesthetic.css">
-<style id="__layoutheader_strip">
-/* LayoutHeader covers logo, top bar, and sidebar — module renders only its page content. */
-.app { display: block !important; grid-template-columns: none !important; grid-template-rows: none !important; }
-.app > main.page, .app > .main { display: block; }
-</style></head>
-<body>
-<div class="app" data-screen-label="Settings">
-  
-  
-  
-  <main class="page">
-    <div class="settings-layout">
-      <aside class="settings-nav">
-        <div class="settings-nav-group">
-          <div class="gh">Account</div>
-          <a href="#" class="active"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"></circle><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path></svg>Profile</a>
-          <a href="#"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>Password &amp; security</a>
-          <a href="#"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path></svg>Notifications</a>
+  <div class="layout">
+    <aside>
+      <div id="nav-host"></div>
+    </aside>
+    <main>
+      <section class="section">
+        <h3 class="section-title">Personal info</h3>
+        <div class="field"><label>Full name</label><input id="f-name" type="text"></div>
+        <div class="field"><label>Email</label><input id="f-email" type="email"></div>
+        <div class="field"><label>Phone</label><input id="f-phone" type="tel"></div>
+        <div class="field">
+          <label>Role</label>
+          <select id="f-role"></select>
         </div>
-        <div class="settings-nav-group">
-          <div class="gh">Workspace</div>
-          <a href="#">Company</a>
-          <a href="#">Team &amp; roles</a>
-          <a href="#">Locations</a>
-        </div>
-        <div class="settings-nav-group">
-          <div class="gh">Operations</div>
-          <a href="#">Vehicles</a>
-          <a href="#">Job types &amp; pricing</a>
-          <a href="#">Templates</a>
-        </div>
-        <div class="settings-nav-group">
-          <div class="gh">Integrations</div>
-          <a href="#">Stripe</a>
-          <a href="#">Twilio</a>
-          <a href="#">Mailgun</a>
-          <a href="#">QuickBooks</a>
-          <a href="#">Webhooks</a>
-        </div>
-        <div class="settings-nav-group">
-          <div class="gh">Billing</div>
-          <a href="#">Subscription</a>
-          <a href="#">Invoices</a>
-        </div>
-      </aside>
+      </section>
 
-      <main class="settings-main">
-        <div class="page-bar no-border" style="margin-bottom:24px;padding-bottom:0;">
-          <div class="page-title-row"><div class="page-title">Profile</div></div>
-          <div class="page-actions"><button class="btn btn-secondary">Cancel</button><button class="btn btn-primary">Save changes</button></div>
+      <section class="section">
+        <h3 class="section-title">Workspace</h3>
+        <div class="field"><label>Company</label><input id="f-company" type="text"></div>
+        <div class="field">
+          <label>Timezone</label>
+          <select id="f-tz"></select>
         </div>
+        <div class="field">
+          <label>Language</label>
+          <select id="f-lang"></select>
+        </div>
+        <div class="field"><label>Theme</label><input id="f-theme" type="text" readonly></div>
+      </section>
 
-        <div class="s-section">
-          <div class="s-section-head"><div class="s-section-title">Personal info</div><div class="s-section-desc">This is what teammates and customers see.</div></div>
-          <div class="s-row"><div class="s-label">Avatar</div><div class="s-control" style="display:flex;align-items:center;gap:14px;"><div style="width:48px;height:48px;border-radius:999px;background:var(--terra);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;">A</div><button class="btn btn-secondary">Upload new</button><button class="btn btn-ghost">Remove</button></div></div>
-          <div class="s-row"><div class="s-label">Full name<div class="help">Shown on signatures and customer emails.</div></div><div class="s-control"><input type="text" value="Admin User"></div></div>
-          <div class="s-row"><div class="s-label">Email</div><div class="s-control"><input type="email" value="admin@service1.com"></div></div>
-          <div class="s-row"><div class="s-label">Phone</div><div class="s-control"><input type="text" value="(555) 200-0143"></div></div>
-          <div class="s-row"><div class="s-label">Role<div class="help">Determines what you can see and do.</div></div><div class="s-control"><select class="field-select" style="width:200px;"><option>Admin</option><option>Manager</option><option>Sales</option><option>Driver</option></select></div></div>
+      <section class="section">
+        <h3 class="section-title">Notifications</h3>
+        <div class="row hd"><div>Notification</div><div>Email</div><div>SMS</div><div>Push</div></div>
+        <div data-bind="notifications">
+          <template>
+            <div class="row">
+              <div>
+                <div style="font-weight:500">{{label}}</div>
+                <div class="section-sub">{{help}}</div>
+              </div>
+              <div><span class="toggle email-{{email}}"></span></div>
+              <div><span class="toggle sms-{{sms}}"></span></div>
+              <div><span class="toggle push-{{push}}"></span></div>
+            </div>
+          </template>
         </div>
+      </section>
 
-        <div class="s-section">
-          <div class="s-section-head"><div class="s-section-title">Preferences</div></div>
-          <div class="s-row"><div class="s-label">Time zone</div><div class="s-control"><select class="field-select" style="width:240px;"><option>America/Toronto (EDT)</option><option>America/Vancouver</option></select></div></div>
-          <div class="s-row"><div class="s-label">Language</div><div class="s-control"><select class="field-select" style="width:160px;"><option>English (US)</option><option>Français</option></select></div></div>
-          <div class="s-row"><div class="s-label">Theme</div><div class="s-control"><div class="seg" style="display:inline-flex;"><button class="active">System</button><button>Light</button><button>Dark</button></div></div></div>
-        </div>
-
-        <div class="s-section">
-          <div class="s-section-head"><div class="s-section-title">Notifications</div><div class="s-section-desc">Where you want to hear about things.</div></div>
-          <div class="s-row"><div class="s-label">New leads<div class="help">Notify whenever a new lead is created.</div></div><div class="s-control"><div class="notif-row"><span><span class="s-toggle on"></span>Email</span><span><span class="s-toggle on"></span>SMS</span><span><span class="s-toggle"></span>Push</span></div></div></div>
-          <div class="s-row"><div class="s-label">Daily summary</div><div class="s-control"><div class="notif-row"><span><span class="s-toggle on"></span>Email</span><span><span class="s-toggle"></span>SMS</span><span><span class="s-toggle"></span>Push</span></div></div></div>
-          <div class="s-row"><div class="s-label">Mentions</div><div class="s-control"><div class="notif-row"><span><span class="s-toggle on"></span>Email</span><span><span class="s-toggle on"></span>SMS</span><span><span class="s-toggle on"></span>Push</span></div></div></div>
-        </div>
-
-        <div class="s-section">
-          <div class="s-section-head"><div class="s-section-title">Danger zone</div></div>
-          <div class="s-row"><div class="s-label">Sign out everywhere<div class="help">Sign out of all browsers and devices.</div></div><div class="s-control"><button class="btn btn-secondary">Sign out all sessions</button></div></div>
-          <div class="s-row"><div class="s-label" style="color:var(--bad);">Delete account<div class="help">Permanent and cannot be undone.</div></div><div class="s-control"><button class="btn btn-danger-text">Delete my account</button></div></div>
-        </div>
-      </main>
-    </div>
-  </main>
+      <section class="section">
+        <button class="btn btn-primary" data-comm-action="save:settings">Save changes</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </section>
+    </main>
+  </div>
 </div>
-<button class="ai-fab"><span class="dot"></span>Ask Service1 AI</button>
 <script src="../../core/event-bus.js"></script>
 <script src="../../core/state-store.js"></script>
 <script src="../../core/schema.js"></script>
@@ -129,7 +81,6 @@
 <script src="../../core/communication.mock.js"></script>
 <script src="../../core/communication.api.js"></script>
 <script src="../../core/communication.js"></script>
+<script src="../../core/render.js"></script>
 <script src="./module.js"></script>
-
-
 </body></html>

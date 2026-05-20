@@ -1,126 +1,98 @@
 <!DOCTYPE html><html lang="en"><head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Finance — Redesign</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="_system.css">
-<template id="__bundler_thumbnail" data-bg-color="#FFFFFF"><svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg"><rect width="1200" height="800" fill="#FFFFFF"></rect><rect x="60" y="60" width="80" height="80" rx="12" fill="#004D40"></rect><text x="100" y="115" text-anchor="middle" font-family="Inter" font-weight="800" font-size="28" fill="#D4960A">S</text><rect x="200" y="80" width="260" height="22" rx="3" fill="#0A2540"></rect><rect x="200" y="160" width="940" height="580" rx="6" fill="#FAFBFC" stroke="#EFF2F5"></rect><text x="600" y="790" text-anchor="middle" font-family="Inter" font-weight="500" font-size="14" fill="#697386">Finance · Loading…</text></svg></template>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Finance</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/css/module.css">
+</head><body>
+<div class="wrap">
+  <div class="page-bar"><div class="page-title">Finance</div></div>
 
+  <section class="section">
+    <h3 class="section-title">P&amp;L (monthly)</h3>
+    <table class="tbl">
+      <thead><tr><th>Month</th><th style="text-align:right">Revenue</th><th style="text-align:right">Expenses</th><th style="text-align:right">Net</th></tr></thead>
+      <tbody data-bind="pnl">
+        <template>
+          <tr>
+            <td>{{month}}</td>
+            <td style="text-align:right">{{revenue|usdint}}</td>
+            <td style="text-align:right">{{expenses|usdint}}</td>
+            <td style="text-align:right">{{net|usdint}}</td>
+          </tr>
+        </template>
+      </tbody>
+    </table>
+  </section>
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="_aesthetic.css">
-<style id="__layoutheader_strip">
-/* LayoutHeader covers logo, top bar, and sidebar — module renders only its page content. */
-.app { display: block !important; grid-template-columns: none !important; grid-template-rows: none !important; }
-.app > main.page, .app > .main { display: block; }
-</style></head>
-<body>
-<div class="app" data-screen-label="Finance">
-  
-  
-  
-  <main class="page">
-    <div class="wrap">
-      <div class="page-bar">
-        <div class="page-title-row">
-          <div class="page-title">Finance</div>
-          <span class="muted">May 2026 · books closed through Apr</span>
-        </div>
-        <div class="page-actions">
-          <button class="range-picker">May 2026 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
-          <button class="btn btn-secondary">Export</button>
-          <button class="btn btn-primary">+ New transaction</button>
-        </div>
-      </div>
+  <div class="two-col">
+    <section class="section">
+      <h3 class="section-title">Receivables</h3>
+      <table class="tbl">
+        <thead><tr><th>Customer</th><th style="text-align:right">Amount</th><th>Aging</th></tr></thead>
+        <tbody data-bind="receivables">
+          <template>
+            <tr>
+              <td>{{customer}}</td>
+              <td style="text-align:right">{{amount|usdint}}</td>
+              <td>{{aging}}</td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+    </section>
 
-      <nav class="subtabs">
-        <button class="subtab active">Overview</button>
-        <button class="subtab">Profit &amp; loss</button>
-        <button class="subtab">Receivables <span class="count warn">5</span></button>
-        <button class="subtab">Payables <span class="count">2</span></button>
-        <button class="subtab">Reconciliation</button>
-        <button class="subtab">Tax</button>
-      </nav>
+    <section class="section">
+      <h3 class="section-title">Payables</h3>
+      <table class="tbl">
+        <thead><tr><th>Vendor</th><th style="text-align:right">Amount</th><th>Due</th></tr></thead>
+        <tbody data-bind="payables">
+          <template>
+            <tr>
+              <td>{{vendor}}</td>
+              <td style="text-align:right">{{amount|usdint}}</td>
+              <td>{{due|date}}</td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+    </section>
+  </div>
 
-      <div class="stat-group" style="margin-bottom:32px;">
-        <div class="stat-col"><div class="stat-eyebrow">Revenue · MTD</div><div class="stat-number">$128,400</div><div class="stat-delta"><span class="pct up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"></polyline></svg>14%</span>vs Apr</div></div>
-        <div class="stat-col"><div class="stat-eyebrow">Net margin</div><div class="stat-number">$78,250</div><div class="stat-delta">61% margin</div></div>
-        <div class="stat-col"><div class="stat-eyebrow">A/R outstanding</div><div class="stat-number" style="color:var(--warn);">$8,420</div><div class="stat-delta">5 invoices · 2 overdue</div></div>
-        <div class="stat-col"><div class="stat-eyebrow">Cash on hand</div><div class="stat-number">$248,300</div><div class="stat-delta">across 3 accounts</div></div>
-      </div>
+  <section class="section">
+    <h3 class="section-title">Invoices</h3>
+    <table class="tbl">
+      <thead><tr><th>#</th><th>Number</th><th>Customer</th><th style="text-align:right">Amount</th><th>Status</th></tr></thead>
+      <tbody data-bind="invoices">
+        <template>
+          <tr>
+            <td>{{id|num}}</td>
+            <td>{{number}}</td>
+            <td>{{customer}}</td>
+            <td style="text-align:right">{{amount|usdint}}</td>
+            <td><span class="tag {{status}}">{{status}}</span></td>
+          </tr>
+        </template>
+      </tbody>
+    </table>
+  </section>
 
-      <section class="section">
-        <div class="section-head"><div class="section-title">Profit &amp; loss · May 2026 (to-date)</div><a class="section-link" href="#">Full statement →</a></div>
-        <table class="tbl">
-          <thead><tr><th>Category</th><th class="num">May (MTD)</th><th class="num">Apr</th><th class="num">YTD</th><th class="num">% of revenue</th></tr></thead>
-          <tbody>
-            <tr><td style="font-weight:600;">Revenue</td><td class="num" style="font-weight:600;">$128,400</td><td class="num">$112,300</td><td class="num">$542,800</td><td class="num">100%</td></tr>
-            <tr><td class="cell-light">— Local moves</td><td class="num cell-light">$84,200</td><td class="num cell-light">$71,400</td><td class="num cell-light">$348,600</td><td class="num cell-light">66%</td></tr>
-            <tr><td class="cell-light">— Long distance</td><td class="num cell-light">$28,400</td><td class="num cell-light">$24,800</td><td class="num cell-light">$118,200</td><td class="num cell-light">22%</td></tr>
-            <tr><td class="cell-light">— Box delivery</td><td class="num cell-light">$8,600</td><td class="num cell-light">$9,200</td><td class="num cell-light">$42,300</td><td class="num cell-light">7%</td></tr>
-            <tr><td class="cell-light">— Packing</td><td class="num cell-light">$7,200</td><td class="num cell-light">$6,900</td><td class="num cell-light">$33,700</td><td class="num cell-light">5%</td></tr>
-            <tr><td style="font-weight:600;">Cost of services</td><td class="num" style="font-weight:600;color:var(--bad);">−$42,800</td><td class="num">−$38,400</td><td class="num">−$184,200</td><td class="num">33%</td></tr>
-            <tr><td class="cell-light">— Wages</td><td class="num cell-light">−$32,400</td><td class="num cell-light">−$29,100</td><td class="num cell-light">−$142,600</td><td class="num cell-light">25%</td></tr>
-            <tr><td class="cell-light">— Fuel &amp; vehicle</td><td class="num cell-light">−$6,200</td><td class="num cell-light">−$5,800</td><td class="num cell-light">−$24,800</td><td class="num cell-light">5%</td></tr>
-            <tr><td class="cell-light">— Materials</td><td class="num cell-light">−$4,200</td><td class="num cell-light">−$3,500</td><td class="num cell-light">−$16,800</td><td class="num cell-light">3%</td></tr>
-            <tr><td style="font-weight:600;">Operating expenses</td><td class="num" style="font-weight:600;color:var(--bad);">−$7,350</td><td class="num">−$6,900</td><td class="num">−$32,200</td><td class="num">6%</td></tr>
-            <tr style="background:var(--surface-2);"><td style="font-weight:700;">Net profit</td><td class="num" style="font-weight:700;color:var(--ok);">$78,250</td><td class="num" style="font-weight:600;">$67,000</td><td class="num" style="font-weight:600;">$326,400</td><td class="num" style="font-weight:700;color:var(--ok);">61%</td></tr>
-          </tbody>
-        </table>
-      </section>
-
-      <div class="two-col">
-        <section class="section">
-          <div class="section-head"><div class="section-title">Outstanding receivables</div><a class="section-link" href="#">All A/R →</a></div>
-          <table class="tbl">
-            <thead><tr><th>Customer</th><th class="num">Amount</th><th class="num">Due</th></tr></thead>
-            <tbody>
-              <tr><td><div class="who"><span class="who-av" style="background:var(--bad);">RM</span><div><div class="who-nm">Rosa Martinez</div><div class="who-sub">INV-2308</div></div></div></td><td class="num">$1,840</td><td class="num" style="color:var(--bad);font-weight:600;">14d late</td></tr>
-              <tr><td><div class="who"><span class="who-av" style="background:var(--warn);">TA</span><div><div class="who-nm">Tao Anand</div><div class="who-sub">INV-2306</div></div></div></td><td class="num">$2,210</td><td class="num" style="color:var(--bad);font-weight:600;">6d late</td></tr>
-              <tr><td><div class="who"><span class="who-av" style="background:var(--teal);">NS</span><div><div class="who-nm">Northside Co.</div><div class="who-sub">INV-2304</div></div></div></td><td class="num">$2,100</td><td class="num" style="color:var(--warn);">Due May 18</td></tr>
-              <tr><td><div class="who"><span class="who-av" style="background:var(--info);">JM</span><div><div class="who-nm">Jordan Murphy</div><div class="who-sub">INV-2310</div></div></div></td><td class="num">$1,420</td><td class="num cell-light">Due May 22</td></tr>
-              <tr><td><div class="who"><span class="who-av" style="background:var(--plum);">RC</span><div><div class="who-nm">Rebecca Chen</div><div class="who-sub">INV-2311</div></div></div></td><td class="num">$850</td><td class="num cell-light">Due May 26</td></tr>
-            </tbody>
-          </table>
-        </section>
-
-        <section class="section">
-          <div class="section-head"><div class="section-title">Payables coming up</div><a class="section-link" href="#">All A/P →</a></div>
-          <table class="tbl">
-            <thead><tr><th>Vendor</th><th class="num">Amount</th><th class="num">Due</th></tr></thead>
-            <tbody>
-              <tr><td><div class="who"><span class="who-av sq" style="background:var(--ink-3);">FE</span><div><div class="who-nm">Fleet Energy Co.</div><div class="who-sub">B-1827</div></div></div></td><td class="num">$2,640</td><td class="num" style="color:var(--warn);font-weight:600;">Due May 18</td></tr>
-              <tr><td><div class="who"><span class="who-av sq" style="background:var(--ink-3);">UH</span><div><div class="who-nm">U-Haul Toronto East</div><div class="who-sub">B-1828</div></div></div></td><td class="num">$680</td><td class="num cell-light">Due May 21</td></tr>
-              <tr><td><div class="who"><span class="who-av sq" style="background:var(--ink-3);">PE</span><div><div class="who-nm">Penske Mississauga</div><div class="who-sub">B-1829</div></div></div></td><td class="num">$1,540</td><td class="num cell-light">Due May 25</td></tr>
-              <tr><td><div class="who"><span class="who-av sq" style="background:var(--ink-3);">SP</span><div><div class="who-nm">Stripe fees</div><div class="who-sub">May statement</div></div></div></td><td class="num">$1,820</td><td class="num cell-light">Auto · May 31</td></tr>
-            </tbody>
-          </table>
-        </section>
-      </div>
-
-      <section class="section">
-        <div class="section-head"><div class="section-title">Recent transactions</div><a class="section-link" href="#">All transactions →</a></div>
-        <table class="tbl">
-          <thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Account</th><th class="num">Amount</th></tr></thead>
-          <tbody>
-            <tr><td class="cell-light">May 16</td><td>Stripe deposit · 14 transactions</td><td><span class="pill ok">Revenue</span></td><td>Operating</td><td class="num" style="color:var(--ok);font-weight:600;">+$8,420</td></tr>
-            <tr><td class="cell-light">May 15</td><td>A. Johnson · move deposit</td><td><span class="pill ok">Revenue</span></td><td>Operating</td><td class="num" style="color:var(--ok);">+$2,768</td></tr>
-            <tr><td class="cell-light">May 15</td><td>Fleet Energy · weekly fuel</td><td><span class="pill">Vehicle</span></td><td>Operating</td><td class="num">−$1,240</td></tr>
-            <tr><td class="cell-light">May 14</td><td>Northside Co. · wire</td><td><span class="pill ok">Revenue</span></td><td>Operating</td><td class="num" style="color:var(--ok);">+$8,420</td></tr>
-            <tr><td class="cell-light">May 14</td><td>Payroll · bi-weekly</td><td><span class="pill plum">Wages</span></td><td>Payroll</td><td class="num">−$14,200</td></tr>
-            <tr><td class="cell-light">May 13</td><td>Box wholesale</td><td><span class="pill">Materials</span></td><td>Operating</td><td class="num">−$2,140</td></tr>
-            <tr><td class="cell-light">May 12</td><td>Insurance premium</td><td><span class="pill info">Insurance</span></td><td>Operating</td><td class="num">−$1,860</td></tr>
-          </tbody>
-        </table>
-      </section>
-    </div>
-  </main>
+  <section class="section">
+    <h3 class="section-title">Payments</h3>
+    <table class="tbl">
+      <thead><tr><th>Ref</th><th>Customer</th><th style="text-align:right">Amount</th><th>Date</th></tr></thead>
+      <tbody data-bind="payments">
+        <template>
+          <tr>
+            <td>{{ref}}</td>
+            <td>{{customer}}</td>
+            <td style="text-align:right">{{amount|usdint}}</td>
+            <td>{{date|date}}</td>
+          </tr>
+        </template>
+      </tbody>
+    </table>
+  </section>
 </div>
-<button class="ai-fab"><span class="dot"></span>Ask Service1 AI</button>
 <script src="../../core/event-bus.js"></script>
 <script src="../../core/state-store.js"></script>
 <script src="../../core/schema.js"></script>
@@ -128,7 +100,6 @@
 <script src="../../core/communication.mock.js"></script>
 <script src="../../core/communication.api.js"></script>
 <script src="../../core/communication.js"></script>
+<script src="../../core/render.js"></script>
 <script src="./module.js"></script>
-
-
 </body></html>

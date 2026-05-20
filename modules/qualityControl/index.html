@@ -1,92 +1,30 @@
 <!DOCTYPE html><html lang="en"><head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Quality Control — Redesign</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="_system.css">
-<template id="__bundler_thumbnail" data-bg-color="#FFFFFF"><svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg"><rect width="1200" height="800" fill="#FFFFFF"></rect><rect x="60" y="60" width="80" height="80" rx="12" fill="#004D40"></rect><text x="100" y="115" text-anchor="middle" font-family="Inter" font-weight="800" font-size="28" fill="#D4960A">S</text><rect x="200" y="80" width="260" height="22" rx="3" fill="#0A2540"></rect><rect x="200" y="160" width="940" height="580" rx="6" fill="#FAFBFC" stroke="#EFF2F5"></rect><text x="600" y="790" text-anchor="middle" font-family="Inter" font-weight="500" font-size="14" fill="#697386">Quality Control · Loading…</text></svg></template>
-
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="_aesthetic.css">
-<style id="__layoutheader_strip">
-/* LayoutHeader covers logo, top bar, and sidebar — module renders only its page content. */
-.app { display: block !important; grid-template-columns: none !important; grid-template-rows: none !important; }
-.app > main.page, .app > .main { display: block; }
-</style></head>
-<body>
-<div class="app" data-screen-label="Quality Control">
-  
-  
-  
-  <main class="page">
-    <div class="wrap">
-      <div class="page-bar">
-        <div class="page-title-row"><div class="page-title">Quality Control</div><span class="muted">42 inspections · last 30 days</span></div>
-        <div class="page-actions"><button class="range-picker">Last 30 days <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg></button><button class="btn btn-primary">+ New inspection</button></div>
-      </div>
-      <nav class="subtabs">
-        <button class="subtab active">Overview</button>
-        <button class="subtab">Inspections <span class="count">42</span></button>
-        <button class="subtab">Issues <span class="count warn">4</span></button>
-        <button class="subtab">Customer feedback</button>
-        <button class="subtab">Photo audits</button>
-      </nav>
-      <div class="stat-group" style="margin-bottom:32px;">
-        <div class="stat-col"><div class="stat-eyebrow">Avg QC score</div><div class="stat-number" style="color:var(--ok);">96<span class="small">%</span></div><div class="stat-delta"><span class="pct up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"></polyline></svg>2 pts</span>vs last month</div></div>
-        <div class="stat-col"><div class="stat-eyebrow">Inspections passed</div><div class="stat-number">38<span class="small">/42</span></div><div class="stat-delta">90% pass rate</div></div>
-        <div class="stat-col"><div class="stat-eyebrow">Open issues</div><div class="stat-number" style="color:var(--warn);">4</div><div class="stat-delta">2 require re-inspection</div></div>
-        <div class="stat-col"><div class="stat-eyebrow">CSAT post-move</div><div class="stat-number" style="color:var(--ok);">4.8<span class="small">/ 5</span></div><div class="stat-delta">38 of 42 responses</div></div>
-      </div>
-      <section class="section">
-        <div class="section-head"><div class="section-title">Recent inspections</div><a class="section-link" href="#">All inspections →</a></div>
-        <table class="tbl">
-          <thead><tr><th>Job</th><th>Team</th><th>Inspector</th><th class="num">Score</th><th>Status</th><th class="num">Date</th></tr></thead>
-          <tbody>
-            <tr><td><div style="font-weight:500;">A. Johnson · 3BR move</div><div class="cell-light" style="font-size:11px;">Deal 17826-1</div></td><td><span class="pill terra">Truck 1</span></td><td><div class="who"><span class="who-av" style="background:var(--info);">JF</span><div class="who-nm">Jane F.</div></div></td><td class="num" style="color:var(--ok);font-weight:600;">100%</td><td><span class="pill ok">Passed</span></td><td class="num cell-light">May 12</td></tr>
-            <tr><td><div style="font-weight:500;">Northside Co. · commercial</div><div class="cell-light" style="font-size:11px;">Deal 17821-1</div></td><td><span class="pill teal">Truck 3</span></td><td><div class="who"><span class="who-av" style="background:var(--info);">JF</span><div class="who-nm">Jane F.</div></div></td><td class="num" style="color:var(--ok);font-weight:600;">98%</td><td><span class="pill ok">Passed</span></td><td class="num cell-light">May 14</td></tr>
-            <tr><td><div style="font-weight:500;">S. Patel · box delivery</div><div class="cell-light" style="font-size:11px;">Deal 17870-1</div></td><td><span class="pill info">Van 1</span></td><td><div class="who"><span class="who-av" style="background:var(--terra);">AH</span><div class="who-nm">A. Haylton</div></div></td><td class="num" style="color:var(--warn);font-weight:600;">84%</td><td><span class="pill warn">Issues</span></td><td class="num cell-light">May 11</td></tr>
-            <tr><td><div style="font-weight:500;">T. Anand · packing</div><div class="cell-light" style="font-size:11px;">Deal 17800-1</div></td><td><span class="pill plum">Van 1</span></td><td><div class="who"><span class="who-av" style="background:var(--info);">JF</span><div class="who-nm">Jane F.</div></div></td><td class="num" style="color:var(--bad);font-weight:600;">72%</td><td><span class="pill bad">Failed</span></td><td class="num cell-light">May 8</td></tr>
-            <tr><td><div style="font-weight:500;">R. Chen · long distance</div><div class="cell-light" style="font-size:11px;">Deal 17878-1</div></td><td><span class="pill terra">Truck 2</span></td><td><div class="who"><span class="who-av" style="background:var(--terra);">AH</span><div class="who-nm">A. Haylton</div></div></td><td class="num" style="color:var(--ok);font-weight:600;">96%</td><td><span class="pill ok">Passed</span></td><td class="num cell-light">May 6</td></tr>
-            <tr><td><div style="font-weight:500;">M. Lee · packing prep</div><div class="cell-light" style="font-size:11px;">Deal 17880-1</div></td><td><span class="pill plum">Van 1</span></td><td><div class="who"><span class="who-av" style="background:var(--info);">JF</span><div class="who-nm">Jane F.</div></div></td><td class="num" style="color:var(--ok);font-weight:600;">94%</td><td><span class="pill ok">Passed</span></td><td class="num cell-light">May 4</td></tr>
-          </tbody>
-        </table>
-      </section>
-      <div class="two-col">
-        <section class="section">
-          <div class="section-head"><div class="section-title">Common issues this month</div></div>
-          <table class="tbl">
-            <thead><tr><th>Issue</th><th class="num">Count</th><th class="num">% of jobs</th></tr></thead>
-            <tbody>
-              <tr><td>Missing wardrobe boxes return</td><td class="num">3</td><td class="num">7%</td></tr>
-              <tr><td>Late arrival (&gt; 15 min)</td><td class="num">2</td><td class="num">5%</td></tr>
-              <tr><td>Minor furniture scuff</td><td class="num">2</td><td class="num">5%</td></tr>
-              <tr><td>Incomplete packing inventory</td><td class="num">1</td><td class="num">2%</td></tr>
-              <tr><td>Box count mismatch</td><td class="num">1</td><td class="num">2%</td></tr>
-            </tbody>
-          </table>
-        </section>
-        <section class="section">
-          <div class="section-head"><div class="section-title">Team QC scores · this month</div></div>
-          <table class="tbl">
-            <thead><tr><th>Team</th><th class="num">Inspections</th><th class="num">Avg score</th><th class="num">Issues</th></tr></thead>
-            <tbody>
-              <tr><td><div class="who"><span class="who-av sq" style="background:var(--terra);">T1</span><div class="who-nm">Truck 1</div></div></td><td class="num">12</td><td class="num" style="color:var(--ok);font-weight:600;">98%</td><td class="num">1</td></tr>
-              <tr><td><div class="who"><span class="who-av sq" style="background:var(--info);">T2</span><div class="who-nm">Truck 2</div></div></td><td class="num">9</td><td class="num" style="color:var(--ok);font-weight:600;">96%</td><td class="num">0</td></tr>
-              <tr><td><div class="who"><span class="who-av sq" style="background:var(--teal);">T3</span><div class="who-nm">Truck 3</div></div></td><td class="num">10</td><td class="num">94%</td><td class="num">1</td></tr>
-              <tr><td><div class="who"><span class="who-av sq" style="background:var(--plum);">V1</span><div class="who-nm">Van 1</div></div></td><td class="num">11</td><td class="num" style="color:var(--warn);font-weight:600;">88%</td><td class="num">2</td></tr>
-            </tbody>
-          </table>
-        </section>
-      </div>
-    </div>
-  </main>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Quality Control</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/css/module.css">
+</head><body>
+<div class="wrap">
+  <div class="page-bar"><div class="page-title">Quality Control</div></div>
+  <section class="section">
+    <table class="tbl">
+      <thead><tr><th>#</th><th>Job</th><th>Severity</th><th>Description</th><th>Status</th><th>Reported by</th><th>Date</th></tr></thead>
+      <tbody data-bind="incidents">
+        <template>
+          <tr>
+            <td>{{id|num}}</td>
+            <td>{{jobId|num}}</td>
+            <td class="prio-{{severity}}">{{severity}}</td>
+            <td>{{description}}</td>
+            <td><span class="tag {{status}}">{{status}}</span></td>
+            <td>{{reportedBy}}</td>
+            <td>{{date|date}}</td>
+          </tr>
+        </template>
+      </tbody>
+    </table>
+  </section>
 </div>
-<button class="ai-fab"><span class="dot"></span>Ask Service1 AI</button>
 <script src="../../core/event-bus.js"></script>
 <script src="../../core/state-store.js"></script>
 <script src="../../core/schema.js"></script>
@@ -94,7 +32,6 @@
 <script src="../../core/communication.mock.js"></script>
 <script src="../../core/communication.api.js"></script>
 <script src="../../core/communication.js"></script>
+<script src="../../core/render.js"></script>
 <script src="./module.js"></script>
-
-
 </body></html>

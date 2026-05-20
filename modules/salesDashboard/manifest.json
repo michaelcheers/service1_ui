@@ -4,8 +4,7 @@
   "source": "SalesDashboard.html",
   "fixture": "salesDashboard",
   "reads": [
-    "customers",
-    "jobs"
+    "customers","jobs","sales/pipeline","sales/deals"
   ],
   "writes": [],
   "icon": "salesDashboard"

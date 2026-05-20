@@ -47,12 +47,15 @@
     }
 
     async get(resource, params) {
-      const raw = store.get(resource);
+      const raw = store.has(resource) ? store.get(resource) : undefined;
       let out;
-      if (Array.isArray(raw)) {
+      if (raw === undefined) {
+        // Missing keys: return null so consumers can branch on shape themselves.
+        out = null;
+      } else if (Array.isArray(raw)) {
         out = params ? raw.filter(r => matches(r, params)) : raw;
       } else {
-        out = raw == null ? null : raw;
+        out = raw;
       }
       out = clone(out);
       this._record('get', resource, params, out);

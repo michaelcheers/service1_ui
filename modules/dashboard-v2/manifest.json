@@ -4,9 +4,9 @@
   "source": "Dashboard v2.html",
   "fixture": "dashboard-v2",
   "reads": [
-    "jobs",
-    "tasks",
-    "reports"
+    "jobs","tasks","reports","auth/me",
+    "dashboard/kpis","dashboard/chart","dashboard/performers",
+    "dashboard/attention","dashboard/realtime"
   ],
   "writes": [],
   "icon": "dashboard-v2"

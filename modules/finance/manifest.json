@@ -4,8 +4,7 @@
   "source": "Finance.html",
   "fixture": "finance",
   "reads": [
-    "finance/invoices",
-    "finance/payments"
+    "finance/invoices","finance/payments","finance/pnl","finance/receivables","finance/payables"
   ],
   "writes": [
     "finance/invoices"

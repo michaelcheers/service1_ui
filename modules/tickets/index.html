@@ -1,182 +1,32 @@
 <!DOCTYPE html><html lang="en"><head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Tickets — Redesign</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="_system.css">
-<template id="__bundler_thumbnail" data-bg-color="#FFFFFF"><svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg"><rect width="1200" height="800" fill="#FFFFFF"></rect><rect x="60" y="60" width="80" height="80" rx="12" fill="#004D40"></rect><text x="100" y="115" text-anchor="middle" font-family="Inter" font-weight="800" font-size="28" fill="#D4960A">S</text><rect x="200" y="80" width="260" height="22" rx="3" fill="#0A2540"></rect><rect x="200" y="160" width="940" height="100" rx="6" fill="#FAFBFC" stroke="#EFF2F5"></rect><rect x="200" y="280" width="940" height="460" rx="6" fill="#FAFBFC" stroke="#EFF2F5"></rect><text x="600" y="790" text-anchor="middle" font-family="Inter" font-weight="500" font-size="14" fill="#697386">Tickets · Loading…</text></svg></template>
-<style>
-.tbl tbody tr td:first-child { width: 36%; }
-</style>
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="_aesthetic.css">
-<style id="__layoutheader_strip">
-/* LayoutHeader covers logo, top bar, and sidebar — module renders only its page content. */
-.app { display: block !important; grid-template-columns: none !important; grid-template-rows: none !important; }
-.app > main.page, .app > .main { display: block; }
-</style></head>
-<body>
-
-<div class="app" data-screen-label="Tickets">
-  
-  
-  
-
-  <main class="page">
-    <div class="wrap">
-      <div class="page-bar">
-        <div class="page-title-row">
-          <div class="page-title">Tickets</div>
-          <span class="muted">14 open · 3 awaiting reply &gt; 24h</span>
-        </div>
-        <div class="page-actions">
-          <button class="range-picker">All channels <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
-          <button class="btn btn-secondary">Filters</button>
-          <button class="btn btn-primary">+ New ticket</button>
-        </div>
-      </div>
-
-      <nav class="subtabs">
-        <button class="subtab active">Open <span class="count">14</span></button>
-        <button class="subtab">Awaiting customer <span class="count">5</span></button>
-        <button class="subtab">Pending internal <span class="count">3</span></button>
-        <button class="subtab">Resolved</button>
-        <button class="subtab">All</button>
-      </nav>
-
-      <div class="stat-group" style="margin-bottom:32px;">
-        <div class="stat-col"><div class="stat-eyebrow">Open</div><div class="stat-number">14</div><div class="stat-delta">5 unassigned</div></div>
-        <div class="stat-col"><div class="stat-eyebrow">Awaiting &gt; 24h</div><div class="stat-number" style="color:var(--bad);">3</div><div class="stat-delta">needs escalation</div></div>
-        <div class="stat-col"><div class="stat-eyebrow">Avg first response</div><div class="stat-number">42<span class="small">m</span></div><div class="stat-delta"><span class="pct down"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg>8m</span>faster than last week</div></div>
-        <div class="stat-col"><div class="stat-eyebrow">CSAT this month</div><div class="stat-number" style="color:var(--ok);">94<span class="small">%</span></div><div class="stat-delta">38 of 41 responses</div></div>
-      </div>
-
-      <div class="toolbar">
-        <div class="fchips">
-          <button class="fchip active">All <span class="fc-count">14</span></button>
-          <button class="fchip">Billing <span class="fc-count">4</span></button>
-          <button class="fchip">Damage claim <span class="fc-count">3</span></button>
-          <button class="fchip">Scheduling <span class="fc-count">3</span></button>
-          <button class="fchip">General <span class="fc-count">4</span></button>
-        </div>
-        <div class="grow"></div>
-        <input class="search-input" placeholder="Search by customer, ID…">
-        <button class="btn btn-secondary">Sort: Updated</button>
-      </div>
-
-      <table class="tbl">
-        <thead>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tickets</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/css/module.css">
+</head><body>
+<div class="wrap">
+  <div class="page-bar">
+    <div class="page-title">Tickets</div>
+    <div><button class="btn btn-primary">New ticket</button></div>
+  </div>
+  <section class="section">
+    <table class="tbl">
+      <thead><tr><th>#</th><th>Subject</th><th>Status</th><th>Priority</th><th>Assignee</th><th>Updated</th></tr></thead>
+      <tbody data-bind="tickets">
+        <template>
           <tr>
-            <th style="width:36%;">Ticket</th>
-            <th>Customer</th>
-            <th>Category</th>
-            <th>Priority</th>
-            <th>Status</th>
-            <th class="num">Last update</th>
+            <td>{{id|num}}</td>
+            <td>{{subject}}</td>
+            <td><span class="tag {{status}}">{{status}}</span></td>
+            <td class="prio-{{priority}}">{{priority}}</td>
+            <td>{{assignee}}</td>
+            <td>{{updated|date}}</td>
           </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>
-              <div style="font-weight:600;">Damage to dining table — request for repair</div>
-              <div class="cell-light" style="margin-top:2px;font-size:11px;">#TKT-2418 · Deal 17712-1</div>
-            </td>
-            <td><div class="who"><span class="who-av" style="background:var(--bad);">RM</span><div><div class="who-nm">Rosa Martinez</div></div></div></td>
-            <td><span class="pill bad">Damage claim</span></td>
-            <td><span class="pill bad">High</span></td>
-            <td><span class="pill warn">Awaiting · 28h</span></td>
-            <td class="num cell-light">2 days ago</td>
-          </tr>
-          <tr>
-            <td>
-              <div style="font-weight:600;">Duplicate charge on invoice 17826-1</div>
-              <div class="cell-light" style="margin-top:2px;font-size:11px;">#TKT-2417</div>
-            </td>
-            <td><div class="who"><span class="who-av" style="background:var(--info);">AJ</span><div><div class="who-nm">Alice Johnson</div></div></div></td>
-            <td><span class="pill info">Billing</span></td>
-            <td><span class="pill warn">Med</span></td>
-            <td><span class="pill warn">Awaiting · 26h</span></td>
-            <td class="num cell-light">1 day ago</td>
-          </tr>
-          <tr>
-            <td>
-              <div style="font-weight:600;">Need to reschedule move from May 22 to May 24</div>
-              <div class="cell-light" style="margin-top:2px;font-size:11px;">#TKT-2416 · Deal 17878-1</div>
-            </td>
-            <td><div class="who"><span class="who-av" style="background:var(--terra);">RC</span><div><div class="who-nm">Rebecca Chen</div></div></div></td>
-            <td><span class="pill terra">Scheduling</span></td>
-            <td><span class="pill warn">Med</span></td>
-            <td><span class="pill info">Replied · 2h</span></td>
-            <td class="num cell-light">2h ago</td>
-          </tr>
-          <tr>
-            <td>
-              <div style="font-weight:600;">Question about insurance coverage for fragile items</div>
-              <div class="cell-light" style="margin-top:2px;font-size:11px;">#TKT-2415</div>
-            </td>
-            <td><div class="who"><span class="who-av" style="background:var(--plum);">ML</span><div><div class="who-nm">Marcus Lee</div></div></div></td>
-            <td><span class="pill">General</span></td>
-            <td><span class="pill">Low</span></td>
-            <td><span class="pill info">In progress</span></td>
-            <td class="num cell-light">4h ago</td>
-          </tr>
-          <tr>
-            <td>
-              <div style="font-weight:600;">Box delivery missed delivery window</div>
-              <div class="cell-light" style="margin-top:2px;font-size:11px;">#TKT-2414 · Deal 17870-1</div>
-            </td>
-            <td><div class="who"><span class="who-av" style="background:var(--gold);">SP</span><div><div class="who-nm">Sara Patel</div></div></div></td>
-            <td><span class="pill terra">Scheduling</span></td>
-            <td><span class="pill warn">Med</span></td>
-            <td><span class="pill ok">Resolved</span></td>
-            <td class="num cell-light">5h ago</td>
-          </tr>
-          <tr>
-            <td>
-              <div style="font-weight:600;">Need a receipt PDF for tax purposes</div>
-              <div class="cell-light" style="margin-top:2px;font-size:11px;">#TKT-2413</div>
-            </td>
-            <td><div class="who"><span class="who-av" style="background:var(--teal);">NS</span><div><div class="who-nm">Northside Co.</div></div></div></td>
-            <td><span class="pill info">Billing</span></td>
-            <td><span class="pill">Low</span></td>
-            <td><span class="pill info">In progress</span></td>
-            <td class="num cell-light">6h ago</td>
-          </tr>
-          <tr>
-            <td>
-              <div style="font-weight:600;">Refund request — cancelled within 48h window</div>
-              <div class="cell-light" style="margin-top:2px;font-size:11px;">#TKT-2412</div>
-            </td>
-            <td><div class="who"><span class="who-av" style="background:var(--info);">JM</span><div><div class="who-nm">Jordan Murphy</div></div></div></td>
-            <td><span class="pill info">Billing</span></td>
-            <td><span class="pill bad">High</span></td>
-            <td><span class="pill warn">Awaiting · 12h</span></td>
-            <td class="num cell-light">12h ago</td>
-          </tr>
-          <tr>
-            <td>
-              <div style="font-weight:600;">Lost a small box during move — looking for compensation</div>
-              <div class="cell-light" style="margin-top:2px;font-size:11px;">#TKT-2411 · Deal 17800-1</div>
-            </td>
-            <td><div class="who"><span class="who-av" style="background:var(--plum);">TA</span><div><div class="who-nm">Tao Anand</div></div></div></td>
-            <td><span class="pill bad">Damage claim</span></td>
-            <td><span class="pill warn">Med</span></td>
-            <td><span class="pill info">In progress</span></td>
-            <td class="num cell-light">1 day ago</td>
-          </tr>
-        </tbody>
-      </table>
-
-    </div>
-  </main>
+        </template>
+      </tbody>
+    </table>
+  </section>
 </div>
-
-<button class="ai-fab"><span class="dot"></span>Ask Service1 AI</button>
 <script src="../../core/event-bus.js"></script>
 <script src="../../core/state-store.js"></script>
 <script src="../../core/schema.js"></script>
@@ -184,7 +34,6 @@
 <script src="../../core/communication.mock.js"></script>
 <script src="../../core/communication.api.js"></script>
 <script src="../../core/communication.js"></script>
+<script src="../../core/render.js"></script>
 <script src="./module.js"></script>
-
-
 </body></html>

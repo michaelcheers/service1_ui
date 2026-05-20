@@ -4,7 +4,8 @@
   "source": "Settings.html",
   "fixture": "settings",
   "reads": [
-    "settings"
+    "settings","auth/me","settings/roles","settings/timezones","settings/languages",
+    "settings/theme","settings/notifications","settings/nav"
   ],
   "writes": [
     "settings"

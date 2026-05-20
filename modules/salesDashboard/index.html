@@ -1,172 +1,61 @@
 <!DOCTYPE html><html lang="en"><head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Sales Dashboard — Redesign</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="_system.css">
-<template id="__bundler_thumbnail" data-bg-color="#FFFFFF"><svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg"><rect width="1200" height="800" fill="#FFFFFF"></rect><rect x="60" y="60" width="80" height="80" rx="12" fill="#004D40"></rect><text x="100" y="115" text-anchor="middle" font-family="Inter" font-weight="800" font-size="28" fill="#D4960A">S</text><rect x="200" y="80" width="260" height="22" rx="3" fill="#0A2540"></rect><rect x="200" y="160" width="940" height="100" rx="6" fill="#FAFBFC" stroke="#EFF2F5"></rect><rect x="200" y="280" width="940" height="460" rx="6" fill="#FAFBFC" stroke="#EFF2F5"></rect><text x="600" y="790" text-anchor="middle" font-family="Inter" font-weight="500" font-size="14" fill="#697386">Sales Dashboard · Loading…</text></svg></template>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sales Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/css/module.css">
+</head><body>
+<div class="wrap">
+  <div class="page-bar"><div class="page-title">Sales Dashboard</div></div>
 
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="_aesthetic.css">
-<style id="__layoutheader_strip">
-/* LayoutHeader covers logo, top bar, and sidebar — module renders only its page content. */
-.app { display: block !important; grid-template-columns: none !important; grid-template-rows: none !important; }
-.app > main.page, .app > .main { display: block; }
-</style></head>
-<body>
-
-<div class="app" data-screen-label="Sales">
-  
-  
-  
-
-  <main class="page">
-    <div class="wrap">
-      <div class="page-bar">
-        <div class="page-title-row">
-          <div class="page-title">Sales Dashboard</div>
-          <span class="muted">John Sales · MTD performance</span>
+  <section class="section">
+    <h3 class="section-title">Pipeline</h3>
+    <div class="cards" data-bind="pipeline">
+      <template>
+        <div class="card">
+          <div class="section-sub">{{stage}}</div>
+          <div style="font-size:24px;font-weight:600">{{deals|num}}</div>
+          <div class="section-sub">{{value|usdint}}</div>
         </div>
-        <div class="page-actions">
-          <button class="range-picker">May 2026 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
-          <button class="btn btn-secondary">Export</button>
-        </div>
-      </div>
-
-      <nav class="subtabs">
-        <button class="subtab active">My performance</button>
-        <button class="subtab">Pipeline <span class="count">23</span></button>
-        <button class="subtab">Leaderboard</button>
-        <button class="subtab">Goals</button>
-      </nav>
-
-      <div class="stat-group" style="margin-bottom:32px;">
-        <div class="stat-col">
-          <div class="stat-eyebrow">Booked · MTD</div>
-          <div class="stat-number">$42,640</div>
-          <div class="stat-delta"><span class="pct up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"></polyline></svg>22%</span>vs last month</div>
-        </div>
-        <div class="stat-col">
-          <div class="stat-eyebrow">Deals closed</div>
-          <div class="stat-number">14</div>
-          <div class="stat-delta">2 today</div>
-        </div>
-        <div class="stat-col">
-          <div class="stat-eyebrow">Close rate</div>
-          <div class="stat-number" style="color:var(--ok);">92<span class="small">%</span></div>
-          <div class="stat-delta">team avg 64%</div>
-        </div>
-        <div class="stat-col">
-          <div class="stat-eyebrow">Goal · May</div>
-          <div class="stat-number">85<span class="small">%</span></div>
-          <div class="stat-delta">$42.6k of $50k</div>
-        </div>
-      </div>
-
-      <section class="section">
-        <div class="section-head">
-          <div class="section-title">Pipeline</div>
-          <span class="muted" style="font-size:12px;">$61.2k across 23 opportunities</span>
-        </div>
-        <div style="background:#fff;border:var(--hair);border-radius:8px;padding:20px;">
-          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;">
-            <div>
-              <div style="height:6px;background:var(--ink-3);border-radius:3px;margin-bottom:10px;"></div>
-              <div style="font-size:11px;color:var(--ink-3);font-weight:500;text-transform:uppercase;letter-spacing:0.06em;">New leads</div>
-              <div style="font-size:24px;font-weight:600;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;margin-top:4px;">8</div>
-              <div style="font-size:12px;color:var(--ink-3);font-variant-numeric:tabular-nums;">$21.4k</div>
-            </div>
-            <div>
-              <div style="height:6px;background:var(--info);border-radius:3px;margin-bottom:10px;"></div>
-              <div style="font-size:11px;color:var(--ink-3);font-weight:500;text-transform:uppercase;letter-spacing:0.06em;">Discovery</div>
-              <div style="font-size:24px;font-weight:600;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;margin-top:4px;">6</div>
-              <div style="font-size:12px;color:var(--ink-3);font-variant-numeric:tabular-nums;">$18.2k</div>
-            </div>
-            <div>
-              <div style="height:6px;background:var(--plum);border-radius:3px;margin-bottom:10px;"></div>
-              <div style="font-size:11px;color:var(--ink-3);font-weight:500;text-transform:uppercase;letter-spacing:0.06em;">Growth Plan sent</div>
-              <div style="font-size:24px;font-weight:600;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;margin-top:4px;">5</div>
-              <div style="font-size:12px;color:var(--ink-3);font-variant-numeric:tabular-nums;">$14.6k</div>
-            </div>
-            <div>
-              <div style="height:6px;background:var(--warn);border-radius:3px;margin-bottom:10px;"></div>
-              <div style="font-size:11px;color:var(--ink-3);font-weight:500;text-transform:uppercase;letter-spacing:0.06em;">Negotiation</div>
-              <div style="font-size:24px;font-weight:600;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;margin-top:4px;">3</div>
-              <div style="font-size:12px;color:var(--ink-3);font-variant-numeric:tabular-nums;">$5.8k</div>
-            </div>
-            <div>
-              <div style="height:6px;background:var(--ok);border-radius:3px;margin-bottom:10px;"></div>
-              <div style="font-size:11px;color:var(--ink-3);font-weight:500;text-transform:uppercase;letter-spacing:0.06em;">Booked</div>
-              <div style="font-size:24px;font-weight:600;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;margin-top:4px;">1</div>
-              <div style="font-size:12px;color:var(--ink-3);font-variant-numeric:tabular-nums;">$1.2k</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <div class="two-col">
-        <section class="section">
-          <div class="section-head">
-            <div class="section-title">Top deals · this month</div>
-            <a class="section-link" href="#">View all →</a>
-          </div>
-          <table class="tbl">
-            <thead><tr><th>Customer</th><th>Type</th><th class="num">Value</th><th class="num">Booked</th></tr></thead>
-            <tbody>
-              <tr><td><div class="who"><span class="who-av" style="background:var(--teal);">NS</span><div><div class="who-nm">Northside Co.</div></div></div></td><td>Commercial</td><td class="num">$8,420</td><td class="num cell-light">May 14</td></tr>
-              <tr><td><div class="who"><span class="who-av" style="background:var(--terra);">AJ</span><div><div class="who-nm">Alice Johnson</div></div></div></td><td>Local move</td><td class="num">$2,768</td><td class="num cell-light">May 8</td></tr>
-              <tr><td><div class="who"><span class="who-av" style="background:var(--info);">RC</span><div><div class="who-nm">Rebecca Chen</div></div></div></td><td>Long distance</td><td class="num">$3,140</td><td class="num cell-light">May 6</td></tr>
-              <tr><td><div class="who"><span class="who-av" style="background:var(--plum);">TA</span><div><div class="who-nm">Tao Anand</div></div></div></td><td>Packing only</td><td class="num">$1,890</td><td class="num cell-light">May 4</td></tr>
-              <tr><td><div class="who"><span class="who-av" style="background:var(--gold);">JL</span><div><div class="who-nm">Joaquin Lopez</div></div></div></td><td>Local move</td><td class="num">$2,420</td><td class="num cell-light">May 2</td></tr>
-            </tbody>
-          </table>
-        </section>
-
-        <section class="section">
-          <div class="section-head">
-            <div class="section-title">Activity · last 7 days</div>
-            <a class="section-link" href="#">Activity log →</a>
-          </div>
-          <table class="tbl">
-            <thead><tr><th>Day</th><th class="num">Calls</th><th class="num">Quotes</th><th class="num">Booked</th></tr></thead>
-            <tbody>
-              <tr><td>Today · Sat 16</td><td class="num">12</td><td class="num">3</td><td class="num">2</td></tr>
-              <tr><td>Fri 15</td><td class="num">14</td><td class="num">4</td><td class="num">3</td></tr>
-              <tr><td>Thu 14</td><td class="num">9</td><td class="num">2</td><td class="num">2</td></tr>
-              <tr><td>Wed 13</td><td class="num">11</td><td class="num">3</td><td class="num">1</td></tr>
-              <tr><td>Tue 12</td><td class="num">8</td><td class="num">2</td><td class="num">2</td></tr>
-              <tr><td>Mon 11</td><td class="num">10</td><td class="num">3</td><td class="num">2</td></tr>
-              <tr><td>Sun 10</td><td class="num">3</td><td class="num">1</td><td class="num">1</td></tr>
-            </tbody>
-          </table>
-        </section>
-      </div>
-
-      <section class="section">
-        <div class="section-head">
-          <div class="section-title">Team leaderboard · May</div>
-        </div>
-        <table class="tbl">
-          <thead><tr><th>Rep</th><th class="num">Calls</th><th class="num">Quotes</th><th class="num">Booked</th><th class="num">Revenue</th><th class="num">Close rate</th><th class="num">Goal</th></tr></thead>
-          <tbody>
-            <tr><td><div class="who"><span class="who-av" style="background:var(--terra);">JS</span><div><div class="who-nm">John Sales</div><div class="who-sub">You</div></div></div></td><td class="num">82</td><td class="num">21</td><td class="num">14</td><td class="num" style="font-weight:600;">$42,640</td><td class="num" style="color:var(--ok);">92%</td><td class="num">85%</td></tr>
-            <tr><td><div class="who"><span class="who-av" style="background:var(--info);">JF</span><div><div class="who-nm">Jane Finance</div></div></div></td><td class="num">71</td><td class="num">18</td><td class="num">11</td><td class="num">$31,210</td><td class="num" style="color:var(--ok);">78%</td><td class="num">62%</td></tr>
-            <tr><td><div class="who"><span class="who-av" style="background:var(--teal);">AH</span><div><div class="who-nm">Andrew Haylton</div></div></div></td><td class="num">58</td><td class="num">14</td><td class="num">9</td><td class="num">$24,810</td><td class="num">71%</td><td class="num">50%</td></tr>
-            <tr><td><div class="who"><span class="who-av" style="background:var(--plum);">PR</span><div><div class="who-nm">Paul Rai</div></div></div></td><td class="num">42</td><td class="num">11</td><td class="num">8</td><td class="num">$18,400</td><td class="num">64%</td><td class="num">37%</td></tr>
-          </tbody>
-        </table>
-      </section>
-
+      </template>
     </div>
-  </main>
-</div>
+  </section>
 
-<button class="ai-fab"><span class="dot"></span>Ask Service1 AI</button>
+  <section class="section">
+    <h3 class="section-title">Deals</h3>
+    <table class="tbl">
+      <thead><tr><th>#</th><th>Customer</th><th>Stage</th><th style="text-align:right">Value</th><th>Owner</th><th>Updated</th></tr></thead>
+      <tbody data-bind="deals">
+        <template>
+          <tr>
+            <td>{{id|num}}</td>
+            <td>{{customer}}</td>
+            <td>{{stage}}</td>
+            <td style="text-align:right">{{value|usdint}}</td>
+            <td>{{owner}}</td>
+            <td>{{updated|date}}</td>
+          </tr>
+        </template>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="section">
+    <h3 class="section-title">Customers</h3>
+    <table class="tbl">
+      <thead><tr><th>#</th><th>Name</th><th>Email</th><th>Phone</th></tr></thead>
+      <tbody data-bind="customers">
+        <template>
+          <tr>
+            <td>{{id|num}}</td>
+            <td>{{name}}</td>
+            <td>{{email}}</td>
+            <td>{{phone}}</td>
+          </tr>
+        </template>
+      </tbody>
+    </table>
+  </section>
+</div>
 <script src="../../core/event-bus.js"></script>
 <script src="../../core/state-store.js"></script>
 <script src="../../core/schema.js"></script>
@@ -174,7 +63,6 @@
 <script src="../../core/communication.mock.js"></script>
 <script src="../../core/communication.api.js"></script>
 <script src="../../core/communication.js"></script>
+<script src="../../core/render.js"></script>
 <script src="./module.js"></script>
-
-
 </body></html>

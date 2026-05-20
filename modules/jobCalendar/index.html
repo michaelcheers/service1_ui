@@ -1,298 +1,39 @@
 <!DOCTYPE html><html lang="en"><head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Job Calendar — Redesign</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="_system.css">
-<template id="__bundler_thumbnail" data-bg-color="#FFFFFF"><svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg"><rect width="1200" height="800" fill="#FFFFFF"></rect><rect x="60" y="60" width="80" height="80" rx="12" fill="#004D40"></rect><text x="100" y="115" text-anchor="middle" font-family="Inter" font-weight="800" font-size="28" fill="#D4960A">S</text><rect x="200" y="80" width="240" height="20" rx="3" fill="#0A2540"></rect><g fill="none" stroke="#EFF2F5" stroke-width="1.5"><rect x="200" y="180" width="940" height="540" rx="6"></rect></g><g fill="#697386" font-family="Inter" font-size="11" font-weight="600"><text x="270" y="220">MON</text><text x="403" y="220">TUE</text><text x="536" y="220">WED</text><text x="670" y="220">THU</text><text x="803" y="220">FRI</text><text x="936" y="220">SAT</text><text x="1070" y="220">SUN</text></g><g fill="#E6F0EE"><rect x="220" y="260" width="120" height="20" rx="3"></rect><rect x="220" y="285" width="100" height="20" rx="3"></rect><rect x="353" y="260" width="120" height="20" rx="3"></rect><rect x="486" y="285" width="120" height="20" rx="3"></rect><rect x="620" y="260" width="120" height="20" rx="3"></rect><rect x="620" y="285" width="100" height="20" rx="3"></rect><rect x="753" y="285" width="120" height="20" rx="3"></rect><rect x="886" y="260" width="120" height="20" rx="3"></rect></g><text x="600" y="780" text-anchor="middle" font-family="Inter" font-weight="500" font-size="14" fill="#697386">Job Calendar · Loading…</text></svg></template>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Job Calendar</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/css/module.css">
 <style>
-.cal-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  border-top: var(--hair);
-  border-left: var(--hair);
-  background: #fff;
-}
-.cal-dow {
-  padding: 10px 12px;
-  background: var(--surface-2);
-  font-size: 11px; color: var(--ink-3); font-weight: 600;
-  text-transform: uppercase; letter-spacing: 0.06em;
-  border-right: var(--hair); border-bottom: var(--hair);
-}
-.cal-cell {
-  min-height: 130px;
-  border-right: var(--hair); border-bottom: var(--hair);
-  padding: 6px 8px;
-  display: flex; flex-direction: column; gap: 3px;
-  position: relative;
-  cursor: pointer;
-}
-.cal-cell:hover { background: var(--surface-2); }
-.cal-cell.other { background: var(--surface-2); }
-.cal-cell.other .cal-num { color: var(--ink-4); }
-.cal-num {
-  font-size: 12px; font-weight: 500; color: var(--ink-2);
-  margin-bottom: 2px;
-}
-.cal-num.today {
-  width: 22px; height: 22px;
-  background: var(--terra); color: #fff;
-  border-radius: 999px;
-  display: inline-flex; align-items: center; justify-content: center;
-  font-weight: 700;
-}
-.cal-evt {
-  font-size: 11px;
-  padding: 3px 7px;
-  border-radius: 3px;
-  border-left: 3px solid;
-  background: #fff;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  font-weight: 500;
-}
-.cal-evt.terra { background: var(--terra-soft); border-color: var(--terra); color: var(--terra); }
-.cal-evt.info  { background: var(--info-soft); border-color: var(--info); color: var(--info); }
-.cal-evt.warn  { background: var(--warn-soft); border-color: var(--warn); color: var(--warn); }
-.cal-evt.plum  { background: var(--plum-soft); border-color: var(--plum); color: var(--plum); }
-.cal-evt.teal  { background: var(--teal-soft); border-color: var(--teal); color: var(--teal); }
-.cal-more {
-  font-size: 11px; color: var(--ink-3); font-weight: 500;
-  padding: 2px 7px;
-}
-.cal-cell:has(.cal-num.today) { background: var(--terra-soft); }
-
-/* Side rail */
-.cal-layout {
-  display: grid; grid-template-columns: 1fr 280px;
-  gap: 24px;
-}
-.rail-block {
-  margin-bottom: 24px;
-}
-.rail-block:last-child { margin-bottom: 0; }
-.rail-title {
-  font-size: 11px; color: var(--ink-3); font-weight: 600;
-  text-transform: uppercase; letter-spacing: 0.08em;
-  margin-bottom: 12px;
-}
-.legend-row {
-  display: flex; align-items: center; gap: 8px;
-  padding: 6px 0;
-  font-size: 13px;
-}
-.legend-row .sw { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
-.legend-row .ct { margin-left: auto; color: var(--ink-3); font-variant-numeric: tabular-nums; }
-
-.mini-day {
-  display: grid; grid-template-columns: repeat(7, 1fr);
-  gap: 2px;
-}
-.mini-d-h {
-  text-align: center; font-size: 10px; color: var(--ink-4);
-  padding: 4px 0;
-}
-.mini-d {
-  text-align: center; font-size: 11px; font-weight: 500;
-  padding: 6px 0; border-radius: 4px;
-  color: var(--ink-2); cursor: pointer;
-}
-.mini-d:hover { background: var(--surface-2); }
-.mini-d.other { color: var(--ink-4); }
-.mini-d.today { background: var(--terra); color: #fff; font-weight: 700; }
-.mini-d.has-events::after {
-  content: ""; display: block;
-  width: 3px; height: 3px; border-radius: 999px;
-  background: var(--terra); margin: 2px auto 0;
-}
-.mini-d.today::after { background: #fff; }
-
-.up-row {
-  display: flex; gap: 10px; padding: 10px 0;
-  border-bottom: 1px dashed var(--line);
-  align-items: flex-start;
-}
-.up-row:last-child { border-bottom: 0; }
-.up-day {
-  flex-shrink: 0; width: 36px;
-  text-align: center;
-  border: var(--hair); border-radius: 6px;
-  padding: 4px 0; background: #fff;
-}
-.up-day .dn { font-size: 10px; color: var(--ink-3); text-transform: uppercase; font-weight: 600; }
-.up-day .dd { font-size: 14px; font-weight: 700; color: var(--ink); }
-.up-body { min-width: 0; flex: 1; font-size: 13px; }
-.up-t { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.up-s { font-size: 11px; color: var(--ink-3); margin-top: 2px; }
+.cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.cal .cell { background: var(--surface-2); padding: 8px; min-height: 80px; border-radius: 4px; }
+.cal .cell .date { font-size: 11px; color: var(--ink-3); margin-bottom: 6px; }
+.pill { display: inline-block; padding: 2px 6px; border-radius: 4px; color: #fff; font-size: 11px; font-weight: 600; margin-bottom: 4px; }
 </style>
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="_aesthetic.css">
-<style id="__layoutheader_strip">
-/* LayoutHeader covers logo, top bar, and sidebar — module renders only its page content. */
-.app { display: block !important; grid-template-columns: none !important; grid-template-rows: none !important; }
-.app > main.page, .app > .main { display: block; }
-</style></head>
-<body>
-
-<div class="app" data-screen-label="Job Calendar">
-  
-  
-  
-
-  <main class="page">
-    <div class="wrap">
-
-      <div class="page-bar">
-        <div class="page-title-row">
-          <div class="page-title">Job Calendar</div>
-          <span class="muted">May 2026 · 48 jobs scheduled</span>
-        </div>
-        <div class="page-actions">
-          <div class="seg">
-            <button>Day</button>
-            <button class="active">Month</button>
-            <button>Week</button>
-            <button>Agenda</button>
-          </div>
-          <button class="btn btn-secondary">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
-          </button>
-          <button class="btn btn-secondary">Today</button>
-          <button class="btn btn-secondary">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
-          </button>
-          <button class="btn btn-primary">+ New job</button>
-        </div>
-      </div>
-
-      <nav class="subtabs">
-        <button class="subtab active">All jobs <span class="count">48</span></button>
-        <button class="subtab">Surveys <span class="count">8</span></button>
-        <button class="subtab">Moves <span class="count">32</span></button>
-        <button class="subtab">Box delivery <span class="count">6</span></button>
-        <button class="subtab">Service <span class="count">2</span></button>
-      </nav>
-
-      <div class="cal-layout">
-        <!-- Month grid -->
-        <div>
-          <div class="cal-grid">
-            <div class="cal-dow">Mon</div><div class="cal-dow">Tue</div><div class="cal-dow">Wed</div><div class="cal-dow">Thu</div><div class="cal-dow">Fri</div><div class="cal-dow">Sat</div><div class="cal-dow">Sun</div>
-
-            <!-- Week 1 -->
-            <div class="cal-cell other"><span class="cal-num">27</span></div>
-            <div class="cal-cell other"><span class="cal-num">28</span></div>
-            <div class="cal-cell other"><span class="cal-num">29</span></div>
-            <div class="cal-cell other"><span class="cal-num">30</span></div>
-            <div class="cal-cell"><span class="cal-num">1</span><div class="cal-evt terra">9a Johnson · move</div><div class="cal-evt info">1p Patel · boxes</div></div>
-            <div class="cal-cell"><span class="cal-num">2</span><div class="cal-evt terra">7a Smith · move</div></div>
-            <div class="cal-cell other"><span class="cal-num">3</span></div>
-
-            <!-- Week 2 -->
-            <div class="cal-cell"><span class="cal-num">4</span><div class="cal-evt terra">8a Garcia · move</div><div class="cal-evt warn">2p Lopez · survey</div></div>
-            <div class="cal-cell"><span class="cal-num">5</span><div class="cal-evt teal">10a Northside · commercial</div></div>
-            <div class="cal-cell"><span class="cal-num">6</span><div class="cal-evt terra">7a Clark · move</div><div class="cal-evt info">12p Adams · boxes</div><div class="cal-evt plum">3p Wong · packing</div></div>
-            <div class="cal-cell"><span class="cal-num">7</span><div class="cal-evt terra">9a Reed · move</div></div>
-            <div class="cal-cell"><span class="cal-num">8</span><div class="cal-evt warn">11a Mason · survey</div><div class="cal-evt terra">2p Hill · move</div></div>
-            <div class="cal-cell"><span class="cal-num">9</span><div class="cal-evt terra">7a Cox · move</div><div class="cal-evt teal">3p Acme Co · commercial</div></div>
-            <div class="cal-cell"><span class="cal-num">10</span></div>
-
-            <!-- Week 3 -->
-            <div class="cal-cell"><span class="cal-num">11</span><div class="cal-evt terra">8a Ortiz · move</div></div>
-            <div class="cal-cell"><span class="cal-num">12</span><div class="cal-evt terra">7a Brown · move</div><div class="cal-evt info">2p Jones · boxes</div></div>
-            <div class="cal-cell"><span class="cal-num">13</span><div class="cal-evt warn">10a Khan · survey</div></div>
-            <div class="cal-cell"><span class="cal-num">14</span><div class="cal-evt terra">9a Lee · move</div><div class="cal-evt plum">1p Sato · packing</div><div class="cal-more">+1 more</div></div>
-            <div class="cal-cell"><span class="cal-num">15</span><div class="cal-evt teal">8a Foundry · commercial</div></div>
-            <div class="cal-cell"><span class="cal-num today">16</span><div class="cal-evt terra">7a Johnson · move</div><div class="cal-evt warn">1p Lopez · survey</div><div class="cal-evt info">11a Patel · boxes</div></div>
-            <div class="cal-cell"><span class="cal-num">17</span></div>
-
-            <!-- Week 4 -->
-            <div class="cal-cell"><span class="cal-num">18</span><div class="cal-evt plum">10a Lee · packing</div></div>
-            <div class="cal-cell"><span class="cal-num">19</span><div class="cal-evt terra">7a Chen · long dist</div><div class="cal-evt terra">7a Chen · long dist</div></div>
-            <div class="cal-cell"><span class="cal-num">20</span><div class="cal-evt terra">8a Chen · long dist</div></div>
-            <div class="cal-cell"><span class="cal-num">21</span><div class="cal-evt warn">2p Mendez · survey</div></div>
-            <div class="cal-cell"><span class="cal-num">22</span><div class="cal-evt terra">9a Diaz · move</div><div class="cal-evt info">12p Ng · boxes</div></div>
-            <div class="cal-cell"><span class="cal-num">23</span><div class="cal-evt terra">7a Park · move</div></div>
-            <div class="cal-cell"><span class="cal-num">24</span></div>
-
-            <!-- Week 5 -->
-            <div class="cal-cell"><span class="cal-num">25</span><div class="cal-evt teal">8a HQ Logistics</div></div>
-            <div class="cal-cell"><span class="cal-num">26</span><div class="cal-evt terra">7a Singh · move</div></div>
-            <div class="cal-cell"><span class="cal-num">27</span><div class="cal-evt terra">9a Roy · move</div><div class="cal-evt warn">2p Black · survey</div></div>
-            <div class="cal-cell"><span class="cal-num">28</span><div class="cal-evt terra">8a White · move</div></div>
-            <div class="cal-cell"><span class="cal-num">29</span><div class="cal-evt info">11a Green · boxes</div></div>
-            <div class="cal-cell"><span class="cal-num">30</span><div class="cal-evt terra">7a Hall · move</div></div>
-            <div class="cal-cell"><span class="cal-num">31</span></div>
-          </div>
-        </div>
-
-        <!-- Right rail -->
-        <aside>
-          <div class="rail-block">
-            <div class="rail-title">Mini calendar</div>
-            <div class="mini-day">
-              <div class="mini-d-h">M</div><div class="mini-d-h">T</div><div class="mini-d-h">W</div><div class="mini-d-h">T</div><div class="mini-d-h">F</div><div class="mini-d-h">S</div><div class="mini-d-h">S</div>
-              <div class="mini-d other">27</div><div class="mini-d other">28</div><div class="mini-d other">29</div><div class="mini-d other">30</div><div class="mini-d has-events">1</div><div class="mini-d has-events">2</div><div class="mini-d other">3</div>
-              <div class="mini-d has-events">4</div><div class="mini-d has-events">5</div><div class="mini-d has-events">6</div><div class="mini-d has-events">7</div><div class="mini-d has-events">8</div><div class="mini-d has-events">9</div><div class="mini-d">10</div>
-              <div class="mini-d has-events">11</div><div class="mini-d has-events">12</div><div class="mini-d has-events">13</div><div class="mini-d has-events">14</div><div class="mini-d has-events">15</div><div class="mini-d today has-events">16</div><div class="mini-d">17</div>
-              <div class="mini-d has-events">18</div><div class="mini-d has-events">19</div><div class="mini-d has-events">20</div><div class="mini-d has-events">21</div><div class="mini-d has-events">22</div><div class="mini-d has-events">23</div><div class="mini-d">24</div>
-              <div class="mini-d has-events">25</div><div class="mini-d has-events">26</div><div class="mini-d has-events">27</div><div class="mini-d has-events">28</div><div class="mini-d has-events">29</div><div class="mini-d has-events">30</div><div class="mini-d">31</div>
-            </div>
-          </div>
-
-          <div class="rail-block">
-            <div class="rail-title">Job types</div>
-            <div class="legend-row"><span class="sw" style="background:var(--terra);"></span> Move <span class="ct">32</span></div>
-            <div class="legend-row"><span class="sw" style="background:var(--warn);"></span> Survey <span class="ct">8</span></div>
-            <div class="legend-row"><span class="sw" style="background:var(--info);"></span> Box delivery <span class="ct">6</span></div>
-            <div class="legend-row"><span class="sw" style="background:var(--plum);"></span> Packing <span class="ct">3</span></div>
-            <div class="legend-row"><span class="sw" style="background:var(--teal);"></span> Commercial <span class="ct">4</span></div>
-          </div>
-
-          <div class="rail-block">
-            <div class="rail-title">Upcoming (today)</div>
-            <div class="up-row">
-              <div class="up-day"><div class="dn">Sat</div><div class="dd">16</div></div>
-              <div class="up-body">
-                <div class="up-t">Alice Johnson · 3BR move</div>
-                <div class="up-s">7:00 AM · Truck 1 · Toronto → Hamilton</div>
-              </div>
-            </div>
-            <div class="up-row">
-              <div class="up-day"><div class="dn">Sat</div><div class="dd">16</div></div>
-              <div class="up-body">
-                <div class="up-t">Sara Patel · 30 boxes</div>
-                <div class="up-s">11:00 AM · Van 1 · Mississauga</div>
-              </div>
-            </div>
-            <div class="up-row">
-              <div class="up-day"><div class="dn">Sat</div><div class="dd">16</div></div>
-              <div class="up-body">
-                <div class="up-t">Joaquin Lopez · in-home survey</div>
-                <div class="up-s">1:00 PM · North York</div>
-              </div>
-            </div>
-            <div class="up-row">
-              <div class="up-day"><div class="dn">Sun</div><div class="dd">17</div></div>
-              <div class="up-body">
-                <div class="up-t">No jobs scheduled</div>
-                <div class="up-s">Quiet day</div>
-              </div>
-            </div>
-          </div>
-        </aside>
-      </div>
-
-    </div>
-  </main>
+</head><body>
+<div class="wrap">
+  <div class="page-bar"><div class="page-title">Job Calendar</div></div>
+  <section class="section">
+    <div id="cal-host"></div>
+  </section>
+  <section class="section">
+    <h3 class="section-title">Jobs</h3>
+    <table class="tbl">
+      <thead><tr><th>#</th><th>Title</th><th>Customer</th><th>Date</th><th>Hours</th><th>Status</th></tr></thead>
+      <tbody data-bind="jobs">
+        <template>
+          <tr>
+            <td>{{id|num}}</td>
+            <td>{{title}}</td>
+            <td>{{customer}}</td>
+            <td>{{date|date}}</td>
+            <td>{{startHour|num}}–{{endHour|num}}</td>
+            <td><span class="tag {{status}}">{{status}}</span></td>
+          </tr>
+        </template>
+      </tbody>
+    </table>
+  </section>
 </div>
-
-<button class="ai-fab"><span class="dot"></span>Ask Service1 AI</button>
 <script src="../../core/event-bus.js"></script>
 <script src="../../core/state-store.js"></script>
 <script src="../../core/schema.js"></script>
@@ -300,7 +41,6 @@
 <script src="../../core/communication.mock.js"></script>
 <script src="../../core/communication.api.js"></script>
 <script src="../../core/communication.js"></script>
+<script src="../../core/render.js"></script>
 <script src="./module.js"></script>
-
-
 </body></html>

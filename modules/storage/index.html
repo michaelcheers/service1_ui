@@ -1,173 +1,29 @@
 <!DOCTYPE html><html lang="en"><head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Storage — Redesign</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="_system.css">
-<template id="__bundler_thumbnail" data-bg-color="#FFFFFF"><svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg"><rect width="1200" height="800" fill="#FFFFFF"></rect><rect x="60" y="60" width="80" height="80" rx="12" fill="#004D40"></rect><text x="100" y="115" text-anchor="middle" font-family="Inter" font-weight="800" font-size="28" fill="#D4960A">S</text><rect x="200" y="80" width="260" height="22" rx="3" fill="#0A2540"></rect><rect x="200" y="160" width="940" height="580" rx="6" fill="#FAFBFC" stroke="#EFF2F5"></rect><text x="600" y="790" text-anchor="middle" font-family="Inter" font-weight="500" font-size="14" fill="#697386">Storage · Loading…</text></svg></template>
-
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="_aesthetic.css">
-<style id="__layoutheader_strip">
-/* LayoutHeader covers logo, top bar, and sidebar — module renders only its page content. */
-.app { display: block !important; grid-template-columns: none !important; grid-template-rows: none !important; }
-.app > main.page, .app > .main { display: block; }
-</style></head>
-<body>
-<div class="app" data-screen-label="Storage">
-  
-  
-  
-  <main class="page">
-    <div class="wrap">
-      <div class="page-bar">
-        <div class="page-title-row"><div class="page-title">Storage</div><span class="muted">42 units · 32 occupied · 8 vacant · 2 maintenance</span></div>
-        <div class="page-actions"><button class="btn btn-secondary">Floor plan</button><button class="btn btn-primary">+ Book storage</button></div>
-      </div>
-      <nav class="subtabs">
-        <button class="subtab active">Units <span class="count">42</span></button>
-        <button class="subtab">Customers <span class="count">32</span></button>
-        <button class="subtab">Billing</button>
-        <button class="subtab">Maintenance <span class="count warn">2</span></button>
-      </nav>
-      <div class="stat-group" style="margin-bottom:32px;">
-        <div class="stat-col"><div class="stat-eyebrow">Occupancy</div><div class="stat-number">76<span class="small">%</span></div><div class="stat-delta">32 of 42 units</div></div>
-        <div class="stat-col"><div class="stat-eyebrow">Monthly revenue</div><div class="stat-number">$8,420</div><div class="stat-delta"><span class="pct up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"></polyline></svg>5%</span>vs Apr</div></div>
-        <div class="stat-col"><div class="stat-eyebrow">Avg tenure</div><div class="stat-number">7.4<span class="small">mo</span></div><div class="stat-delta">2 over 18 months</div></div>
-        <div class="stat-col"><div class="stat-eyebrow">Past due</div><div class="stat-number" style="color:var(--bad);">2</div><div class="stat-delta">$640 outstanding</div></div>
-      </div>
-      <div class="toolbar">
-        <div class="fchips">
-          <button class="fchip active">All <span class="fc-count">42</span></button>
-          <button class="fchip">5×5 <span class="fc-count">12</span></button>
-          <button class="fchip">5×10 <span class="fc-count">14</span></button>
-          <button class="fchip">10×10 <span class="fc-count">10</span></button>
-          <button class="fchip">10×20 <span class="fc-count">6</span></button>
-        </div>
-        <div class="grow"></div>
-        <input class="search-input" placeholder="Search unit or customer…">
-        <div class="seg"><button class="active">Grid</button><button>List</button></div>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;">
-        <div style="background:#fff;border:var(--hair);border-radius:8px;padding:14px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-      <div style="font-family:'SF Mono',monospace;font-weight:700;font-size:14px;color:var(--terra);">A-101</div>
-      <span class="pill" style="background:var(--terra-soft);color:var(--terra);">Occupied</span>
-    </div>
-    <div style="font-size:11px;color:var(--ink-3);font-weight:500;margin-bottom:8px;">5×5 ft · 5×5 cuft</div>
-    <div style="font-weight:500;font-size:13px;min-height:18px;">Alice Johnson</div>
-    <div style="font-size:11px;color:var(--ink-3);margin-top:2px;">Since Mar 2026</div>
-    <div style="margin-top:10px;"><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--ink-3);margin-bottom:4px;"><span>Fill</span><span style="font-variant-numeric:tabular-nums;font-weight:600;color:var(--ink);">62%</span></div><div style="height:4px;background:var(--surface-3);border-radius:999px;overflow:hidden;"><div style="width:62%;height:100%;background:var(--terra);"></div></div></div>
-  </div><div style="background:var(--surface-2);border:var(--hair);border-radius:8px;padding:14px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-      <div style="font-family:'SF Mono',monospace;font-weight:700;font-size:14px;color:var(--ink-3);">A-102</div>
-      <span class="pill" style="background:var(--surface-3);color:var(--ink-3);">Vacant</span>
-    </div>
-    <div style="font-size:11px;color:var(--ink-3);font-weight:500;margin-bottom:8px;">5×5 ft · 5×5 cuft</div>
-    <div style="font-weight:500;font-size:13px;min-height:18px;">—</div>
-    <div style="font-size:11px;color:var(--ink-3);margin-top:2px;">Available</div>
-    
-  </div><div style="background:#fff;border:var(--hair);border-radius:8px;padding:14px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-      <div style="font-family:'SF Mono',monospace;font-weight:700;font-size:14px;color:var(--terra);">A-103</div>
-      <span class="pill" style="background:var(--terra-soft);color:var(--terra);">Occupied</span>
-    </div>
-    <div style="font-size:11px;color:var(--ink-3);font-weight:500;margin-bottom:8px;">5×5 ft · 5×5 cuft</div>
-    <div style="font-weight:500;font-size:13px;min-height:18px;">R. Patel</div>
-    <div style="font-size:11px;color:var(--ink-3);margin-top:2px;">Since Jan 2026</div>
-    <div style="margin-top:10px;"><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--ink-3);margin-bottom:4px;"><span>Fill</span><span style="font-variant-numeric:tabular-nums;font-weight:600;color:var(--ink);">88%</span></div><div style="height:4px;background:var(--surface-3);border-radius:999px;overflow:hidden;"><div style="width:88%;height:100%;background:var(--warn);"></div></div></div>
-  </div><div style="background:#fff;border:var(--hair);border-radius:8px;padding:14px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-      <div style="font-family:'SF Mono',monospace;font-weight:700;font-size:14px;color:var(--terra);">A-104</div>
-      <span class="pill" style="background:var(--terra-soft);color:var(--terra);">Occupied</span>
-    </div>
-    <div style="font-size:11px;color:var(--ink-3);font-weight:500;margin-bottom:8px;">5×5 ft · 5×5 cuft</div>
-    <div style="font-weight:500;font-size:13px;min-height:18px;">M. Khan</div>
-    <div style="font-size:11px;color:var(--ink-3);margin-top:2px;">Since Sep 2025</div>
-    <div style="margin-top:10px;"><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--ink-3);margin-bottom:4px;"><span>Fill</span><span style="font-variant-numeric:tabular-nums;font-weight:600;color:var(--ink);">45%</span></div><div style="height:4px;background:var(--surface-3);border-radius:999px;overflow:hidden;"><div style="width:45%;height:100%;background:var(--terra);"></div></div></div>
-  </div><div style="background:#fff;border:var(--hair);border-radius:8px;padding:14px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-      <div style="font-family:'SF Mono',monospace;font-weight:700;font-size:14px;color:var(--terra);">B-201</div>
-      <span class="pill" style="background:var(--terra-soft);color:var(--terra);">Occupied</span>
-    </div>
-    <div style="font-size:11px;color:var(--ink-3);font-weight:500;margin-bottom:8px;">5×10 ft · 10×10 cuft</div>
-    <div style="font-weight:500;font-size:13px;min-height:18px;">Tao Anand</div>
-    <div style="font-size:11px;color:var(--ink-3);margin-top:2px;">Since Nov 2025</div>
-    <div style="margin-top:10px;"><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--ink-3);margin-bottom:4px;"><span>Fill</span><span style="font-variant-numeric:tabular-nums;font-weight:600;color:var(--ink);">78%</span></div><div style="height:4px;background:var(--surface-3);border-radius:999px;overflow:hidden;"><div style="width:78%;height:100%;background:var(--terra);"></div></div></div>
-  </div><div style="background:var(--surface-2);border:var(--hair);border-radius:8px;padding:14px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-      <div style="font-family:'SF Mono',monospace;font-weight:700;font-size:14px;color:var(--ink-3);">B-202</div>
-      <span class="pill" style="background:var(--surface-3);color:var(--ink-3);">Vacant</span>
-    </div>
-    <div style="font-size:11px;color:var(--ink-3);font-weight:500;margin-bottom:8px;">5×10 ft · 10×10 cuft</div>
-    <div style="font-weight:500;font-size:13px;min-height:18px;">—</div>
-    <div style="font-size:11px;color:var(--ink-3);margin-top:2px;">Available</div>
-    
-  </div><div style="background:#fff;border:var(--hair);border-radius:8px;padding:14px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-      <div style="font-family:'SF Mono',monospace;font-weight:700;font-size:14px;color:var(--terra);">B-203</div>
-      <span class="pill" style="background:var(--terra-soft);color:var(--terra);">Occupied</span>
-    </div>
-    <div style="font-size:11px;color:var(--ink-3);font-weight:500;margin-bottom:8px;">5×10 ft · 10×10 cuft</div>
-    <div style="font-weight:500;font-size:13px;min-height:18px;">Northside Co.</div>
-    <div style="font-size:11px;color:var(--ink-3);margin-top:2px;">Since Feb 2026</div>
-    <div style="margin-top:10px;"><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--ink-3);margin-bottom:4px;"><span>Fill</span><span style="font-variant-numeric:tabular-nums;font-weight:600;color:var(--ink);">92%</span></div><div style="height:4px;background:var(--surface-3);border-radius:999px;overflow:hidden;"><div style="width:92%;height:100%;background:var(--warn);"></div></div></div>
-  </div><div style="background:#fff;border:var(--hair);border-radius:8px;padding:14px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-      <div style="font-family:'SF Mono',monospace;font-weight:700;font-size:14px;color:var(--terra);">C-301</div>
-      <span class="pill" style="background:var(--terra-soft);color:var(--terra);">Occupied</span>
-    </div>
-    <div style="font-size:11px;color:var(--ink-3);font-weight:500;margin-bottom:8px;">10×10 ft · 20×20 cuft</div>
-    <div style="font-weight:500;font-size:13px;min-height:18px;">Cox Family</div>
-    <div style="font-size:11px;color:var(--ink-3);margin-top:2px;">Since Aug 2025</div>
-    <div style="margin-top:10px;"><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--ink-3);margin-bottom:4px;"><span>Fill</span><span style="font-variant-numeric:tabular-nums;font-weight:600;color:var(--ink);">71%</span></div><div style="height:4px;background:var(--surface-3);border-radius:999px;overflow:hidden;"><div style="width:71%;height:100%;background:var(--terra);"></div></div></div>
-  </div><div style="background:var(--warn-soft);border:var(--hair);border-radius:8px;padding:14px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-      <div style="font-family:'SF Mono',monospace;font-weight:700;font-size:14px;color:var(--warn);">C-302</div>
-      <span class="pill" style="background:var(--warn-soft);color:var(--warn);">Maintenance</span>
-    </div>
-    <div style="font-size:11px;color:var(--ink-3);font-weight:500;margin-bottom:8px;">10×10 ft · 20×20 cuft</div>
-    <div style="font-weight:500;font-size:13px;min-height:18px;">—</div>
-    <div style="font-size:11px;color:var(--ink-3);margin-top:2px;">Maintenance</div>
-    
-  </div><div style="background:#fff;border:var(--hair);border-radius:8px;padding:14px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-      <div style="font-family:'SF Mono',monospace;font-weight:700;font-size:14px;color:var(--terra);">C-303</div>
-      <span class="pill" style="background:var(--terra-soft);color:var(--terra);">Occupied</span>
-    </div>
-    <div style="font-size:11px;color:var(--ink-3);font-weight:500;margin-bottom:8px;">10×10 ft · 20×20 cuft</div>
-    <div style="font-weight:500;font-size:13px;min-height:18px;">P. Adams</div>
-    <div style="font-size:11px;color:var(--ink-3);margin-top:2px;">Since Apr 2026</div>
-    <div style="margin-top:10px;"><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--ink-3);margin-bottom:4px;"><span>Fill</span><span style="font-variant-numeric:tabular-nums;font-weight:600;color:var(--ink);">54%</span></div><div style="height:4px;background:var(--surface-3);border-radius:999px;overflow:hidden;"><div style="width:54%;height:100%;background:var(--terra);"></div></div></div>
-  </div><div style="background:#fff;border:var(--hair);border-radius:8px;padding:14px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-      <div style="font-family:'SF Mono',monospace;font-weight:700;font-size:14px;color:var(--terra);">C-304</div>
-      <span class="pill" style="background:var(--terra-soft);color:var(--terra);">Occupied</span>
-    </div>
-    <div style="font-size:11px;color:var(--ink-3);font-weight:500;margin-bottom:8px;">10×10 ft · 20×20 cuft</div>
-    <div style="font-weight:500;font-size:13px;min-height:18px;">Hill Estate</div>
-    <div style="font-size:11px;color:var(--ink-3);margin-top:2px;">Since Oct 2025</div>
-    <div style="margin-top:10px;"><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--ink-3);margin-bottom:4px;"><span>Fill</span><span style="font-variant-numeric:tabular-nums;font-weight:600;color:var(--ink);">96%</span></div><div style="height:4px;background:var(--surface-3);border-radius:999px;overflow:hidden;"><div style="width:96%;height:100%;background:var(--warn);"></div></div></div>
-  </div><div style="background:#fff;border:var(--hair);border-radius:8px;padding:14px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-      <div style="font-family:'SF Mono',monospace;font-weight:700;font-size:14px;color:var(--terra);">D-401</div>
-      <span class="pill" style="background:var(--terra-soft);color:var(--terra);">Occupied</span>
-    </div>
-    <div style="font-size:11px;color:var(--ink-3);font-weight:500;margin-bottom:8px;">10×20 ft · 40×40 cuft</div>
-    <div style="font-weight:500;font-size:13px;min-height:18px;">Reed Inc.</div>
-    <div style="font-size:11px;color:var(--ink-3);margin-top:2px;">Since Dec 2025</div>
-    <div style="margin-top:10px;"><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--ink-3);margin-bottom:4px;"><span>Fill</span><span style="font-variant-numeric:tabular-nums;font-weight:600;color:var(--ink);">83%</span></div><div style="height:4px;background:var(--surface-3);border-radius:999px;overflow:hidden;"><div style="width:83%;height:100%;background:var(--terra);"></div></div></div>
-  </div>
-      </div>
-    </div>
-  </main>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Storage</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/css/module.css">
+</head><body>
+<div class="wrap">
+  <div class="page-bar"><div class="page-title">Storage</div></div>
+  <section class="section">
+    <table class="tbl">
+      <thead><tr><th>#</th><th>Name</th><th>Folder</th><th>Size</th><th>Modified</th><th>Type</th></tr></thead>
+      <tbody data-bind="documents">
+        <template>
+          <tr>
+            <td>{{id|num}}</td>
+            <td>{{name}}</td>
+            <td>{{folder}}</td>
+            <td>{{size|bytes}}</td>
+            <td>{{modified|date}}</td>
+            <td>{{type}}</td>
+          </tr>
+        </template>
+      </tbody>
+    </table>
+  </section>
 </div>
-<button class="ai-fab"><span class="dot"></span>Ask Service1 AI</button>
 <script src="../../core/event-bus.js"></script>
 <script src="../../core/state-store.js"></script>
 <script src="../../core/schema.js"></script>
@@ -175,7 +31,6 @@
 <script src="../../core/communication.mock.js"></script>
 <script src="../../core/communication.api.js"></script>
 <script src="../../core/communication.js"></script>
+<script src="../../core/render.js"></script>
 <script src="./module.js"></script>
-
-
 </body></html>

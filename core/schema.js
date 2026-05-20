@@ -75,8 +75,14 @@
   window.S1.RESOURCES = [
     'jobs','tasks','tickets','customers','crews','documents',
     'finance/invoices','finance/payments',
+    'finance/pnl','finance/receivables','finance/payables',
     'preoffice/submissions','preoffice/templates',
     'quality/incidents','safety/incidents',
+    'sales/pipeline','sales/deals',
+    'dashboard/kpis','dashboard/chart','dashboard/performers',
+    'dashboard/attention','dashboard/realtime',
+    'settings/roles','settings/timezones','settings/languages',
+    'settings/theme','settings/notifications','settings/nav',
     'reports','videos','settings','auth/me'
   ];
 })();

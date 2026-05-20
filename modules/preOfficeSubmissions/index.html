@@ -1,75 +1,28 @@
 <!DOCTYPE html><html lang="en"><head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Pre-Office Submissions — Redesign</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="_system.css">
-<template id="__bundler_thumbnail" data-bg-color="#FFFFFF"><svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg"><rect width="1200" height="800" fill="#FFFFFF"></rect><rect x="60" y="60" width="80" height="80" rx="12" fill="#004D40"></rect><text x="100" y="115" text-anchor="middle" font-family="Inter" font-weight="800" font-size="28" fill="#D4960A">S</text><rect x="200" y="80" width="260" height="22" rx="3" fill="#0A2540"></rect><rect x="200" y="160" width="940" height="580" rx="6" fill="#FAFBFC" stroke="#EFF2F5"></rect><text x="600" y="790" text-anchor="middle" font-family="Inter" font-weight="500" font-size="14" fill="#697386">Pre-Office Submissions · Loading…</text></svg></template>
-
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="_aesthetic.css">
-<style id="__layoutheader_strip">
-/* LayoutHeader covers logo, top bar, and sidebar — module renders only its page content. */
-.app { display: block !important; grid-template-columns: none !important; grid-template-rows: none !important; }
-.app > main.page, .app > .main { display: block; }
-</style></head>
-<body>
-<div class="app" data-screen-label="Pre-Office Submissions">
-  
-  
-  
-  <main class="page">
-    <div class="wrap">
-      <div class="page-bar">
-        <div class="page-title-row"><div class="page-title">Pre-Office Checklists</div><span class="muted">Submissions · today</span></div>
-        <div class="page-actions"><button class="range-picker">Today <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg></button><button class="btn btn-secondary">Export CSV</button></div>
-      </div>
-      <nav class="subtabs">
-        <button class="subtab"><a href="PreOfficeTemplates.html" style="color:inherit;">Templates</a> <span class="count">6</span></button>
-        <button class="subtab active">Submissions <span class="count">142</span></button>
-        <button class="subtab">Flagged <span class="count warn">3</span></button>
-      </nav>
-      <div class="stat-group" style="margin-bottom:32px;">
-        <div class="stat-col"><div class="stat-eyebrow">Submitted today</div><div class="stat-number">11<span class="small">/12</span></div><div class="stat-delta">92% on time</div></div>
-        <div class="stat-col"><div class="stat-eyebrow">Flagged issues</div><div class="stat-number" style="color:var(--warn);">3</div><div class="stat-delta">need review</div></div>
-        <div class="stat-col"><div class="stat-eyebrow">Avg completion time</div><div class="stat-number">4<span class="small">m</span></div><div class="stat-delta">all roles</div></div>
-        <div class="stat-col"><div class="stat-eyebrow">Late submissions · 7d</div><div class="stat-number">5</div><div class="stat-delta">2 from same person</div></div>
-      </div>
-      <div class="toolbar">
-        <div class="fchips">
-          <button class="fchip active">All <span class="fc-count">11</span></button>
-          <button class="fchip">Movers <span class="fc-count">4</span></button>
-          <button class="fchip">Drivers <span class="fc-count">2</span></button>
-          <button class="fchip">Team Leaders <span class="fc-count">3</span></button>
-          <button class="fchip">Sales <span class="fc-count">1</span></button>
-          <button class="fchip">Admin <span class="fc-count">1</span></button>
-        </div>
-        <div class="grow"></div>
-        <input class="search-input" placeholder="Search submitter…">
-      </div>
-      <table class="tbl">
-        <thead><tr><th>Submitter</th><th>Template</th><th class="num">Submitted</th><th class="num">Duration</th><th>Status</th><th class="num">Items</th></tr></thead>
-        <tbody>
-          <tr><td><div class="who"><span class="who-av" style="background:var(--terra);">AH</span><div><div class="who-nm">Andrew Haylton</div><div class="who-sub">Team Leader</div></div></div></td><td>Team Leader pre-shift</td><td class="num cell-light">6:48 AM</td><td class="num">3m 42s</td><td><span class="pill ok"><span class="dot"></span>Complete</span></td><td class="num">22/22</td></tr>
-          <tr><td><div class="who"><span class="who-av" style="background:var(--info);">DJ</span><div><div class="who-nm">Donald James</div><div class="who-sub">Team Leader</div></div></div></td><td>Team Leader pre-shift</td><td class="num cell-light">6:52 AM</td><td class="num">3m 18s</td><td><span class="pill ok"><span class="dot"></span>Complete</span></td><td class="num">22/22</td></tr>
-          <tr><td><div class="who"><span class="who-av" style="background:var(--teal);">JM</span><div><div class="who-nm">Jackson Mungai</div><div class="who-sub">Mover</div></div></div></td><td>Mover daily check-in</td><td class="num cell-light">6:42 AM</td><td class="num">2m 04s</td><td><span class="pill ok"><span class="dot"></span>Complete</span></td><td class="num">14/14</td></tr>
-          <tr><td><div class="who"><span class="who-av" style="background:var(--plum);">PR</span><div><div class="who-nm">Paul Rai</div><div class="who-sub">Mover</div></div></div></td><td>Mover daily check-in</td><td class="num cell-light">6:39 AM</td><td class="num">2m 32s</td><td><span class="pill warn"><span class="dot"></span>Flagged · sleep</span></td><td class="num">14/14</td></tr>
-          <tr><td><div class="who"><span class="who-av" style="background:var(--info);">AZ</span><div><div class="who-nm">Alex Zu</div><div class="who-sub">Driver</div></div></div></td><td>Driver vehicle inspection</td><td class="num cell-light">6:51 AM</td><td class="num">5m 08s</td><td><span class="pill warn"><span class="dot"></span>Flagged · tire pressure</span></td><td class="num">17/18</td></tr>
-          <tr><td><div class="who"><span class="who-av" style="background:var(--gold);">JS</span><div><div class="who-nm">John Sales</div><div class="who-sub">Sales</div></div></div></td><td>Sales rep morning standup</td><td class="num cell-light">8:52 AM</td><td class="num">1m 48s</td><td><span class="pill ok"><span class="dot"></span>Complete</span></td><td class="num">8/8</td></tr>
-          <tr><td><div class="who"><span class="who-av" style="background:var(--ink-3);">GA</span><div><div class="who-nm">Gurtsik Ann</div><div class="who-sub">Helper</div></div></div></td><td>Mover daily check-in</td><td class="num cell-light" style="color:var(--bad);font-weight:600;">7:32 AM · late</td><td class="num">2m 11s</td><td><span class="pill bad"><span class="dot"></span>Late</span></td><td class="num">14/14</td></tr>
-          <tr><td><div class="who"><span class="who-av" style="background:var(--plum);">A</span><div><div class="who-nm">Admin User</div><div class="who-sub">Office</div></div></div></td><td>Office reception opening</td><td class="num cell-light">7:58 AM</td><td class="num">3m 24s</td><td><span class="pill ok"><span class="dot"></span>Complete</span></td><td class="num">10/10</td></tr>
-          <tr><td><div class="who"><span class="who-av" style="background:var(--teal);">FW</span><div><div class="who-nm">Fred Waite</div><div class="who-sub">Team Leader</div></div></div></td><td>Team Leader pre-shift</td><td class="num cell-light">6:58 AM</td><td class="num">3m 56s</td><td><span class="pill ok"><span class="dot"></span>Complete</span></td><td class="num">22/22</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </main>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pre-Office Submissions</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/css/module.css">
+</head><body>
+<div class="wrap">
+  <div class="page-bar"><div class="page-title">Pre-Office Submissions</div></div>
+  <section class="section">
+    <table class="tbl">
+      <thead><tr><th>#</th><th>Customer</th><th>Date</th><th>Status</th><th>Assignee</th></tr></thead>
+      <tbody data-bind="submissions">
+        <template>
+          <tr>
+            <td>{{id|num}}</td>
+            <td>{{customer}}</td>
+            <td>{{date|date}}</td>
+            <td><span class="tag {{status}}">{{status}}</span></td>
+            <td>{{assignee}}</td>
+          </tr>
+        </template>
+      </tbody>
+    </table>
+  </section>
 </div>
-<button class="ai-fab"><span class="dot"></span>Ask Service1 AI</button>
 <script src="../../core/event-bus.js"></script>
 <script src="../../core/state-store.js"></script>
 <script src="../../core/schema.js"></script>
@@ -77,7 +30,6 @@
 <script src="../../core/communication.mock.js"></script>
 <script src="../../core/communication.api.js"></script>
 <script src="../../core/communication.js"></script>
+<script src="../../core/render.js"></script>
 <script src="./module.js"></script>
-
-
 </body></html>

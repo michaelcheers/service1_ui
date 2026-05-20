@@ -1,187 +1,26 @@
 <!DOCTYPE html><html lang="en"><head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Reports — Redesign</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="_system.css">
-<template id="__bundler_thumbnail" data-bg-color="#FFFFFF"><svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg"><rect width="1200" height="800" fill="#FFFFFF"></rect><rect x="60" y="60" width="80" height="80" rx="12" fill="#004D40"></rect><text x="100" y="115" text-anchor="middle" font-family="Inter" font-weight="800" font-size="28" fill="#D4960A">S</text><rect x="200" y="80" width="260" height="22" rx="3" fill="#0A2540"></rect><rect x="200" y="160" width="940" height="580" rx="6" fill="#FAFBFC" stroke="#EFF2F5"></rect><text x="600" y="790" text-anchor="middle" font-family="Inter" font-weight="500" font-size="14" fill="#697386">Reports · Loading…</text></svg></template>
-
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="_aesthetic.css">
-<style id="__layoutheader_strip">
-/* LayoutHeader covers logo, top bar, and sidebar — module renders only its page content. */
-.app { display: block !important; grid-template-columns: none !important; grid-template-rows: none !important; }
-.app > main.page, .app > .main { display: block; }
-</style></head>
-<body>
-<div class="app" data-screen-label="Reports">
-  
-  
-  
-  <main class="page">
-    <div class="wrap">
-      <div class="page-bar">
-        <div class="page-title-row"><div class="page-title">Reports</div><span class="muted">38 reports · 6 pinned</span></div>
-        <div class="page-actions"><button class="btn btn-secondary">Filters</button><button class="btn btn-primary">+ New report</button></div>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Reports</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/css/module.css">
+<style>
+.kpi-card { border: 1px solid var(--line); border-radius: var(--r); padding: 16px; }
+.kpi-card .v { font-size: 28px; font-weight: 600; letter-spacing: -0.02em; margin-top: 6px; }
+.spark { height: 36px; }
+</style>
+</head><body>
+<div class="wrap">
+  <div class="page-bar"><div class="page-title">Reports</div></div>
+  <div class="cards" data-bind="reports">
+    <template>
+      <div class="kpi-card">
+        <div class="section-sub">{{label}}</div>
+        <div class="v">{{value|num}}</div>
+        <div class="section-sub">{{id}}</div>
       </div>
-      <nav class="subtabs">
-        <button class="subtab active">All <span class="count">38</span></button>
-        <button class="subtab">Pinned <span class="count">6</span></button>
-        <button class="subtab">Sales</button>
-        <button class="subtab">Operations</button>
-        <button class="subtab">Finance</button>
-        <button class="subtab">Recent</button>
-      </nav>
-      <div class="toolbar">
-        <input class="search-input" placeholder="Search reports…">
-        <div class="grow"></div>
-        <div class="seg"><button class="active">Grid</button><button>List</button></div>
-        <button class="btn btn-secondary">Sort: Recent</button>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:14px;">
-        <a href="#" style="display:flex;flex-direction:column;background:#fff;border:var(--hair);border-radius:8px;padding:16px;cursor:pointer;color:inherit;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-      <div style="width:36px;height:36px;border-radius:8px;background:var(--terra-soft);color:var(--terra);display:flex;align-items:center;justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="9" y1="13" x2="15" y2="13"></line><line x1="9" y1="17" x2="13" y2="17"></line></svg></div>
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--terra)" stroke="var(--terra)" stroke-width="1.5"><path d="M12 2 9 9l-7 1 5 5-1 7 6-3 6 3-1-7 5-5-7-1z"></path></svg>
-    </div>
-    <div style="font-weight:600;font-size:14px;margin-bottom:4px;">Booked jobs by date</div>
-    <div style="font-size:12px;color:var(--ink-3);line-height:1.45;margin-bottom:12px;flex:1;">Daily breakdown of confirmed bookings</div>
-    <div style="display:flex;justify-content:space-between;align-items:center;border-top:var(--hair);padding-top:10px;margin-top:auto;">
-      <span class="pill" style="background:var(--terra-soft);color:var(--terra);">Sales</span>
-      <span style="font-size:11px;color:var(--ink-4);">Run anytime</span>
-    </div>
-  </a><a href="#" style="display:flex;flex-direction:column;background:#fff;border:var(--hair);border-radius:8px;padding:16px;cursor:pointer;color:inherit;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-      <div style="width:36px;height:36px;border-radius:8px;background:var(--warn-soft);color:var(--warn);display:flex;align-items:center;justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="9" y1="13" x2="15" y2="13"></line><line x1="9" y1="17" x2="13" y2="17"></line></svg></div>
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--warn)" stroke="var(--warn)" stroke-width="1.5"><path d="M12 2 9 9l-7 1 5 5-1 7 6-3 6 3-1-7 5-5-7-1z"></path></svg>
-    </div>
-    <div style="font-weight:600;font-size:14px;margin-bottom:4px;">Stale opportunities</div>
-    <div style="font-size:12px;color:var(--ink-3);line-height:1.45;margin-bottom:12px;flex:1;">No activity in 7+ days, ranked by deal value</div>
-    <div style="display:flex;justify-content:space-between;align-items:center;border-top:var(--hair);padding-top:10px;margin-top:auto;">
-      <span class="pill" style="background:var(--warn-soft);color:var(--warn);">Sales</span>
-      <span style="font-size:11px;color:var(--ink-4);">Run anytime</span>
-    </div>
-  </a><a href="#" style="display:flex;flex-direction:column;background:#fff;border:var(--hair);border-radius:8px;padding:16px;cursor:pointer;color:inherit;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-      <div style="width:36px;height:36px;border-radius:8px;background:var(--bad-soft);color:var(--bad);display:flex;align-items:center;justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="9" y1="13" x2="15" y2="13"></line><line x1="9" y1="17" x2="13" y2="17"></line></svg></div>
-      
-    </div>
-    <div style="font-weight:600;font-size:14px;margin-bottom:4px;">Cancellations &amp; lost deals</div>
-    <div style="font-size:12px;color:var(--ink-3);line-height:1.45;margin-bottom:12px;flex:1;">Reasons and recovery opportunities</div>
-    <div style="display:flex;justify-content:space-between;align-items:center;border-top:var(--hair);padding-top:10px;margin-top:auto;">
-      <span class="pill" style="background:var(--bad-soft);color:var(--bad);">Sales</span>
-      <span style="font-size:11px;color:var(--ink-4);">Run anytime</span>
-    </div>
-  </a><a href="#" style="display:flex;flex-direction:column;background:#fff;border:var(--hair);border-radius:8px;padding:16px;cursor:pointer;color:inherit;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-      <div style="width:36px;height:36px;border-radius:8px;background:var(--info-soft);color:var(--info);display:flex;align-items:center;justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="9" y1="13" x2="15" y2="13"></line><line x1="9" y1="17" x2="13" y2="17"></line></svg></div>
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--info)" stroke="var(--info)" stroke-width="1.5"><path d="M12 2 9 9l-7 1 5 5-1 7 6-3 6 3-1-7 5-5-7-1z"></path></svg>
-    </div>
-    <div style="font-weight:600;font-size:14px;margin-bottom:4px;">Revenue by source</div>
-    <div style="font-size:12px;color:var(--ink-3);line-height:1.45;margin-bottom:12px;flex:1;">Referral, web, ads, repeat breakdown</div>
-    <div style="display:flex;justify-content:space-between;align-items:center;border-top:var(--hair);padding-top:10px;margin-top:auto;">
-      <span class="pill" style="background:var(--info-soft);color:var(--info);">Sales</span>
-      <span style="font-size:11px;color:var(--ink-4);">Run anytime</span>
-    </div>
-  </a><a href="#" style="display:flex;flex-direction:column;background:#fff;border:var(--hair);border-radius:8px;padding:16px;cursor:pointer;color:inherit;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-      <div style="width:36px;height:36px;border-radius:8px;background:var(--plum-soft);color:var(--plum);display:flex;align-items:center;justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="9" y1="13" x2="15" y2="13"></line><line x1="9" y1="17" x2="13" y2="17"></line></svg></div>
-      
-    </div>
-    <div style="font-weight:600;font-size:14px;margin-bottom:4px;">Avg deal value trend</div>
-    <div style="font-size:12px;color:var(--ink-3);line-height:1.45;margin-bottom:12px;flex:1;">Rolling 90-day with segment splits</div>
-    <div style="display:flex;justify-content:space-between;align-items:center;border-top:var(--hair);padding-top:10px;margin-top:auto;">
-      <span class="pill" style="background:var(--plum-soft);color:var(--plum);">Sales</span>
-      <span style="font-size:11px;color:var(--ink-4);">Run anytime</span>
-    </div>
-  </a><a href="#" style="display:flex;flex-direction:column;background:#fff;border:var(--hair);border-radius:8px;padding:16px;cursor:pointer;color:inherit;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-      <div style="width:36px;height:36px;border-radius:8px;background:var(--teal-soft);color:var(--teal);display:flex;align-items:center;justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="9" y1="13" x2="15" y2="13"></line><line x1="9" y1="17" x2="13" y2="17"></line></svg></div>
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--teal)" stroke="var(--teal)" stroke-width="1.5"><path d="M12 2 9 9l-7 1 5 5-1 7 6-3 6 3-1-7 5-5-7-1z"></path></svg>
-    </div>
-    <div style="font-weight:600;font-size:14px;margin-bottom:4px;">Crew utilization</div>
-    <div style="font-size:12px;color:var(--ink-3);line-height:1.45;margin-bottom:12px;flex:1;">Hours scheduled vs available per team</div>
-    <div style="display:flex;justify-content:space-between;align-items:center;border-top:var(--hair);padding-top:10px;margin-top:auto;">
-      <span class="pill" style="background:var(--teal-soft);color:var(--teal);">Ops</span>
-      <span style="font-size:11px;color:var(--ink-4);">Run anytime</span>
-    </div>
-  </a><a href="#" style="display:flex;flex-direction:column;background:#fff;border:var(--hair);border-radius:8px;padding:16px;cursor:pointer;color:inherit;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-      <div style="width:36px;height:36px;border-radius:8px;background:var(--ok-soft);color:var(--ok);display:flex;align-items:center;justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="9" y1="13" x2="15" y2="13"></line><line x1="9" y1="17" x2="13" y2="17"></line></svg></div>
-      
-    </div>
-    <div style="font-weight:600;font-size:14px;margin-bottom:4px;">On-time arrival rate</div>
-    <div style="font-size:12px;color:var(--ink-3);line-height:1.45;margin-bottom:12px;flex:1;">% within 15 min of scheduled window</div>
-    <div style="display:flex;justify-content:space-between;align-items:center;border-top:var(--hair);padding-top:10px;margin-top:auto;">
-      <span class="pill" style="background:var(--ok-soft);color:var(--ok);">Ops</span>
-      <span style="font-size:11px;color:var(--ink-4);">Run anytime</span>
-    </div>
-  </a><a href="#" style="display:flex;flex-direction:column;background:#fff;border:var(--hair);border-radius:8px;padding:16px;cursor:pointer;color:inherit;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-      <div style="width:36px;height:36px;border-radius:8px;background:var(--warn-soft);color:var(--warn);display:flex;align-items:center;justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="9" y1="13" x2="15" y2="13"></line><line x1="9" y1="17" x2="13" y2="17"></line></svg></div>
-      
-    </div>
-    <div style="font-weight:600;font-size:14px;margin-bottom:4px;">Fuel &amp; vehicle costs</div>
-    <div style="font-size:12px;color:var(--ink-3);line-height:1.45;margin-bottom:12px;flex:1;">Per truck and per job cost analysis</div>
-    <div style="display:flex;justify-content:space-between;align-items:center;border-top:var(--hair);padding-top:10px;margin-top:auto;">
-      <span class="pill" style="background:var(--warn-soft);color:var(--warn);">Ops</span>
-      <span style="font-size:11px;color:var(--ink-4);">Run anytime</span>
-    </div>
-  </a><a href="#" style="display:flex;flex-direction:column;background:#fff;border:var(--hair);border-radius:8px;padding:16px;cursor:pointer;color:inherit;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-      <div style="width:36px;height:36px;border-radius:8px;background:var(--terra-soft);color:var(--terra);display:flex;align-items:center;justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="9" y1="13" x2="15" y2="13"></line><line x1="9" y1="17" x2="13" y2="17"></line></svg></div>
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--terra)" stroke="var(--terra)" stroke-width="1.5"><path d="M12 2 9 9l-7 1 5 5-1 7 6-3 6 3-1-7 5-5-7-1z"></path></svg>
-    </div>
-    <div style="font-weight:600;font-size:14px;margin-bottom:4px;">P&amp;L summary</div>
-    <div style="font-size:12px;color:var(--ink-3);line-height:1.45;margin-bottom:12px;flex:1;">Revenue, COGS, opex, net by month</div>
-    <div style="display:flex;justify-content:space-between;align-items:center;border-top:var(--hair);padding-top:10px;margin-top:auto;">
-      <span class="pill" style="background:var(--terra-soft);color:var(--terra);">Finance</span>
-      <span style="font-size:11px;color:var(--ink-4);">Run anytime</span>
-    </div>
-  </a><a href="#" style="display:flex;flex-direction:column;background:#fff;border:var(--hair);border-radius:8px;padding:16px;cursor:pointer;color:inherit;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-      <div style="width:36px;height:36px;border-radius:8px;background:var(--bad-soft);color:var(--bad);display:flex;align-items:center;justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="9" y1="13" x2="15" y2="13"></line><line x1="9" y1="17" x2="13" y2="17"></line></svg></div>
-      
-    </div>
-    <div style="font-weight:600;font-size:14px;margin-bottom:4px;">A/R aging</div>
-    <div style="font-size:12px;color:var(--ink-3);line-height:1.45;margin-bottom:12px;flex:1;">Receivables by 0-30, 30-60, 60-90, 90+</div>
-    <div style="display:flex;justify-content:space-between;align-items:center;border-top:var(--hair);padding-top:10px;margin-top:auto;">
-      <span class="pill" style="background:var(--bad-soft);color:var(--bad);">Finance</span>
-      <span style="font-size:11px;color:var(--ink-4);">Run anytime</span>
-    </div>
-  </a><a href="#" style="display:flex;flex-direction:column;background:#fff;border:var(--hair);border-radius:8px;padding:16px;cursor:pointer;color:inherit;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-      <div style="width:36px;height:36px;border-radius:8px;background:var(--plum-soft);color:var(--plum);display:flex;align-items:center;justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="9" y1="13" x2="15" y2="13"></line><line x1="9" y1="17" x2="13" y2="17"></line></svg></div>
-      
-    </div>
-    <div style="font-weight:600;font-size:14px;margin-bottom:4px;">Wages by employee</div>
-    <div style="font-size:12px;color:var(--ink-3);line-height:1.45;margin-bottom:12px;flex:1;">Hourly, commission, overtime</div>
-    <div style="display:flex;justify-content:space-between;align-items:center;border-top:var(--hair);padding-top:10px;margin-top:auto;">
-      <span class="pill" style="background:var(--plum-soft);color:var(--plum);">Finance</span>
-      <span style="font-size:11px;color:var(--ink-4);">Run anytime</span>
-    </div>
-  </a><a href="#" style="display:flex;flex-direction:column;background:#fff;border:var(--hair);border-radius:8px;padding:16px;cursor:pointer;color:inherit;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-      <div style="width:36px;height:36px;border-radius:8px;background:var(--info-soft);color:var(--info);display:flex;align-items:center;justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="9" y1="13" x2="15" y2="13"></line><line x1="9" y1="17" x2="13" y2="17"></line></svg></div>
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--info)" stroke="var(--info)" stroke-width="1.5"><path d="M12 2 9 9l-7 1 5 5-1 7 6-3 6 3-1-7 5-5-7-1z"></path></svg>
-    </div>
-    <div style="font-weight:600;font-size:14px;margin-bottom:4px;">Sales tax remitted</div>
-    <div style="font-size:12px;color:var(--ink-3);line-height:1.45;margin-bottom:12px;flex:1;">By province, jurisdiction, period</div>
-    <div style="display:flex;justify-content:space-between;align-items:center;border-top:var(--hair);padding-top:10px;margin-top:auto;">
-      <span class="pill" style="background:var(--info-soft);color:var(--info);">Finance</span>
-      <span style="font-size:11px;color:var(--ink-4);">Run anytime</span>
-    </div>
-  </a>
-      </div>
-    </div>
-  </main>
+    </template>
+  </div>
 </div>
-<button class="ai-fab"><span class="dot"></span>Ask Service1 AI</button>
 <script src="../../core/event-bus.js"></script>
 <script src="../../core/state-store.js"></script>
 <script src="../../core/schema.js"></script>
@@ -189,7 +28,6 @@
 <script src="../../core/communication.mock.js"></script>
 <script src="../../core/communication.api.js"></script>
 <script src="../../core/communication.js"></script>
+<script src="../../core/render.js"></script>
 <script src="./module.js"></script>
-
-
 </body></html>
