@@ -1,0 +1,11 @@
+{
+  "name": "reports",
+  "title": "Reports",
+  "source": "Reports.html",
+  "fixture": "reports",
+  "reads": [
+    "reports"
+  ],
+  "writes": [],
+  "icon": "reports"
+}

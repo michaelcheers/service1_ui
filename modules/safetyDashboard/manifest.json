@@ -1,0 +1,13 @@
+{
+  "name": "safetyDashboard",
+  "title": "Safety Dashboard",
+  "source": "SafetyDashboard.html",
+  "fixture": "safetyDashboard",
+  "reads": [
+    "safety/incidents"
+  ],
+  "writes": [
+    "safety/incidents"
+  ],
+  "icon": "safetyDashboard"
+}

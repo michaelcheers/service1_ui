@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>service1_ui — module gallery</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  body { margin: 0; font-family: 'Inter', system-ui, sans-serif; color: #0A2540; background: #F6F8FA; }
+  header { background: #0A2540; color: #fff; padding: 18px 24px; display: flex; align-items: center; gap: 14px; }
+  header h1 { margin: 0; font-size: 18px; font-weight: 700; }
+  header .pill { background: #D4960A; color: #0A2540; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+  header .grow { flex: 1; }
+  header a { color: #fff; font-size: 13px; opacity: .85; text-decoration: none; margin-left: 14px; }
+  header a:hover { opacity: 1; }
+  main { padding: 24px; max-width: 1200px; margin: 0 auto; }
+  .intro { background: #fff; border: 1px solid #EFF2F5; border-radius: 8px; padding: 16px 18px; margin-bottom: 18px; font-size: 13.5px; line-height: 1.5; color: #3C4257; }
+  .intro code { background: #F6F8FA; padding: 1px 5px; border-radius: 3px; font-size: 12px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+  .card { background: #fff; border: 1px solid #EFF2F5; border-radius: 8px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; }
+  .card h3 { margin: 0; font-size: 14px; font-weight: 600; }
+  .card .desc { font-size: 11.5px; color: #697386; }
+  .card .row { display: flex; gap: 8px; margin-top: 8px; }
+  .card a { font-size: 12px; padding: 5px 9px; border-radius: 4px; text-decoration: none; }
+  .card a.primary { background: #004D40; color: #fff; }
+  .card a.secondary { background: #EFF2F5; color: #0A2540; }
+  .card .tags { font-size: 10px; color: #8792A2; margin-top: 4px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>service1_ui</h1>
+  <span class="pill">MODULES</span>
+  <span class="grow"></span>
+  <a href="./lab.html">Open the Lab →</a>
+</header>
+<main>
+  <div class="intro">
+    <strong>service1_ui</strong> is the modular static frontend for the Service1 app. Each card below is a module — a self-contained HTML page that talks to the backend through <code>core/communication.js</code>. In the <a href="./lab.html">Lab</a>, you can paste in JSON state, see every read/write a page issues, and develop modules in isolation. In production, the ASP.NET host loads the same modules with <code>SERVICE1_UI_MODE = "api"</code>.
+  </div>
+  <div class="grid" id="grid"></div>
+</main>
+<script src="./modules.index.js"></script>
+<script>
+const list = (window.S1 && window.S1.modulesIndex) || [];
+document.getElementById('grid').innerHTML = list.map(m => `
+  <div class="card">
+    <h3>${m.title}</h3>
+    <div class="desc">${m.reads.length} read(s), ${m.writes.length} write(s)</div>
+    <div class="tags">${[...m.reads, ...m.writes].slice(0,3).map(x => '<span>'+x+'</span>').join(' · ')}</div>
+    <div class="row">
+      <a class="primary" href="./lab.html?module=${m.name}">Open in Lab</a>
+      <a class="secondary" href="./modules/${m.name}/index.html?mode=mock&fixture=${m.fixture}" target="_blank">Standalone ↗</a>
+    </div>
+  </div>`).join('');
+</script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "name": "salesDashboard",
+  "title": "Sales Dashboard",
+  "source": "SalesDashboard.html",
+  "fixture": "salesDashboard",
+  "reads": [
+    "customers",
+    "jobs"
+  ],
+  "writes": [],
+  "icon": "salesDashboard"
+}

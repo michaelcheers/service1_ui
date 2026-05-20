@@ -1,0 +1,14 @@
+{
+  "name": "finance",
+  "title": "Finance",
+  "source": "Finance.html",
+  "fixture": "finance",
+  "reads": [
+    "finance/invoices",
+    "finance/payments"
+  ],
+  "writes": [
+    "finance/invoices"
+  ],
+  "icon": "finance"
+}

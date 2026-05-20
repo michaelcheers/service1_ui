@@ -1,0 +1,174 @@
+/* ════════════════════════════════════════════════════
+   Service1 — Aesthetic overlay (conservative)
+   Loaded AFTER each page's inline styles.
+   Refreshes typography + color + hairlines only.
+   Does NOT touch layout dimensions, button sizes, or
+   shapes that pages have already configured inline.
+   ════════════════════════════════════════════════════ */
+
+:root {
+  --cream:        #FCF7E0;
+  --cream-edge:   #F2E8B8;
+  --blue-soft:    #E6EEFB;
+  --blue-deep:    #1E40AF;
+  --red-line:     #D44A4A;
+  --red-text:     #B43A3A;
+  --page-bg:      #F6F7F9;
+  --ink-strong:   #0F172A;
+  --hair-line:    #E6E8EC;
+  --hair-soft:    #ECEEF1;
+}
+
+/* ── Typography ───────────────────────────────────── */
+body {
+  font-family: 'Plus Jakarta Sans', -apple-system, system-ui, sans-serif !important;
+  font-feature-settings: "tnum" 1, "ss01" 1, "ss03" 1, "calt" 1;
+  letter-spacing: -0.005em;
+  background: var(--page-bg) !important;
+  color: var(--ink-strong);
+}
+
+/* ── Page area background ─────────────────────────── */
+.page { background: var(--page-bg) !important; }
+
+/* ── Topbar / Page chrome (color + hairline only) ─── */
+.topbar {
+  background: var(--page-bg) !important;
+  border-bottom: 1px solid var(--hair-soft) !important;
+}
+
+/* ── Page header typography ───────────────────────── */
+.page-title {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.022em;
+  color: var(--ink-strong);
+  line-height: 1.1;
+}
+.page-subtitle {
+  font-size: 14px;
+  color: var(--ink-3);
+  line-height: 1.55;
+  margin-top: 6px;
+}
+
+/* ── Cards (color + hairline refinement only) ────── */
+.card, .stat-card {
+  border-color: var(--hair-line) !important;
+}
+.card-head { border-bottom-color: var(--hair-soft) !important; }
+.card-title { font-weight: 700; letter-spacing: -0.012em; }
+
+/* ── Tables ───────────────────────────────────────── */
+.tbl thead th {
+  color: var(--ink-3) !important;
+  border-bottom-color: var(--hair-soft) !important;
+  font-weight: 600;
+  letter-spacing: -0.002em;
+}
+.tbl tbody td {
+  border-bottom-color: var(--hair-soft) !important;
+}
+
+/* ── Subtabs ──────────────────────────────────────── */
+.subtabs { border-bottom-color: var(--hair-soft) !important; }
+.subtab.active {
+  color: var(--ink-strong) !important;
+  border-bottom-color: var(--terra) !important;
+}
+
+/* ── Form fields ──────────────────────────────────── */
+.field-input, .field-select, .field-area {
+  border-color: var(--hair-line) !important;
+}
+.field-input:focus, .field-select:focus, .field-area:focus {
+  border-color: var(--terra) !important;
+  box-shadow: 0 0 0 3px var(--terra-soft) !important;
+}
+.field-label {
+  color: var(--ink-2) !important;
+  font-weight: 500;
+}
+
+/* ── Filter chips / seg ───────────────────────────── */
+.fchip { border-color: var(--hair-line) !important; }
+.seg { border-color: var(--hair-line) !important; }
+
+/* ── Stat blocks ──────────────────────────────────── */
+.stat-eyebrow {
+  font-weight: 600;
+  color: var(--ink-3) !important;
+  letter-spacing: 0.04em;
+}
+.stat-number {
+  font-weight: 700;
+  letter-spacing: -0.022em !important;
+  color: var(--ink-strong);
+}
+
+/* ── Buttons (color refinement only) ──────────────── */
+.btn-primary { background: var(--terra) !important; color: #fff !important; }
+.btn-primary:hover { background: var(--terra-hover) !important; }
+.btn-secondary { border-color: var(--hair-line) !important; color: var(--ink-strong) !important; }
+
+/* ── Pills keep their shape; only sharpen weight ─── */
+.pill { font-weight: 600; }
+
+/* ── Card-ify content sections ──────────────────────
+   Wraps stat blocks, charts, and section blocks in
+   proper bordered cards so they read as distinct
+   modules instead of one big sheet of paper.
+   ─────────────────────────────────────────────────── */
+.stat-group,
+.chart-wrap,
+.section {
+  background: #fff;
+  border: 1px solid var(--hair-line);
+  border-radius: 12px;
+  padding: 22px 24px;
+  margin-bottom: 20px !important;
+}
+.section:last-child { margin-bottom: 0 !important; }
+.stat-group { padding: 24px; }
+.chart-wrap { padding: 24px; }
+
+/* Two-col: each child is its own card with gap, not margin */
+.two-col {
+  gap: 20px !important;
+}
+.two-col > .section,
+.two-col > section {
+  background: #fff;
+  border: 1px solid var(--hair-line);
+  border-radius: 12px;
+  padding: 22px 24px;
+  margin: 0 !important;
+}
+
+/* Section head gets a hairline divider so the title
+   reads as a header rather than floating text */
+.section-head {
+  padding-bottom: 16px !important;
+  margin-bottom: 18px !important;
+  border-bottom: 1px solid var(--hair-soft);
+}
+.section-title {
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.012em;
+}
+
+/* Tables sitting inside a section: kill the leftover
+   internal padding so columns align with the card edge */
+.section .tbl thead th:first-child,
+.section .tbl tbody td:first-child { padding-left: 0 !important; }
+.section .tbl thead th:last-child,
+.section .tbl tbody td:last-child { padding-right: 0 !important; }
+.section .tbl thead th { padding-top: 0 !important; padding-bottom: 12px !important; }
+.section .tbl tbody tr:last-child td { border-bottom: 0 !important; padding-bottom: 0 !important; }
+.section .tbl tbody tr:hover { background: transparent !important; }
+
+/* Stat-group inside the card: dividers between columns */
+.stat-group .stat-col { padding: 0 24px; }
+.stat-group .stat-col:first-child { padding-left: 0; }
+.stat-group .stat-col:last-child { padding-right: 0; }

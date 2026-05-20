@@ -1,0 +1,12 @@
+{
+  "name": "fieldCrew",
+  "title": "Field Crew",
+  "source": "FieldCrew.html",
+  "fixture": "fieldCrew",
+  "reads": [
+    "crews",
+    "jobs"
+  ],
+  "writes": [],
+  "icon": "fieldCrew"
+}

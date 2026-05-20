@@ -1,0 +1,11 @@
+{
+  "name": "videosLibrary",
+  "title": "Videos Library",
+  "source": "VideosLibrary.html",
+  "fixture": "videosLibrary",
+  "reads": [
+    "videos"
+  ],
+  "writes": [],
+  "icon": "videosLibrary"
+}

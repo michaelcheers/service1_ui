@@ -1,0 +1,13 @@
+{
+  "name": "qualityControl",
+  "title": "Quality Control",
+  "source": "QualityControl.html",
+  "fixture": "qualityControl",
+  "reads": [
+    "quality/incidents"
+  ],
+  "writes": [
+    "quality/incidents"
+  ],
+  "icon": "qualityControl"
+}

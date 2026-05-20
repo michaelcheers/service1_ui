@@ -1,0 +1,14 @@
+{
+  "name": "crewProcesses",
+  "title": "Crew Processes",
+  "source": "CrewProcesses.html",
+  "fixture": "crewProcesses",
+  "reads": [
+    "crews",
+    "settings"
+  ],
+  "writes": [
+    "settings"
+  ],
+  "icon": "crewProcesses"
+}

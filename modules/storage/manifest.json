@@ -1,0 +1,13 @@
+{
+  "name": "storage",
+  "title": "Storage",
+  "source": "Storage.html",
+  "fixture": "storage",
+  "reads": [
+    "documents"
+  ],
+  "writes": [
+    "documents"
+  ],
+  "icon": "storage"
+}

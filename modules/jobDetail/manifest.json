@@ -1,0 +1,16 @@
+{
+  "name": "jobDetail",
+  "title": "Job Detail",
+  "source": "Job Detail.html",
+  "fixture": "jobDetail",
+  "reads": [
+    "jobs",
+    "customers",
+    "finance/invoices",
+    "documents"
+  ],
+  "writes": [
+    "jobs"
+  ],
+  "icon": "jobDetail"
+}

@@ -1,0 +1,340 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tasks — Redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_system.css">
+<template id="__bundler_thumbnail" data-bg-color="#FFFFFF"><svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg"><rect width="1200" height="800" fill="#FFFFFF"></rect><rect x="60" y="60" width="80" height="80" rx="12" fill="#004D40"></rect><text x="100" y="115" text-anchor="middle" font-family="Inter" font-weight="800" font-size="28" fill="#D4960A">S</text><rect x="200" y="80" width="140" height="20" rx="3" fill="#0A2540"></rect><g><rect x="200" y="180" width="940" height="50" rx="6" fill="#FAFBFC" stroke="#EFF2F5"></rect></g><g fill="#EFF2F5"><rect x="200" y="250" width="940" height="80"></rect><rect x="200" y="340" width="940" height="80"></rect><rect x="200" y="430" width="940" height="80"></rect><rect x="200" y="520" width="940" height="80"></rect></g><g><circle cx="240" cy="290" r="6" fill="none" stroke="#697386" stroke-width="2"></circle><circle cx="240" cy="380" r="6" fill="#047857"></circle><circle cx="240" cy="470" r="6" fill="none" stroke="#B5780A" stroke-width="2"></circle><circle cx="240" cy="560" r="6" fill="none" stroke="#697386" stroke-width="2"></circle></g><text x="600" y="780" text-anchor="middle" font-family="Inter" font-weight="500" font-size="14" fill="#697386">Tasks · Loading…</text></svg></template>
+<style>
+.task-row {
+  display: grid;
+  grid-template-columns: 28px 1fr 100px 130px 140px 28px;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 0;
+  border-top: var(--hair);
+  font-size: 13px;
+}
+.task-row:first-child { border-top: 0; }
+.task-row:hover { background: var(--surface-2); margin: 0 -12px; padding-left: 12px; padding-right: 12px; }
+.task-check {
+  width: 18px; height: 18px;
+  border: 1.5px solid var(--line-2);
+  border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0;
+}
+.task-check.done { background: var(--terra); border-color: var(--terra); color: #fff; }
+.task-t {
+  display: flex; align-items: center; gap: 10px; min-width: 0;
+}
+.task-name { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.task-name.done { text-decoration: line-through; color: var(--ink-3); }
+.task-meta {
+  font-size: 11px; color: var(--ink-3);
+  margin-top: 2px;
+  display: flex; align-items: center; gap: 8px;
+}
+.task-due { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.task-due.overdue { color: var(--bad); font-weight: 600; }
+.task-due.today { color: var(--warn); font-weight: 600; }
+.task-priority {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: 600;
+  padding: 2px 8px; border-radius: 4px;
+}
+.task-priority.high { background: var(--bad-soft); color: var(--bad); }
+.task-priority.med  { background: var(--warn-soft); color: var(--warn); }
+.task-priority.low  { background: var(--surface-3); color: var(--ink-3); }
+.task-arr { color: var(--ink-4); }
+.task-tag {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: var(--surface-3);
+  font-size: 10px; font-weight: 600;
+  color: var(--ink-2);
+  letter-spacing: 0.02em;
+}
+.task-group-h {
+  padding: 16px 0 10px;
+  font-size: 11px; color: var(--ink-3);
+  text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600;
+  display: flex; align-items: center; gap: 8px;
+}
+.task-group-h .ct {
+  padding: 1px 7px; border-radius: 10px;
+  background: var(--surface-3); color: var(--ink-3);
+  font-size: 10px; font-weight: 700; letter-spacing: 0;
+}
+</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_aesthetic.css">
+<style id="__layoutheader_strip">
+/* LayoutHeader covers logo, top bar, and sidebar — module renders only its page content. */
+.app { display: block !important; grid-template-columns: none !important; grid-template-rows: none !important; }
+.app > main.page, .app > .main { display: block; }
+</style></head>
+<body>
+
+<div class="app" data-screen-label="Tasks">
+  
+  
+  
+
+  <main class="page">
+    <div class="wrap">
+
+      <div class="page-bar">
+        <div class="page-title-row">
+          <div class="page-title">Tasks</div>
+          <span class="muted">12 open · 4 due today</span>
+        </div>
+        <div class="page-actions">
+          <button class="range-picker">Assigned to anyone <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
+          <button class="btn btn-secondary">Filters</button>
+          <button class="btn btn-primary">+ New task</button>
+        </div>
+      </div>
+
+      <nav class="subtabs">
+        <button class="subtab active">All tasks <span class="count">28</span></button>
+        <button class="subtab">My tasks <span class="count">7</span></button>
+        <button class="subtab">Due today <span class="count warn">4</span></button>
+        <button class="subtab">Overdue <span class="count" style="background:var(--bad-soft);color:var(--bad);">2</span></button>
+        <button class="subtab">Completed</button>
+      </nav>
+
+      <!-- Stats -->
+      <div class="stat-group" style="margin-bottom:32px;">
+        <div class="stat-col">
+          <div class="stat-eyebrow">Open</div>
+          <div class="stat-number">12</div>
+          <div class="stat-delta">across 8 jobs</div>
+        </div>
+        <div class="stat-col">
+          <div class="stat-eyebrow">Overdue</div>
+          <div class="stat-number" style="color:var(--bad);">2</div>
+          <div class="stat-delta">requires escalation</div>
+        </div>
+        <div class="stat-col">
+          <div class="stat-eyebrow">Completed this week</div>
+          <div class="stat-number">38</div>
+          <div class="stat-delta"><span class="pct up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"></polyline></svg>12%</span>vs last week</div>
+        </div>
+        <div class="stat-col">
+          <div class="stat-eyebrow">Avg completion time</div>
+          <div class="stat-number">2.3<span class="small">d</span></div>
+          <div class="stat-delta">from assigned to done</div>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <div class="fchips">
+          <button class="fchip active">All</button>
+          <button class="fchip">Sales</button>
+          <button class="fchip">Ops</button>
+          <button class="fchip">Service</button>
+          <button class="fchip">Finance</button>
+        </div>
+        <div class="grow"></div>
+        <input class="search-input" placeholder="Search tasks…">
+        <button class="btn btn-secondary">Sort: Due date</button>
+      </div>
+
+      <!-- Overdue -->
+      <div class="task-group-h"><span style="color:var(--bad);">Overdue</span> <span class="ct" style="background:var(--bad-soft);color:var(--bad);">2</span></div>
+      <div>
+        <div class="task-row">
+          <span class="task-check"></span>
+          <div class="task-t">
+            <div>
+              <div class="task-name">Follow up with R. Chen on long-distance quote</div>
+              <div class="task-meta"><span class="task-tag">Sales</span><span>Deal · 17878-1</span></div>
+            </div>
+          </div>
+          <span class="task-priority high">High</span>
+          <div class="task-due overdue">3 days late</div>
+          <div class="who"><span class="who-av">JS</span><div class="who-nm">John Sales</div></div>
+          <span class="task-arr">→</span>
+        </div>
+        <div class="task-row">
+          <span class="task-check"></span>
+          <div class="task-t">
+            <div>
+              <div class="task-name">Send insurance certificate to Northside Co.</div>
+              <div class="task-meta"><span class="task-tag">Ops</span><span>Deal · 17821-1</span></div>
+            </div>
+          </div>
+          <span class="task-priority med">Med</span>
+          <div class="task-due overdue">1 day late</div>
+          <div class="who"><span class="who-av" style="background:var(--info);">DJ</span><div class="who-nm">Donald James</div></div>
+          <span class="task-arr">→</span>
+        </div>
+      </div>
+
+      <!-- Due today -->
+      <div class="task-group-h">Due today <span class="ct">4</span></div>
+      <div>
+        <div class="task-row">
+          <span class="task-check"></span>
+          <div class="task-t">
+            <div>
+              <div class="task-name">Confirm survey time with J. Lopez</div>
+              <div class="task-meta"><span class="task-tag">Sales</span><span>Deal · 17872-1</span></div>
+            </div>
+          </div>
+          <span class="task-priority high">High</span>
+          <div class="task-due today">Today · 1:00 PM</div>
+          <div class="who"><span class="who-av">JS</span><div class="who-nm">John Sales</div></div>
+          <span class="task-arr">→</span>
+        </div>
+        <div class="task-row">
+          <span class="task-check"></span>
+          <div class="task-t">
+            <div>
+              <div class="task-name">Prepare Growth Plan for M. Lee packing job</div>
+              <div class="task-meta"><span class="task-tag">Sales</span><span>Deal · 17880-1</span></div>
+            </div>
+          </div>
+          <span class="task-priority med">Med</span>
+          <div class="task-due today">Today</div>
+          <div class="who"><span class="who-av" style="background:var(--info);">JF</span><div class="who-nm">Jane Finance</div></div>
+          <span class="task-arr">→</span>
+        </div>
+        <div class="task-row">
+          <span class="task-check"></span>
+          <div class="task-t">
+            <div>
+              <div class="task-name">Inspect Truck 5 — return from maintenance</div>
+              <div class="task-meta"><span class="task-tag">Ops</span></div>
+            </div>
+          </div>
+          <span class="task-priority low">Low</span>
+          <div class="task-due today">Today · 4:00 PM</div>
+          <div class="who"><span class="who-av" style="background:var(--teal);">AH</span><div class="who-nm">A. Haylton</div></div>
+          <span class="task-arr">→</span>
+        </div>
+        <div class="task-row">
+          <span class="task-check"></span>
+          <div class="task-t">
+            <div>
+              <div class="task-name">Reconcile May Stripe payouts</div>
+              <div class="task-meta"><span class="task-tag">Finance</span></div>
+            </div>
+          </div>
+          <span class="task-priority med">Med</span>
+          <div class="task-due today">Today · EOD</div>
+          <div class="who"><span class="who-av" style="background:var(--info);">JF</span><div class="who-nm">Jane Finance</div></div>
+          <span class="task-arr">→</span>
+        </div>
+      </div>
+
+      <!-- This week -->
+      <div class="task-group-h">This week <span class="ct">6</span></div>
+      <div>
+        <div class="task-row">
+          <span class="task-check"></span>
+          <div class="task-t">
+            <div>
+              <div class="task-name">Schedule packing materials delivery</div>
+              <div class="task-meta"><span class="task-tag">Ops</span><span>Deal · 17880-1</span></div>
+            </div>
+          </div>
+          <span class="task-priority low">Low</span>
+          <div class="task-due">Mon · May 18</div>
+          <div class="who"><span class="who-av" style="background:var(--plum);">PR</span><div class="who-nm">Paul Rai</div></div>
+          <span class="task-arr">→</span>
+        </div>
+        <div class="task-row">
+          <span class="task-check"></span>
+          <div class="task-t">
+            <div>
+              <div class="task-name">Review Q2 KPIs with leadership</div>
+              <div class="task-meta"><span class="task-tag">Admin</span></div>
+            </div>
+          </div>
+          <span class="task-priority med">Med</span>
+          <div class="task-due">Tue · May 19</div>
+          <div class="who"><span class="who-av">A</span><div class="who-nm">Admin</div></div>
+          <span class="task-arr">→</span>
+        </div>
+        <div class="task-row">
+          <span class="task-check"></span>
+          <div class="task-t">
+            <div>
+              <div class="task-name">Follow up — A. Johnson move review</div>
+              <div class="task-meta"><span class="task-tag">Service</span><span>Deal · 17826-1</span></div>
+            </div>
+          </div>
+          <span class="task-priority low">Low</span>
+          <div class="task-due">Wed · May 20</div>
+          <div class="who"><span class="who-av">JS</span><div class="who-nm">John Sales</div></div>
+          <span class="task-arr">→</span>
+        </div>
+        <div class="task-row">
+          <span class="task-check"></span>
+          <div class="task-t">
+            <div>
+              <div class="task-name">Update employee training records</div>
+              <div class="task-meta"><span class="task-tag">HR</span></div>
+            </div>
+          </div>
+          <span class="task-priority low">Low</span>
+          <div class="task-due">Fri · May 22</div>
+          <div class="who"><span class="who-av" style="background:var(--info);">JF</span><div class="who-nm">Jane Finance</div></div>
+          <span class="task-arr">→</span>
+        </div>
+      </div>
+
+      <!-- Completed -->
+      <div class="task-group-h">Completed today <span class="ct">5</span></div>
+      <div>
+        <div class="task-row" style="opacity:0.65;">
+          <span class="task-check done"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg></span>
+          <div class="task-t">
+            <div>
+              <div class="task-name done">Send portal link to A. Johnson</div>
+              <div class="task-meta"><span class="task-tag">Sales</span><span>Deal · 17826-1</span></div>
+            </div>
+          </div>
+          <span class="task-priority low">Low</span>
+          <div class="task-due">Today · 9:38 AM</div>
+          <div class="who"><span class="who-av">JS</span><div class="who-nm">John Sales</div></div>
+          <span class="task-arr">→</span>
+        </div>
+        <div class="task-row" style="opacity:0.65;">
+          <span class="task-check done"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg></span>
+          <div class="task-t">
+            <div>
+              <div class="task-name done">Confirm box delivery window with S. Patel</div>
+              <div class="task-meta"><span class="task-tag">Ops</span><span>Deal · 17870-1</span></div>
+            </div>
+          </div>
+          <span class="task-priority low">Low</span>
+          <div class="task-due">Today · 8:14 AM</div>
+          <div class="who"><span class="who-av" style="background:var(--info);">DJ</span><div class="who-nm">Donald James</div></div>
+          <span class="task-arr">→</span>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+<button class="ai-fab"><span class="dot"></span>Ask Service1 AI</button>
+<script src="../../core/event-bus.js"></script>
+<script src="../../core/state-store.js"></script>
+<script src="../../core/schema.js"></script>
+<script src="../../core/fixtures.js"></script>
+<script src="../../core/communication.mock.js"></script>
+<script src="../../core/communication.api.js"></script>
+<script src="../../core/communication.js"></script>
+<script src="./module.js"></script>
+
+
+</body></html>

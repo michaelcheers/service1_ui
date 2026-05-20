@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>service1_ui · Lab</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./assets/css/lab.css">
+</head>
+<body>
+<div class="lab">
+  <header class="topbar">
+    <div class="brand">service1_ui<span class="lab-pill">LAB</span></div>
+    <span class="grow"></span>
+    <span style="font-size:11px; opacity:.7;">mode</span>
+    <div class="mode" id="modeToggle">
+      <button data-mode="mock" class="active">Mock</button>
+      <button data-mode="api">API</button>
+    </div>
+    <button id="btnReload" class="secondary" style="background:#1A2C44; color:#fff; border:0; padding:5px 10px; border-radius:6px; font-size:12px; cursor:pointer;">Reload</button>
+  </header>
+
+  <aside class="modules">
+    <div class="filter"><input id="filter" placeholder="Filter modules…" /></div>
+    <h6>Modules</h6>
+    <div id="modList"></div>
+  </aside>
+
+  <main class="center">
+    <div class="frame-shell">
+      <div class="head">
+        <span class="crumb" id="crumb">—</span>
+        <span class="url"  id="frameUrl">—</span>
+        <button id="btnReloadFrame" title="Reload iframe">↻</button>
+        <a id="btnStandalone" target="_blank" rel="noopener">open standalone ↗</a>
+      </div>
+      <iframe id="frame" src="about:blank"></iframe>
+    </div>
+  </main>
+
+  <aside class="inspect">
+    <div class="pane">
+      <h5>State (JSON)</h5>
+      <textarea id="stateText" spellcheck="false">{}</textarea>
+      <div class="row">
+        <button class="primary"   id="btnApply">Apply &amp; reload module</button>
+        <button class="secondary" id="btnSaveFx" title="Save current state as the module's fixture (downloads as &lt;module&gt;.json)">Save as fixture</button>
+        <button class="secondary" id="btnDownload">Download</button>
+        <button class="secondary" id="btnReset">Reset</button>
+      </div>
+      <div class="row" style="margin-top:8px;">
+        <select id="fxSelect" style="flex:1; padding:5px; border-radius:4px; border:1px solid #D9DEE3;"></select>
+        <button class="secondary" id="btnLoadFx">Load fixture</button>
+      </div>
+    </div>
+    <div class="pane" style="padding-bottom:6px;">
+      <div class="tabs-bar">
+        <button class="active" data-tab="log">I/O log</button>
+        <button data-tab="ops">Operations</button>
+      </div>
+    </div>
+    <div class="log" id="ioPane">
+      <div class="empty">No calls yet — open a module above.</div>
+    </div>
+    <div class="log" id="opsPane" style="display:none;"></div>
+  </aside>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="./core/event-bus.js"></script>
+<script src="./modules.index.js"></script>
+<script src="./core/fixtures.js"></script>
+<script>
+const bus = window.S1.bus;
+
+const $  = (s) => document.querySelector(s);
+const $$ = (s) => Array.from(document.querySelectorAll(s));
+
+let modules = [];
+let current = null;
+let mode = localStorage.getItem('s1ui_mode') || 'mock';
+
+function toast(msg) {
+  const el = $('#toast'); el.textContent = msg; el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2400);
+}
+
+function paintModeToggle() {
+  $$('#modeToggle button').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+}
+paintModeToggle();
+$('#modeToggle').addEventListener('click', (e) => {
+  const b = e.target.closest('button[data-mode]'); if (!b) return;
+  mode = b.dataset.mode;
+  localStorage.setItem('s1ui_mode', mode);
+  paintModeToggle();
+  if (current) openModule(current.name);
+});
+
+async function loadModules() {
+  modules = (window.S1 && window.S1.modulesIndex) || [];
+  renderModuleList(modules);
+  // also populate fixture select with all
+  const sel = $('#fxSelect');
+  sel.innerHTML = modules.map(m => `<option value="${m.fixture}">${m.fixture}.json</option>`).join('');
+}
+
+function renderModuleList(list) {
+  const root = $('#modList');
+  root.innerHTML = list.map(m => `
+    <div class="mod${current?.name === m.name ? ' active' : ''}" data-name="${m.name}">
+      <span>${m.title}</span>
+      <span class="badge">${m.reads.length}r / ${m.writes.length}w</span>
+    </div>`).join('');
+  root.querySelectorAll('.mod').forEach(el => {
+    el.addEventListener('click', () => openModule(el.dataset.name));
+  });
+}
+
+$('#filter').addEventListener('input', (e) => {
+  const v = e.target.value.toLowerCase();
+  renderModuleList(modules.filter(m => m.title.toLowerCase().includes(v) || m.name.toLowerCase().includes(v)));
+});
+
+const ioPane = $('#ioPane');
+function renderLog(entries) {
+  if (!entries.length) { ioPane.innerHTML = '<div class="empty">No calls yet.</div>'; return; }
+  ioPane.innerHTML = entries.slice(-200).map(e => {
+    const ts = new Date(e.t).toLocaleTimeString();
+    const tag = e.kind;
+    const args = e.kind === 'get'
+      ? `get("${e.resource}"${e.payload ? ', ' + JSON.stringify(e.payload) : ''})`
+      : e.kind === 'save'   ? `save("${e.resource}", ${JSON.stringify(e.payload)})`
+      : e.kind === 'delete' ? `delete("${e.resource}", ${JSON.stringify(e.payload)})`
+      : e.kind === 'action' ? `action("${e.resource}", ${JSON.stringify(e.payload)})`
+      : e.kind === 'upload' ? `upload(${JSON.stringify(e.payload)})`
+      : `${e.kind}("${e.resource}")`;
+    const res = e.result == null ? '' : ` → ${typeof e.result === 'object' ? (Array.isArray(e.result) ? e.result.length+' rows' : JSON.stringify(e.result).slice(0,80)) : String(e.result).slice(0,80)}`;
+    return `<div class="e ${tag}"><span style="color:#697386">${ts}</span> ${args}${res}</div>`;
+  }).join('');
+  ioPane.scrollTop = ioPane.scrollHeight;
+}
+
+const logEntries = [];
+bus.on('iframe:comm:log', (entry) => {
+  logEntries.push(entry);
+  if (logEntries.length > 500) logEntries.shift();
+  renderLog(logEntries);
+  renderOps();
+});
+
+const opsPane = $('#opsPane');
+function renderOps() {
+  if (!current) { opsPane.innerHTML = ''; return; }
+  const declared = new Set([...current.reads.map(r => 'get:' + r), ...current.writes.map(r => 'save:' + r), ...current.writes.map(r => 'delete:' + r)]);
+  const observed = new Set(logEntries.map(e => e.kind + ':' + e.resource));
+  const allKeys  = [...new Set([...declared, ...observed])].sort();
+  opsPane.innerHTML = `<div class="ops-diff"><table>
+    <tr><th style="text-align:left">op</th><th>declared</th><th>observed</th></tr>
+    ${allKeys.map(k => `<tr>
+      <td>${k}</td>
+      <td class="${declared.has(k) ? 'ok' : 'bad'}">${declared.has(k) ? '✓' : '—'}</td>
+      <td class="${observed.has(k) ? 'ok' : 'bad'}">${observed.has(k) ? '✓' : '—'}</td>
+    </tr>`).join('')}
+  </table></div>`;
+}
+
+$$('.tabs-bar button').forEach(b => b.addEventListener('click', () => {
+  $$('.tabs-bar button').forEach(x => x.classList.toggle('active', x === b));
+  ioPane.style.display  = b.dataset.tab === 'log' ? '' : 'none';
+  opsPane.style.display = b.dataset.tab === 'ops' ? '' : 'none';
+  if (b.dataset.tab === 'ops') renderOps();
+}));
+
+async function openModule(name) {
+  current = modules.find(m => m.name === name);
+  if (!current) return;
+  renderModuleList(modules);
+  logEntries.length = 0; renderLog(logEntries); renderOps();
+  const url = './modules/' + name + '/index.html?mode=' + mode + '&fixture=' + current.fixture + '&embedded=1';
+  $('#crumb').textContent = 'iframe · ' + current.title;
+  $('#frameUrl').textContent = url;
+  $('#btnStandalone').href = url;
+  $('#frame').src = url;
+  // Try to preload fixture into textarea so user can see/edit
+  try {
+    const fx = (window.S1.fixtures || {})[current.fixture];
+    if (fx != null) $('#stateText').value = JSON.stringify(fx, null, 2);
+  } catch {}
+}
+
+$('#btnReload').addEventListener('click', () => location.reload());
+$('#btnReloadFrame').addEventListener('click', () => { if (current) openModule(current.name); });
+
+$('#btnApply').addEventListener('click', () => {
+  let json;
+  try { json = JSON.parse($('#stateText').value); }
+  catch (e) { toast('Invalid JSON: ' + e.message); return; }
+  // push state into the iframe's mock store, then reload it
+  try {
+    const w = $('#frame').contentWindow;
+    if (w && w.__s1ui_store) {
+      w.__s1ui_store.replaceAll(json);
+      try { w.localStorage.setItem('s1ui_state', JSON.stringify(json)); } catch {}
+    } else {
+      // fallback: write to our localStorage so iframe picks it up on load
+      try { localStorage.setItem('s1ui_state', JSON.stringify(json)); } catch {}
+    }
+  } catch {}
+  if (current) openModule(current.name);
+  toast('State applied.');
+});
+
+$('#btnSaveFx').addEventListener('click', () => {
+  if (!current) { toast('Select a module first'); return; }
+  let json;
+  try { json = JSON.parse($('#stateText').value); }
+  catch (e) { toast('Invalid JSON: ' + e.message); return; }
+  const blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = current.fixture + '.json';
+  a.click();
+  toast('Saved as ' + current.fixture + '.json — drop into core/fixtures/');
+});
+
+$('#btnDownload').addEventListener('click', () => {
+  const blob = new Blob([$('#stateText').value], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (current?.name || 'state') + '.json';
+  a.click();
+});
+
+$('#btnReset').addEventListener('click', () => {
+  $('#stateText').value = '{}';
+  try {
+    const w = $('#frame').contentWindow;
+    if (w && w.__s1ui_store) w.__s1ui_store.replaceAll({});
+    if (w) try { w.localStorage.removeItem('s1ui_state'); } catch {}
+  } catch {}
+  if (current) openModule(current.name);
+  toast('State cleared.');
+});
+
+$('#btnLoadFx').addEventListener('click', () => {
+  const name = $('#fxSelect').value;
+  const fx = (window.S1.fixtures || {})[name];
+  if (fx == null) { toast('Fixture not found'); return; }
+  $('#stateText').value = JSON.stringify(fx, null, 2);
+  toast('Loaded ' + name + '.json');
+});
+
+(async () => {
+  await loadModules();
+  // open module from ?module=…
+  const qs = new URLSearchParams(location.search);
+  const initial = qs.get('module') || modules[0]?.name;
+  if (initial) openModule(initial);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "name": "scheduling",
+  "title": "Scheduling",
+  "source": "Scheduling.html",
+  "fixture": "scheduling",
+  "reads": [
+    "jobs",
+    "crews"
+  ],
+  "writes": [
+    "jobs"
+  ],
+  "icon": "scheduling"
+}

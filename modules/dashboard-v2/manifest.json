@@ -1,0 +1,13 @@
+{
+  "name": "dashboard-v2",
+  "title": "Dashboard (v2)",
+  "source": "Dashboard v2.html",
+  "fixture": "dashboard-v2",
+  "reads": [
+    "jobs",
+    "tasks",
+    "reports"
+  ],
+  "writes": [],
+  "icon": "dashboard-v2"
+}

@@ -1,0 +1,14 @@
+{
+  "name": "dashboard",
+  "title": "Dashboard",
+  "source": "Dashboard.html",
+  "fixture": "dashboard",
+  "reads": [
+    "jobs",
+    "tasks",
+    "reports",
+    "auth/me"
+  ],
+  "writes": [],
+  "icon": "dashboard"
+}

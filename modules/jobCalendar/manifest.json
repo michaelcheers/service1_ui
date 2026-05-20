@@ -1,0 +1,13 @@
+{
+  "name": "jobCalendar",
+  "title": "Job Calendar",
+  "source": "JobCalendar.html",
+  "fixture": "jobCalendar",
+  "reads": [
+    "jobs"
+  ],
+  "writes": [
+    "jobs"
+  ],
+  "icon": "jobCalendar"
+}

@@ -1,0 +1,13 @@
+{
+  "name": "tasks",
+  "title": "Tasks",
+  "source": "Tasks.html",
+  "fixture": "tasks",
+  "reads": [
+    "tasks"
+  ],
+  "writes": [
+    "tasks"
+  ],
+  "icon": "tasks"
+}

@@ -1,0 +1,13 @@
+{
+  "name": "settings",
+  "title": "Settings",
+  "source": "Settings.html",
+  "fixture": "settings",
+  "reads": [
+    "settings"
+  ],
+  "writes": [
+    "settings"
+  ],
+  "icon": "settings"
+}

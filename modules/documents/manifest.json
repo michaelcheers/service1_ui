@@ -1,0 +1,13 @@
+{
+  "name": "documents",
+  "title": "Documents",
+  "source": "Documents.html",
+  "fixture": "documents",
+  "reads": [
+    "documents"
+  ],
+  "writes": [
+    "documents"
+  ],
+  "icon": "documents"
+}

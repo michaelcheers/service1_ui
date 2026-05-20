@@ -1,0 +1,13 @@
+{
+  "name": "preOfficeSubmissions",
+  "title": "Pre-Office Submissions",
+  "source": "PreOfficeSubmissions.html",
+  "fixture": "preOfficeSubmissions",
+  "reads": [
+    "preoffice/submissions"
+  ],
+  "writes": [
+    "preoffice/submissions"
+  ],
+  "icon": "preOfficeSubmissions"
+}

@@ -1,0 +1,13 @@
+{
+  "name": "preOfficeTemplates",
+  "title": "Pre-Office Templates",
+  "source": "PreOfficeTemplates.html",
+  "fixture": "preOfficeTemplates",
+  "reads": [
+    "preoffice/templates"
+  ],
+  "writes": [
+    "preoffice/templates"
+  ],
+  "icon": "preOfficeTemplates"
+}
