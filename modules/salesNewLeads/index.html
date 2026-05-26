@@ -148,9 +148,10 @@ const INLINE_LEADS = ([
 // list under `rows` (POCO only exposes `id`/`name`) — accept either array.
 function getLeads() {
   const fx = (window.S1 && window.S1.fixtures && window.S1.fixtures["salesNewLeads"]) || null;
+  const IS_PROD = /(^|\.)service1\.app$/i.test(location.hostname);
   const raw = (fx && Array.isArray(fx.leads) && fx.leads.length) ? fx.leads
             : (fx && Array.isArray(fx.rows)  && fx.rows.length)  ? fx.rows
-            : INLINE_LEADS;
+            : (IS_PROD ? [] : INLINE_LEADS);
   return raw.map(l => Object.assign({}, l, {
     name:      l.name      || '',
     phone:     l.phone     || '',

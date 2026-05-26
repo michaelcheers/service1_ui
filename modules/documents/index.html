@@ -229,9 +229,10 @@ const BADGE_LBL = { process:'In process', completed:'Completed', draft:'Draft', 
 // minimal here because the backend POCO doesn't expose the `tabs`/`status`
 // shape this view filters on — see TODO above.
 function getDocs() {
+  const IS_PROD = /(^|\.)service1\.app$/i.test(location.hostname);
   const raw = (window.S1 && window.S1.fixtures && window.S1.fixtures["documents"] && Array.isArray(window.S1.fixtures["documents"].docs) && window.S1.fixtures["documents"].docs.length)
     ? window.S1.fixtures["documents"].docs
-    : INLINE_DOCS;
+    : (IS_PROD ? [] : INLINE_DOCS);
   return raw.map(d => {
     // Ensure `tabs` is always an array so .includes() works even if the
     // backend ships a single status string instead of the tab list.

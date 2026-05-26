@@ -299,7 +299,8 @@ function getTasks() {
     }
     if (out.length) return out;
   }
-  return INLINE_TASKS;
+  const IS_PROD = /(^|\.)service1\.app$/i.test(location.hostname);
+  return IS_PROD ? [] : INLINE_TASKS;
 }
 
 function cardHTML(t) {

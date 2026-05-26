@@ -144,9 +144,10 @@ const STATUS_LBL = { submitted:'Submitted', reviewed:'Reviewed', flagged:'Flagge
 // `who`/`tpl`/`gps`) — accept either array key and alias renamed fields.
 function getRows() {
   const fx = (window.S1 && window.S1.fixtures && window.S1.fixtures["preOfficeSubmissions"]) || null;
+  const IS_PROD = /(^|\.)service1\.app$/i.test(location.hostname);
   const raw = (fx && Array.isArray(fx.rows)        && fx.rows.length)        ? fx.rows
             : (fx && Array.isArray(fx.submissions) && fx.submissions.length) ? fx.submissions
-            : INLINE_ROWS;
+            : (IS_PROD ? [] : INLINE_ROWS);
   return raw.map((r, i) => Object.assign({}, r, {
     id:        r.id != null ? r.id : i + 1,
     who:       r.who       || r.name     || '',

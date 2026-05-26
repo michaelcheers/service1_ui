@@ -191,9 +191,10 @@ function priCls(p){ return p === 'High' ? 'high' : p === 'Med' ? 'med' : 'low'; 
 // Read tickets fresh on every render (lets state-push updates land) and
 // normalize live-backend field names onto the shape the table expects.
 function getTickets() {
+  const IS_PROD = /(^|\.)service1\.app$/i.test(location.hostname);
   const raw = (window.S1 && window.S1.fixtures && window.S1.fixtures["tickets"] && Array.isArray(window.S1.fixtures["tickets"].tickets) && window.S1.fixtures["tickets"].tickets.length)
     ? window.S1.fixtures["tickets"].tickets
-    : INLINE_TICKETS;
+    : (IS_PROD ? [] : INLINE_TICKETS);
   return raw.map(t => {
     const status = t.status || '';
     return {

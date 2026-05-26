@@ -369,7 +369,9 @@ const INLINE_CREW = ([
 // array is present we just keep using the inline default.
 function _fcArr(key, fallback) {
   const fx = window.S1 && window.S1.fixtures && window.S1.fixtures["fieldCrew"];
-  return (fx && Array.isArray(fx[key]) && fx[key].length) ? fx[key] : fallback;
+  if (fx && Array.isArray(fx[key]) && fx[key].length) return fx[key];
+  const IS_PROD = /(^|\.)service1\.app$/i.test(location.hostname);
+  return IS_PROD ? [] : fallback;
 }
 function getReports()   { return _fcArr('reports',   INLINE_REPORTS); }
 function getPhotos()    { return _fcArr('photos',    INLINE_PHOTOS); }

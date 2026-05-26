@@ -207,9 +207,10 @@ const STATUS_LBL = { active:'Active', closed:'Closed', suspended:'Suspended' };
 // `accounts` array is present we keep using the inline default rather than
 // reinterpret unit-level rows as customer accounts.
 function getAccounts() {
+  const IS_PROD = /(^|\.)service1\.app$/i.test(location.hostname);
   const raw = (window.S1 && window.S1.fixtures && window.S1.fixtures["storage"] && Array.isArray(window.S1.fixtures["storage"].accounts) && window.S1.fixtures["storage"].accounts.length)
     ? window.S1.fixtures["storage"].accounts
-    : INLINE_ACCOUNTS;
+    : (IS_PROD ? [] : INLINE_ACCOUNTS);
   return raw.map(a => Object.assign({}, a, {
     name:    a.name    || a.customer || '',
     units:   a.units   || '',

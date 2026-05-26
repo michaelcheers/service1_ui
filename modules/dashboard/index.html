@@ -529,12 +529,9 @@ a { color: inherit; text-decoration: none; }
         <div class="stat-group">
           <div class="stat-col">
             <div class="stat-eyebrow" data-bind-text="kpis.0.label">Deals booked this month</div>
-            <div class="stat-number">48 <span class="small">/ $128,400</span></div>
+            <div class="stat-number" data-bind-text="kpis.0.value">48 <span class="small">/ $128,400</span></div>
             <div class="stat-delta">
-              <span class="pct up">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
-                14.2%
-              </span>
+              <span class="pct" data-bind-attr="class:kpis.0.deltaClass"><span data-bind-text="kpis.0.delta">14.2%</span></span>
               vs previous 30 days
             </div>
           </div>
@@ -542,10 +539,7 @@ a { color: inherit; text-decoration: none; }
             <div class="stat-eyebrow" data-bind-text="kpis.1.label">Discovery Calls today</div>
             <div class="stat-number" data-bind-text="kpis.1.value">12</div>
             <div class="stat-delta">
-              <span class="pct up">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
-                9.1%
-              </span>
+              <span class="pct" data-bind-attr="class:kpis.1.deltaClass"><span data-bind-text="kpis.1.delta">9.1%</span></span>
               vs previous 30 days
             </div>
           </div>
@@ -553,10 +547,7 @@ a { color: inherit; text-decoration: none; }
             <div class="stat-eyebrow" data-bind-text="kpis.2.label">Deals booked today</div>
             <div class="stat-number" data-bind-text="kpis.2.value">3</div>
             <div class="stat-delta">
-              <span class="pct up">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
-                6.2%
-              </span>
+              <span class="pct" data-bind-attr="class:kpis.2.deltaClass"><span data-bind-text="kpis.2.delta">6.2%</span></span>
               vs previous 30 days
             </div>
           </div>
@@ -564,10 +555,7 @@ a { color: inherit; text-decoration: none; }
             <div class="stat-eyebrow" data-bind-text="kpis.3.label">Average deal value</div>
             <div class="stat-number" data-bind-text="kpis.3.value"><span data-bind-text="amounts.0">$2,675</span></div>
             <div class="stat-delta">
-              <span class="pct down">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>
-                2.1pp
-              </span>
+              <span class="pct" data-bind-attr="class:kpis.3.deltaClass"><span data-bind-text="kpis.3.delta">2.1pp</span></span>
               vs previous 30 days
             </div>
           </div>
@@ -580,9 +568,9 @@ a { color: inherit; text-decoration: none; }
               <div class="chart-h-eyebrow">Net revenue · Last 12 months</div>
               <div class="chart-h-num"><span data-bind-text="amounts.1">$1,420,800</span></div>
               <div class="chart-h-sub">
-                <span><span class="swatch" style="background:var(--terra);"></span>This year · <strong>$1.42M</strong></span>
-                <span><span class="swatch" style="background:var(--ink-4);opacity:.5;"></span>Previous year · <strong>$1.18M</strong></span>
-                <span>Forecast EOY · <strong>$1.58M</strong></span>
+                <span><span class="swatch" style="background:var(--terra);"></span>This year · <strong data-bind-text="chart.thisYear">$1.42M</strong></span>
+                <span><span class="swatch" style="background:var(--ink-4);opacity:.5;"></span>Previous year · <strong data-bind-text="chart.prevYear">$1.18M</strong></span>
+                <span>Forecast EOY · <strong data-bind-text="chart.forecast">$1.58M</strong></span>
               </div>
             </div>
             <div class="chart-tools">
@@ -645,40 +633,40 @@ a { color: inherit; text-decoration: none; }
             </div>
             <div class="tp-list">
               <div class="tp-row">
-                <div class="tp-av" style="background:var(--terra);">JS</div>
+                <div class="tp-av" data-bind-attr="style:topPerformers.0.avStyle" data-bind-text="topPerformers.0.initials">JS</div>
                 <div class="tp-info">
-                  <div class="tp-nm">John Sales</div>
-                  <div class="tp-mt">14 deals booked</div>
+                  <div class="tp-nm" data-bind-text="topPerformers.0.name">John Sales</div>
+                  <div class="tp-mt"><span data-bind-text="topPerformers.0.deals">14</span> deals booked</div>
                 </div>
-                <div class="tp-amt"><span data-bind-text="amounts.3">$42,640</span></div>
-                <div class="tp-rate good" data-bind-text="metrics.tp_rate.0">92%</div>
+                <div class="tp-amt"><span data-bind-text="topPerformers.0.amount">$42,640</span></div>
+                <div class="tp-rate" data-bind-attr="class:topPerformers.0.rateClass" data-bind-text="topPerformers.0.rate">92%</div>
               </div>
               <div class="tp-row">
-                <div class="tp-av" style="background:var(--info);">JF</div>
+                <div class="tp-av" data-bind-attr="style:topPerformers.1.avStyle" data-bind-text="topPerformers.1.initials">JF</div>
                 <div class="tp-info">
-                  <div class="tp-nm">Jane Finance</div>
-                  <div class="tp-mt">11 deals booked</div>
+                  <div class="tp-nm" data-bind-text="topPerformers.1.name">Jane Finance</div>
+                  <div class="tp-mt"><span data-bind-text="topPerformers.1.deals">11</span> deals booked</div>
                 </div>
-                <div class="tp-amt"><span data-bind-text="amounts.4">$31,210</span></div>
-                <div class="tp-rate good" data-bind-text="metrics.tp_rate.1">78%</div>
+                <div class="tp-amt"><span data-bind-text="topPerformers.1.amount">$31,210</span></div>
+                <div class="tp-rate" data-bind-attr="class:topPerformers.1.rateClass" data-bind-text="topPerformers.1.rate">78%</div>
               </div>
               <div class="tp-row">
-                <div class="tp-av" style="background:#0E7C8F;">AH</div>
+                <div class="tp-av" data-bind-attr="style:topPerformers.2.avStyle" data-bind-text="topPerformers.2.initials">AH</div>
                 <div class="tp-info">
-                  <div class="tp-nm">Andrew Haylton</div>
-                  <div class="tp-mt">9 deals booked</div>
+                  <div class="tp-nm" data-bind-text="topPerformers.2.name">Andrew Haylton</div>
+                  <div class="tp-mt"><span data-bind-text="topPerformers.2.deals">9</span> deals booked</div>
                 </div>
-                <div class="tp-amt"><span data-bind-text="amounts.5">$24,810</span></div>
-                <div class="tp-rate" data-bind-text="metrics.tp_rate.2">71%</div>
+                <div class="tp-amt"><span data-bind-text="topPerformers.2.amount">$24,810</span></div>
+                <div class="tp-rate" data-bind-attr="class:topPerformers.2.rateClass" data-bind-text="topPerformers.2.rate">71%</div>
               </div>
               <div class="tp-row">
-                <div class="tp-av" style="background:#7B4B94;">PR</div>
+                <div class="tp-av" data-bind-attr="style:topPerformers.3.avStyle" data-bind-text="topPerformers.3.initials">PR</div>
                 <div class="tp-info">
-                  <div class="tp-nm">Paul Rai</div>
-                  <div class="tp-mt">8 deals booked</div>
+                  <div class="tp-nm" data-bind-text="topPerformers.3.name">Paul Rai</div>
+                  <div class="tp-mt"><span data-bind-text="topPerformers.3.deals">8</span> deals booked</div>
                 </div>
-                <div class="tp-amt"><span data-bind-text="amounts.6">$18,400</span></div>
-                <div class="tp-rate" data-bind-text="metrics.tp_rate.3">64%</div>
+                <div class="tp-amt"><span data-bind-text="topPerformers.3.amount">$18,400</span></div>
+                <div class="tp-rate" data-bind-attr="class:topPerformers.3.rateClass" data-bind-text="topPerformers.3.rate">64%</div>
               </div>
             </div>
           </section>
@@ -691,34 +679,34 @@ a { color: inherit; text-decoration: none; }
             <div class="na-list">
               <a class="na-row" href="DashboardStales.html">
                 <div class="na-l">
-                  <div class="na-t">Stale opportunities</div>
-                  <div class="na-s">No contact in 48+ hours</div>
+                  <div class="na-t" data-bind-text="needsAttention.0.title">Stale opportunities</div>
+                  <div class="na-s" data-bind-text="needsAttention.0.subtitle">No contact in 48+ hours</div>
                 </div>
-                <div class="na-n warn">5</div>
+                <div class="na-n" data-bind-attr="class:needsAttention.0.levelClass" data-bind-text="needsAttention.0.count">5</div>
                 <div class="na-arr">→</div>
               </a>
               <a class="na-row" href="#">
                 <div class="na-l">
-                  <div class="na-t">Open service tickets</div>
-                  <div class="na-s">Awaiting customer reply</div>
+                  <div class="na-t" data-bind-text="needsAttention.1.title">Open service tickets</div>
+                  <div class="na-s" data-bind-text="needsAttention.1.subtitle">Awaiting customer reply</div>
                 </div>
-                <div class="na-n bad">2</div>
+                <div class="na-n" data-bind-attr="class:needsAttention.1.levelClass" data-bind-text="needsAttention.1.count">2</div>
                 <div class="na-arr">→</div>
               </a>
               <a class="na-row" href="#">
                 <div class="na-l">
-                  <div class="na-t">Accepted Growth Plans</div>
-                  <div class="na-s">Not yet booked or paid</div>
+                  <div class="na-t" data-bind-text="needsAttention.2.title">Accepted Growth Plans</div>
+                  <div class="na-s" data-bind-text="needsAttention.2.subtitle">Not yet booked or paid</div>
                 </div>
-                <div class="na-n">3</div>
+                <div class="na-n" data-bind-attr="class:needsAttention.2.levelClass" data-bind-text="needsAttention.2.count">3</div>
                 <div class="na-arr">→</div>
               </a>
               <a class="na-row" href="#">
                 <div class="na-l">
-                  <div class="na-t">Unassigned new leads</div>
-                  <div class="na-s">In queue under 1h</div>
+                  <div class="na-t" data-bind-text="needsAttention.3.title">Unassigned new leads</div>
+                  <div class="na-s" data-bind-text="needsAttention.3.subtitle">In queue under 1h</div>
                 </div>
-                <div class="na-n">4</div>
+                <div class="na-n" data-bind-attr="class:needsAttention.3.levelClass" data-bind-text="needsAttention.3.count">4</div>
                 <div class="na-arr">→</div>
               </a>
             </div>
@@ -748,7 +736,7 @@ a { color: inherit; text-decoration: none; }
           </div>
           <div class="live-cell">
             <div class="stat-eyebrow" data-bind-text="metrics.stat_eyebrow.3">Talk time today</div>
-            <div class="stat-number">14h <span class="small">28m</span></div>
+            <div class="stat-number" data-bind-text="kpis.7.value">14h <span class="small">28m</span></div>
             <div class="stat-delta" data-bind-text="metrics.stat_delta.1">Avg per agent · 2h 04m</div>
           </div>
           <div class="live-cell">

@@ -152,9 +152,10 @@ const INLINE_VIDEOS = [
 // live-backend (`category`, `duration`, `views`) shape onto the frontend shape
 // (`tag`, `tagLbl`, `dur`, `sub`) the chip filter + cards expect.
 function getVideos() {
+  const IS_PROD = /(^|\.)service1\.app$/i.test(location.hostname);
   const raw = (window.S1 && window.S1.fixtures && window.S1.fixtures["videosLibrary"] && Array.isArray(window.S1.fixtures["videosLibrary"].videos) && window.S1.fixtures["videosLibrary"].videos.length)
     ? window.S1.fixtures["videosLibrary"].videos
-    : INLINE_VIDEOS;
+    : (IS_PROD ? [] : INLINE_VIDEOS);
   return raw.map((v, i) => {
     const category = v.category || v.tagLbl || '';
     const tag = v.tag || category.toLowerCase().replace(/[\s-]+/g, '_');

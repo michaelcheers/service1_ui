@@ -190,9 +190,10 @@ const STATUS_LBL = { active:'Active', hot:'Hot', booked:'Booked', accepted:'Acce
 // we map `name` → `customer` for display and leave the chip-filter fields
 // undefined; rows without `lead`/`status` simply don't match status chips.
 function getRows() {
+  const IS_PROD = /(^|\.)service1\.app$/i.test(location.hostname);
   const raw = (window.S1 && window.S1.fixtures && window.S1.fixtures["salesFollowUps"] && Array.isArray(window.S1.fixtures["salesFollowUps"].rows) && window.S1.fixtures["salesFollowUps"].rows.length)
     ? window.S1.fixtures["salesFollowUps"].rows
-    : INLINE_ROWS;
+    : (IS_PROD ? [] : INLINE_ROWS);
   return raw.map(r => Object.assign({}, r, {
     customer: r.customer || r.name || '',
     job:      r.job      || '',

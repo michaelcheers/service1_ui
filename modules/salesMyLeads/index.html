@@ -178,9 +178,10 @@ const STATUS_LBL = { 'new-lead':'New Lead', opportunity:'Opportunity', booked:'B
 // we accept either array key and alias `name` → display fields the cards use.
 function getLeads() {
   const fx = (window.S1 && window.S1.fixtures && window.S1.fixtures["salesMyLeads"]) || null;
+  const IS_PROD = /(^|\.)service1\.app$/i.test(location.hostname);
   const raw = (fx && Array.isArray(fx.leads) && fx.leads.length) ? fx.leads
             : (fx && Array.isArray(fx.rows)  && fx.rows.length)  ? fx.rows
-            : INLINE_LEADS;
+            : (IS_PROD ? [] : INLINE_LEADS);
   return raw.map(l => Object.assign({}, l, {
     name:   l.name   || '',
     job:    l.job    || '',
