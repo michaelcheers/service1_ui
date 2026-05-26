@@ -75,12 +75,52 @@
     }
   }
 
+  // Escape text so it's safe to interpolate into an HTML string. ALWAYS on
+  // for plain placeholders — there is no opt-out, because untrusted values
+  // must not reach innerHTML/insertAdjacentHTML as parsed HTML.
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+  // For placeholders that hold HTML markup (host-published, e.g. row cell
+  // markup with <input>/<b>/<span class>), render them inside a sandboxed
+  // <iframe srcdoc> — same pattern as business_card's Dashboard.BuildCardSrcdoc
+  // and Reports/Custom.cshtml.cs. The iframe is inert (sandbox=""), so even if
+  // the data contained <script> or onclick=, it cannot execute or escape into
+  // the host page.
+  function buildHtmlSrcdocIframe(html) {
+    var srcdoc = '<!DOCTYPE html><html><head><meta charset="utf-8">'
+      + '<style>html,body{margin:0;padding:0;background:transparent;color:inherit;}body{font:13px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}*{box-sizing:border-box;}</style>'
+      + '</head><body>' + String(html) + '</body></html>';
+    // sandbox="allow-same-origin" gives the iframe its own origin (so the
+    // parent can read contentDocument to size it) but withholds allow-scripts
+    // / allow-forms / allow-top-navigation / allow-popups — so injected
+    // <script>, on*=, <form>, javascript:, window.* are all inert. We
+    // intentionally omit an inner CSP because this iframe is hosted on
+    // ui.service1.app (gh-pages static origin, no privileges, no cookies),
+    // so the residual passive-resource / cell-scoped-phishing surface is
+    // not exploitable into anything that matters. State-changing endpoints
+    // are POST + CSRF-token elsewhere, so meta-refresh / anchor nav can't
+    // turn into account compromise either.
+    var srcdocAttr = escHtml(srcdoc);
+    return '<iframe sandbox="allow-same-origin" frameborder="0" scrolling="no" class="s1-html-frame" '
+      + 'style="width:100%;height:auto;min-height:1.4em;border:0;display:block;background:transparent;" '
+      + 'onload="try{this.style.height=(this.contentDocument.documentElement.scrollHeight)+\'px\'}catch(e){}" '
+      + 'srcdoc="' + srcdocAttr + '"></iframe>';
+  }
+
   function substitute(html, item) {
     return String(html).replace(/\{\{\s*([^}|\s]+)\s*(?:\|\s*([^}\s]+)\s*)?\}\}/g, function (_, key, fmt) {
       var v = get(item, key);
+      var f = (fmt || '').toLowerCase();
+      // |html modifier — value is HTML markup published by the host. Render
+      // inside a sandboxed iframe srcdoc so script/style/layout in the value
+      // cannot affect the host page. Same trust model as business_card's
+      // Dashboard custom-card and Reports/Custom srcdoc pipeline.
+      if (f === 'html') return buildHtmlSrcdocIframe(String(v == null ? '' : v));
       var out = format(v, fmt);
-      // Light HTML escape
-      return String(out).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      // Plain placeholders always HTML-escape — never interpolate raw HTML
+      // from data into innerHTML/insertAdjacentHTML.
+      return escHtml(out);
     });
   }
 
@@ -91,6 +131,42 @@
       var path = el.getAttribute('data-bind-text');
       var fmt  = el.getAttribute('data-fmt') || '';
       el.textContent = format(get(state, path), fmt);
+    }
+  }
+
+  // data-bind-html — render an HTML string from state inside a sandboxed
+  // <iframe srcdoc> so the markup parses as HTML without leaking script,
+  // style, or layout into the host page. Mirrors the BuildCardSrcdoc /
+  // Reports/Custom.cshtml.cs pattern in business_card: doctype + minimal
+  // <style> reset + the data payload, served via srcdoc, with sandbox=""
+  // (no allow-scripts, no allow-same-origin) so it's strictly inert.
+  function bindHtml(root, state) {
+    var nodes = root.querySelectorAll('[data-bind-html]');
+    for (var i = 0; i < nodes.length; i++) {
+      var el = nodes[i];
+      var path = el.getAttribute('data-bind-html');
+      var v = get(state, path);
+      if (v == null) v = '';
+      var srcdoc = '<!DOCTYPE html><html><head><meta charset="utf-8">'
+        + '<base target="_parent">'
+        + '<style>body{margin:0;padding:0;font:13px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:inherit;background:transparent;}*{box-sizing:border-box;}</style>'
+        + '</head><body>' + String(v) + '</body></html>';
+      // Re-use an existing iframe if present so we don't churn DOM nodes
+      // between state pushes.
+      var ifr = el.querySelector(':scope > iframe.s1-html-frame');
+      if (!ifr) {
+        // Clear and create a fresh sandboxed iframe.
+        while (el.firstChild) el.removeChild(el.firstChild);
+        ifr = document.createElement('iframe');
+        ifr.className = 's1-html-frame';
+        ifr.setAttribute('sandbox', '');
+        ifr.setAttribute('frameborder', '0');
+        ifr.setAttribute('scrolling', 'no');
+        ifr.style.cssText = 'width:100%;height:100%;border:0;display:block;background:transparent;';
+        el.appendChild(ifr);
+      }
+      // srcdoc setter triggers the parse; sandbox="" keeps it inert.
+      ifr.setAttribute('srcdoc', srcdoc);
     }
   }
 
@@ -111,11 +187,74 @@
       var raw = get(state, path);
       if (raw == null) continue;
       var arr = Array.isArray(raw) ? raw : [raw];
+      // Parse via insertAdjacentHTML so the host's own element acts as the
+      // parsing context. A <div> staging container parses in "in body"
+      // mode and silently drops <tr>/<td>/<thead>/<tbody> tags (only their
+      // text survives), which mangled table-bound lists into one run-on
+      // line. Inserting directly into the host (<tbody>, <select>, etc.)
+      // respects the correct parser insertion mode.
       for (var j = 0; j < arr.length; j++) {
         var html = substitute(tpl.innerHTML, arr[j]);
-        var holder = document.createElement('div');
-        holder.innerHTML = html;
-        while (holder.firstChild) host.appendChild(holder.firstChild);
+        host.insertAdjacentHTML('beforeend', html);
+      }
+    }
+  }
+
+  function bindValues(root, state) {
+    var nodes = root.querySelectorAll('[data-bind-value]');
+    for (var i = 0; i < nodes.length; i++) {
+      var el = nodes[i];
+      var path = el.getAttribute('data-bind-value');
+      var fmt  = el.getAttribute('data-fmt') || '';
+      var v = format(get(state, path), fmt);
+      if ('value' in el) el.value = (v === '—' ? '' : v);
+    }
+  }
+
+  function bindAttrs(root, state) {
+    var nodes = root.querySelectorAll('[data-bind-attr]');
+    for (var i = 0; i < nodes.length; i++) {
+      var el = nodes[i];
+      var spec = el.getAttribute('data-bind-attr');
+      // Format: "attr:path[;attr2:path2]"
+      var pairs = spec.split(';');
+      for (var p = 0; p < pairs.length; p++) {
+        var bits = pairs[p].split(':');
+        if (bits.length < 2) continue;
+        var attr = bits[0].trim();
+        var path = bits.slice(1).join(':').trim();
+        var v = get(state, path);
+        if (v == null) continue;
+        el.setAttribute(attr, String(v));
+      }
+    }
+  }
+
+  function bindOptions(root, state) {
+    var nodes = root.querySelectorAll('[data-bind-options]');
+    for (var i = 0; i < nodes.length; i++) {
+      var el = nodes[i];
+      var path = el.getAttribute('data-bind-options');
+      var arr = get(state, path);
+      if (!Array.isArray(arr)) continue;
+      var keep = [];
+      for (var k = 0; k < el.children.length; k++) {
+        var c = el.children[k];
+        if (c.tagName === 'OPTION' && c.value === '') keep.push(c);
+      }
+      while (el.firstChild) el.removeChild(el.firstChild);
+      for (var kk = 0; kk < keep.length; kk++) el.appendChild(keep[kk]);
+      for (var j = 0; j < arr.length; j++) {
+        var opt = document.createElement('option');
+        var item = arr[j];
+        if (item && typeof item === 'object') {
+          opt.value = item.value != null ? item.value : (item.label || '');
+          opt.textContent = item.label != null ? item.label : String(opt.value);
+        } else {
+          opt.value = String(item);
+          opt.textContent = String(item);
+        }
+        el.appendChild(opt);
       }
     }
   }
@@ -124,8 +263,91 @@
     bindText(root, state);
     bindLists(root, state);
     bindText(root, state); // re-bind for nodes injected from templates
+    bindValues(root, state);
+    bindAttrs(root, state);
+    bindOptions(root, state);
+    bindHtml(root, state);
+    bindHtml(root, state); // re-bind for nodes injected by bindLists
+  }
+
+  // Collect a payload object from the comm-firing element's surrounding
+  // form scope. Used by every module's document-level click dispatcher so
+  // a click on e.g. <button data-comm-action="action:jobDetail.send:">
+  // carries the composer textarea's content + any other inputs in the
+  // closest [data-comm-scope] / <form> / section.card, plus the row id
+  // when the button sits inside a [data-record-id]="…" container.
+  function slugify(s) {
+    return String(s || '').replace(/[^A-Za-z0-9]+/g, '_').replace(/^_+|_+$/g, '').toLowerCase();
+  }
+  function collectPayload(trigger) {
+    if (trigger && trigger.dataset && trigger.dataset.payload) {
+      try { return JSON.parse(trigger.dataset.payload); } catch { /* fall through */ }
+    }
+    var payload = {};
+    if (!trigger) return payload;
+    // Find the nearest ancestor that carries an id (data-record-id or any
+    // data-*-id). Row/card-level action buttons should ONLY carry that row's
+    // id — never the whole page.
+    var idEl = trigger;
+    var idAncestor = null;
+    while (idEl) {
+      if (idEl.attributes) {
+        for (var ai = 0; ai < idEl.attributes.length; ai++) {
+          var a = idEl.attributes[ai];
+          if (a.name === 'data-record-id' || /^data-[a-z0-9_-]+-id$/.test(a.name)) {
+            payload.id = a.value;
+            idAncestor = idEl;
+            idEl = null;
+            break;
+          }
+        }
+      }
+      if (idEl) idEl = idEl.parentElement;
+    }
+    // Scope cascade:
+    //   explicit data-comm-scope  → that container
+    //   form                      → that form
+    //   row/card with data-*-id   → JUST that row (don't bleed into siblings)
+    //   section.card / section    → that section
+    //   nothing else              → no scope: emit just {id} (if any). Do NOT
+    //                               fall back to `document` — that scrapes
+    //                               every input on the page into the payload,
+    //                               which was the bug.
+    // Tighter cascade: only explicit form-like scopes. section.card / section
+    // were too broad — a standalone action button (e.g. 'Recompute crew wages')
+    // sitting near a table would scrape every input in the table into its
+    // payload. data-comm-scope / form are explicit declarations. id-ancestor
+    // is row-action context (already narrow). For anything else, return just
+    // {id} (if any) and stop.
+    var scope = trigger.closest('[data-comm-scope]') ||
+                trigger.closest('form') ||
+                idAncestor;
+    if (!scope) return payload;
+    var fields = scope.querySelectorAll('input, textarea, select');
+    for (var i = 0; i < fields.length; i++) {
+      var el = fields[i];
+      if (el.type === 'button' || el.type === 'submit' || el.type === 'reset') continue;
+      var key = el.getAttribute('name') ||
+                el.getAttribute('data-comm-field') ||
+                el.getAttribute('id') ||
+                slugify(el.getAttribute('placeholder') || el.getAttribute('aria-label') || el.type || 'field');
+      if (!key || key in payload) continue;
+      if (el.type === 'checkbox' || el.type === 'radio') {
+        if (el.type === 'radio' && !el.checked) continue;
+        payload[key] = !!el.checked;
+      } else {
+        payload[key] = el.value;
+      }
+    }
+    var extras = scope.querySelectorAll('[data-comm-include]');
+    for (var j = 0; j < extras.length; j++) {
+      var ex = extras[j];
+      payload[ex.getAttribute('data-comm-include')] = ex.textContent.trim();
+    }
+    return payload;
   }
 
   window.S1 = window.S1 || {};
   window.S1.render = { bind: bind, get: get, format: format };
+  window.S1.collectPayload = collectPayload;
 })();

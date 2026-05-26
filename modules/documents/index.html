@@ -1,32 +1,176 @@
-<!DOCTYPE html><html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Documents</title>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Documents — Redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../../assets/css/module.css">
-</head><body>
-<div class="wrap">
-  <div class="page-bar">
-    <div class="page-title">Documents</div>
-    <div><button class="btn btn-primary">Upload</button></div>
-  </div>
-  <section class="section">
-    <table class="tbl">
-      <thead><tr><th>#</th><th>Name</th><th>Folder</th><th>Size</th><th>Modified</th><th>Owner</th></tr></thead>
-      <tbody data-bind="documents">
-        <template>
-          <tr>
-            <td>{{id|num}}</td>
-            <td>{{name}}</td>
-            <td>{{folder}}</td>
-            <td>{{size|bytes}}</td>
-            <td>{{modified|date}}</td>
-            <td>{{owner}}</td>
-          </tr>
-        </template>
-      </tbody>
-    </table>
-  </section>
+<link rel="stylesheet" href="_system.css">
+<template id="__bundler_thumbnail" data-bg-color="#FFFFFF"><svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg"><rect width="1200" height="800" fill="#FFFFFF"/><rect x="60" y="60" width="80" height="80" rx="12" fill="#004D40"/><text x="100" y="115" text-anchor="middle" font-family="Inter" font-weight="800" font-size="28" fill="#D4960A">S</text><rect x="200" y="80" width="260" height="22" rx="3" fill="#0A2540"/><rect x="200" y="160" width="940" height="580" rx="6" fill="#FAFBFC" stroke="#EFF2F5"/><text x="600" y="790" text-anchor="middle" font-family="Inter" font-weight="500" font-size="14" fill="#697386">Documents · Loading…</text></svg></template>
+
+<style>
+.di-tabs { display: flex; justify-content: center; gap: 4px; margin-bottom: 18px; flex-wrap: wrap; }
+.di-tab {
+  padding: 8px 20px; font-size: 13px; font-weight: 500; color: var(--ink-3);
+  text-decoration: none; border-radius: var(--r-pill, 999px);
+  transition: background .12s, color .12s;
+}
+.di-tab:hover { color: var(--ink); background: var(--surface-2); }
+.di-tab.active { background: var(--terra); color: #fff; }
+
+.di-card { background: #fff; border: var(--hair); border-radius: var(--r-card, 12px); overflow: hidden; }
+.di-row {
+  display: grid; grid-template-columns: 40px 1fr 140px 130px 110px 120px;
+  align-items: center; gap: 12px;
+  padding: 14px 20px; border-bottom: var(--hair); cursor: pointer;
+  transition: background .12s;
+}
+.di-row:last-child { border-bottom: 0; }
+.di-row:hover { background: var(--surface-2); }
+
+.di-ext {
+  width: 32px; height: 38px; border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9.5px; font-weight: 700; color: #fff; letter-spacing: 0.04em;
+}
+.di-ext.pdf  { background: #C44B4B; }
+.di-ext.docx { background: #1E40AF; }
+.di-ext.xlsx { background: #008978; }
+.di-ext.zip  { background: #D4960A; }
+.di-ext.png  { background: #7B4D9F; }
+
+.di-title { font-size: 13.5px; font-weight: 600; color: var(--ink); letter-spacing: -0.005em; }
+.di-sub   { font-size: 11.5px; color: var(--ink-3); margin-top: 2px; }
+.di-meta  { font-size: 12.5px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+
+.di-badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.di-badge.process   { background: var(--gold-soft); color: var(--gold); }
+.di-badge.completed { background: var(--ok-soft); color: var(--ok); }
+.di-badge.draft     { background: var(--surface-2); color: var(--ink-3); }
+.di-badge.cancelled { background: var(--bad-soft); color: var(--bad); }
+.di-badge.signed    { background: var(--ok-soft); color: var(--ok); }
+.di-badge.needs     { background: var(--terra-soft); color: var(--terra); }
+.di-badge.internal  { background: var(--info-soft); color: var(--info); }
+
+.di-view-wrap { position: relative; }
+.di-view-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px; font-size: 12.5px; font-weight: 600;
+  color: var(--terra); background: transparent;
+  border: 1.5px solid var(--terra); border-radius: var(--r-input, 8px);
+  cursor: pointer;
+}
+.di-view-btn:hover { background: var(--terra-soft); }
+.di-view-btn svg { width: 11px; height: 11px; }
+.di-dropdown {
+  display: none; position: absolute; right: 0; top: calc(100% + 4px);
+  min-width: 170px; background: #fff;
+  border: var(--hair); border-radius: var(--r-card, 12px);
+  box-shadow: 0 8px 24px -8px rgba(15,23,42,.18);
+  z-index: 20; padding: 4px 0;
+}
+.di-dropdown.show { display: block; }
+.di-dropdown a {
+  display: block; padding: 8px 14px; font-size: 12.5px;
+  color: var(--ink); cursor: pointer; text-decoration: none;
+}
+.di-dropdown a:hover { background: var(--surface-2); }
+.di-dropdown a.danger { color: var(--bad); }
+
+.di-empty {
+  padding: 80px 20px; text-align: center; color: var(--ink-3);
+}
+.di-empty svg { width: 44px; height: 44px; margin-bottom: 10px; opacity: 0.4; }
+.di-empty .t { font-size: 14px; font-weight: 600; color: var(--ink-2); }
+.di-empty .h { font-size: 12.5px; margin-top: 4px; }
+.di-empty a { color: var(--terra); font-weight: 600; margin-top: 12px; display: inline-block; }
+
+.di-toolbar { display: flex; justify-content: flex-end; margin-bottom: 12px; gap: 8px; }
+</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_aesthetic.css">
+</head>
+<body>
+<div class="app" data-screen-label="Documents"><main class="page">
+    <div class="wrap">
+      <div class="page-bar">
+        <div class="page-title-row">
+          <div class="page-title"><span data-bind-text="summary">Documents</span></div>
+          <span class="muted" data-bind-text="subtitle">Quotes, contracts, signed forms, and internal files</span>
+        </div>
+        <div class="page-actions">
+          <a href="CreateDocument.html" class="btn btn-primary" style="text-decoration:none;display:inline-flex;align-items:center;">+ New document</a>
+        </div>
+      </div>
+
+      <!-- Tabs (match original) -->
+      <nav class="di-tabs" id="diTabs">
+        <a class="di-tab active" data-tab="all">All</a>
+        <a class="di-tab" data-tab="process">In process</a>
+        <a class="di-tab" data-tab="sign">I need to sign</a>
+        <a class="di-tab" data-tab="drafts">Drafts</a>
+        <a class="di-tab" data-tab="completed">Completed</a>
+        <a class="di-tab" data-tab="cancelled">Cancelled</a>
+        <a class="di-tab" data-tab="internal">Internal Documents</a>
+        <a class="di-tab" data-tab="templates">Templates</a>
+        <a class="di-tab" data-tab="fieldcontracts">Field Contracts</a>
+      </nav>
+
+      <div class="di-card" id="diList"></div>
+    </div>
+  </main>
 </div>
+<!-- v12 auto-modal toolbar -->
+<div style="display:flex;gap:8px;flex-wrap:wrap;padding:0 24px 16px;">
+  <button class="s1-btn sec" data-documents-open="docUploadModal" type="button">Upload</button>
+  <button class="s1-btn sec" data-documents-open="docNewFolderModal" type="button">New folder</button>
+  <button class="s1-btn sec" data-documents-open="docMoveModal" type="button">Move</button>
+  <button class="s1-btn sec" data-documents-open="docShareModal" type="button">Share</button>
+  <button class="s1-btn sec" data-documents-open="docDeleteModal" type="button">Delete</button>
+</div>
+<div class="s1-overlay gm-overlay" id="docUploadModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Documents</div><h4>Upload</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">File name</label><input class="s1-input" type="text" name="name"></div>
+    <div><label class="s1-mlabel">Folder</label><input class="s1-input" type="text" name="folder"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Upload</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="docNewFolderModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Documents</div><h4>New folder</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Folder name</label><input class="s1-input" type="text" name="name"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Create</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="docMoveModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Documents</div><h4>Move</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Document id</label><input class="s1-input" type="text" name="id"></div>
+    <div><label class="s1-mlabel">Target folder</label><input class="s1-input" type="text" name="targetFolder"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Move</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="docShareModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Documents</div><h4>Share</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Document id</label><input class="s1-input" type="text" name="id"></div>
+    <div><label class="s1-mlabel">Recipient email</label><input class="s1-input" type="email" name="email"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Share</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="docDeleteModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Documents</div><h4>Delete</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Document id</label><input class="s1-input" type="text" name="id"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Delete</button></div>
+</div></div>
 <script src="../../core/event-bus.js"></script>
 <script src="../../core/state-store.js"></script>
 <script src="../../core/schema.js"></script>
@@ -35,5 +179,172 @@
 <script src="../../core/communication.api.js"></script>
 <script src="../../core/communication.js"></script>
 <script src="../../core/render.js"></script>
+<script src="../../core/standard-page.js"></script>
+<script src="../../core/google-places.js"></script>
 <script src="./module.js"></script>
-</body></html>
+<script>
+const INLINE_DOCS = ([
+  // In process
+  { id:1042, ext:'pdf',  title:'Service contract — Alice Johnson',     to:'alice.johnson@gmail.com',   date:'May 18, 2026', status:'process',   tabs:['all','process'] },
+  { id:1041, ext:'pdf',  title:'Quote — Northside Co. (commercial)',   to:'ops@northsideco.com',       date:'May 17, 2026', status:'process',   tabs:['all','process'] },
+  { id:1040, ext:'pdf',  title:'Box delivery agreement — S. Patel',     to:'sara.patel@yahoo.com',      date:'May 16, 2026', status:'process',   tabs:['all','process'] },
+  // I need to sign
+  { id:1039, ext:'pdf',  title:'Truck 14 — annual safety renewal',     to:'You · countersign',          date:'May 16, 2026', status:'needs',     tabs:['all','sign'] },
+  { id:1038, ext:'docx', title:'Vendor — fuel card terms (Petro-Can)', to:'You · countersign',          date:'May 14, 2026', status:'needs',     tabs:['all','sign'] },
+  // Drafts
+  { id:1037, ext:'docx', title:'Draft — packing services rider',        to:'—',                          date:'Today',        status:'draft',     tabs:['all','drafts'] },
+  { id:1036, ext:'docx', title:'Draft — long distance addendum v3',     to:'—',                          date:'Yesterday',    status:'draft',     tabs:['all','drafts'] },
+  // Completed
+  { id:1035, ext:'pdf',  title:'Service contract — R. Chen (signed)',   to:'rebecca.chen@gmail.com',     date:'May 12, 2026', status:'completed', tabs:['all','completed'] },
+  { id:1034, ext:'pdf',  title:'Service contract — T. Anand (signed)',  to:'tao.anand@hotmail.com',      date:'May 08, 2026', status:'completed', tabs:['all','completed'] },
+  { id:1033, ext:'pdf',  title:'Service contract — Foundry Co.',        to:'cfo@foundry.com',            date:'May 02, 2026', status:'completed', tabs:['all','completed'] },
+  { id:1032, ext:'pdf',  title:'Service contract — M. Tran',            to:'m.tran@outlook.com',         date:'Apr 28, 2026', status:'completed', tabs:['all','completed'] },
+  // Cancelled
+  { id:1031, ext:'pdf',  title:'Quote — Linwood Plaza (declined)',      to:'pm@linwood.com',             date:'Apr 22, 2026', status:'cancelled', tabs:['all','cancelled'] },
+  { id:1030, ext:'pdf',  title:'Quote — Cedar Glen HOA',                to:'board@cedarglen.com',        date:'Apr 15, 2026', status:'cancelled', tabs:['all','cancelled'] },
+  // Internal documents
+  { id:1029, ext:'pdf',  title:'Employee handbook v4.pdf',              to:'All staff',                  date:'Apr 01, 2026', status:'internal',  tabs:['all','internal'] },
+  { id:1028, ext:'pdf',  title:'Workplace safety policy.pdf',           to:'All staff',                  date:'Mar 15, 2026', status:'internal',  tabs:['all','internal'] },
+  { id:1027, ext:'xlsx', title:'Q1 P&L final.xlsx',                     to:'Finance team',               date:'Apr 01, 2026', status:'internal',  tabs:['all','internal'] },
+  { id:1026, ext:'docx', title:'Vendor list 2026.docx',                 to:'Ops team',                   date:'Mar 02, 2026', status:'internal',  tabs:['all','internal'] },
+  // Templates
+  { id:2001, ext:'docx', title:'Standard service contract — template',   to:'Template · used 12×',         date:'Mar 01, 2026', status:'template',  tabs:['templates'] },
+  { id:2002, ext:'docx', title:'Long-distance addendum — template',      to:'Template · used 5×',          date:'Feb 10, 2026', status:'template',  tabs:['templates'] },
+  { id:2003, ext:'docx', title:'Packing services rider — template',      to:'Template · used 9×',          date:'Feb 04, 2026', status:'template',  tabs:['templates'] },
+  { id:2004, ext:'docx', title:'Damage waiver — template',                to:'Template · used 31×',         date:'Jan 18, 2026', status:'template',  tabs:['templates'] },
+  { id:2005, ext:'pdf',  title:'Storage rental agreement — template',    to:'Template · used 18×',         date:'Jan 12, 2026', status:'template',  tabs:['templates'] },
+  // Field contracts (signed in field)
+  { id:3001, ext:'pdf',  title:'Field contract — J. Park (signed)',       to:'jpark@gmail.com',             date:'May 18, 2026', status:'fieldsigned', tabs:['fieldcontracts'] },
+  { id:3002, ext:'pdf',  title:'Field contract — D. Wu (signed)',         to:'david@example.com',           date:'May 16, 2026', status:'fieldsigned', tabs:['fieldcontracts'] },
+  { id:3003, ext:'pdf',  title:'Field contract — M. Tran (signed)',       to:'m.tran@outlook.com',          date:'May 14, 2026', status:'fieldsigned', tabs:['fieldcontracts'] },
+  { id:3004, ext:'pdf',  title:'Field damage report — Truck 02',          to:'Crew · Ravi Patel',           date:'May 09, 2026', status:'fieldsigned', tabs:['fieldcontracts'] }
+]);
+
+const BADGE_LBL = { process:'In process', completed:'Completed', draft:'Draft', cancelled:'Cancelled', needs:'Needs your signature', internal:'Internal', template:'Template', fieldsigned:'Field signed' };
+
+// Read fresh on every render so host state-pushes land. The live backend ships
+// an entirely different shape (`files` array with `name`/`category`/`owner`)
+// so when the backend `docs` array is present we just trust it; otherwise we
+// fall back to the inline default. Field-level normalization is intentionally
+// minimal here because the backend POCO doesn't expose the `tabs`/`status`
+// shape this view filters on — see TODO above.
+function getDocs() {
+  const raw = (window.S1 && window.S1.fixtures && window.S1.fixtures["documents"] && Array.isArray(window.S1.fixtures["documents"].docs) && window.S1.fixtures["documents"].docs.length)
+    ? window.S1.fixtures["documents"].docs
+    : INLINE_DOCS;
+  return raw.map(d => {
+    // Ensure `tabs` is always an array so .includes() works even if the
+    // backend ships a single status string instead of the tab list.
+    let tabs = d.tabs;
+    if (!Array.isArray(tabs)) {
+      tabs = d.status ? ['all', d.status] : ['all'];
+    }
+    return Object.assign({}, d, { tabs });
+  });
+}
+
+function render(tab) {
+  const list = document.getElementById('diList');
+  const shown = getDocs().filter(d => d.tabs.includes(tab));
+  if (!shown.length) {
+    list.innerHTML = `
+      <div class="di-empty">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <div class="t">No documents in this view</div>
+        <div class="h">Documents you create or receive will appear here.</div>
+        <a href="#">+ New document</a>
+      </div>`;
+    return;
+  }
+  list.innerHTML = shown.map(d => `
+    <div class="di-row" data-id="${d.id}">
+      <div class="di-ext ${d.ext}">${d.ext.toUpperCase()}</div>
+      <div>
+        <div class="di-title">${d.title}</div>
+        <div class="di-sub">To: ${d.to}</div>
+      </div>
+      <div class="di-meta">${d.date}</div>
+      <div><span class="di-badge ${d.status}">${BADGE_LBL[d.status]}</span></div>
+      <div class="di-meta" style="font-size:11.5px;color:var(--ink-3);">#${d.id}</div>
+      <div class="di-view-wrap">
+        <button class="di-view-btn" onclick="event.stopPropagation();toggleDd(this);">View <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="6 9 12 15 18 9"/></svg></button>
+        <div class="di-dropdown" data-doc-id="${d.id}">
+          <a href="#">Open</a>
+          <a data-comm-action="action:documents.download" href="#">Download</a>
+          <a data-comm-action="action:documents.send-copy" href="#">Send copy</a>
+          <a data-comm-action="action:documents.rename" href="#">Rename</a>
+          <a data-comm-action="action:documents.delete" href="#" class="danger">Delete</a>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function toggleDd(btn) {
+  const dd = btn.nextElementSibling;
+  document.querySelectorAll('.di-dropdown.show').forEach(el => { if (el !== dd) el.classList.remove('show'); });
+  dd.classList.toggle('show');
+}
+window.toggleDd = toggleDd;
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.di-view-wrap')) {
+    document.querySelectorAll('.di-dropdown.show').forEach(el => el.classList.remove('show'));
+  }
+});
+
+// Tab click — defer to data-tab handler in shared interactions.js, but render content
+document.querySelectorAll('#diTabs .di-tab').forEach(t => t.addEventListener('click', () => {
+  document.querySelectorAll('#diTabs .di-tab').forEach(x => x.classList.toggle('active', x === t));
+  render(t.dataset.tab);
+}));
+
+// Row click → open detail modal
+document.getElementById('diList').addEventListener('click', e => {
+  if (e.target.closest('.di-view-wrap')) return;
+  const row = e.target.closest('.di-row'); if (!row) return;
+  const d = getDocs().find(x => x.id === +row.dataset.id); if (!d) return;
+  const m = document.createElement('div');
+  m.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:center;justify-content:center;z-index:1000;padding:24px;';
+  m.innerHTML = `
+    <div style="background:#fff;border-radius:12px;max-width:640px;width:100%;max-height:84vh;overflow:auto;box-shadow:0 24px 60px -16px rgba(15,23,42,.4);">
+      <div style="padding:22px 26px 16px;border-bottom:var(--hair);display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+        <div style="display:flex;gap:14px;align-items:flex-start;">
+          <div class="di-ext ${d.ext}" style="width:42px;height:48px;font-size:11px;">${d.ext.toUpperCase()}</div>
+          <div>
+            <div style="font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;">Document · #${d.id}</div>
+            <h2 style="margin:6px 0 8px;font-size:20px;font-weight:700;letter-spacing:-0.01em;">${d.title}</h2>
+            <span class="di-badge ${d.status}">${BADGE_LBL[d.status]}</span>
+          </div>
+        </div>
+        <button class="x" style="border:0;background:transparent;font-size:24px;color:var(--ink-3);cursor:pointer;line-height:1;">×</button>
+      </div>
+      <div style="padding:18px 26px;">
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:18px;">
+          <div style="padding:10px 14px;border:var(--hair);border-radius:8px;"><div style="font-size:11px;color:var(--ink-3);">To</div><div style="font-weight:600;margin-top:4px;">${d.to}</div></div>
+          <div style="padding:10px 14px;border:var(--hair);border-radius:8px;"><div style="font-size:11px;color:var(--ink-3);">Date</div><div style="font-weight:600;margin-top:4px;">${d.date}</div></div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;">
+          <button class="btn btn-secondary x">Close</button>
+          <button data-comm-action="action:documents.download" class="btn btn-secondary">Download</button>
+          <button class="btn btn-primary">Open document →</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(m);
+  const close = () => m.remove();
+  m.addEventListener('click', e2 => { if (e2.target === m) close(); });
+  m.querySelectorAll('.x').forEach(b => b.addEventListener('click', close));
+});
+
+render('all');
+
+// Re-render when the host pushes fresh state.
+if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
+  window.S1.bus.on('state:replaced', () => {
+    const active = document.querySelector('#diTabs .di-tab.active');
+    render(active ? active.dataset.tab : 'all');
+  });
+}
+</script>
+</body>
+</html>

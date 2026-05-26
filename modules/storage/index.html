@@ -1,29 +1,178 @@
-<!DOCTYPE html><html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Storage</title>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Storage — Redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../../assets/css/module.css">
-</head><body>
-<div class="wrap">
-  <div class="page-bar"><div class="page-title">Storage</div></div>
-  <section class="section">
-    <table class="tbl">
-      <thead><tr><th>#</th><th>Name</th><th>Folder</th><th>Size</th><th>Modified</th><th>Type</th></tr></thead>
-      <tbody data-bind="documents">
-        <template>
-          <tr>
-            <td>{{id|num}}</td>
-            <td>{{name}}</td>
-            <td>{{folder}}</td>
-            <td>{{size|bytes}}</td>
-            <td>{{modified|date}}</td>
-            <td>{{type}}</td>
-          </tr>
-        </template>
-      </tbody>
-    </table>
-  </section>
+<link rel="stylesheet" href="_system.css">
+<template id="__bundler_thumbnail" data-bg-color="#FFFFFF"><svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg"><rect width="1200" height="800" fill="#FFFFFF"/><rect x="60" y="60" width="80" height="80" rx="12" fill="#004D40"/><text x="100" y="115" text-anchor="middle" font-family="Inter" font-weight="800" font-size="28" fill="#D4960A">S</text><rect x="200" y="80" width="260" height="22" rx="3" fill="#0A2540"/><rect x="200" y="160" width="940" height="580" rx="6" fill="#FAFBFC" stroke="#EFF2F5"/><text x="600" y="790" text-anchor="middle" font-family="Inter" font-weight="500" font-size="14" fill="#697386">Storage · Loading…</text></svg></template>
+
+<style>
+.stor-filter-bar { display:flex; gap:6px; align-items:center; margin-bottom:18px; flex-wrap:wrap; }
+.stor-filter-btn {
+  padding:8px 18px; font-size:13px; font-weight:500; color:var(--ink-3);
+  border-radius:var(--r-pill, 999px); text-decoration:none; cursor:pointer;
+  transition: background .12s, color .12s;
+}
+.stor-filter-btn:hover { color:var(--ink); background:var(--surface-2); }
+.stor-filter-btn.active { background:var(--terra); color:#fff; }
+
+.stor-pill { display:inline-block; padding:3px 10px; border-radius:999px; font-size:11px; font-weight:600; }
+.stor-pill.active    { background:var(--ok-soft); color:var(--ok); }
+.stor-pill.closed    { background:var(--surface-2); color:var(--ink-3); }
+.stor-pill.suspended { background:var(--warn-soft); color:var(--warn); }
+</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_aesthetic.css">
+</head>
+<body>
+<div class="app" data-screen-label="Storage"><main class="page">
+    <div class="wrap">
+      <div class="page-bar">
+        <div class="page-title-row">
+          <div class="page-title">Storage <span class="muted" style="font-size:18px;font-weight:600;color:var(--ink-3);margin-left:8px;" data-bind-text="subtitle">32</span></div>
+          <span class="muted">Customer storage accounts</span>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-primary" onclick="document.getElementById('newStorModal').classList.add('open')">+ New Storage Account</button>
+        </div>
+      </div>
+
+      <!-- KPI strip — matches original 4 cards -->
+      <div class="stat-group" style="margin-bottom:24px;">
+        <div class="stat-col"><div class="stat-eyebrow" data-bind-text="kpis.0.label">Total accounts</div><div class="stat-number" data-bind-text="kpis.0.value">32</div><div class="stat-delta" data-bind-text="kpis.0.delta">across 3 buildings</div></div>
+        <div class="stat-col"><div class="stat-eyebrow" data-bind-text="kpis.1.label">Active</div><div class="stat-number" style="color:var(--ok);" data-bind-text="kpis.1.value">28</div><div class="stat-delta" data-bind-text="kpis.1.delta">2 past due</div></div>
+        <div class="stat-col"><div class="stat-eyebrow" data-bind-text="kpis.2.label">Total units</div><div class="stat-number" data-bind-text="kpis.2.value">42</div><div class="stat-delta" data-bind-text="kpis.2.delta">38 occupied · 90% fill</div></div>
+        <div class="stat-col"><div class="stat-eyebrow" data-bind-text="kpis.3.label">Monthly revenue</div><div class="stat-number" style="color:var(--ok);" data-bind-text="kpis.3.value">$7,820</div><div class="stat-delta" data-bind-text="metrics.stat_delta.0">+$385 vs Apr</div></div>
+      </div>
+
+      <!-- Filter bar — matches original (All / Active / Closed / Suspended) -->
+      <div class="stor-filter-bar" id="storFilters">
+        <a data-comm-action="save:storage.filter:all" class="stor-filter-btn active" data-filter="all">All <span class="muted" style="margin-left:4px;font-variant-numeric:tabular-nums;" data-bind-text="mutedCounts.0">32</span></a>
+        <a data-comm-action="save:storage.filter:active" class="stor-filter-btn" data-filter="active">Active <span class="muted" style="margin-left:4px;font-variant-numeric:tabular-nums;" data-bind-text="mutedCounts.1">28</span></a>
+        <a data-comm-action="save:storage.filter:closed" class="stor-filter-btn" data-filter="closed">Closed <span class="muted" style="margin-left:4px;font-variant-numeric:tabular-nums;" data-bind-text="mutedCounts.2">3</span></a>
+        <a data-comm-action="save:storage.filter:suspended" class="stor-filter-btn" data-filter="suspended">Suspended <span class="muted" style="margin-left:4px;font-variant-numeric:tabular-nums;" data-bind-text="mutedCounts.3">1</span></a>
+        <div class="grow" style="flex:1;"></div>
+        <input class="search-input" placeholder="Search by customer…" id="storSearch">
+      </div>
+
+      <table class="tbl">
+        <thead><tr><th>Customer</th><th>Units</th><th class="num">Monthly</th><th class="num">Balance</th><th class="num">Since</th><th>Status</th><th></th></tr></thead>
+        <tbody id="storBody"></tbody>
+      </table>
+    </div>
+  </main>
 </div>
+<!-- New Storage Account Modal -->
+<style>
+.stm-overlay { position:fixed; inset:0; background:rgba(15,23,42,0.45); display:none; align-items:center; justify-content:center; z-index:1000; padding:24px; }
+.stm-overlay.open { display:flex; }
+.stm-modal { background:#fff; border-radius:12px; width:720px; max-width:96vw; max-height:90vh; overflow-y:auto; box-shadow:0 25px 50px rgba(0,0,0,0.25); }
+.stm-head { display:flex; justify-content:space-between; align-items:center; padding:18px 22px; border-bottom:var(--hair); }
+.stm-title { font-size:16px; font-weight:700; }
+.stm-close { font-size:20px; color:var(--ink-3); cursor:pointer; background:transparent; border:0; }
+.stm-body { padding:18px 22px; }
+.stm-section-title { font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--ink-3); margin:8px 0 10px; padding-bottom:8px; border-bottom:var(--hair); }
+.stm-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px 14px; margin-bottom:18px; }
+.stm-field { display:flex; flex-direction:column; gap:5px; }
+.stm-field.full { grid-column:1/-1; }
+.stm-label { font-size:12px; font-weight:600; color:var(--ink); }
+.stm-label .req { color:var(--bad); }
+.stm-input, .stm-select, .stm-textarea { width:100%; padding:9px 11px; border:var(--hair); border-radius:6px; font-size:13px; background:#fff; color:var(--ink); font-family:inherit; outline:none; }
+.stm-textarea { min-height:70px; resize:vertical; }
+.stm-input:focus, .stm-select:focus, .stm-textarea:focus { border-color:var(--terra); box-shadow:0 0 0 3px var(--terra-soft); }
+.stm-actions { display:flex; justify-content:flex-end; gap:8px; padding:14px 22px; border-top:var(--hair); }
+</style>
+<div class="stm-overlay" id="newStorModal">
+  <div class="stm-modal">
+    <div class="stm-head"><div class="stm-title">New Storage Account</div><button data-modal-close class="stm-close">✕</button></div>
+    <div class="stm-body">
+
+      <div class="stm-section-title">Account Info</div>
+      <div class="stm-grid">
+        <div class="stm-field"><label class="stm-label">Customer name <span class="req">*</span></label><input name="customerName" class="stm-input" type="text" placeholder="e.g. John Smith"></div>
+        <div class="stm-field"><label class="stm-label">Account type</label><select name="accountType" class="stm-select" data-bind-options="accountTypeOptions"></select></div>
+        <div class="stm-field"><label class="stm-label">Email</label><input name="email" class="stm-input" type="email"></div>
+        <div class="stm-field"><label class="stm-label">Phone</label><input name="phone" class="stm-input" type="tel"></div>
+        <div class="stm-field full"><label class="stm-label">Address</label><input name="address" class="stm-input" type="text" data-places-autocomplete></div>
+      </div>
+
+      <div class="stm-section-title">Units</div>
+      <div class="stm-grid">
+        <div class="stm-field"><label class="stm-label">Unit number <span class="req">*</span></label><input name="unitNumber" class="stm-input" type="text" placeholder="e.g. A-12"></div>
+        <div class="stm-field"><label class="stm-label">Size</label><select name="size" class="stm-select" data-bind-options="sizeOptions2"></select></div>
+        <div class="stm-field"><label class="stm-label">Climate-controlled</label><select name="climateControlled" class="stm-select" data-bind-options="climateControlledOptions"></select></div>
+        <div class="stm-field"><label class="stm-label">Access code (optional)</label><input name="accessCode" class="stm-input" type="text" placeholder="#####"></div>
+      </div>
+      <button class="btn btn-secondary" type="button" style="margin-bottom:18px;">+ Add another unit</button>
+
+      <div class="stm-section-title">Billing</div>
+      <div class="stm-grid">
+        <div class="stm-field"><label class="stm-label">Monthly rate <span class="req">*</span></label><input name="monthlyRate" class="stm-input" type="number" step="0.01" placeholder="$"></div>
+        <div class="stm-field"><label class="stm-label">Billing cycle</label><select name="billingCycle" class="stm-select" data-bind-options="billingCycleOptions"></select></div>
+        <div class="stm-field"><label class="stm-label">Start date <span class="req">*</span></label><input name="startDate" class="stm-input" type="date"></div>
+        <div class="stm-field"><label class="stm-label">Payment method</label><select name="paymentMethod" class="stm-select" data-bind-options="paymentMethodOptions"></select></div>
+        <div class="stm-field"><label class="stm-label">Deposit collected</label><input name="depositCollected" class="stm-input" type="number" step="0.01" placeholder="$"></div>
+        <div class="stm-field"><label class="stm-label">Auto-charge late fee after</label><div style="display:flex;gap:6px;align-items:center;"><input name="autoChargeLateFeeAfter" class="stm-input" type="number" value="5" style="max-width:80px;"><span style="font-size:12px;color:var(--ink-3);">days overdue</span></div></div>
+      </div>
+
+      <div class="stm-section-title">Notes</div>
+      <textarea name="autoChargeLateFeeAfter" class="stm-textarea" placeholder="Internal notes — access requirements, key location, etc."></textarea>
+    </div>
+    <div class="stm-actions">
+      <button data-modal-close class="btn btn-secondary">Cancel</button>
+      <button data-modal-save class="btn btn-primary">Create Account</button>
+    </div>
+  </div>
+</div>
+<!-- v12: Storage toolbar -->
+<div style="display:flex;gap:8px;flex-wrap:wrap;padding:0 24px 16px;">
+  <button class="s1-btn pri" data-st-open="newStorModal" type="button">+ New unit</button>
+  <button class="s1-btn sec" data-st-open="moveStorModal" type="button">Move to unit</button>
+  <button class="s1-btn sec" data-st-open="releaseStorModal" type="button">Release</button>
+  <button class="s1-btn sec" data-st-open="billCycleModal" type="button">Bill cycle</button>
+</div>
+<div class="s1-overlay st-overlay" id="newStorModal" role="dialog"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Storage</div><h4>New storage unit</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div class="full"><label class="s1-mlabel">Customer</label><select class="s1-select" name="customerId" data-bind-options="customers"><option value="">Choose…</option></select></div>
+    <div><label class="s1-mlabel">Unit #</label><input class="s1-input" name="unitNumber"></div>
+    <div><label class="s1-mlabel">Size</label><select class="s1-select" name="sizeSqft" data-bind-options="sizeOptions"><option value="">Choose…</option></select></div>
+    <div><label class="s1-mlabel">Monthly rate</label><input class="s1-input" type="number" step="0.01" name="monthlyRate"></div>
+    <div><label class="s1-mlabel">Start date</label><input class="s1-input" type="date" name="startDate"></div>
+    <div class="full"><label class="s1-mlabel">Notes</label><textarea class="s1-textarea" name="notes"></textarea></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Create unit</button></div>
+</div></div>
+<div class="s1-overlay st-overlay" id="moveStorModal" role="dialog"><div class="s1-modal">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Storage</div><h4>Move to unit</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid"><input type="hidden" name="unitId">
+    <div class="full"><label class="s1-mlabel">Target unit</label><select class="s1-select" name="targetUnitId" data-bind-options="availableUnits"><option value="">Choose…</option></select></div>
+    <div class="full"><label class="s1-mlabel">Move date</label><input class="s1-input" type="date" name="moveDate"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Move</button></div>
+</div></div>
+<div class="s1-overlay st-overlay" id="releaseStorModal" role="dialog"><div class="s1-modal">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Storage</div><h4>Release unit</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid"><input type="hidden" name="unitId">
+    <div><label class="s1-mlabel">Release date</label><input class="s1-input" type="date" name="releaseDate"></div>
+    <div><label class="s1-mlabel">Final charge</label><input class="s1-input" type="number" step="0.01" name="finalCharge"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn dan" data-modal-save type="button">Release</button></div>
+</div></div>
+<div class="s1-overlay st-overlay" id="billCycleModal" role="dialog"><div class="s1-modal">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Storage</div><h4>Run bill cycle</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div class="full"><label class="s1-mlabel">Period</label><input class="s1-input" type="month" name="periodMonth"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Run</button></div>
+</div></div>
 <script src="../../core/event-bus.js"></script>
 <script src="../../core/state-store.js"></script>
 <script src="../../core/schema.js"></script>
@@ -32,5 +181,110 @@
 <script src="../../core/communication.api.js"></script>
 <script src="../../core/communication.js"></script>
 <script src="../../core/render.js"></script>
+<script src="../../core/standard-page.js"></script>
+<script src="../../core/google-places.js"></script>
 <script src="./module.js"></script>
-</body></html>
+<script>
+const INLINE_ACCOUNTS = ([
+  { id:101, name:'Jordan Chen',         units:'A-12 · 5×10',          monthly:'$165', balance:'$0',     since:'Apr 2024', status:'active',    av:'JC', avc:'var(--terra)' },
+  { id:102, name:'Sara Foster',         units:'B-04 · 10×10',         monthly:'$245', balance:'$0',     since:'Jan 2023', status:'active',    av:'SF', avc:'var(--info)' },
+  { id:103, name:'Northside Co.',       units:'C-12, C-13 · 2 units', monthly:'$720', balance:'$0',     since:'Oct 2022', status:'active',    av:'NC', avc:'var(--teal)' },
+  { id:104, name:'Reed Inc.',           units:'C-14 · 10×20',         monthly:'$385', balance:'$0',     since:'Dec 2025', status:'active',    av:'RI', avc:'var(--plum)' },
+  { id:105, name:'M. Parker',           units:'A-22 · 5×10',          monthly:'$165', balance:'−$165',  since:'Mar 2025', status:'suspended', av:'MP', avc:'var(--warn)' },
+  { id:106, name:'Tao Anand',           units:'B-09 · 10×10',         monthly:'$245', balance:'$0',     since:'Aug 2024', status:'active',    av:'TA', avc:'var(--info)' },
+  { id:107, name:'L. Dunlop',           units:'A-08 · 5×10',          monthly:'—',    balance:'$0',     since:'Jan 2021', status:'closed',    av:'LD', avc:'var(--ink-3)' },
+  { id:108, name:'Maple Court Condos',  units:'C-08 · 10×20',         monthly:'$385', balance:'$0',     since:'Jun 2025', status:'active',    av:'MC', avc:'var(--teal)' },
+  { id:109, name:'R. Chen',             units:'B-11 · 10×10',         monthly:'$245', balance:'−$700',  since:'Feb 2024', status:'suspended', av:'RC', avc:'var(--warn)' },
+  { id:110, name:'Daniel Park',         units:'A-04 · 5×5',           monthly:'$120', balance:'$0',     since:'Mar 2024', status:'active',    av:'DP', avc:'var(--terra)' },
+  { id:111, name:'Old Mill Holdings',   units:'C-01 · 10×20',         monthly:'—',    balance:'$0',     since:'Nov 2020', status:'closed',    av:'OM', avc:'var(--ink-3)' },
+  { id:112, name:'Pinewood Estates',    units:'C-09, C-10 · 2 units', monthly:'$720', balance:'$0',     since:'Sep 2024', status:'active',    av:'PE', avc:'var(--plum)' }
+]);
+
+const STATUS_LBL = { active:'Active', closed:'Closed', suspended:'Suspended' };
+
+// Read fresh on every render so host state-pushes land. The live backend POCO
+// uses `units` (per-storage-unit shape) instead of an `accounts` array; if no
+// `accounts` array is present we keep using the inline default rather than
+// reinterpret unit-level rows as customer accounts.
+function getAccounts() {
+  const raw = (window.S1 && window.S1.fixtures && window.S1.fixtures["storage"] && Array.isArray(window.S1.fixtures["storage"].accounts) && window.S1.fixtures["storage"].accounts.length)
+    ? window.S1.fixtures["storage"].accounts
+    : INLINE_ACCOUNTS;
+  return raw.map(a => Object.assign({}, a, {
+    name:    a.name    || a.customer || '',
+    units:   a.units   || '',
+    monthly: a.monthly || '',
+    balance: a.balance || '',
+    since:   a.since   || '',
+    status:  a.status  || 'active',
+    av:      a.av      || ((a.name || a.customer || '').split(' ').map(s=>s[0]||'').join('').slice(0,2)),
+    avc:     a.avc     || 'var(--ink-3)'
+  }));
+}
+
+function render() {
+  const f = document.querySelector('#storFilters .stor-filter-btn.active')?.dataset.filter || 'all';
+  const q = document.getElementById('storSearch').value.trim().toLowerCase();
+  const shown = getAccounts().filter(a => {
+    if (f !== 'all' && a.status !== f) return false;
+    if (q && !a.name.toLowerCase().includes(q)) return false;
+    return true;
+  });
+  document.getElementById('storBody').innerHTML = shown.map(a => `
+    <tr data-id="${a.id}" style="cursor:pointer;">
+      <td><div class="who"><span class="who-av" style="background:${a.avc};">${a.av}</span><div><div class="who-nm">${a.name}</div></div></div></td>
+      <td>${a.units}</td>
+      <td class="num">${a.monthly}</td>
+      <td class="num" style="${a.balance.startsWith('−')?'color:var(--bad);font-weight:600;':''}">${a.balance}</td>
+      <td class="num cell-light">${a.since}</td>
+      <td><span class="stor-pill ${a.status}">${STATUS_LBL[a.status]}</span></td>
+      <td onclick="event.stopPropagation();"><button class="btn btn-ghost" style="font-size:11.5px;">Edit</button></td>
+    </tr>`).join('') || '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--ink-3);">No accounts match.</td></tr>';
+}
+
+document.querySelectorAll('#storFilters .stor-filter-btn').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#storFilters .stor-filter-btn').forEach(x => x.classList.toggle('active', x === b));
+  render();
+}));
+document.getElementById('storSearch').addEventListener('input', render);
+render();
+
+// Row click → modal
+document.getElementById('storBody').addEventListener('click', e => {
+  const tr = e.target.closest('tr[data-id]'); if (!tr) return;
+  const a = getAccounts().find(x => x.id === +tr.dataset.id); if (!a) return;
+  const m = document.createElement('div');
+  m.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:center;justify-content:center;z-index:1000;padding:24px;';
+  m.innerHTML = `<div style="background:#fff;border-radius:12px;max-width:540px;width:100%;padding:24px 26px;box-shadow:0 24px 60px -16px rgba(15,23,42,.4);">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;gap:14px;">
+      <div style="display:flex;gap:14px;align-items:center;">
+        <div class="who-av" style="background:${a.avc};width:42px;height:42px;font-size:14px;">${a.av}</div>
+        <div><div style="font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;">Storage account #${a.id}</div><h2 style="margin:6px 0 0;font-size:20px;font-weight:700;letter-spacing:-0.01em;">${a.name}</h2></div>
+      </div>
+      <button class="x" style="border:0;background:transparent;font-size:24px;color:var(--ink-3);cursor:pointer;line-height:1;">×</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:18px;">
+      <div style="padding:10px 14px;border:var(--hair);border-radius:8px;"><div style="font-size:11px;color:var(--ink-3);">Units</div><div style="font-weight:600;margin-top:4px;">${a.units}</div></div>
+      <div style="padding:10px 14px;border:var(--hair);border-radius:8px;"><div style="font-size:11px;color:var(--ink-3);">Monthly</div><div style="font-weight:600;margin-top:4px;">${a.monthly}</div></div>
+      <div style="padding:10px 14px;border:var(--hair);border-radius:8px;"><div style="font-size:11px;color:var(--ink-3);">Balance</div><div style="font-weight:600;margin-top:4px;${a.balance.startsWith('−')?'color:var(--bad);':''}">${a.balance}</div></div>
+      <div style="padding:10px 14px;border:var(--hair);border-radius:8px;"><div style="font-size:11px;color:var(--ink-3);">Status</div><div style="margin-top:4px;"><span class="stor-pill ${a.status}">${STATUS_LBL[a.status]}</span></div></div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;">
+      <button class="btn btn-secondary x">Close</button>
+      <button data-comm-action="action:storage.send-statement" class="btn btn-secondary">Send statement</button>
+      <button class="btn btn-primary">Edit account</button>
+    </div>
+  </div>`;
+  document.body.appendChild(m);
+  const close = () => m.remove();
+  m.addEventListener('click', e2 => { if (e2.target === m) close(); });
+  m.querySelectorAll('.x').forEach(b => b.addEventListener('click', close));
+});
+
+// Re-render when the host pushes fresh state.
+if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
+  window.S1.bus.on('state:replaced', render);
+}
+</script>
+</body>
+</html>

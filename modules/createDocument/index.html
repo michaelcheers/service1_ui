@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Create Document — Redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_system.css">
+<style>
+.cd-wrap { max-width: 980px; margin: 0 auto; padding: 24px 28px 64px; }
+.cd-header { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+.cd-header h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; margin: 0; }
+.cd-header .back { font-size: 13px; color: var(--terra); text-decoration: none; }
+.cd-card { background: #fff; border: var(--hair); border-radius: 10px; padding: 24px 26px; margin-bottom: 14px; }
+.cd-section-title { font-size: 14px; font-weight: 700; color: var(--ink); margin: 0 0 14px; }
+.cd-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 18px; }
+.cd-field { display: flex; flex-direction: column; gap: 6px; }
+.cd-field.full { grid-column: 1 / -1; }
+.cd-label { font-size: 13px; font-weight: 600; color: var(--ink); }
+.cd-label .req { color: var(--bad); }
+.cd-help { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
+.cd-input, .cd-select, .cd-textarea {
+  width: 100%; padding: 10px 12px; border: var(--hair); border-radius: 7px; font-size: 13.5px; background: #fff; color: var(--ink); font-family: inherit; outline: none;
+}
+.cd-textarea { min-height: 110px; resize: vertical; }
+.cd-input:focus, .cd-select:focus, .cd-textarea:focus { border-color: var(--terra); box-shadow: 0 0 0 3px var(--terra-soft); }
+.cd-upload { padding: 32px 20px; border: 2px dashed var(--line-2); border-radius: 10px; text-align: center; color: var(--ink-3); font-size: 13px; }
+.cd-upload .icon { font-size: 36px; margin-bottom: 8px; }
+.cd-upload .lnk { color: var(--terra); font-weight: 600; cursor: pointer; }
+.cd-actions { display: flex; justify-content: flex-end; gap: 10px; padding-top: 6px; }
+.cd-btn-primary { padding: 10px 18px; background: var(--terra); color: #fff; border: 0; border-radius: 7px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.cd-btn-secondary { padding: 10px 18px; background: #fff; color: var(--ink); border: var(--hair); border-radius: 7px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.cd-step-bar { display: flex; gap: 2px; margin-bottom: 18px; background:#fff; border:var(--hair); border-radius:8px; padding:4px; }
+.cd-step { flex: 1; padding: 10px; text-align: center; font-size: 12.5px; font-weight: 600; color: var(--ink-3); cursor: pointer; border-radius: 6px; }
+.cd-step.active { background: var(--terra); color: #fff; }
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_aesthetic.css">
+</head>
+<body>
+<div class="app" data-screen-label="Create Document"><main class="page">
+    <div class="cd-wrap">
+      <div class="cd-header">
+        <a class="back" href="Documents.html">← Back to Documents</a>
+      </div>
+      <h1 style="font-size:24px;font-weight:700;letter-spacing:-0.02em;margin:0 0 18px;" data-bind-text="summary">Create Document</h1>
+
+      <div class="cd-step-bar">
+        <div class="cd-step active">1. Details</div>
+        <div class="cd-step">2. Upload / Compose</div>
+        <div class="cd-step">3. Recipients &amp; Send</div>
+      </div>
+
+      <form>
+        <div class="cd-card">
+          <div class="cd-section-title">Document Details</div>
+          <div class="cd-grid">
+            <div class="cd-field"><label class="cd-label">Title <span class="req">*</span></label><input class="cd-input" type="text" placeholder="e.g. Service contract — Alice Johnson"></div>
+            <div class="cd-field"><label class="cd-label">Document Type <span class="req">*</span></label><select class="cd-select" data-bind-options="optionsOptions"></select></div>
+            <div class="cd-field"><label class="cd-label">Recipient Type</label><select class="cd-select" data-bind-options="recipientTypeOptions"></select></div>
+            <div class="cd-field"><label class="cd-label">Customer / Account</label><select class="cd-select" data-bind-options="customerAccountOptions"><option value="Select customer…">Select customer…</option></select></div>
+            <div class="cd-field full"><label class="cd-label">Description</label><textarea class="cd-textarea" placeholder="Brief description of the document — what it covers, why it's being sent…"></textarea></div>
+            <div class="cd-field"><label class="cd-label">Linked job</label><select class="cd-select" data-bind-options="linkedJobOptions"><option value="— None —">— None —</option></select></div>
+            <div class="cd-field"><label class="cd-label">Branch</label><select class="cd-select" data-bind-options="branchOptions"></select></div>
+            <div class="cd-field"><label class="cd-label">Effective date</label><input class="cd-input" type="date"></div>
+            <div class="cd-field"><label class="cd-label">Expires</label><input class="cd-input" type="date"></div>
+          </div>
+        </div>
+
+        <div class="cd-card">
+          <div class="cd-section-title">Source</div>
+          <div class="cd-grid">
+            <div class="cd-field full">
+              <label class="cd-label">How would you like to create this document?</label>
+              <div style="display:flex;gap:10px;margin-top:6px;">
+                <label style="flex:1;padding:14px;border:1px solid var(--terra);background:var(--terra-soft);border-radius:8px;cursor:pointer;"><input type="radio" name="src" checked style="accent-color:var(--terra);margin-right:8px;"><b>Upload PDF</b><div class="cd-help" style="margin-left:24px;">Upload a finalized PDF/DOCX and request signatures</div></label>
+                <label style="flex:1;padding:14px;border:var(--hair);border-radius:8px;cursor:pointer;"><input type="radio" name="src" style="accent-color:var(--terra);margin-right:8px;"><b>Use template</b><div class="cd-help" style="margin-left:24px;">Start from a saved template and merge customer fields</div></label>
+                <label style="flex:1;padding:14px;border:var(--hair);border-radius:8px;cursor:pointer;"><input type="radio" name="src" style="accent-color:var(--terra);margin-right:8px;"><b>Compose</b><div class="cd-help" style="margin-left:24px;">Write the document from scratch with a rich-text editor</div></label>
+              </div>
+            </div>
+            <div class="cd-field full">
+              <label class="cd-label">Upload PDF / DOCX</label>
+              <div class="cd-upload"><div class="icon">📎</div>Drag &amp; drop a file here, or <span class="lnk">browse…</span><div class="cd-help" style="margin-top:6px;">Max 25 MB. Accepted: PDF, DOCX, DOC</div></div>
+            </div>
+            <div class="cd-field"><label class="cd-label">Template (if using one)</label><select class="cd-select" data-bind-options="templateOptions"><option value="— None —">— None —</option></select></div>
+            <div class="cd-field"><label class="cd-label">Save as new template</label><div style="padding:9px 0;"><label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;"><input type="checkbox" style="accent-color:var(--terra);">Yes — save this document for reuse</label></div></div>
+          </div>
+        </div>
+
+        <div class="cd-card">
+          <div class="cd-section-title">Recipients</div>
+          <div class="cd-grid">
+            <div class="cd-field full">
+              <label class="cd-label">Recipients (signing order)</label>
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <div style="display:grid;grid-template-columns:24px 1fr 1fr 1fr 100px auto;gap:8px;align-items:center;">
+                  <span style="font-weight:700;color:var(--ink-3);">1.</span>
+                  <input class="cd-input" type="text" placeholder="Name" value="Alice Johnson">
+                  <input class="cd-input" type="email" placeholder="Email" value="alice.johnson@gmail.com">
+                  <select class="cd-select" data-bind-options="optionsOptions2"></select>
+                  <input class="cd-input" type="text" placeholder="Order" value="1" style="text-align:center;">
+                  <button data-comm-action="action:createDocument.recipient.remove" type="button" style="padding:8px 10px;color:#B91C1C;background:transparent;border:0;font-size:13px;cursor:pointer;">Remove</button>
+                </div>
+                <div style="display:grid;grid-template-columns:24px 1fr 1fr 1fr 100px auto;gap:8px;align-items:center;">
+                  <span style="font-weight:700;color:var(--ink-3);">2.</span>
+                  <input class="cd-input" type="text" placeholder="Name" value="Admin User">
+                  <input class="cd-input" type="email" placeholder="Email" value="admin@businesscard.com">
+                  <select class="cd-select" data-bind-options="optionsOptions3"></select>
+                  <input class="cd-input" type="text" placeholder="Order" value="2" style="text-align:center;">
+                  <button data-comm-action="action:createDocument.recipient.remove" type="button" style="padding:8px 10px;color:#B91C1C;background:transparent;border:0;font-size:13px;cursor:pointer;">Remove</button>
+                </div>
+              </div>
+              <button type="button" class="cd-btn-secondary" style="margin-top:10px;">+ Add recipient</button>
+            </div>
+            <div class="cd-field full"><label class="cd-label">Message to recipients</label><textarea class="cd-textarea" placeholder="Hi Alice, please review and sign your service contract attached. Let me know if you have any questions!"></textarea></div>
+            <div class="cd-field"><label class="cd-label">Reminder schedule</label><select class="cd-select" data-bind-options="reminderScheduleOptions"></select></div>
+            <div class="cd-field"><label class="cd-label">Auto-expire if not signed in</label><select class="cd-select" data-bind-options="autoExpireIfNotSignedInOptions"></select></div>
+          </div>
+        </div>
+
+        <div class="cd-actions">
+          <a href="Documents.html" class="cd-btn-secondary" style="text-decoration:none;display:inline-flex;align-items:center;">Cancel</a>
+          <button data-comm-action="action:createDocument.draft.save" type="button" class="cd-btn-secondary">Save as Draft</button>
+          <button data-comm-action="action:createDocument.send" type="submit" class="cd-btn-primary">Send for Signature</button>
+        </div>
+      </form>
+    </div>
+  </main>
+</div><div class="s1-overlay gm-overlay" id="chooseTemplateModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Create document</div><h4>Choose template</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Template</label><select class="s1-select" name="templateId" data-bind-options="templates"><option value="">Choose…</option></select></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Choose</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="insertFieldModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Create document</div><h4>Insert field</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Field type</label><select class="s1-select" name="kind" data-bind-options="fieldKinds"><option value="">Choose…</option></select></div>
+    <div><label class="s1-mlabel">Label</label><input class="s1-input" type="text" name="label"></div>
+    <div class="full"><label><input type="checkbox" name="required"> Required</label></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Insert</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="sendDocumentModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Create document</div><h4>Send for signing</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Recipient email</label><input class="s1-input" type="email" name="recipientEmail"></div>
+    <div><label class="s1-mlabel">Signer role</label><select class="s1-select" name="signerRole" data-bind-options="signerRoles"><option value="">Choose…</option></select></div>
+    <div><label class="s1-mlabel">Signing order</label><select class="s1-select" name="signingOrder" data-bind-options="signingOrderOptions"><option value="">Choose…</option></select></div>
+    <div class="full"><label class="s1-mlabel">Message</label><textarea class="s1-textarea" name="message"></textarea></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Send</button></div>
+</div></div>
+<script src="../../core/event-bus.js"></script>
+<script src="../../core/state-store.js"></script>
+<script src="../../core/schema.js"></script>
+<script src="../../core/fixtures.js"></script>
+<script src="../../core/communication.mock.js"></script>
+<script src="../../core/communication.api.js"></script>
+<script src="../../core/communication.js"></script>
+<script src="../../core/render.js"></script>
+<script src="../../core/standard-page.js"></script>
+<script src="../../core/google-places.js"></script>
+<script src="./module.js"></script>
+</body>
+</html>

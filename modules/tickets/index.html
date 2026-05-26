@@ -1,31 +1,158 @@
-<!DOCTYPE html><html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Tickets</title>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tickets — Redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../../assets/css/module.css">
-</head><body>
-<div class="wrap">
-  <div class="page-bar">
-    <div class="page-title">Tickets</div>
-    <div><button class="btn btn-primary">New ticket</button></div>
-  </div>
-  <section class="section">
-    <table class="tbl">
-      <thead><tr><th>#</th><th>Subject</th><th>Status</th><th>Priority</th><th>Assignee</th><th>Updated</th></tr></thead>
-      <tbody data-bind="tickets">
-        <template>
+<link rel="stylesheet" href="_system.css">
+<template id="__bundler_thumbnail" data-bg-color="#FFFFFF"><svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg"><rect width="1200" height="800" fill="#FFFFFF"/><rect x="60" y="60" width="80" height="80" rx="12" fill="#004D40"/><text x="100" y="115" text-anchor="middle" font-family="Inter" font-weight="800" font-size="28" fill="#D4960A">S</text><rect x="200" y="80" width="260" height="22" rx="3" fill="#0A2540"/><rect x="200" y="160" width="940" height="580" rx="6" fill="#FAFBFC" stroke="#EFF2F5"/><text x="600" y="790" text-anchor="middle" font-family="Inter" font-weight="500" font-size="14" fill="#697386">Tickets · Loading…</text></svg></template>
+
+<style>
+.tix-tabs { display:flex; gap:4px; margin-bottom:18px; }
+.tix-tab {
+  padding:8px 18px; font-size:13px; font-weight:500; color:var(--ink-3);
+  border-radius:var(--r-pill, 999px); text-decoration:none; cursor:pointer;
+  transition: background .12s, color .12s;
+}
+.tix-tab:hover { color:var(--ink); background:var(--surface-2); }
+.tix-tab.active { background:var(--terra); color:#fff; }
+
+.tix-filters { display:grid; grid-template-columns:repeat(4, 1fr) auto; gap:10px; margin-bottom:16px; align-items:end; }
+.tix-fg { display:flex; flex-direction:column; gap:4px; }
+.tix-fg label { font-size:11px; font-weight:600; color:var(--ink-3); text-transform:uppercase; letter-spacing:0.05em; }
+.tix-fg input, .tix-fg select {
+  height:34px; padding:0 10px; font-size:12.5px;
+  border:var(--hair); border-radius:var(--r-input, 8px);
+  background:#fff; color:var(--ink); font-family:inherit;
+}
+.tix-fg input:focus, .tix-fg select:focus { outline:0; border-color:var(--terra); box-shadow:0 0 0 3px var(--terra-soft); }
+
+.tix-pri { display:inline-block; padding:3px 9px; border-radius:999px; font-size:11px; font-weight:600; }
+.tix-pri.high   { background:var(--bad-soft); color:var(--bad); }
+.tix-pri.med    { background:var(--warn-soft); color:var(--warn); }
+.tix-pri.low    { background:var(--surface-2); color:var(--ink-3); }
+
+.tix-st  { display:inline-block; padding:3px 10px; border-radius:999px; font-size:11px; font-weight:600; }
+.tix-st.ns     { background:var(--surface-2); color:var(--ink-3); }
+.tix-st.ip     { background:var(--info-soft); color:var(--info); }
+.tix-st.neg    { background:var(--gold-soft); color:var(--gold); }
+.tix-st.am     { background:var(--plum-soft); color:var(--plum); }
+.tix-st.del    { background:var(--teal-soft); color:var(--teal); }
+.tix-st.res    { background:var(--ok-soft); color:var(--ok); }
+.tix-st.closed { background:var(--surface-2); color:var(--ink-3); }
+</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_aesthetic.css">
+</head>
+<body>
+<div class="app" data-screen-label="Tickets"><main class="page">
+    <div class="wrap">
+      <div class="page-bar">
+        <div class="page-title-row">
+          <div class="page-title"><span data-bind-text="summary">Tickets</span></div>
+          <span class="muted" data-bind-text="subtitle">Ad campaign change requests &amp; account work</span>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-primary" onclick="document.getElementById('newTicketModal').classList.add('open')">+ New ticket</button>
+        </div>
+      </div>
+
+      <!-- KPI strip — matches original labels -->
+      <div class="stat-group" style="margin-bottom:24px;">
+        <div class="stat-col"><div class="stat-eyebrow" data-bind-text="kpis.0.label">Active tickets</div><div class="stat-number" data-bind-text="kpis.0.value">14</div><div class="stat-delta" data-bind-text="kpis.0.delta">across 8 clients</div></div>
+        <div class="stat-col"><div class="stat-eyebrow" data-bind-text="kpis.1.label">Not started</div><div class="stat-number" data-bind-text="kpis.1.value">5</div><div class="stat-delta" data-bind-text="kpis.1.delta">awaiting triage</div></div>
+        <div class="stat-col"><div class="stat-eyebrow" data-bind-text="kpis.2.label">In progress</div><div class="stat-number" style="color:var(--info);" data-bind-text="kpis.2.value">6</div><div class="stat-delta" data-bind-text="kpis.2.delta">active work</div></div>
+        <div class="stat-col"><div class="stat-eyebrow" data-bind-text="kpis.3.label">Resolved · 30d</div><div class="stat-number" style="color:var(--ok);" data-bind-text="kpis.3.value">38</div><div class="stat-delta" data-bind-text="metrics.stat_delta.0">CSAT 94%</div></div>
+      </div>
+
+      <!-- Tabs (3 only — matches original) -->
+      <nav class="tix-tabs" id="tixTabs">
+        <a class="tix-tab active" data-tab="active">Active</a>
+        <a class="tix-tab" data-tab="completed">Completed</a>
+        <a class="tix-tab" data-tab="inactive">Inactive</a>
+      </nav>
+
+      <!-- Filters — match original exactly -->
+      <div class="tix-filters">
+        <div class="tix-fg"><label>Search</label><input type="text" placeholder="Search tickets…" id="tixSearch"></div>
+        <div class="tix-fg"><label>Status</label>
+          <select id="tixStatus" data-bind-options="statusOptions"><option value="">All Statuses</option></select>
+        </div>
+        <div class="tix-fg"><label>Type</label>
+          <select id="tixType" data-bind-options="typeOptions"><option value="">All Types</option></select>
+        </div>
+        <div class="tix-fg"><label>Assigned to</label>
+          <select id="tixAssignee" data-bind-options="assignedToOptions"><option value="">Everyone</option></select>
+        </div>
+        <button class="btn btn-secondary" style="height:34px;">Reset</button>
+      </div>
+
+      <table class="tbl" id="tixTbl">
+        <thead>
           <tr>
-            <td>{{id|num}}</td>
-            <td>{{subject}}</td>
-            <td><span class="tag {{status}}">{{status}}</span></td>
-            <td class="prio-{{priority}}">{{priority}}</td>
-            <td>{{assignee}}</td>
-            <td>{{updated|date}}</td>
+            <th>Client ID</th><th>Customer</th><th>Priority</th><th>Type</th>
+            <th class="num">Created</th><th class="num">Last activity</th>
+            <th>Assigned to</th><th>Status</th><th></th>
           </tr>
-        </template>
-      </tbody>
-    </table>
-  </section>
+        </thead>
+        <tbody id="tixBody"></tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<!-- New Ticket Modal -->
+<style>
+.tk-overlay { position:fixed; inset:0; background:rgba(15,23,42,0.45); display:none; align-items:center; justify-content:center; z-index:1000; padding:24px; }
+.tk-overlay.open { display:flex; }
+.tk-modal { background:#fff; border-radius:12px; width:640px; max-width:96vw; max-height:90vh; overflow-y:auto; box-shadow:0 25px 50px rgba(0,0,0,0.25); }
+.tk-head { display:flex; justify-content:space-between; align-items:center; padding:18px 22px; border-bottom:var(--hair); }
+.tk-title { font-size:16px; font-weight:700; }
+.tk-close { font-size:20px; color:var(--ink-3); cursor:pointer; }
+.tk-body { padding:18px 22px; }
+.tk-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px 16px; }
+.tk-field { display:flex; flex-direction:column; gap:6px; }
+.tk-field.full { grid-column:1/-1; }
+.tk-label { font-size:12px; font-weight:600; color:var(--ink); }
+.tk-label .req { color:var(--bad); }
+.tk-input, .tk-select, .tk-textarea { width:100%; padding:9px 11px; border:var(--hair); border-radius:6px; font-size:13px; background:#fff; color:var(--ink); font-family:inherit; outline:none; }
+.tk-textarea { min-height:84px; resize:vertical; }
+.tk-input:focus, .tk-select:focus, .tk-textarea:focus { border-color:var(--terra); box-shadow:0 0 0 3px var(--terra-soft); }
+.tk-actions { display:flex; justify-content:flex-end; gap:8px; padding:14px 22px; border-top:var(--hair); }
+</style>
+<div class="tk-overlay" id="newTicketModal">
+  <div class="tk-modal">
+    <div class="tk-head"><div class="tk-title">New Ticket</div><div class="tk-close" onclick="document.getElementById('newTicketModal').classList.remove('open')">✕</div></div>
+    <div class="tk-body">
+      <div class="tk-grid">
+        <div class="tk-field full"><label class="tk-label">Title <span class="req">*</span></label><input name="title" class="tk-input" type="text" placeholder="e.g. Pause Google Ads campaign"></div>
+        <div class="tk-field"><label class="tk-label">Customer <span class="req">*</span></label><select name="customer" class="tk-select" data-bind-options="optionsOptions"><option value="Select customer…">Select customer…</option></select></div>
+        <div class="tk-field"><label class="tk-label">Client ID</label><input name="clientId" class="tk-input" type="text" placeholder="e.g. CL-2419"></div>
+        <div class="tk-field"><label class="tk-label">Type <span class="req">*</span></label><select name="type" class="tk-select" data-bind-options="optionsOptions2"></select></div>
+        <div class="tk-field"><label class="tk-label">Priority</label><select name="priority" class="tk-select" data-bind-options="priorityOptions"></select></div>
+        <div class="tk-field"><label class="tk-label">Status</label><select name="status" class="tk-select" data-bind-options="statusOptions2"></select></div>
+        <div class="tk-field"><label class="tk-label">Assigned to</label><select name="assignedTo" class="tk-select" data-bind-options="assignedToOptions2"><option value="Unassigned">Unassigned</option></select></div>
+        <div class="tk-field"><label class="tk-label">Follow-up date</label><input name="followUpDate" class="tk-input" type="date"></div>
+        <div class="tk-field"><label class="tk-label">Follow-up time</label><input name="followUpTime" class="tk-input" type="time"></div>
+        <div class="tk-field full"><label class="tk-label">Description / Notes</label><textarea name="descriptionNotes" class="tk-textarea" placeholder="What's the request, account details, context…"></textarea></div>
+        <div class="tk-field full">
+          <label class="tk-label">Attachments</label>
+          <div style="padding:14px;border:2px dashed var(--line-2);border-radius:6px;text-align:center;color:var(--ink-3);font-size:12.5px;">📎 Drag files here or <span style="color:var(--terra);font-weight:600;cursor:pointer;">browse…</span></div>
+        </div>
+        <div class="tk-field full"><label style="display:flex;align-items:center;gap:8px;font-size:12.5px;cursor:pointer;"><input name="attachments" type="checkbox" style="accent-color:var(--terra);">Notify assignee on save</label></div>
+      </div>
+    </div>
+    <div class="tk-actions">
+      <button data-modal-close class="btn btn-secondary">Cancel</button>
+      <button data-modal-save class="btn btn-primary">Create Ticket</button>
+    </div>
+  </div>
 </div>
 <script src="../../core/event-bus.js"></script>
 <script src="../../core/state-store.js"></script>
@@ -35,5 +162,158 @@
 <script src="../../core/communication.api.js"></script>
 <script src="../../core/communication.js"></script>
 <script src="../../core/render.js"></script>
+<script src="../../core/standard-page.js"></script>
+<script src="../../core/google-places.js"></script>
 <script src="./module.js"></script>
-</body></html>
+<script>
+const INLINE_TICKETS = ([
+  // Active
+  { id:'CL-2418', customer:'Aurora Properties',  priority:'High', type:'Monthly Budget Increase', created:'May 18', last:'2h ago',   assignee:'John Sales',       status:'In Progress',   bucket:'active', st:'ip' },
+  { id:'CL-2417', customer:'Northside Co.',      priority:'Med',  type:'Ad Copy',                 created:'May 17', last:'5h ago',   assignee:'Jane Finance',     status:'Working - Account Manager', bucket:'active', st:'am' },
+  { id:'CL-2416', customer:'Pinewood Estates',   priority:'High', type:'Pause Specific Platform', created:'May 17', last:'1d ago',   assignee:'Andrew Haylton',   status:'Not Started',   bucket:'active', st:'ns' },
+  { id:'CL-2415', customer:'Cedar Lane HOA',     priority:'Med',  type:'Location Targeting',      created:'May 16', last:'4h ago',   assignee:'John Sales',       status:'Negotiating',   bucket:'active', st:'neg' },
+  { id:'CL-2414', customer:'Maple Court Condos', priority:'Low',  type:'Ad Schedule',             created:'May 15', last:'Yesterday',assignee:'Paul Rai',         status:'In Progress',   bucket:'active', st:'ip' },
+  { id:'CL-2413', customer:'Foundry Co.',        priority:'High', type:'Monthly Budget Decrease', created:'May 15', last:'Yesterday',assignee:'Jane Finance',     status:'Working - Delivery', bucket:'active', st:'del' },
+  { id:'CL-2412', customer:'Linwood Plaza',      priority:'Med',  type:'Additional Service',      created:'May 14', last:'2d ago',   assignee:'John Sales',       status:'Negotiating',   bucket:'active', st:'neg' },
+  { id:'CL-2411', customer:'Greenfield Apts',    priority:'Low',  type:'Ring-To Phone Number',    created:'May 13', last:'3d ago',   assignee:'Andrew Haylton',   status:'In Progress',   bucket:'active', st:'ip' },
+  // Completed
+  { id:'CL-2410', customer:'Hillside Realty',    priority:'Med',  type:'Pause Service',           created:'May 10', last:'May 13',   assignee:'John Sales',       status:'Resolved',      bucket:'completed', st:'res' },
+  { id:'CL-2409', customer:'Beachway HOA',       priority:'Low',  type:'Common Change Requests',  created:'May 09', last:'May 12',   assignee:'Paul Rai',         status:'Resolved',      bucket:'completed', st:'res' },
+  { id:'CL-2408', customer:'Yorkdale Properties',priority:'High', type:'Monthly Budget Increase', created:'May 04', last:'May 11',   assignee:'Jane Finance',     status:'Closed',        bucket:'completed', st:'closed' },
+  { id:'CL-2407', customer:'Riverside Centre',   priority:'Med',  type:'Ad Copy',                 created:'Apr 28', last:'May 02',   assignee:'John Sales',       status:'Resolved',      bucket:'completed', st:'res' },
+  // Inactive
+  { id:'CL-2406', customer:'Old Mill Condos',    priority:'Low',  type:'Pause Service',           created:'Apr 12', last:'Apr 18',   assignee:'—',                status:'Closed',        bucket:'inactive', st:'closed' },
+  { id:'CL-2405', customer:'Northpoint Plaza',   priority:'Low',  type:'Ad Schedule',             created:'Apr 02', last:'Apr 04',   assignee:'—',                status:'Closed',        bucket:'inactive', st:'closed' }
+]);
+
+function priCls(p){ return p === 'High' ? 'high' : p === 'Med' ? 'med' : 'low'; }
+
+// Read tickets fresh on every render (lets state-push updates land) and
+// normalize live-backend field names onto the shape the table expects.
+function getTickets() {
+  const raw = (window.S1 && window.S1.fixtures && window.S1.fixtures["tickets"] && Array.isArray(window.S1.fixtures["tickets"].tickets) && window.S1.fixtures["tickets"].tickets.length)
+    ? window.S1.fixtures["tickets"].tickets
+    : INLINE_TICKETS;
+  return raw.map(t => {
+    const status = t.status || '';
+    return {
+      id:       t.id       || t.ref      || '',
+      customer: t.customer || '',
+      priority: t.priority || '',
+      type:     t.type     || t.category || '',
+      created:  t.created  || '',
+      last:     t.last     || t.updated  || '',
+      assignee: t.assignee || '',
+      status,
+      // Backend doesn't ship a bucket — derive it from status so the tabs
+      // still segment the list correctly.
+      bucket:   t.bucket || (/closed/i.test(status) ? 'inactive'
+                         : /resolved/i.test(status) ? 'completed'
+                         : 'active'),
+      st:       t.st || t.statusClass || ''
+    };
+  });
+}
+
+function render() {
+  const tb = document.getElementById('tixBody');
+  const tab = document.querySelector('#tixTabs .tix-tab.active')?.dataset.tab || 'active';
+  const q = document.getElementById('tixSearch').value.trim().toLowerCase();
+  const st = document.getElementById('tixStatus').value;
+  const ty = document.getElementById('tixType').value;
+  const as = document.getElementById('tixAssignee').value;
+  const shown = getTickets().filter(t => {
+    if (t.bucket !== tab) return false;
+    if (q && !(t.customer + ' ' + t.id + ' ' + t.type).toLowerCase().includes(q)) return false;
+    if (st && t.status !== st) return false;
+    if (ty && t.type !== ty) return false;
+    if (as && t.assignee !== as) return false;
+    return true;
+  });
+  tb.innerHTML = shown.map(t => `
+    <tr data-id="${t.id}" style="cursor:pointer;">
+      <td class="cell-light">${t.id}</td>
+      <td><b>${t.customer}</b></td>
+      <td><span class="tix-pri ${priCls(t.priority)}">${t.priority}</span></td>
+      <td>${t.type}</td>
+      <td class="num cell-light">${t.created}</td>
+      <td class="num cell-light">${t.last}</td>
+      <td>${t.assignee}</td>
+      <td><span class="tix-st ${t.st}">${t.status}</span></td>
+      <td onclick="event.stopPropagation();">
+        <div style="display:flex;gap:4px;justify-content:flex-end;">
+          <button class="btn btn-ghost" style="padding:4px 8px;font-size:11.5px;">View</button>
+          <button class="btn btn-ghost" style="padding:4px 8px;font-size:11.5px;">Edit</button>
+        </div>
+      </td>
+    </tr>`).join('') || '<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--ink-3);">No tickets match these filters.</td></tr>';
+}
+
+document.querySelectorAll('#tixTabs .tix-tab').forEach(t => t.addEventListener('click', () => {
+  document.querySelectorAll('#tixTabs .tix-tab').forEach(x => x.classList.toggle('active', x === t));
+  render();
+}));
+['tixSearch','tixStatus','tixType','tixAssignee'].forEach(id => document.getElementById(id).addEventListener('input', render));
+['tixSearch','tixStatus','tixType','tixAssignee'].forEach(id => document.getElementById(id).addEventListener('change', render));
+document.querySelector('.tix-filters .btn').addEventListener('click', () => {
+  document.getElementById('tixSearch').value = '';
+  document.getElementById('tixStatus').value = '';
+  document.getElementById('tixType').value = '';
+  document.getElementById('tixAssignee').value = '';
+  render();
+});
+
+// Row click → ticket modal
+document.getElementById('tixBody').addEventListener('click', e => {
+  const tr = e.target.closest('tr[data-id]'); if (!tr) return;
+  const t = getTickets().find(x => x.id === tr.dataset.id); if (!t) return;
+  const m = document.createElement('div');
+  m.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:center;justify-content:center;z-index:1000;padding:24px;';
+  m.innerHTML = `<div style="background:#fff;border-radius:12px;max-width:680px;width:100%;max-height:84vh;overflow:auto;box-shadow:0 24px 60px -16px rgba(15,23,42,.4);">
+    <div style="padding:22px 26px 16px;border-bottom:var(--hair);display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+      <div>
+        <div style="font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;">${t.id} · ${t.type}</div>
+        <h2 style="margin:6px 0 8px;font-size:20px;font-weight:700;letter-spacing:-0.01em;">${t.customer}</h2>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;"><span class="tix-pri ${priCls(t.priority)}">${t.priority}</span><span class="tix-st ${t.st}">${t.status}</span></div>
+      </div>
+      <button class="x" style="border:0;background:transparent;font-size:24px;color:var(--ink-3);cursor:pointer;line-height:1;">×</button>
+    </div>
+    <div style="padding:18px 26px;">
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:18px;">
+        <div style="padding:10px 14px;border:var(--hair);border-radius:8px;"><div style="font-size:11px;color:var(--ink-3);">Created</div><div style="font-weight:600;margin-top:4px;">${t.created}</div></div>
+        <div style="padding:10px 14px;border:var(--hair);border-radius:8px;"><div style="font-size:11px;color:var(--ink-3);">Last activity</div><div style="font-weight:600;margin-top:4px;">${t.last}</div></div>
+        <div style="padding:10px 14px;border:var(--hair);border-radius:8px;grid-column:span 2;"><div style="font-size:11px;color:var(--ink-3);">Assigned to</div><div style="font-weight:600;margin-top:4px;">${t.assignee}</div></div>
+      </div>
+      <div style="font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:6px;">Activity</div>
+      <div style="background:var(--surface-2);border:var(--hair);border-radius:8px;padding:12px 14px;margin-bottom:18px;font-size:13px;line-height:1.5;">
+        <b>Client request</b> · ${t.created}<br>Hi team, opening this ticket to follow up on the change. Let me know what info you need.
+      </div>
+      <textarea placeholder="Add a reply…" style="width:100%;min-height:80px;padding:12px;border:var(--hair);border-radius:8px;font-size:13px;outline:none;resize:vertical;font-family:inherit;"></textarea>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;">
+        <button data-comm-action="action:tickets.reassign" class="btn btn-secondary">Reassign…</button>
+        <div style="display:flex;gap:8px;"><button class="btn btn-secondary x">Cancel</button><button data-comm-action="action:tickets.reply.draft" class="btn btn-secondary">Save draft</button><button data-comm-action="action:tickets.reply.send" class="btn btn-primary">Send reply</button></div>
+      </div>
+    </div>
+  </div>`;
+  document.body.appendChild(m);
+  const close = () => m.remove();
+  m.addEventListener('click', e2 => { if (e2.target === m) close(); });
+  m.querySelectorAll('.x').forEach(b => b.addEventListener('click', close));
+});
+
+render();
+// Re-render when the host pushes fresh state.
+if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
+  window.S1.bus.on('state:replaced', render);
+}
+</script>
+
+<div class="s1-overlay" id="replyTicketModal" role="dialog" aria-modal="true"><div class="s1-modal"><div class="s1-mhead"><div><h4>Reply</h4></div><button class="s1-x" data-modal-close type="button">×</button></div><div class="s1-mgrid"><div class="full"><label class="s1-mlabel">Ticket id</label><input class="s1-input" type="text" name="id"></div><div class="full"><label class="s1-mlabel">Message</label><textarea class="s1-textarea" name="body"></textarea></div><div class="full"><label><input type="checkbox" name="sendEmail"> Send as email</label></div></div><div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Send reply</button></div></div></div>
+
+<div class="s1-overlay" id="reassignTicketModal" role="dialog" aria-modal="true"><div class="s1-modal"><div class="s1-mhead"><div><h4>Reassign</h4></div><button class="s1-x" data-modal-close type="button">×</button></div><div class="s1-mgrid"><div class="full"><label class="s1-mlabel">Ticket id</label><input class="s1-input" type="text" name="id"></div><div class="full"><label class="s1-mlabel">New assignee (user id)</label><input class="s1-input" type="text" name="userId"></div><div class="full"><label class="s1-mlabel">Reason (optional)</label><textarea class="s1-textarea" name="reason"></textarea></div></div><div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Reassign</button></div></div></div>
+
+<div class="s1-overlay" id="escalateTicketModal" role="dialog" aria-modal="true"><div class="s1-modal"><div class="s1-mhead"><div><h4>Escalate</h4></div><button class="s1-x" data-modal-close type="button">×</button></div><div class="s1-mgrid"><div class="full"><label class="s1-mlabel">Ticket id</label><input class="s1-input" type="text" name="id"></div><div class="full"><label class="s1-mlabel">Escalate to (user id)</label><input class="s1-input" type="text" name="toUserId"></div><div class="full"><label class="s1-mlabel">Notes</label><textarea class="s1-textarea" name="notes"></textarea></div></div><div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Escalate</button></div></div></div>
+
+<div class="s1-overlay" id="closeTicketModal" role="dialog" aria-modal="true"><div class="s1-modal"><div class="s1-mhead"><div><h4>Close ticket</h4></div><button class="s1-x" data-modal-close type="button">×</button></div><div class="s1-mgrid"><div class="full"><label class="s1-mlabel">Ticket id</label><input class="s1-input" type="text" name="id"></div><div class="full"><label class="s1-mlabel">Resolution</label><textarea class="s1-textarea" name="resolution"></textarea></div></div><div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Close</button></div></div></div>
+</body>
+</html>

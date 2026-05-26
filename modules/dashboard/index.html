@@ -1,186 +1,873 @@
-<!DOCTYPE html><html lang="en"><head>
+<!doctype html>
+<html lang="en">
+<head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Dashboard</title>
+<title>Dashboard — Redesign</title>
+<template id="__bundler_thumbnail" data-bg-color="#FFFFFF">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="800" fill="#FFFFFF"/>
+    <rect x="60" y="60" width="80" height="80" rx="12" fill="#004D40"/>
+    <rect x="80" y="80" width="40" height="40" rx="6" fill="#D4960A"/>
+    <rect x="200" y="80" width="180" height="22" rx="3" fill="#0A2540"/>
+    <rect x="200" y="160" width="940" height="80" fill="#FAFBFC" stroke="#EFF2F5" stroke-width="1"/>
+    <rect x="220" y="180" width="80" height="9" rx="2" fill="#697386"/>
+    <rect x="220" y="200" width="120" height="22" rx="3" fill="#0A2540"/>
+    <rect x="380" y="180" width="80" height="9" rx="2" fill="#697386"/>
+    <rect x="380" y="200" width="120" height="22" rx="3" fill="#0A2540"/>
+    <rect x="540" y="180" width="80" height="9" rx="2" fill="#697386"/>
+    <rect x="540" y="200" width="120" height="22" rx="3" fill="#0A2540"/>
+    <rect x="700" y="180" width="80" height="9" rx="2" fill="#697386"/>
+    <rect x="700" y="200" width="120" height="22" rx="3" fill="#0A2540"/>
+    <path d="M200 480 L260 460 L320 470 L380 430 L440 440 L500 400 L560 410 L620 380 L680 390 L740 350 L800 340 L860 320 L920 310 L980 280 L1040 260 L1100 240"
+          fill="none" stroke="#004D40" stroke-width="2.5"/>
+    <path d="M200 480 L260 460 L320 470 L380 430 L440 440 L500 400 L560 410 L620 380 L680 390 L740 350 L800 340 L860 320 L920 310 L980 280 L1040 260 L1100 240 L1100 560 L200 560 Z"
+          fill="#004D40" opacity="0.08"/>
+    <line x1="200" y1="560" x2="1100" y2="560" stroke="#EFF2F5"/>
+    <rect x="200" y="620" width="450" height="140" fill="#FAFBFC" stroke="#EFF2F5"/>
+    <rect x="680" y="620" width="450" height="140" fill="#FAFBFC" stroke="#EFF2F5"/>
+    <text x="600" y="790" text-anchor="middle" font-family="Inter, sans-serif" font-weight="500" font-size="14" fill="#697386">Dashboard · Loading…</text>
+  </svg>
+</template>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../../assets/css/module.css">
 <style>
-.tabs { display: flex; gap: 0; border-bottom: 1px solid var(--line); margin-bottom: 24px; }
-.tab { padding: 12px 16px; font-size: 13px; font-weight: 500; color: var(--ink-3); border-bottom: 2px solid transparent; cursor: pointer; background: none; border-top: 0; border-left: 0; border-right: 0; margin-bottom: -1px; }
-.tab.active { color: var(--ink); border-bottom-color: var(--terra); font-weight: 600; }
+/* ════════════════════════════════════════════════════
+   Dashboard — clean enterprise SaaS aesthetic
+   Strong type hierarchy · minimal chrome · line charts
+   ════════════════════════════════════════════════════ */
+:root {
+  /* Brand */
+  --terra: #004D40;
+  --terra-hover: #003D32;
+  --terra-soft: #E6F0EE;
+  --gold: #D4960A;
+
+  /* Neutrals — cooler, Stripe-like */
+  --ink: #0A2540;
+  --ink-2: #3C4257;
+  --ink-3: #697386;
+  --ink-4: #8792A2;
+  --line: #EFF2F5;
+  --line-2: #D9DEE3;
+  --bg: #FFFFFF;
+  --surface: #FFFFFF;
+  --surface-2: #FAFBFC;
+
+  /* Status */
+  --ok: #047857;
+  --bad: #B23E3E;
+  --warn: #B5780A;
+  --info: #3F6FA6;
+
+  --t-eyebrow: 11px; --t-body: 13px; --t-emph: 15px; --t-num: 28px; --t-hero: 36px;
+  --r: 6px;
+  --hair: 1px solid var(--line);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', -apple-system, system-ui, sans-serif;
+  font-size: var(--t-body); line-height: 1.45;
+  color: var(--ink); background: #FFFFFF;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "tnum" 1, "ss01" 1;
+}
+button, input, select { font: inherit; color: inherit; }
+button { background: none; border: none; cursor: pointer; padding: 0; }
+a { color: inherit; text-decoration: none; }
+.muted { color: var(--ink-3); }
+.num { font-variant-numeric: tabular-nums; }
+
+/* ── Shell ── */
+.app { display: grid; grid-template-columns: 56px 1fr; grid-template-rows: 56px 1fr; min-height: 100vh; }
+.search { flex: 0 1 320px; display: flex; align-items: center; gap: 8px; height: 32px; padding: 0 12px; background: var(--surface-2); border: var(--hair); border-radius: 6px; color: var(--ink-3); }
+.search input { flex: 1; border: 0; background: transparent; outline: none; font-size: 13px; }
+.kbd { display: inline-flex; align-items: center; height: 18px; padding: 0 5px; border: var(--hair); border-radius: 3px; background: #fff; color: var(--ink-3); font-size: 11px; font-weight: 500; }
+.top-actions { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+.icon-btn { width: 30px; height: 30px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; color: var(--ink-2); }
+.icon-btn:hover { background: var(--surface-2); }
+.user-chip { display: flex; align-items: center; gap: 8px; padding: 3px 10px 3px 3px; border-radius: 999px; border: var(--hair); background: #fff; font-weight: 500; font-size: 13px; }
+.avatar { width: 22px; height: 22px; border-radius: 999px; background: var(--terra); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; }
+
+.page { grid-row: 2; grid-column: 2; min-width: 0; overflow-y: auto; }
+
+/* Buttons */
+.btn { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 12px; border: 1px solid transparent; border-radius: 6px; font-size: 13px; font-weight: 500; white-space: nowrap; cursor: pointer; }
+.btn-primary { background: var(--terra); color: #fff; }
+.btn-primary:hover { background: var(--terra-hover); }
+.btn-secondary { background: #fff; color: var(--ink); border-color: var(--line-2); }
+.btn-secondary:hover { background: var(--surface-2); }
+.btn-ghost { color: var(--ink-3); }
+.btn-ghost:hover { color: var(--ink); background: var(--surface-2); }
+
+/* ════════════════════════════════════════════════
+   PAGE HEADER
+   ════════════════════════════════════════════════ */
+.wrap {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 24px 28px 56px;
+}
+
+.page-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 22px;
+  border-bottom: var(--hair);
+  margin-bottom: 0;
+}
+.page-title {
+  font-size: 22px; font-weight: 700; letter-spacing: -0.018em;
+}
+.page-actions { display: flex; align-items: center; gap: 8px; }
+.range-picker {
+  display: flex; align-items: center; gap: 8px;
+  height: 30px; padding: 0 12px;
+  border: var(--hair); border-radius: 6px;
+  background: #fff;
+  font-size: 13px; font-weight: 500;
+  cursor: pointer;
+}
+.range-picker:hover { background: var(--surface-2); }
+.range-picker svg { color: var(--ink-3); }
+
+/* Sub-tabs (underline) */
+.subtabs {
+  display: flex; gap: 0;
+  border-bottom: var(--hair);
+  margin-bottom: 32px;
+}
+.subtab {
+  position: relative;
+  padding: 14px 16px;
+  font-size: 13px; font-weight: 500;
+  color: var(--ink-3);
+  margin-bottom: -1px;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.subtab:hover { color: var(--ink); }
+.subtab.active { color: var(--ink); border-bottom-color: var(--terra); font-weight: 600; }
+.subtab .live {
+  width: 7px; height: 7px; border-radius: 999px;
+  background: var(--ok);
+  animation: pulse 1.8s ease infinite;
+}
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(4,120,87,0.5); }
+  70%      { box-shadow: 0 0 0 5px rgba(4,120,87,0); }
+}
+
+/* Tab panes */
 .pane { display: none; }
 .pane.active { display: block; }
-.chart-box { height: 240px; background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r); padding: 12px; position: relative; }
-.chart-box svg { width: 100%; height: 100%; }
-.chart-head { display:flex; justify-content:space-between; align-items:end; margin-bottom: 12px; gap: 16px; flex-wrap: wrap; }
-.chart-num { font-size: 28px; font-weight: 600; letter-spacing: -0.02em; }
-.chart-sub { font-size: 12px; color: var(--ink-3); display: flex; gap: 16px; flex-wrap: wrap; margin-top: 4px; }
-.attn { display: grid; grid-template-columns: 1fr 60px 18px; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); align-items: center; }
-.attn:first-child { border-top: 0; }
-.attn-n { font-size: 18px; font-weight: 600; text-align: right; }
-.attn-n.warn { color: var(--warn); }
-.attn-n.bad  { color: var(--bad); }
-.live-strip { display: grid; grid-template-columns: repeat(3,1fr); margin-bottom: 24px; }
-.live-strip .col { padding: 0 24px; border-left: 1px solid var(--line); }
-.live-strip .col:first-child { padding-left:0; border-left: 0; }
-.queue-block { padding-bottom: 18px; border-bottom: 1px solid var(--line); margin-bottom: 18px; }
-.queue-block:last-child { border-bottom: 0; }
-.q-row { display:flex; justify-content:space-between; padding: 6px 0; font-size: 13px; }
+
+/* ════════════════════════════════════════════════
+   STAT GROUP — Stripe-style horizontal stats
+   ════════════════════════════════════════════════ */
+.stat-group {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  margin-bottom: 40px;
+}
+.stat-col {
+  padding: 0 24px;
+  border-left: var(--hair);
+  display: flex; flex-direction: column; gap: 8px;
+}
+.stat-col:first-child { padding-left: 0; border-left: 0; }
+.stat-eyebrow {
+  font-size: 12px; color: var(--ink-3); font-weight: 500;
+  letter-spacing: -0.005em;
+  display: flex; align-items: center; gap: 5px;
+  white-space: nowrap;
+}
+.stat-eyebrow .help {
+  display: inline-flex; width: 14px; height: 14px; border-radius: 999px;
+  background: var(--surface-2); color: var(--ink-4);
+  font-size: 9px; align-items: center; justify-content: center;
+  cursor: help;
+}
+.stat-number {
+  font-size: var(--t-hero);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+.stat-number .small {
+  font-size: 18px; color: var(--ink-3); font-weight: 500;
+  margin-left: 4px;
+}
+.stat-delta {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--ink-3);
+  white-space: nowrap;
+}
+.stat-delta .pct {
+  font-weight: 600;
+  display: inline-flex; align-items: center; gap: 2px;
+}
+.stat-delta .pct.up   { color: var(--ok); }
+.stat-delta .pct.down { color: var(--bad); }
+.stat-delta .pct.flat { color: var(--ink-3); }
+.stat-delta .pct svg { width: 11px; height: 11px; }
+
+/* ════════════════════════════════════════════════
+   HERO CHART
+   ════════════════════════════════════════════════ */
+.chart-wrap {
+  margin-bottom: 40px;
+}
+.chart-head {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  margin-bottom: 24px;
+  gap: 20px; flex-wrap: wrap;
+}
+.chart-h-left { min-width: 0; }
+.chart-h-eyebrow {
+  font-size: 12px; color: var(--ink-3); font-weight: 500;
+  margin-bottom: 6px;
+}
+.chart-h-num {
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.chart-h-sub {
+  margin-top: 6px;
+  font-size: 13px; color: var(--ink-3);
+  display: flex; gap: 18px; flex-wrap: wrap;
+}
+.chart-h-sub strong { color: var(--ink); font-weight: 600; }
+.chart-h-sub .swatch {
+  display: inline-block; width: 10px; height: 10px;
+  border-radius: 2px; vertical-align: 1px;
+  margin-right: 6px;
+}
+
+.chart-tools {
+  display: flex; gap: 0;
+  border: var(--hair); border-radius: 6px;
+  background: #fff;
+  padding: 2px;
+  flex-shrink: 0;
+}
+.chart-tools button {
+  padding: 4px 10px;
+  font-size: 12px; font-weight: 500;
+  color: var(--ink-3);
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.chart-tools button:hover { color: var(--ink); }
+.chart-tools button.active { background: var(--surface-2); color: var(--ink); font-weight: 600; }
+
+/* The chart itself */
+.chart {
+  position: relative;
+  width: 100%;
+  height: 260px;
+}
+.chart svg { width: 100%; height: 100%; overflow: visible; }
+.chart-y {
+  position: absolute; right: 0; top: 0; bottom: 28px;
+  display: flex; flex-direction: column; justify-content: space-between;
+  font-size: 11px; color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+.chart-y span { transform: translateY(-50%); }
+.chart-x {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  margin-top: 8px;
+  font-size: 11px; color: var(--ink-3);
+  text-align: center;
+}
+.chart-x .cur { color: var(--terra); font-weight: 600; }
+
+/* ════════════════════════════════════════════════
+   SECTION
+   ════════════════════════════════════════════════ */
+.section {
+  margin-bottom: 40px;
+}
+.section:last-child { margin-bottom: 0; }
+.section-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px;
+  gap: 10px;
+}
+.section-title {
+  font-size: 15px; font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.section-link {
+  font-size: 13px; color: var(--ink-3); font-weight: 500;
+}
+.section-link:hover { color: var(--terra); }
+
+/* Two-column */
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+}
+@media (max-width: 980px) { .two-col { grid-template-columns: 1fr; gap: 32px; } }
+
+/* ── Top performers list ── */
+.tp-list { display: flex; flex-direction: column; }
+.tp-row {
+  display: grid;
+  grid-template-columns: 32px 1fr 90px 90px;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 0;
+  border-top: var(--hair);
+  font-size: 13px;
+}
+.tp-row:first-child { border-top: 0; }
+.tp-row:hover { background: var(--surface-2); margin: 0 -12px; padding-left: 12px; padding-right: 12px; }
+.tp-av {
+  width: 32px; height: 32px; border-radius: 999px;
+  background: var(--terra); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600;
+}
+.tp-info { min-width: 0; }
+.tp-nm { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tp-mt { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
+.tp-amt {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  text-align: right;
+  white-space: nowrap;
+}
+.tp-rate {
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  color: var(--ink-3);
+  text-align: right;
+  white-space: nowrap;
+  font-size: 12px;
+}
+.tp-rate.good { color: var(--ok); }
+
+/* ── Needs attention list ── */
+.na-list { display: flex; flex-direction: column; }
+.na-row {
+  display: grid;
+  grid-template-columns: 1fr 60px 18px;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 0;
+  border-top: var(--hair);
+  font-size: 13px;
+  cursor: pointer;
+}
+.na-row:first-child { border-top: 0; }
+.na-row:hover { background: var(--surface-2); margin: 0 -12px; padding-left: 12px; padding-right: 12px; }
+.na-row:hover .na-row + .na-arr { color: var(--terra); }
+.na-l { min-width: 0; }
+.na-t { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.na-s { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
+.na-n {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  font-size: 20px;
+  text-align: right;
+}
+.na-n.warn { color: var(--warn); }
+.na-n.bad  { color: var(--bad); }
+.na-arr { color: var(--ink-4); text-align: right; }
+
+/* ════════════════════════════════════════════════
+   REALTIME
+   ════════════════════════════════════════════════ */
+.live-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  margin-bottom: 32px;
+}
+.live-cell {
+  padding: 0 24px;
+  border-left: var(--hair);
+  display: flex; flex-direction: column; gap: 8px;
+}
+.live-cell:first-child { padding-left: 0; border-left: 0; }
+
+.live-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.live-table thead th {
+  font-size: 11px;
+  color: var(--ink-3); font-weight: 500;
+  padding: 0 16px 12px;
+  text-align: right;
+  border-bottom: var(--hair);
+  white-space: nowrap;
+}
+.live-table thead th:first-child { text-align: left; padding-left: 0; }
+.live-table tbody td {
+  padding: 16px;
+  border-bottom: var(--hair);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.live-table tbody td:first-child { text-align: left; padding-left: 0; }
+.live-table tbody tr:last-child td { border-bottom: 0; }
+.live-table tbody tr:hover { background: var(--surface-2); }
+
+.agent { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.agent > div:not(.agent-av) { min-width: 0; flex: 1; }
+.agent-av {
+  width: 30px; height: 30px; border-radius: 999px;
+  background: var(--terra); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600;
+  flex-shrink: 0;
+}
+.agent-nm { font-weight: 500; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.agent-st {
+  font-size: 11px; color: var(--ink-3);
+  display: flex; align-items: center; gap: 5px;
+  margin-top: 2px;
+  white-space: nowrap;
+}
+.dot { width: 6px; height: 6px; border-radius: 999px; flex-shrink: 0; }
+.dot.online { background: var(--ok); }
+.dot.call   { background: var(--info); }
+.dot.away   { background: var(--gold); }
+.dot.off    { background: var(--ink-4); }
+.val-good { color: var(--ok); }
+.val-warn { color: var(--warn); }
+.val-bad  { color: var(--bad); }
+
+.live-row {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 40px;
+  align-items: start;
+}
+@media (max-width: 1100px) { .live-row { grid-template-columns: 1fr; } }
+
+.queue-card {
+  display: flex; flex-direction: column; gap: 22px;
+}
+.queue-block {
+  padding-bottom: 22px;
+  border-bottom: var(--hair);
+}
+.queue-block:last-child { border-bottom: 0; padding-bottom: 0; }
+.q-eyebrow { font-size: 12px; color: var(--ink-3); font-weight: 500; }
+.q-num {
+  font-size: var(--t-hero);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.05;
+  margin-top: 4px;
+}
+.q-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 13px; border-top: 1px dashed var(--line); }
+.q-row:first-of-type { border-top: 0; padding-top: 0; }
 .q-row .l { color: var(--ink-3); }
-.q-row .v { font-weight: 600; }
-.state-dot { width: 7px; height: 7px; border-radius: 999px; display: inline-block; margin-right: 6px; }
-.state-on_call { background: var(--info); }
-.state-online  { background: var(--ok); }
-.state-away    { background: var(--gold); }
-.state-offline { background: var(--ink-4); }
-.live-row { display: grid; grid-template-columns: 1fr 320px; gap: 32px; }
-@media (max-width: 1000px) { .live-row { grid-template-columns: 1fr; } .live-strip { grid-template-columns: 1fr; } .live-strip .col { padding:0; border-left:0; border-top: 1px solid var(--line); padding-top: 12px; } }
+.q-row .v { font-weight: 600; font-variant-numeric: tabular-nums; }
+
 </style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_aesthetic.css">
 </head>
 <body>
-<div class="wrap">
-  <div class="page-bar">
-    <div class="page-title">Dashboard</div>
-    <div><button class="btn btn-secondary">Export</button></div>
-  </div>
-  <nav class="tabs" id="tabs">
-    <button class="tab active" data-tab="overview">Overview</button>
-    <button class="tab" data-tab="realtime">Realtime</button>
-  </nav>
 
-  <section class="pane active" data-pane="overview">
-    <div class="kpi" data-bind="kpis">
-      <template>
-        <div class="col">
-          <div class="eyebrow">{{label}}</div>
-          <div class="big"><span data-formatted-value>{{value}}</span></div>
-          <div class="delta {{dir}}"><span>{{deltaPct|num}}%</span> vs previous 30 days</div>
-        </div>
-      </template>
-    </div>
+<div class="app" data-screen-label="Dashboard"><main class="page">
+    <div class="wrap">
 
-    <section class="section">
-      <div class="chart-head">
-        <div>
-          <div class="section-sub" data-bind-text="chart.label"></div>
-          <div class="chart-num"><span data-bind-text="chart.total" data-fmt="usdint"></span></div>
-          <div class="chart-sub">
-            <span>This year · <strong data-bind-text="chart.total" data-fmt="usdint"></strong></span>
-            <span>Prev year · <strong data-bind-text="chart.prevYear" data-fmt="usdint"></strong></span>
-            <span>Forecast EOY · <strong data-bind-text="chart.forecastEoy" data-fmt="usdint"></strong></span>
-          </div>
-        </div>
-      </div>
-      <div class="chart-box"><svg id="chart" viewBox="0 0 1200 240" preserveAspectRatio="none"></svg></div>
-    </section>
-
-    <div class="two-col">
-      <section class="section">
-        <h3 class="section-title">Top performers</h3>
-        <div data-bind="performers">
-          <template>
-            <div class="row">
-              <div class="avatar" style="background:{{color}}">{{init}}</div>
-              <div>
-                <div style="font-weight:600">{{name}}</div>
-                <div class="section-sub">{{deals|num}} deals booked</div>
-              </div>
-              <div class="amt">{{amount|usdint}}</div>
-              <div class="rate good">{{rate|pct}}</div>
+      <!-- Page bar -->
+      <div class="page-bar">
+        <div class="page-title"><span data-bind-text="summary">Dashboard</span></div>
+        <div class="page-actions">
+          <div class="range-picker-wrap" style="position:relative;">
+            <button type="button" id="rangePicker" class="range-picker" aria-haspopup="true" aria-expanded="false">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <span id="rangePickerLabel">Last 30 days</span>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div id="rangePickerMenu" class="range-picker-menu" role="menu" style="position:absolute;top:calc(100% + 4px);right:0;background:#fff;border:var(--hair);border-radius:6px;padding:4px 0;box-shadow:0 4px 12px rgba(0,0,0,.08);min-width:170px;z-index:50;flex-direction:column;display:none;">
+              <button type="button" role="menuitem" data-range="1d"  style="text-align:left;padding:6px 12px;font-size:13px;background:transparent;border:0;cursor:pointer;">Today</button>
+              <button type="button" role="menuitem" data-range="7d"  style="text-align:left;padding:6px 12px;font-size:13px;background:transparent;border:0;cursor:pointer;">Last 7 days</button>
+              <button type="button" role="menuitem" data-range="30d" style="text-align:left;padding:6px 12px;font-size:13px;background:transparent;border:0;cursor:pointer;">Last 30 days</button>
+              <button type="button" role="menuitem" data-range="90d" style="text-align:left;padding:6px 12px;font-size:13px;background:transparent;border:0;cursor:pointer;">Last 90 days</button>
+              <button type="button" role="menuitem" data-range="12m" style="text-align:left;padding:6px 12px;font-size:13px;background:transparent;border:0;cursor:pointer;">Last 12 months</button>
+              <button type="button" role="menuitem" data-range="ytd" style="text-align:left;padding:6px 12px;font-size:13px;background:transparent;border:0;cursor:pointer;">Year to date</button>
             </div>
-          </template>
-        </div>
-      </section>
-      <section class="section">
-        <h3 class="section-title">Needs attention</h3>
-        <div data-bind="attention">
-          <template>
-            <a class="attn" href="#">
-              <div>
-                <div style="font-weight:500">{{title}}</div>
-                <div class="section-sub">{{sub}}</div>
-              </div>
-              <div class="attn-n {{tone}}">{{count|num}}</div>
-              <div class="muted">→</div>
-            </a>
-          </template>
-        </div>
-      </section>
-    </div>
-  </section>
-
-  <section class="pane" data-pane="realtime">
-    <div class="live-strip">
-      <div class="col">
-        <div class="eyebrow">Online now</div>
-        <div class="big"><span data-bind-text="realtime.online" data-fmt="num"></span>/<span data-bind-text="realtime.total" data-fmt="num"></span></div>
-        <div class="section-sub"><span data-bind-text="realtime.onCalls" data-fmt="num"></span> on calls</div>
-      </div>
-      <div class="col">
-        <div class="eyebrow">Calls in last hour</div>
-        <div class="big" data-bind-text="realtime.callsLastHour" data-fmt="num"></div>
-        <div class="section-sub">Avg duration <strong data-bind-text="realtime.avgDuration"></strong></div>
-      </div>
-      <div class="col">
-        <div class="eyebrow">In queue</div>
-        <div class="big" style="color:var(--warn)" data-bind-text="realtime.inQueue" data-fmt="num"></div>
-        <div class="section-sub">Longest wait · <span data-bind-text="realtime.longestWait"></span></div>
-      </div>
-    </div>
-
-    <div class="live-row">
-      <section class="section">
-        <h3 class="section-title">Agent activity</h3>
-        <table class="tbl">
-          <thead><tr><th>Agent</th><th>Calls</th><th>Connected</th><th>Talk</th><th>Deals</th></tr></thead>
-          <tbody data-bind="realtime.agents">
-            <template>
-              <tr>
-                <td>
-                  <div style="display:flex;align-items:center;gap:10px">
-                    <span class="avatar" style="background:{{color}}">{{init}}</span>
-                    <div>
-                      <div style="font-weight:500">{{name}}</div>
-                      <div class="section-sub"><span class="state-dot state-{{state}}"></span>{{state}}</div>
-                    </div>
-                  </div>
-                </td>
-                <td>{{calls|num}}</td>
-                <td>{{connected|num}} · {{rate|pct}}</td>
-                <td>{{talk}}</td>
-                <td>{{deals|num}}</td>
-              </tr>
-            </template>
-          </tbody>
-        </table>
-      </section>
-      <aside>
-        <div class="queue-block">
-          <div class="eyebrow muted">In queue</div>
-          <div class="big" style="color:var(--warn);font-size:28px;font-weight:600" data-bind-text="realtime.inQueue" data-fmt="num"></div>
-          <div data-bind="realtime.queues">
-            <template><div class="q-row"><span class="l">{{name}}</span><span class="v">{{n|num}}</span></div></template>
           </div>
-          <div class="q-row"><span class="l">Longest wait</span><span class="v" data-bind-text="realtime.longestWait"></span></div>
+          <button type="button" class="btn btn-secondary">Export</button>
         </div>
-        <div class="queue-block">
-          <div class="eyebrow muted">Today</div>
-          <div class="q-row"><span class="l">Total calls</span><span class="v" data-bind-text="realtime.today.totalCalls" data-fmt="num"></span></div>
-          <div class="q-row"><span class="l">Connected rate</span><span class="v" style="color:var(--ok)" data-bind-text="realtime.today.connectedRate" data-fmt="pct"></span></div>
-          <div class="q-row"><span class="l">Avg wait</span><span class="v" data-bind-text="realtime.today.avgWait"></span></div>
-          <div class="q-row"><span class="l">Abandoned</span><span class="v" style="color:var(--bad)" data-bind-text="realtime.today.abandoned" data-fmt="num"></span></div>
+      </div>
+
+      <!-- Sub-tabs -->
+      <nav class="subtabs" id="tabs">
+        <button class="subtab active" data-tab="overview">Overview</button>
+        <button class="subtab" data-tab="realtime">Realtime <span class="live"></span></button>
+      </nav>
+
+      <!-- ═══════════════ OVERVIEW ═══════════════ -->
+      <section class="pane active" data-pane="overview">
+
+        <!-- Top stat group -->
+        <div class="stat-group">
+          <div class="stat-col">
+            <div class="stat-eyebrow" data-bind-text="kpis.0.label">Deals booked this month</div>
+            <div class="stat-number">48 <span class="small">/ $128,400</span></div>
+            <div class="stat-delta">
+              <span class="pct up">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
+                14.2%
+              </span>
+              vs previous 30 days
+            </div>
+          </div>
+          <div class="stat-col">
+            <div class="stat-eyebrow" data-bind-text="kpis.1.label">Discovery Calls today</div>
+            <div class="stat-number" data-bind-text="kpis.1.value">12</div>
+            <div class="stat-delta">
+              <span class="pct up">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
+                9.1%
+              </span>
+              vs previous 30 days
+            </div>
+          </div>
+          <div class="stat-col">
+            <div class="stat-eyebrow" data-bind-text="kpis.2.label">Deals booked today</div>
+            <div class="stat-number" data-bind-text="kpis.2.value">3</div>
+            <div class="stat-delta">
+              <span class="pct up">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
+                6.2%
+              </span>
+              vs previous 30 days
+            </div>
+          </div>
+          <div class="stat-col">
+            <div class="stat-eyebrow" data-bind-text="kpis.3.label">Average deal value</div>
+            <div class="stat-number" data-bind-text="kpis.3.value"><span data-bind-text="amounts.0">$2,675</span></div>
+            <div class="stat-delta">
+              <span class="pct down">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>
+                2.1pp
+              </span>
+              vs previous 30 days
+            </div>
+          </div>
         </div>
-        <div class="queue-block">
-          <div class="eyebrow muted">Deals booked today</div>
-          <div class="big" style="font-size:28px;font-weight:600"><span data-bind-text="realtime.dealsBookedToday.count" data-fmt="num"></span> / <span data-bind-text="realtime.dealsBookedToday.amount" data-fmt="usdint"></span></div>
-          <div class="q-row"><span class="l">Last booked</span><span class="v"><span data-bind-text="realtime.dealsBookedToday.lastBookedAgo"></span> ago</span></div>
+
+        <!-- Hero chart -->
+        <section class="chart-wrap">
+          <div class="chart-head">
+            <div class="chart-h-left">
+              <div class="chart-h-eyebrow">Net revenue · Last 12 months</div>
+              <div class="chart-h-num"><span data-bind-text="amounts.1">$1,420,800</span></div>
+              <div class="chart-h-sub">
+                <span><span class="swatch" style="background:var(--terra);"></span>This year · <strong>$1.42M</strong></span>
+                <span><span class="swatch" style="background:var(--ink-4);opacity:.5;"></span>Previous year · <strong>$1.18M</strong></span>
+                <span>Forecast EOY · <strong>$1.58M</strong></span>
+              </div>
+            </div>
+            <div class="chart-tools">
+              <button type="button" data-range="1d">1D</button>
+              <button type="button" data-range="7d">7D</button>
+              <button type="button" data-range="30d">30D</button>
+              <button type="button" data-range="90d">90D</button>
+              <button type="button" data-range="12m" class="active">12M</button>
+              <button type="button" data-range="ytd">YTD</button>
+            </div>
+          </div>
+
+          <div class="chart">
+            <svg viewBox="0 0 1200 260" preserveAspectRatio="none">
+              <!-- Grid -->
+              <line x1="0" y1="0"   x2="1200" y2="0"   stroke="var(--line)" stroke-dasharray="2 4"/>
+              <line x1="0" y1="65"  x2="1200" y2="65"  stroke="var(--line)" stroke-dasharray="2 4"/>
+              <line x1="0" y1="130" x2="1200" y2="130" stroke="var(--line)" stroke-dasharray="2 4"/>
+              <line x1="0" y1="195" x2="1200" y2="195" stroke="var(--line)" stroke-dasharray="2 4"/>
+              <line x1="0" y1="260" x2="1200" y2="260" stroke="var(--line-2)"/>
+
+              <!-- Previous period (ghost line) -->
+              <path class="chart-prev" d=""
+                    fill="none" stroke="var(--ink-4)" stroke-width="1.5" stroke-dasharray="4 4" opacity="0.5"/>
+
+              <!-- Current period area -->
+              <path class="chart-area" d=""
+                    fill="var(--terra)" opacity="0.06"/>
+
+              <!-- Current period line -->
+              <path class="chart-line" d=""
+                    fill="none" stroke="var(--terra)" stroke-width="2.5"/>
+
+              <!-- End-point dot -->
+              <circle class="chart-end" cx="0" cy="0" r="5" fill="#fff" stroke="var(--terra)" stroke-width="2.5"/>
+
+              <!-- Now line -->
+              <line x1="1200" y1="0" x2="1200" y2="260" stroke="var(--terra)" stroke-width="1" stroke-dasharray="3 3" opacity="0.4"/>
+            </svg>
+            <div class="chart-y">
+              <span>$200k</span>
+              <span>$150k</span>
+              <span>$100k</span>
+              <span>$50k</span>
+              <span><span data-bind-text="amounts.2">$0</span></span>
+            </div>
+          </div>
+          <div class="chart-x">
+            <span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span><span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span class="cur">May</span>
+          </div>
+        </section>
+
+        <!-- Two-column data -->
+        <div class="two-col">
+
+          <section class="section">
+            <div class="section-head">
+              <div class="section-title">Sales Leaders</div>
+              <a data-comm-action="action:dashboard.open" class="section-link" href="#">View all →</a>
+            </div>
+            <div class="tp-list">
+              <div class="tp-row">
+                <div class="tp-av" style="background:var(--terra);">JS</div>
+                <div class="tp-info">
+                  <div class="tp-nm">John Sales</div>
+                  <div class="tp-mt">14 deals booked</div>
+                </div>
+                <div class="tp-amt"><span data-bind-text="amounts.3">$42,640</span></div>
+                <div class="tp-rate good" data-bind-text="metrics.tp_rate.0">92%</div>
+              </div>
+              <div class="tp-row">
+                <div class="tp-av" style="background:var(--info);">JF</div>
+                <div class="tp-info">
+                  <div class="tp-nm">Jane Finance</div>
+                  <div class="tp-mt">11 deals booked</div>
+                </div>
+                <div class="tp-amt"><span data-bind-text="amounts.4">$31,210</span></div>
+                <div class="tp-rate good" data-bind-text="metrics.tp_rate.1">78%</div>
+              </div>
+              <div class="tp-row">
+                <div class="tp-av" style="background:#0E7C8F;">AH</div>
+                <div class="tp-info">
+                  <div class="tp-nm">Andrew Haylton</div>
+                  <div class="tp-mt">9 deals booked</div>
+                </div>
+                <div class="tp-amt"><span data-bind-text="amounts.5">$24,810</span></div>
+                <div class="tp-rate" data-bind-text="metrics.tp_rate.2">71%</div>
+              </div>
+              <div class="tp-row">
+                <div class="tp-av" style="background:#7B4B94;">PR</div>
+                <div class="tp-info">
+                  <div class="tp-nm">Paul Rai</div>
+                  <div class="tp-mt">8 deals booked</div>
+                </div>
+                <div class="tp-amt"><span data-bind-text="amounts.6">$18,400</span></div>
+                <div class="tp-rate" data-bind-text="metrics.tp_rate.3">64%</div>
+              </div>
+            </div>
+          </section>
+
+          <section class="section">
+            <div class="section-head">
+              <div class="section-title">Open Items</div>
+              <a data-comm-action="action:dashboard.open" class="section-link" href="#">View all →</a>
+            </div>
+            <div class="na-list">
+              <a class="na-row" href="DashboardStales.html">
+                <div class="na-l">
+                  <div class="na-t">Stale opportunities</div>
+                  <div class="na-s">No contact in 48+ hours</div>
+                </div>
+                <div class="na-n warn">5</div>
+                <div class="na-arr">→</div>
+              </a>
+              <a class="na-row" href="#">
+                <div class="na-l">
+                  <div class="na-t">Open service tickets</div>
+                  <div class="na-s">Awaiting customer reply</div>
+                </div>
+                <div class="na-n bad">2</div>
+                <div class="na-arr">→</div>
+              </a>
+              <a class="na-row" href="#">
+                <div class="na-l">
+                  <div class="na-t">Accepted Growth Plans</div>
+                  <div class="na-s">Not yet booked or paid</div>
+                </div>
+                <div class="na-n">3</div>
+                <div class="na-arr">→</div>
+              </a>
+              <a class="na-row" href="#">
+                <div class="na-l">
+                  <div class="na-t">Unassigned new leads</div>
+                  <div class="na-s">In queue under 1h</div>
+                </div>
+                <div class="na-n">4</div>
+                <div class="na-arr">→</div>
+              </a>
+            </div>
+          </section>
+
         </div>
-      </aside>
+      </section>
+
+      <!-- ═══════════════ REALTIME ═══════════════ -->
+      <section class="pane" data-pane="realtime">
+
+        <div class="live-strip">
+          <div class="live-cell">
+            <div class="stat-eyebrow" data-bind-text="metrics.stat_eyebrow.0">Online now</div>
+            <div class="stat-number"><span data-bind-text="live.onlineNow">7</span><span class="small" data-bind-text="live.onlineTotal">/12</span></div>
+            <div class="stat-delta"><span class="dot online"></span><span data-bind-text="live.onCalls">5</span> on calls</div>
+          </div>
+          <div class="live-cell">
+            <div class="stat-eyebrow" data-bind-text="metrics.stat_eyebrow.1">Calls in last hour</div>
+            <div class="stat-number" data-bind-text="kpis.4.value">38</div>
+            <div class="stat-delta">Avg duration <strong style="color:var(--ink);font-weight:600;" data-bind-text="live.avgDuration">3m 42s</strong></div>
+          </div>
+          <div class="live-cell">
+            <div class="stat-eyebrow" data-bind-text="metrics.stat_eyebrow.2">In queue</div>
+            <div class="stat-number" style="color:var(--warn);" data-bind-text="kpis.5.value">3</div>
+            <div class="stat-delta" data-bind-text="metrics.stat_delta.0">Longest wait · 42s</div>
+          </div>
+          <div class="live-cell">
+            <div class="stat-eyebrow" data-bind-text="metrics.stat_eyebrow.3">Talk time today</div>
+            <div class="stat-number">14h <span class="small">28m</span></div>
+            <div class="stat-delta" data-bind-text="metrics.stat_delta.1">Avg per agent · 2h 04m</div>
+          </div>
+          <div class="live-cell">
+            <div class="stat-eyebrow" data-bind-text="metrics.stat_eyebrow.4">Leads today</div>
+            <div class="stat-number" data-bind-text="kpis.6.value">21</div>
+            <div class="stat-delta"><span class="pct up" data-bind-text="metrics.pct.0">↑ 18%</span> vs yesterday</div>
+          </div>
+          <div class="live-cell">
+            <div class="stat-eyebrow" data-bind-text="metrics.stat_eyebrow.5">Emails sent</div>
+            <div class="stat-number" data-bind-text="kpis.7.value">156</div>
+            <div class="stat-delta" data-bind-text="metrics.stat_delta.2">42 opened · 27% open rate</div>
+          </div>
+          <div class="live-cell">
+            <div class="stat-eyebrow" data-bind-text="metrics.stat_eyebrow.6">Quotes sent</div>
+            <div class="stat-number" data-bind-text="kpis.8.value">19</div>
+            <div class="stat-delta" data-bind-text="metrics.stat_delta.3">8 viewed · 3 accepted</div>
+          </div>
+          <div class="live-cell">
+            <div class="stat-eyebrow" data-bind-text="metrics.stat_eyebrow.7">Moves booked</div>
+            <div class="stat-number" style="color:var(--ok);" data-bind-text="kpis.9.value">7</div>
+            <div class="stat-delta" data-bind-text="metrics.stat_delta.4">$18,450 booked today</div>
+          </div>
+        </div>
+
+        <div class="live-row">
+
+          <section class="section" style="margin-bottom:0;">
+            <div class="section-head">
+              <div class="section-title">Sales Activity</div>
+              <span class="section-link" style="display:inline-flex;align-items:center;gap:6px;color:var(--ink-3);"><span class="live"></span>Auto-refresh · 30s</span>
+            </div>
+            <table class="live-table">
+              <thead>
+                <tr>
+                  <th>Agent</th>
+                  <th>Calls</th>
+                  <th>Connected</th>
+                  <th>Talk time</th>
+                  <th>Deals</th>
+                </tr>
+              </thead>
+              <tbody data-bind="rows"><template><tr><td><div class="agent"><span class="agent-av" style="background:{{c0_avBg}};">{{c0_avInitials}}</span><div><div class="agent-nm">{{c0_name}}</div><div class="agent-st"><span class="dot {{c0_dotCls}}"></span>{{c0_sub}}</div></div></div></td><td>{{c1_text}}</td><td>{{c2_text}}</td><td>{{c3_text}}</td><td>{{c4_text}}</td></tr></template></tbody>
+            </table>
+          </section>
+
+          <aside class="queue-card">
+            <div class="queue-block">
+              <div class="q-eyebrow">In queue</div>
+              <div class="q-num" style="color:var(--warn);" data-bind-text="metrics.q_num.0">3</div>
+              <div class="q-row" style="margin-top:14px;"><span class="l">Sales line</span><span class="v" data-bind-text="queue.salesLine">2</span></div>
+              <div class="q-row"><span class="l">Support line</span><span class="v" data-bind-text="queue.supportLine">1</span></div>
+              <div class="q-row"><span class="l">Longest wait</span><span class="v" data-bind-text="queue.longestWait">42s</span></div>
+            </div>
+
+            <div class="queue-block">
+              <div class="q-eyebrow">Today</div>
+              <div class="q-row"><span class="l">Total calls</span><span class="v" data-bind-text="today.totalCalls">186</span></div>
+              <div class="q-row"><span class="l">Connected rate</span><span class="v" style="color:var(--ok);" data-bind-text="today.connectedRate">62%</span></div>
+              <div class="q-row"><span class="l">Avg wait</span><span class="v" data-bind-text="today.avgWait">18s</span></div>
+              <div class="q-row"><span class="l">Abandoned</span><span class="v" style="color:var(--bad);" data-bind-text="today.abandoned">2</span></div>
+            </div>
+
+            <div class="queue-block">
+              <div class="q-eyebrow">Deals booked today</div>
+              <div class="q-num"><span data-bind-text="dealsToday.count">2</span> <span style="font-size:18px;color:var(--ink-3);font-weight:500;" data-bind-text="dealsToday.amount">/ $5,403</span></div>
+              <div class="q-row" style="margin-top:14px;"><span class="l">Last booked</span><span class="v" data-bind-text="dealsToday.lastBooked">12m ago</span></div>
+            </div>
+          </aside>
+
+        </div>
+      </section>
+
     </div>
-  </section>
+  </main>
 </div>
 
+
+
+
+<!-- v12 auto-modal toolbar -->
+<div style="display:flex;gap:8px;flex-wrap:wrap;padding:0 24px 16px;">
+  <button class="s1-btn sec" data-dashboard-open="dbAddLeadModal" type="button">Add lead</button>
+  <button class="s1-btn sec" data-dashboard-open="dbAddTaskModal" type="button">Add task</button>
+  <button class="s1-btn sec" data-dashboard-open="dbMarkStaleModal" type="button">Mark stale</button>
+  <button class="s1-btn sec" data-dashboard-open="dbSnoozeModal" type="button">Snooze</button>
+</div>
+<div class="s1-overlay gm-overlay" id="dbAddLeadModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Dashboard</div><h4>Add lead</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Name</label><input class="s1-input" type="text" name="name"></div>
+    <div><label class="s1-mlabel">Source</label><select class="s1-select" name="source" data-bind-options="sources"><option value="">Choose…</option></select></div>
+    <div class="full"><label class="s1-mlabel">Notes</label><textarea class="s1-textarea" name="notes"></textarea></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Add lead</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="dbAddTaskModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Dashboard</div><h4>Add task</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Title</label><input class="s1-input" type="text" name="title"></div>
+    <div><label class="s1-mlabel">Due</label><input class="s1-input" type="date" name="dueDate"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Add task</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="dbMarkStaleModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Dashboard</div><h4>Mark stale</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Lead id</label><input class="s1-input" type="text" name="id"></div>
+    <div><label class="s1-mlabel">Reason</label><input class="s1-input" type="text" name="reason"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Mark stale</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="dbSnoozeModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Dashboard</div><h4>Snooze</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Lead id</label><input class="s1-input" type="text" name="id"></div>
+    <div><label class="s1-mlabel">Until</label><input class="s1-input" type="date" name="until"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Snooze</button></div>
+</div></div>
 <script src="../../core/event-bus.js"></script>
 <script src="../../core/state-store.js"></script>
 <script src="../../core/schema.js"></script>
@@ -189,5 +876,30 @@
 <script src="../../core/communication.api.js"></script>
 <script src="../../core/communication.js"></script>
 <script src="../../core/render.js"></script>
+<script src="../../core/standard-page.js"></script>
+<script src="../../core/google-places.js"></script>
 <script src="./module.js"></script>
-</body></html>
+<script>
+  // Tab switching
+  (function(){
+    var tabs = document.querySelectorAll('#tabs .subtab');
+    var panes = document.querySelectorAll('.pane');
+    tabs.forEach(function(t){
+      t.addEventListener('click', function(){
+        tabs.forEach(function(x){ x.classList.toggle('active', x===t); });
+        panes.forEach(function(p){ p.classList.toggle('active', p.dataset.pane===t.dataset.tab); });
+      });
+    });
+  })();
+
+  // Range toggle (visual)
+  document.querySelectorAll('.chart-tools').forEach(function(g){
+    g.querySelectorAll('button').forEach(function(b){
+      b.addEventListener('click', function(){
+        g.querySelectorAll('button').forEach(function(x){ x.classList.toggle('active', x===b); });
+      });
+    });
+  });
+</script>
+</body>
+</html>

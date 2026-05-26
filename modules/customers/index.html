@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Customers — Redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_system.css">
+<style>
+.cust-wrap { padding: 24px 28px 56px; }
+.cust-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+.cust-header h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; margin: 0; }
+.cust-filters { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr auto auto auto; gap: 10px; align-items: end; background: #fff; border: var(--hair); border-radius: 8px; padding: 14px 16px; margin-bottom: 12px; }
+.cust-filter-group { display: flex; flex-direction: column; gap: 4px; }
+.cust-filter-label { font-size: 11px; font-weight: 600; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.05em; }
+.cust-filter-input, .cust-filter-select {
+  height: 34px; padding: 0 10px; border: var(--hair); border-radius: 6px; font-size: 12.5px; background: #fff; color: var(--ink); font-family: inherit; outline: none;
+}
+.cust-filter-input:focus, .cust-filter-select:focus { border-color: var(--terra); box-shadow: 0 0 0 3px var(--terra-soft); }
+.cust-btn-filter { height: 34px; padding: 0 16px; background: var(--terra); color: #fff; border: 0; border-radius: 6px; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.cust-btn-clear { height: 34px; padding: 0 14px; background: #fff; color: var(--ink); border: var(--hair); border-radius: 6px; font-size: 12.5px; font-weight: 500; cursor: pointer; }
+.cust-btn-export { height: 34px; padding: 0 14px; background: #fff; color: var(--terra); border: 1px solid var(--terra); border-radius: 6px; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+
+.cust-bulk-bar { display: flex; gap: 8px; align-items: center; background: #fff; border: var(--hair); border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; flex-wrap: wrap; }
+.cust-bulk-btn { height: 32px; padding: 0 12px; border: var(--hair); border-radius: 6px; font-size: 12px; font-weight: 600; background: #fff; cursor: pointer; }
+.cust-bulk-btn.danger { color: #B91C1C; border-color: #FECACA; background: #FEF2F2; }
+.cust-bulk-btn.primary { color: #fff; background: var(--terra); border-color: var(--terra); }
+.cust-bulk-input { height: 32px; padding: 0 10px; border: var(--hair); border-radius: 6px; font-size: 12px; min-width: 140px; }
+
+.cust-table-wrap { background: #fff; border: var(--hair); border-radius: 8px; overflow: hidden; }
+.cust-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.cust-table th { padding: 12px 14px; font-size: 11px; font-weight: 600; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: var(--hair); text-align: left; background: var(--surface-2); white-space: nowrap; }
+.cust-table td { padding: 12px 14px; border-bottom: 1px solid var(--line-2); white-space: nowrap; }
+.cust-table tbody tr:last-child td { border-bottom: 0; }
+.cust-table tbody tr:hover td { background: var(--surface-2); }
+.cust-table td .row-action { color: var(--terra); font-size: 12px; font-weight: 600; cursor: pointer; margin-right: 12px; }
+.cust-table td .row-action.delete { color: #B91C1C; }
+.pill-status { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+.pill-status.lead { background: #FEF3C7; color: #92400E; }
+.pill-status.opp  { background: #DBEAFE; color: #1E40AF; }
+.pill-status.booked { background: #D1FAE5; color: #065F46; }
+.pill-status.closed { background: #E5E7EB; color: #374151; }
+.pill-branch { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 10.5px; font-weight: 600; }
+.b-toronto { background: #FEE2E2; color: #B91C1C; }
+.b-vancouver { background: #DBEAFE; color: #1E40AF; }
+.b-calgary { background: #D1FAE5; color: #065F46; }
+.b-ottawa { background: #FEE2E2; color: #B91C1C; }
+.b-edmonton { background: #FEF3C7; color: #92400E; }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_aesthetic.css">
+</head>
+<body>
+<div class="app" data-screen-label="Customers"><main class="page">
+    <div class="cust-wrap">
+      <div class="cust-header">
+        <h1 data-bind-text="summary">Customers</h1>
+        <a href="CreateCustomer.html" style="padding:9px 16px;background:var(--terra);color:#fff;border-radius:7px;font-size:13px;font-weight:600;text-decoration:none;">+ New Customer</a>
+      </div>
+
+      <div class="cust-filters">
+        <div class="cust-filter-group"><span class="cust-filter-label">Search</span><input class="cust-filter-input" type="text" placeholder="Name, email, company…" data-cust-filter="search"></div>
+        <div class="cust-filter-group"><span class="cust-filter-label">Status</span><select class="cust-filter-select" data-bind-options="optionsOptions" data-cust-filter="status"><option value="">All Statuses</option></select></div>
+        <div class="cust-filter-group"><span class="cust-filter-label">Source</span><select class="cust-filter-select" data-bind-options="optionsOptions2" data-cust-filter="source"><option value="">All Sources</option></select></div>
+        <div class="cust-filter-group"><span class="cust-filter-label">Location</span><select class="cust-filter-select" data-bind-options="optionsOptions3" data-cust-filter="location"><option value="">All Locations</option></select></div>
+        <div class="cust-filter-group"><span class="cust-filter-label">From Date</span><input class="cust-filter-input" type="date" data-cust-filter="from"></div>
+        <div class="cust-filter-group"><span class="cust-filter-label">To Date</span><input class="cust-filter-input" type="date" data-cust-filter="to"></div>
+        <div class="cust-filter-group"><span class="cust-filter-label">Tag</span><select class="cust-filter-select" data-bind-options="optionsOptions4" data-cust-filter="tag"><option value="">All Tags</option></select></div>
+        <button type="button" class="cust-btn-filter" id="custApplyFilters">Filter</button>
+        <button class="cust-btn-clear">Clear</button>
+        <button data-comm-action="action:customers.export" class="cust-btn-export">Export CSV</button>
+      </div>
+
+      <div class="cust-bulk-bar">
+        <button type="button" data-cust-bulk="delete" class="cust-bulk-btn danger">Delete Selected</button>
+        <select id="custBulkUpdateField" class="cust-bulk-input" data-bind-options="optionsOptions5"></select>
+        <button type="button" data-cust-bulk="update" class="cust-bulk-btn primary">Update</button>
+        <button type="button" data-cust-bulk="export" class="cust-bulk-btn">Export Selected</button>
+        <input id="custBulkAddTag" class="cust-bulk-input" placeholder="Add Tag…">
+        <button type="button" data-cust-bulk="tag.add" class="cust-bulk-btn primary">Add</button>
+        <input id="custBulkRemoveTag" class="cust-bulk-input" placeholder="Remove Tag…">
+        <button type="button" data-cust-bulk="tag.remove" class="cust-bulk-btn danger">Remove</button>
+      </div>
+
+      <div class="cust-table-wrap">
+        <table class="cust-table">
+          <thead>
+            <tr>
+              <th><input type="checkbox" id="custSelectAll"></th>
+              <th>Name</th><th>Company</th><th>Email</th><th>Phone</th>
+              <th>Status</th><th>Source</th><th>Branch</th><th>Tags</th><th>Revenue</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody data-bind="rows"><template><tr data-record-id="{{id}}"><td><input type="checkbox" class="cust-row-check" data-id="{{id}}"></td><td><b>{{name}}</b><div class="cell-light" data-bind-show-if="subMeta" style="font-size:11px;color:var(--ink-3);">{{subMeta}}</div></td><td>{{company}}</td><td>{{email}}</td><td>{{phone}}</td><td><span class="pill-status {{statusCls}}">{{statusLabel}}</span></td><td>{{source}}</td><td><span class="pill-branch b-{{branchCls}}">{{branchLabel}}</span></td><td>{{tags}}</td><td>{{revenue}}</td><td><span class="row-action">View</span><span class="row-action">Edit</span><span class="row-action delete">Delete</span></td></tr></template></tbody>
+        </table>
+        <div style="padding:14px 18px;display:flex;justify-content:space-between;align-items:center;border-top:var(--hair);font-size:12px;color:var(--ink-3);">
+          <span>Showing <span data-bind-text="pagination.shown">14</span> of <span data-bind-text="pagination.total">1,710</span> customers</span>
+          <div class="customers-pager" id="customersPager"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div><div class="s1-overlay gm-overlay" id="newCustomerModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Customers</div><h4>New customer</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Name *</label><input class="s1-input" type="text" name="name"></div>
+    <div><label class="s1-mlabel">Email</label><input class="s1-input" type="email" name="email"></div>
+    <div><label class="s1-mlabel">Phone</label><input class="s1-input" type="tel" name="phone"></div>
+    <div><label class="s1-mlabel">Company</label><input class="s1-input" type="text" name="company"></div>
+    <div><label class="s1-mlabel">Source</label><select class="s1-select" name="source" data-bind-options="sources"><option value="">Choose…</option></select></div>
+    <div><label class="s1-mlabel">Tag</label><select class="s1-select" name="tag" data-bind-options="tags"><option value="">Choose…</option></select></div>
+    <div class="full"><label class="s1-mlabel">Notes</label><textarea class="s1-textarea" name="notes"></textarea></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Create customer</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="mergeCustomerModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Customers</div><h4>Merge customers</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">From (id)</label><input class="s1-input" type="text" name="fromId"></div>
+    <div><label class="s1-mlabel">Into (id)</label><input class="s1-input" type="text" name="intoId"></div>
+    <div><label class="s1-mlabel">Strategy</label><select class="s1-select" name="strategy" data-bind-options="strategyOptions"><option value="">Choose…</option></select></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Merge</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="tagCustomerModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Customers</div><h4>Tag customer</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Customer (id)</label><input class="s1-input" type="text" name="id"></div>
+    <div><label class="s1-mlabel">Tag</label><select class="s1-select" name="tag" data-bind-options="tags"><option value="">Choose…</option></select></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Apply tag</button></div>
+</div></div>
+<script src="../../core/event-bus.js"></script>
+<script src="../../core/state-store.js"></script>
+<script src="../../core/schema.js"></script>
+<script src="../../core/fixtures.js"></script>
+<script src="../../core/communication.mock.js"></script>
+<script src="../../core/communication.api.js"></script>
+<script src="../../core/communication.js"></script>
+<script src="../../core/render.js"></script>
+<script src="../../core/standard-page.js"></script>
+<script src="../../core/google-places.js"></script>
+<script src="./module.js"></script>
+</body>
+</html>

@@ -1,98 +1,718 @@
-<!DOCTYPE html><html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Finance</title>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Finance — Redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../../assets/css/module.css">
-</head><body>
-<div class="wrap">
-  <div class="page-bar"><div class="page-title">Finance</div></div>
+<link rel="stylesheet" href="_system.css">
+<template id="__bundler_thumbnail" data-bg-color="#FFFFFF"><svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg"><rect width="1200" height="800" fill="#FFFFFF"/><rect x="60" y="60" width="80" height="80" rx="12" fill="#004D40"/><text x="100" y="115" text-anchor="middle" font-family="Inter" font-weight="800" font-size="28" fill="#D4960A">S</text><rect x="200" y="80" width="260" height="22" rx="3" fill="#0A2540"/><rect x="200" y="160" width="940" height="580" rx="6" fill="#FAFBFC" stroke="#EFF2F5"/><text x="600" y="790" text-anchor="middle" font-family="Inter" font-weight="500" font-size="14" fill="#697386">Finance · Loading…</text></svg></template>
 
-  <section class="section">
-    <h3 class="section-title">P&amp;L (monthly)</h3>
-    <table class="tbl">
-      <thead><tr><th>Month</th><th style="text-align:right">Revenue</th><th style="text-align:right">Expenses</th><th style="text-align:right">Net</th></tr></thead>
-      <tbody data-bind="pnl">
-        <template>
-          <tr>
-            <td>{{month}}</td>
-            <td style="text-align:right">{{revenue|usdint}}</td>
-            <td style="text-align:right">{{expenses|usdint}}</td>
-            <td style="text-align:right">{{net|usdint}}</td>
-          </tr>
-        </template>
-      </tbody>
-    </table>
-  </section>
+<style>
+.fin-tabs { display:flex; gap:4px; margin-bottom:18px; flex-wrap:wrap; border-bottom: var(--hair); padding-bottom: 0; }
+.fin-tab {
+  padding:10px 16px; font-size:13px; font-weight:500; color:var(--ink-2);
+  border-bottom: 2px solid transparent; cursor:pointer; transition:color .12s, border-color .12s;
+  text-decoration:none;
+}
+.fin-tab:hover { color:var(--terra); }
+.fin-tab.active { color:var(--terra); border-bottom-color:var(--terra); font-weight:600; }
 
-  <div class="two-col">
-    <section class="section">
-      <h3 class="section-title">Receivables</h3>
-      <table class="tbl">
-        <thead><tr><th>Customer</th><th style="text-align:right">Amount</th><th>Aging</th></tr></thead>
-        <tbody data-bind="receivables">
-          <template>
-            <tr>
-              <td>{{customer}}</td>
-              <td style="text-align:right">{{amount|usdint}}</td>
-              <td>{{aging}}</td>
-            </tr>
-          </template>
-        </tbody>
-      </table>
-    </section>
+.fin-pane { display:none; }
+.fin-pane.active { display:block; }
 
-    <section class="section">
-      <h3 class="section-title">Payables</h3>
-      <table class="tbl">
-        <thead><tr><th>Vendor</th><th style="text-align:right">Amount</th><th>Due</th></tr></thead>
-        <tbody data-bind="payables">
-          <template>
-            <tr>
-              <td>{{vendor}}</td>
-              <td style="text-align:right">{{amount|usdint}}</td>
-              <td>{{due|date}}</td>
-            </tr>
-          </template>
-        </tbody>
-      </table>
-    </section>
-  </div>
+.fin-filters { display:flex; align-items:center; gap:8px; margin-bottom:18px; flex-wrap:wrap; }
+.fin-filter-btn {
+  padding:6px 12px; font-size:12.5px; font-weight:500; color:var(--ink-2);
+  background:#fff; border:var(--hair); border-radius:var(--r-pill, 999px); cursor:pointer;
+  text-decoration:none; display:inline-block;
+}
+.fin-filter-btn:hover { background:var(--surface-2); color:var(--ink); }
+.fin-filter-btn.active { background:var(--terra); color:#fff; border-color:var(--terra); }
+.fin-export {
+  display:inline-flex; align-items:center; gap:6px; padding:6px 14px;
+  font-size:12.5px; font-weight:600; color:var(--terra);
+  border:1.5px solid var(--terra); border-radius:var(--r-input, 8px);
+  background:transparent; cursor:pointer; text-decoration:none; margin-left:auto;
+}
+.fin-export:hover { background:var(--terra-soft); }
+.fin-export svg { width:13px; height:13px; }
 
-  <section class="section">
-    <h3 class="section-title">Invoices</h3>
-    <table class="tbl">
-      <thead><tr><th>#</th><th>Number</th><th>Customer</th><th style="text-align:right">Amount</th><th>Status</th></tr></thead>
-      <tbody data-bind="invoices">
-        <template>
-          <tr>
-            <td>{{id|num}}</td>
-            <td>{{number}}</td>
-            <td>{{customer}}</td>
-            <td style="text-align:right">{{amount|usdint}}</td>
-            <td><span class="tag {{status}}">{{status}}</span></td>
-          </tr>
-        </template>
-      </tbody>
-    </table>
-  </section>
+.realtime-badge {
+  display:inline-flex; align-items:center; gap:4px;
+  padding:1px 7px; border-radius:999px; background:var(--ok-soft); color:var(--ok);
+  font-size:9.5px; font-weight:700; letter-spacing:0.04em; margin-left:6px;
+}
+.realtime-badge::before {
+  content:""; width:6px; height:6px; border-radius:999px; background:var(--ok);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.4; } }
 
-  <section class="section">
-    <h3 class="section-title">Payments</h3>
-    <table class="tbl">
-      <thead><tr><th>Ref</th><th>Customer</th><th style="text-align:right">Amount</th><th>Date</th></tr></thead>
-      <tbody data-bind="payments">
-        <template>
-          <tr>
-            <td>{{ref}}</td>
-            <td>{{customer}}</td>
-            <td style="text-align:right">{{amount|usdint}}</td>
-            <td>{{date|date}}</td>
-          </tr>
-        </template>
-      </tbody>
-    </table>
-  </section>
+.acct-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+.acct-title-row { display:flex; align-items:baseline; gap:14px; }
+.acct-title { font-size:22px; font-weight:700; letter-spacing:-0.015em; }
+.acct-updated { font-size:11.5px; color:var(--ink-3); display:inline-flex; align-items:center; gap:6px; }
+.acct-updated-dot { width:6px; height:6px; border-radius:999px; background:var(--ok); animation: pulse 2s infinite; }
+
+.pnl-table { width:100%; border-collapse:collapse; background:#fff; border:var(--hair); border-radius:8px; overflow:hidden; }
+.pnl-table th {
+  text-align:left; padding:12px 16px; font-size:11.5px; font-weight:700; color:var(--ink-3);
+  text-transform:uppercase; letter-spacing:0.05em;
+  background:var(--surface-2); border-bottom:1px solid var(--line);
+}
+.pnl-table th.r { text-align:right; }
+.pnl-table td {
+  padding:12px 16px; font-size:13px; color:var(--ink);
+  border-bottom:1px solid var(--line-2);
+}
+.pnl-table td.r { text-align:right; font-variant-numeric:tabular-nums; }
+.pnl-table tr.subtotal td { font-weight:600; border-bottom:2px solid var(--line); background:var(--surface-2); }
+.pnl-table tr.total td { font-weight:700; font-size:14.5px; background:var(--cream, #FCF7E0); border-bottom:none; }
+.pnl-table tr.section td { font-weight:700; color:var(--ink-3); font-size:11px; text-transform:uppercase; letter-spacing:0.05em; padding-top:18px; background:transparent; border:none; }
+.pnl-table tbody tr:last-child td { border-bottom:none; }
+.pnl-change { font-size:11.5px; font-weight:700; }
+.pnl-change.up   { color: var(--ok); }
+.pnl-change.down { color: var(--bad); }
+
+.margin-footer { display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
+.margin-chip {
+  display:inline-flex; align-items:center; gap:8px;
+  padding:7px 14px; background:#fff; border:var(--hair); border-radius:8px;
+  font-size:12.5px;
+}
+.margin-chip .l { color:var(--ink-3); font-weight:500; }
+.margin-chip .v { font-weight:700; font-variant-numeric:tabular-nums; }
+.margin-chip.add { border-style:dashed; color:var(--ink-3); cursor:pointer; }
+.margin-chip.add:hover { color:var(--terra); border-color:var(--terra); background:var(--terra-soft); }
+
+/* ── Payroll periods ── */
+.payroll-period-row { cursor:pointer; transition:background .12s; }
+.payroll-period-row:hover { background:var(--surface-2); }
+.payroll-period-row td b { font-weight:600; }
+
+.payroll-detail-tbl td { vertical-align:middle; }
+.payroll-caret { color:var(--ink-3); margin-right:6px; cursor:pointer; user-select:none; font-size:11px; }
+.payroll-hrs { font-size:12px; color:var(--ink-3); margin-left:8px; font-weight:400; }
+.payroll-rate { font-size:12px; color:var(--ink-3); margin-left:6px; font-weight:400; }
+.payroll-paid { display:inline-flex; gap:6px; align-items:center; }
+.payroll-paid input {
+  width:90px; padding:6px 10px; border:var(--hair); border-radius:6px;
+  font-size:12.5px; text-align:right; font-variant-numeric:tabular-nums;
+  outline:none; font-family:inherit; color:var(--ink);
+}
+.payroll-paid input:focus { border-color:var(--terra); box-shadow:0 0 0 3px var(--terra-soft); }
+
+/* ── Petty cash ── */
+.petty-filters { display:flex; gap:10px; align-items:center; margin-bottom:14px; flex-wrap:wrap; }
+.petty-filter {
+  padding:8px 12px; border:var(--hair); border-radius:8px;
+  background:#fff; font-size:12.5px; color:var(--ink); font-family:inherit;
+  min-width:180px;
+}
+.petty-filter:focus { outline:none; border-color:var(--terra); box-shadow:0 0 0 3px var(--terra-soft); }
+.petty-filter-btn {
+  padding:8px 14px; border:var(--hair); border-radius:8px;
+  background:#fff; color:var(--ink-2); font-size:12.5px; font-weight:500;
+  cursor:pointer;
+}
+.petty-filter-btn:hover { background:var(--surface-2); }
+
+.petty-summary {
+  display:grid; grid-template-columns:repeat(3, 1fr); gap:0;
+  margin-top:16px; background:#fff; border:var(--hair); border-radius:10px;
+  overflow:hidden;
+}
+.petty-summary-cell { padding:20px 22px; border-right:var(--hair); }
+.petty-summary-cell:last-child { border-right:0; }
+.petty-summary-cell .l {
+  font-size:11px; font-weight:700; color:var(--ink-3);
+  text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px;
+}
+.petty-summary-cell .v { font-size:22px; font-weight:700; font-variant-numeric:tabular-nums; letter-spacing:-0.015em; }
+</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_aesthetic.css">
+</head>
+<body>
+<div class="app" data-screen-label="Finance"><main class="page">
+    <div class="wrap">
+
+      <!-- Tabs match original exactly -->
+      <nav class="fin-tabs" id="finTabs">
+        <a class="fin-tab active" data-tab="pnl">PNL</a>
+        <a class="fin-tab" data-tab="detailed">Detailed P&amp;L</a>
+        <a class="fin-tab" data-tab="payroll">Payroll</a>
+        <a class="fin-tab" data-tab="petty">Petty Cash</a>
+        <a class="fin-tab" data-tab="expenses">Expenses</a>
+        <a class="fin-tab" data-tab="banking">Banking</a>
+        <a class="fin-tab" data-tab="tax">Tax</a>
+      </nav>
+
+      <!-- ═════ PNL ═════ -->
+      <section class="fin-pane active" data-pane="pnl">
+        <div class="acct-header">
+          <div class="acct-title-row">
+            <span class="acct-title">PNL</span>
+            <span class="acct-updated"><span class="acct-updated-dot"></span>Updated just now</span>
+          </div>
+          <div class="fin-filters" style="margin:0;">
+            <button class="fin-filter-btn" data-fin-location-toggle>All locations</button>
+            <a class="fin-filter-btn" data-comm-action="save:finance.period" data-payload='{"period":"week"}'>This Week</a>
+            <a class="fin-filter-btn active" data-comm-action="save:finance.period" data-payload='{"period":"month"}'>This Month</a>
+            <a class="fin-filter-btn" data-comm-action="save:finance.period" data-payload='{"period":"quarter"}'>Quarter</a>
+            <a class="fin-filter-btn" data-comm-action="save:finance.period" data-payload='{"period":"year"}'>Year</a>
+            <a data-comm-action="action:finance.export" class="fin-export">Export CSV<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></a>
+          </div>
+        </div>
+
+        <div class="stat-group" style="margin-bottom:18px;">
+          <div class="stat-col"><div class="stat-eyebrow">Net profit <span class="realtime-badge">Realtime</span></div><div class="stat-number" style="color:var(--ok);" data-bind-text="kpis.0.value"><span data-bind-text="amounts.0">$54,250</span></div><div class="stat-delta"><span class="pct up" data-bind-text="metrics.pct.0">+12.4%</span>vs previous month</div></div>
+          <div class="stat-col"><div class="stat-eyebrow" data-bind-text="kpis.1.label">Revenue</div><div class="stat-number" style="color:var(--ok);" data-bind-text="kpis.1.value"><span data-bind-text="amounts.1">$94,210</span></div><div class="stat-delta"><span class="pct up" data-bind-text="metrics.pct.1">+18.2%</span>(This Month)</div></div>
+          <div class="stat-col"><div class="stat-eyebrow" data-bind-text="kpis.2.label">Cost of goods sold</div><div class="stat-number" style="color:var(--bad);" data-bind-text="kpis.2.value">−$22,840</div><div class="stat-delta" data-bind-text="kpis.2.delta">+8.1% (This Month)</div></div>
+          <div class="stat-col"><div class="stat-eyebrow" data-bind-text="kpis.3.label">Operating expenses</div><div class="stat-number" style="color:var(--bad);" data-bind-text="kpis.3.value">−$17,120</div><div class="stat-delta" data-bind-text="metrics.stat_delta.0">+4.6% (This Month)</div></div>
+        </div>
+
+        <table class="pnl-table">
+          <thead><tr><th>Item</th><th class="r">Current period</th><th class="r">Compare</th><th class="r">Change</th></tr></thead>
+          <tbody data-bind="rows"><template><tr><td>{{c0_text}}</td><td>{{c1_text}}</td><td>{{c2_text}}</td><td><span class="pnl-change up">+18.2%</span></td></tr></template></tbody>
+        </table>
+
+        <div class="margin-footer">
+          <div class="margin-chip"><span class="l">Gross margin</span><span class="v" style="color:var(--ok);">75.4%</span></div>
+          <div class="margin-chip"><span class="l">Operating margin</span><span class="v" style="color:var(--ok);">57.7%</span></div>
+          <div class="margin-chip"><span class="l">Net margin</span><span class="v" style="color:var(--ok);">58.5%</span></div>
+          <div class="margin-chip add" onclick="document.getElementById('addMetricModal').classList.add('open')">+ Add metric</div>
+        </div>
+      </section>
+
+      <!-- ═════ DETAILED P&L ═════ -->
+      <section class="fin-pane" data-pane="detailed">
+        <div class="acct-header">
+          <div class="acct-title-row"><span class="acct-title">Detailed P&amp;L</span><span class="acct-updated"><span class="acct-updated-dot"></span>Updated 2 min ago</span></div>
+          <a data-comm-action="action:finance.export" data-payload='{"section":"detailed-pnl"}' class="fin-export">Export CSV<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></a>
+        </div>
+        <table class="pnl-table">
+          <thead><tr><th>Item</th><th class="r">Jan</th><th class="r">Feb</th><th class="r">Mar</th><th class="r">Apr</th><th class="r">May</th><th class="r">YTD</th></tr></thead>
+          <tbody data-bind="rows2"><template><tr><td><b>{{c0_name}}</b><div class="cell-light" style="font-size:11px;color:var(--ink-3);display:none"></div></td><td>{{c1_text}}</td><td>{{c2_text}}</td><td>{{c3_text}}</td><td>{{c4_text}}</td><td><b>{{c5_name}}</b><div class="cell-light" style="font-size:11px;color:var(--ink-3);display:none"></div></td><td><b>{{c6_name}}</b><div class="cell-light" style="font-size:11px;color:var(--ink-3);display:none"></div></td></tr></template></tbody>
+        </table>
+      </section>
+
+      <!-- ═════ PAYROLL ═════ -->
+      <section class="fin-pane" data-pane="payroll">
+
+        <!-- ── List view (periods) ── -->
+        <div id="payrollList">
+          <div class="acct-header">
+            <div class="acct-title-row"><span class="acct-title">Payroll Periods</span></div>
+            <div style="display:flex;gap:8px;">
+              <button data-comm-action="action:finance.recompute-crew-wages-from-finalized-jobs" class="btn btn-secondary" title="Re-pull crew earnings from finalized jobs in each open period">Recompute crew wages from finalized jobs</button>
+              <button class="btn btn-primary" onclick="document.getElementById('newPeriodModal').classList.add('open')">+ New Period</button>
+            </div>
+          </div>
+          <table class="tbl">
+            <thead><tr><th>Status</th><th>Period</th><th class="num">Staff</th><th class="num">Earnings</th><th class="num">Bonuses</th><th class="num">Deductions</th><th class="num">Net Revenue</th><th></th></tr></thead>
+            <tbody data-bind="rows3"><template><tr class="payroll-period-row" onclick="openPayrollPeriod(this)" data-period="Pay Period May 11 – May 24, 2026">
+                <td><span class="pill" style="background:{{c0_bg}};color:{{c0_fg}};">{{c0_label}}</span></td>
+                <td><b>{{c1_name}}</b></td>
+                <td class="num">{{c2_text}}</td>
+                <td class="num">{{c3_text}}</td>
+                <td class="num" style="color:var(--ok);">{{c4_text}}</td>
+                <td class="num" style="color:var(--bad);">{{c5_text}}</td>
+                <td class="num"><b>{{c6_text}}</b></td>
+                <td><button class="btn btn-secondary btn-sm" style="display:{{c7_btnDisplay}};">{{c7_btnLabel}}</button></td>
+              </tr></template></tbody>
+          </table>
+
+          <div style="margin-top:36px;">
+            <div class="acct-header"><div class="acct-title-row"><span class="acct-title" style="font-size:18px;">User Moves Earnings</span><span class="acct-updated">Lifetime, across closed periods</span></div></div>
+            <table class="tbl">
+              <thead><tr><th>Employee</th><th class="num">Total Value</th></tr></thead>
+              <tbody data-bind="rows4"><template><tr><td><b>{{c0_name}}</b><div class="cell-light" style="font-size:11px;color:var(--ink-3);display:none"></div></td><td>{{c1_text}}</td></tr></template></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ── Period detail view ── -->
+        <div id="payrollDetail" style="display:none;">
+          <a href="#" onclick="closePayrollPeriod(event)" style="display:inline-flex;align-items:center;gap:4px;font-size:13px;color:var(--ink-3);margin-bottom:18px;text-decoration:none;font-weight:500;">← Back to Payroll</a>
+          <div class="acct-header">
+            <div class="acct-title-row" style="flex-direction:column;align-items:flex-start;gap:2px;">
+              <span class="acct-title" id="payrollDetailTitle">Pay April 26 – May 10</span>
+              <span class="acct-updated" style="margin-left:0;">Apr 26 – May 10, 2026 · Open</span>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-secondary" onclick="document.getElementById('addStaffEntryModal').classList.add('open')">+ Add Staff Entry</button>
+              <button class="btn btn-primary" onclick="document.getElementById('miscPaymentModal').classList.add('open')">+ Misc Payment</button>
+            </div>
+          </div>
+
+          <table class="tbl payroll-detail-tbl">
+            <thead><tr>
+              <th>Name</th><th class="num">Moves</th><th class="num">Earnings</th><th class="num">Tips</th><th class="num">Commission</th><th class="num">Bonuses</th><th class="num">Deductions</th><th class="num">Total Due</th><th class="num" style="width:160px;">Paid</th><th class="num">Balance</th>
+            </tr></thead>
+            <tbody data-bind="rows5"><template><tr><td><span class="payroll-caret">▸</span><b>Balaji Sukumar</b><span class="payroll-hrs">8 hrs</span></td><td>{{c1_text}}</td><td>{{c2_text}}</td><td>{{c3_text}}</td><td>{{c4_text}}</td><td>{{c5_text}}</td><td>{{c6_text}}</td><td><b>{{c7_name}}</b><div class="cell-light" style="font-size:11px;color:var(--ink-3);display:none"></div></td><td><div class="payroll-paid"><input type="number" placeholder="0.00" value="{{c8_amount}}"><button class="btn btn-secondary btn-sm">Save</button></div></td><td>{{c9_text}}</td></tr></template></tbody>
+          </table>
+
+          <div style="margin-top:32px;">
+            <div class="acct-header"><div class="acct-title-row"><span class="acct-title" style="font-size:18px;">Department Summary</span></div></div>
+            <table class="tbl">
+              <thead><tr><th>Department</th><th class="num">Staff</th><th class="num">Earnings</th><th class="num">Total Due</th><th class="num">Paid</th><th class="num">Balance</th></tr></thead>
+              <tbody>
+                <tr><td>Unassigned</td><td class="num">5</td><td class="num">C$1,621.00</td><td class="num">C$1,621.00</td><td class="num" style="color:var(--ok);">C$0.00</td><td class="num" style="color:var(--bad);">C$1,621.00</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ═════ PETTY CASH ═════ -->
+      <section class="fin-pane" data-pane="petty">
+        <div class="acct-header">
+          <div class="acct-title-row"><span class="acct-title">Petty Cash</span></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button data-comm-action="action:finance.export" data-payload='{"section":"tax"}' class="btn btn-secondary"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export CSV</button>
+            <button class="btn btn-secondary" style="border-color:var(--bad-soft);color:var(--bad);" onclick="if(confirm('This will permanently delete every petty-cash transaction. Continue?')) { document.querySelectorAll('#pettyTable tbody tr').forEach(r=>r.remove()); document.getElementById('pettyEmpty').style.display=''; }">Delete All Data</button>
+            <button class="btn btn-secondary" onclick="document.getElementById('addCategoryModal').classList.add('open')">+ Add Category</button>
+            <button class="btn btn-primary" onclick="document.getElementById('recordTransactionModal').classList.add('open')">+ Record Transaction</button>
+          </div>
+        </div>
+
+        <div class="petty-filters">
+          <select class="petty-filter" data-bind-options="optionsOptions"><option value="All Types">All Types</option></select>
+          <select class="petty-filter" data-bind-options="optionsOptions2"><option value="All Categories">All Categories</option></select>
+          <select class="petty-filter" data-bind-options="optionsOptions3"></select>
+          <button class="petty-filter-btn" onclick="this.previousElementSibling.previousElementSibling.previousElementSibling.value='All Types';this.previousElementSibling.previousElementSibling.value='All Categories';this.previousElementSibling.value='This Month';">Clear Filters</button>
+        </div>
+
+        <table class="tbl" id="pettyTable">
+          <thead><tr><th class="num">Date</th><th>Recorded By</th><th>Category</th><th>Description</th><th class="num">Amount</th><th>Receipt</th><th class="num">Balance</th></tr></thead>
+          <tbody data-bind="rows6"><template><tr><td>{{c0_text}}</td><td>{{c1_text}}</td><td><span class="pill" style="background:var(--cream);color:var(--ink-2);">Office</span></td><td>{{c3_text}}</td><td>{{c4_text}}</td><td><a href="#" style="color:var(--terra);font-size:12px;">📎 View</a></td><td><b>{{c6_name}}</b><div class="cell-light" style="font-size:11px;color:var(--ink-3);display:none"></div></td></tr></template></tbody>
+        </table>
+        <div id="pettyEmpty" style="display:none;padding:60px 20px;text-align:center;color:var(--ink-3);background:#fff;border:var(--hair);border-radius:8px;margin-top:8px;">No transactions found. <a href="#" onclick="event.preventDefault();document.getElementById('recordTransactionModal').classList.add('open');" style="color:var(--terra);font-weight:600;">Record one →</a></div>
+
+        <div class="petty-summary">
+          <div class="petty-summary-cell"><div class="l">Cash Balance</div><div class="v">C$385.60</div></div>
+          <div class="petty-summary-cell"><div class="l">Cash In</div><div class="v" style="color:var(--ok);">+C$200.00</div></div>
+          <div class="petty-summary-cell"><div class="l">Cash Out</div><div class="v" style="color:var(--bad);">−C$106.00</div></div>
+        </div>
+      </section>
+
+      <!-- ═════ EXPENSES ═════ -->
+      <section class="fin-pane" data-pane="expenses">
+        <div class="acct-header">
+          <div class="acct-title-row"><span class="acct-title">Expenses</span><span class="acct-updated">May 2026 · 42 entries</span></div>
+          <div style="display:flex;gap:8px;">
+            <input type="file" id="fin-receipts-input" multiple accept="image/*,application/pdf" style="display:none">
+            <button data-fin-upload-receipts class="btn btn-secondary">Upload receipts</button>
+            <button class="btn btn-primary" onclick="document.getElementById('addExpenseModal').classList.add('open')">+ Add expense</button>
+          </div>
+        </div>
+        <div class="stat-group" style="margin-bottom:18px;">
+          <div class="stat-col"><div class="stat-eyebrow" data-bind-text="kpis.4.label">Total · MTD</div><div class="stat-number" data-bind-text="kpis.4.value"><span data-bind-text="amounts.2">$17,120</span></div><div class="stat-delta" data-bind-text="kpis.4.delta">82 entries</div></div>
+          <div class="stat-col"><div class="stat-eyebrow" data-bind-text="kpis.5.label">Largest category</div><div class="stat-number" style="font-size:18px;" data-bind-text="kpis.5.value">Wages</div><div class="stat-delta" data-bind-text="kpis.5.delta"><span data-bind-text="amounts.3">$8,420</span></div></div>
+          <div class="stat-col"><div class="stat-eyebrow" data-bind-text="kpis.6.label">Pending approval</div><div class="stat-number" style="color:var(--warn);" data-bind-text="kpis.6.value">5</div></div>
+          <div class="stat-col"><div class="stat-eyebrow" data-bind-text="kpis.7.label">Reimbursable</div><div class="stat-number" data-bind-text="kpis.7.value"><span data-bind-text="amounts.4">$420</span></div><div class="stat-delta" data-bind-text="metrics.stat_delta.1">3 employees</div></div>
+        </div>
+        <table class="tbl">
+          <thead><tr><th class="num">Date</th><th>Vendor</th><th>Category</th><th>Account</th><th class="num">Amount</th><th>Receipt</th><th>Status</th></tr></thead>
+          <tbody data-bind="rows7"><template><tr><td>{{c0_text}}</td><td>{{c1_text}}</td><td><span class="pill">Fuel</span></td><td>{{c3_text}}</td><td>{{c4_text}}</td><td><span class="pill ok">Attached</span></td><td><span class="pill ok">Approved</span></td></tr></template></tbody>
+        </table>
+      </section>
+
+      <!-- ═════ BANKING ═════ -->
+      <section class="fin-pane" data-pane="banking">
+        <div class="acct-header">
+          <div class="acct-title-row"><span class="acct-title">Banking</span><span class="acct-updated">3 accounts · last sync 4 min ago</span></div>
+          <button data-comm-action="action:finance.bank.connect" class="btn btn-primary">+ Connect account</button>
+        </div>
+        <div class="stat-group" style="margin-bottom:18px;">
+          <div class="stat-col"><div class="stat-eyebrow" data-bind-text="kpis.8.label">RBC checking</div><div class="stat-number" data-bind-text="kpis.8.value"><span data-bind-text="amounts.5">$84,210</span></div><div class="stat-delta" data-bind-text="kpis.8.delta">primary operating</div></div>
+          <div class="stat-col"><div class="stat-eyebrow" data-bind-text="kpis.9.label">RBC savings</div><div class="stat-number" data-bind-text="kpis.9.value"><span data-bind-text="amounts.6">$48,420</span></div><div class="stat-delta" data-bind-text="kpis.9.delta">reserve</div></div>
+          <div class="stat-col"><div class="stat-eyebrow" data-bind-text="kpis.10.label">Visa •••• 4242</div><div class="stat-number" style="color:var(--bad);" data-bind-text="kpis.10.value">−$4,820</div><div class="stat-delta" data-bind-text="kpis.10.delta">due Jun 12</div></div>
+          <div class="stat-col"><div class="stat-eyebrow" data-bind-text="kpis.11.label">Unreconciled</div><div class="stat-number" style="color:var(--warn);" data-bind-text="kpis.11.value">8</div><div class="stat-delta" data-bind-text="metrics.stat_delta.2">$2,140 total</div></div>
+        </div>
+        <section class="section">
+          <div class="section-head"><div class="section-title">Recent transactions</div><a class="section-link" data-comm-action="action:finance.open" data-payload='{"section":"transactions"}'>View all →</a></div>
+          <table class="tbl">
+            <thead><tr><th class="num">Date</th><th>Description</th><th>Account</th><th class="num">Amount</th><th>Match</th></tr></thead>
+            <tbody data-bind="rows8"><template><tr><td>{{c0_text}}</td><td>{{c1_text}}</td><td>{{c2_text}}</td><td>{{c3_text}}</td><td><button class="btn btn-ghost">Match</button></td></tr></template></tbody>
+          </table>
+        </section>
+      </section>
+
+      <!-- ═════ TAX ═════ -->
+      <section class="fin-pane" data-pane="tax">
+        <div class="acct-header">
+          <div class="acct-title-row"><span class="acct-title">Tax</span><span class="acct-updated">HST quarterly · next filing Jul 31</span></div>
+          <div style="display:flex;gap:8px;"><button data-comm-action="action:finance.tax.downloadPackage" class="btn btn-secondary">Download package</button><button class="btn btn-primary" onclick="document.getElementById('addTaxModal').classList.add('open')">+ Add tax record</button></div>
+        </div>
+        <div class="stat-group" style="margin-bottom:18px;">
+          <div class="stat-col"><div class="stat-eyebrow" data-bind-text="kpis.12.label">HST collected · Q2</div><div class="stat-number" data-bind-text="kpis.12.value"><span data-bind-text="amounts.7">$12,840</span></div></div>
+          <div class="stat-col"><div class="stat-eyebrow" data-bind-text="kpis.13.label">HST paid · Q2</div><div class="stat-number" data-bind-text="kpis.13.value"><span data-bind-text="amounts.8">$3,420</span></div></div>
+          <div class="stat-col"><div class="stat-eyebrow" data-bind-text="kpis.14.label">Net remit · Q2</div><div class="stat-number" style="color:var(--warn);" data-bind-text="kpis.14.value"><span data-bind-text="amounts.9">$9,420</span></div><div class="stat-delta" data-bind-text="kpis.14.delta">due Jul 31</div></div>
+          <div class="stat-col"><div class="stat-eyebrow" data-bind-text="kpis.15.label">Last filing</div><div class="stat-number" style="font-size:18px;" data-bind-text="kpis.15.value">Q1 2026</div><div class="stat-delta" data-bind-text="metrics.stat_delta.3">filed Apr 30</div></div>
+        </div>
+        <table class="tbl">
+          <thead><tr><th>Period</th><th>Jurisdiction</th><th class="num">Collected</th><th class="num">Paid</th><th class="num">Remitted</th><th>Status</th></tr></thead>
+          <tbody data-bind="rows9"><template><tr><td>{{c0_text}}</td><td>{{c1_text}}</td><td>{{c2_text}}</td><td>{{c3_text}}</td><td>{{c4_text}}</td><td><span class="pill warn">In progress</span></td></tr></template></tbody>
+        </table>
+      </section>
+
+    </div>
+  </main>
 </div>
+<!-- Finance modals -->
+<style>
+.fm-overlay { position:fixed; inset:0; background:rgba(15,23,42,0.45); display:none; align-items:center; justify-content:center; z-index:1000; padding:24px; }
+.fm-overlay.open { display:flex; }
+.fm-modal { background:#fff; border-radius:12px; width:680px; max-width:96vw; max-height:90vh; overflow-y:auto; box-shadow:0 25px 50px rgba(0,0,0,0.25); }
+.fm-head { display:flex; justify-content:space-between; align-items:center; padding:18px 22px; border-bottom:var(--hair); }
+.fm-title { font-size:16px; font-weight:700; }
+.fm-close { font-size:20px; color:var(--ink-3); cursor:pointer; background:transparent; border:0; }
+.fm-body { padding:18px 22px; }
+.fm-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px 16px; }
+.fm-field { display:flex; flex-direction:column; gap:5px; }
+.fm-field.full { grid-column:1/-1; }
+.fm-label { font-size:12px; font-weight:600; color:var(--ink); }
+.fm-label .req { color:var(--bad); }
+.fm-input, .fm-select, .fm-textarea { width:100%; padding:9px 11px; border:var(--hair); border-radius:6px; font-size:13px; background:#fff; color:var(--ink); font-family:inherit; outline:none; }
+.fm-textarea { min-height:60px; resize:vertical; }
+.fm-input:focus, .fm-select:focus, .fm-textarea:focus { border-color:var(--terra); box-shadow:0 0 0 3px var(--terra-soft); }
+.fm-actions { display:flex; justify-content:flex-end; gap:8px; padding:14px 22px; border-top:var(--hair); }
+.fm-amount { display:flex; align-items:center; }
+.fm-amount .pre { padding:9px 12px; background:var(--surface-2); border:var(--hair); border-right:0; border-radius:6px 0 0 6px; font-weight:600; color:var(--ink-3); font-size:13px; }
+.fm-amount input { border-radius:0 6px 6px 0; }
+</style>
+<div class="fm-overlay" id="addExpenseModal">
+  <div class="fm-modal">
+    <div class="fm-head"><div class="fm-title">Add Expense</div><button data-modal-close class="fm-close">✕</button></div>
+    <div class="fm-body">
+      <div class="fm-grid">
+        <div class="fm-field"><label class="fm-label">Vendor <span class="req">*</span></label><input name="vendor" class="fm-input" type="text" placeholder="e.g. Shell"></div>
+        <div class="fm-field"><label class="fm-label">Category <span class="req">*</span></label><select name="category" class="fm-select" data-bind-options="optionsOptions4"></select></div>
+        <div class="fm-field"><label class="fm-label">Amount <span class="req">*</span></label><div class="fm-amount"><span class="pre">$</span><input name="amount" class="fm-input" type="number" step="0.01" placeholder="0.00"></div></div>
+        <div class="fm-field"><label class="fm-label">Tax</label><div class="fm-amount"><span class="pre">$</span><input name="tax" class="fm-input" type="number" step="0.01" placeholder="0.00"></div></div>
+        <div class="fm-field"><label class="fm-label">Date <span class="req">*</span></label><input name="date" class="fm-input" type="date"></div>
+        <div class="fm-field"><label class="fm-label">Payment method</label><select name="paymentMethod" class="fm-select" data-bind-options="paymentMethodOptions"></select></div>
+        <div class="fm-field"><label class="fm-label">Virtual card / Card last 4</label><input name="virtualCardCardLast4" class="fm-input" type="text" placeholder="4811"></div>
+        <div class="fm-field"><label class="fm-label">Linked job</label><select name="linkedJob" class="fm-select" data-bind-options="linkedJobOptions"><option value="— None —">— None —</option></select></div>
+        <div class="fm-field"><label class="fm-label">Branch</label><select name="branch" class="fm-select" data-bind-options="branchOptions"></select></div>
+        <div class="fm-field"><label class="fm-label">Reimbursable to employee</label><select name="reimbursableToEmployee" class="fm-select" data-bind-options="reimbursableToEmployeeOptions"></select></div>
+        <div class="fm-field full"><label class="fm-label">Description</label><textarea name="description" class="fm-textarea" placeholder="What was this for?"></textarea></div>
+        <div class="fm-field full">
+          <label class="fm-label">Receipt</label>
+          <div style="padding:14px;border:2px dashed var(--line-2);border-radius:6px;text-align:center;color:var(--ink-3);font-size:12.5px;">📎 Drag receipt PDF / image here or <span style="color:var(--terra);font-weight:600;cursor:pointer;">browse…</span></div>
+        </div>
+        <div class="fm-field full"><label style="display:flex;align-items:center;gap:8px;font-size:12.5px;cursor:pointer;"><input name="receipt" type="checkbox" checked style="accent-color:var(--terra);">Tax-deductible</label></div>
+      </div>
+    </div>
+    <div class="fm-actions">
+      <button data-modal-close class="btn btn-secondary">Cancel</button>
+      <button data-modal-save class="btn btn-primary">Save Expense</button>
+    </div>
+  </div>
+</div>
+
+<!-- New Payroll Period -->
+<div class="fm-overlay" id="newPeriodModal">
+  <div class="fm-modal" style="width:520px;">
+    <div class="fm-head"><div class="fm-title">Create Payroll Period</div><button data-modal-close class="fm-close">✕</button></div>
+    <div class="fm-body">
+      <div class="fm-grid">
+        <div class="fm-field full"><label class="fm-label">Period Name</label><input name="periodName" class="fm-input" type="text" placeholder="e.g., January 2026 Payroll"></div>
+        <div class="fm-field"><label class="fm-label">Start Date</label><input name="startDate" class="fm-input" type="date"></div>
+        <div class="fm-field"><label class="fm-label">End Date</label><input name="endDate" class="fm-input" type="date"></div>
+        <div class="fm-field full"><label class="fm-label">Department Filter (optional)</label><input name="departmentFilter" class="fm-input" type="text" placeholder="Leave blank for all departments"></div>
+        <div class="fm-field full">
+          <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;cursor:pointer;">
+            <input name="departmentFilter" type="checkbox" checked style="accent-color:var(--terra);">
+            Auto-import crew earnings from finalized jobs in this date range
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="fm-actions">
+      <button data-modal-close class="btn btn-secondary">Cancel</button>
+      <button data-modal-save class="btn btn-primary" onclick="document.getElementById('newPeriodModal').classList.remove('open')">Create Period</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Staff Entry -->
+<div class="fm-overlay" id="addStaffEntryModal">
+  <div class="fm-modal" style="width:560px;">
+    <div class="fm-head"><div class="fm-title">Add Staff Entry</div><button data-modal-close class="fm-close">✕</button></div>
+    <div class="fm-body">
+      <div class="fm-grid">
+        <div class="fm-field"><label class="fm-label">Employee</label><select name="employee" class="fm-select" data-bind-options="employeeOptions"><option value="Select employee…">Select employee…</option></select></div>
+        <div class="fm-field"><label class="fm-label">Department</label><input name="department" class="fm-input" type="text" placeholder="e.g., Crew A"></div>
+        <div class="fm-field full"><label class="fm-label">Moves Completed</label><input name="movesCompleted" class="fm-input" type="number" min="0" placeholder="0"></div>
+        <div class="fm-field"><label class="fm-label">Earnings</label><div class="fm-amount"><span class="pre">$</span><input name="earnings" class="fm-input" type="number" step="0.01" placeholder="0.00"></div></div>
+        <div class="fm-field"><label class="fm-label">Tips</label><div class="fm-amount"><span class="pre">$</span><input name="tips" class="fm-input" type="number" step="0.01" placeholder="0.00"></div></div>
+        <div class="fm-field"><label class="fm-label">Commission</label><div class="fm-amount"><span class="pre">$</span><input name="commission" class="fm-input" type="number" step="0.01" placeholder="0.00"></div></div>
+        <div class="fm-field"><label class="fm-label">Bonuses</label><div class="fm-amount"><span class="pre">$</span><input name="bonuses" class="fm-input" type="number" step="0.01" placeholder="0.00"></div></div>
+        <div class="fm-field"><label class="fm-label">Deductions</label><div class="fm-amount"><span class="pre">$</span><input name="deductions" class="fm-input" type="number" step="0.01" placeholder="0.00"></div></div>
+      </div>
+    </div>
+    <div class="fm-actions">
+      <button data-modal-close class="btn btn-secondary">Cancel</button>
+      <button data-modal-save class="btn btn-primary" onclick="document.getElementById('addStaffEntryModal').classList.remove('open')">Add Entry</button>
+    </div>
+  </div>
+</div>
+
+<!-- Misc Payment -->
+<div class="fm-overlay" id="miscPaymentModal">
+  <div class="fm-modal" style="width:480px;">
+    <div class="fm-head"><div class="fm-title">Add employee payment</div><button data-modal-close class="fm-close">✕</button></div>
+    <div style="display:flex;gap:24px;padding:0 22px;border-bottom:var(--hair);">
+      <button class="mp-tab active" data-mptab="amount" style="background:transparent;border:0;padding:12px 0 14px;font-size:13.5px;font-weight:700;color:var(--terra);border-bottom:2px solid var(--terra);cursor:pointer;margin-bottom:-1px;">Amount</button>
+      <button class="mp-tab" data-mptab="rate" style="background:transparent;border:0;padding:12px 0 14px;font-size:13.5px;font-weight:500;color:var(--ink-3);border-bottom:2px solid transparent;cursor:pointer;margin-bottom:-1px;">Hourly rate</button>
+    </div>
+    <div class="fm-body">
+      <div class="mp-panel" data-mppanel="amount">
+        <div class="fm-field" style="margin-bottom:14px;"><label class="fm-label">Employee</label><select name="employee" class="fm-select" data-bind-options="employeeOptions2"><option value="Select employee…">Select employee…</option></select></div>
+        <div class="fm-field" style="margin-bottom:14px;">
+          <label class="fm-label">Type</label>
+          <div style="display:flex;gap:18px;margin-top:6px;">
+            <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;"><input type="radio" name="mp-type" checked style="accent-color:#2563EB;"> Pay</label>
+            <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;"><input type="radio" name="mp-type" style="accent-color:#2563EB;"> Deduct</label>
+          </div>
+        </div>
+        <div class="fm-field" style="margin-bottom:14px;"><label class="fm-label">Amount</label><div class="fm-amount"><span class="pre">$</span><input name="amount" class="fm-input" type="number" step="0.01" placeholder="0.00"></div></div>
+        <div class="fm-field"><label class="fm-label">Notes</label><textarea name="notes" class="fm-textarea" placeholder="Optional notes…"></textarea></div>
+      </div>
+      <div class="mp-panel" data-mppanel="rate" style="display:none;">
+        <div class="fm-field" style="margin-bottom:14px;"><label class="fm-label">Employee</label><select name="employee" class="fm-select" data-bind-options="employeeOptions3"><option value="Select employee…">Select employee…</option></select></div>
+        <div class="fm-field" style="margin-bottom:14px;"><label class="fm-label">Hourly rate</label><div class="fm-amount"><span class="pre">$</span><input name="hourlyRate" class="fm-input" type="number" step="0.01" placeholder="25.00"></div></div>
+        <div class="fm-field" style="margin-bottom:14px;"><label class="fm-label">Hours worked</label><input name="hoursWorked" class="fm-input" type="number" step="0.25" placeholder="0.00"></div>
+        <div class="fm-field"><label class="fm-label">Notes</label><textarea name="notes" class="fm-textarea" placeholder="Optional notes…"></textarea></div>
+      </div>
+    </div>
+    <div class="fm-actions">
+      <button data-modal-close class="btn btn-secondary">Cancel</button>
+      <button data-modal-save class="btn btn-primary" onclick="document.getElementById('miscPaymentModal').classList.remove('open')">Add Payment</button>
+    </div>
+  </div>
+</div>
+
+<!-- Record Petty Cash Transaction -->
+<div class="fm-overlay" id="recordTransactionModal">
+  <div class="fm-modal" style="width:560px;">
+    <div class="fm-head"><div class="fm-title">Record Petty Cash Transaction</div><button data-modal-close class="fm-close">✕</button></div>
+    <div class="fm-body">
+      <div class="fm-grid">
+        <div class="fm-field"><label class="fm-label">Type</label><select name="type" class="fm-select" data-bind-options="typeOptions"></select></div>
+        <div class="fm-field"><label class="fm-label">Amount</label><div class="fm-amount"><span class="pre">C$</span><input name="amount" class="fm-input" type="number" step="0.01" placeholder="0.00"></div></div>
+        <div class="fm-field"><label class="fm-label">Date</label><input name="date" class="fm-input" type="date"></div>
+        <div class="fm-field"><label class="fm-label">Category</label><select name="category" class="fm-select" data-bind-options="categoryOptions"><option value="— None —">— None —</option></select></div>
+        <div class="fm-field full"><label class="fm-label">Description</label><input name="description" class="fm-input" type="text" placeholder="e.g., Bought office supplies"></div>
+        <div class="fm-field full">
+          <label class="fm-label">Receipt (optional)</label>
+          <div style="padding:14px;border:2px dashed var(--line-2);border-radius:6px;text-align:center;color:var(--ink-3);font-size:12.5px;">📎 Drag receipt or <span style="color:var(--terra);font-weight:600;cursor:pointer;">browse…</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="fm-actions">
+      <button data-modal-close class="btn btn-secondary">Cancel</button>
+      <button data-modal-save class="btn btn-primary" onclick="document.getElementById('recordTransactionModal').classList.remove('open')">Record</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Category -->
+<div class="fm-overlay" id="addCategoryModal">
+  <div class="fm-modal" style="width:440px;">
+    <div class="fm-head"><div class="fm-title">Add Petty Cash Category</div><button data-modal-close class="fm-close">✕</button></div>
+    <div class="fm-body">
+      <div class="fm-grid">
+        <div class="fm-field full"><label class="fm-label">Category Name</label><input name="categoryName" class="fm-input" type="text" placeholder="e.g., Vehicle Maintenance"></div>
+        <div class="fm-field full"><label class="fm-label">Type</label><select name="type" class="fm-select" data-bind-options="typeOptions2"></select></div>
+        <div class="fm-field full"><label class="fm-label">Color</label>
+          <div style="display:flex;gap:8px;">
+            <span style="width:28px;height:28px;border-radius:6px;background:var(--cream);border:2px solid var(--terra);cursor:pointer;"></span>
+            <span style="width:28px;height:28px;border-radius:6px;background:var(--ok-soft);cursor:pointer;"></span>
+            <span style="width:28px;height:28px;border-radius:6px;background:var(--warn-soft);cursor:pointer;"></span>
+            <span style="width:28px;height:28px;border-radius:6px;background:var(--info-soft);cursor:pointer;"></span>
+            <span style="width:28px;height:28px;border-radius:6px;background:var(--surface-2);cursor:pointer;"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="fm-actions">
+      <button data-modal-close class="btn btn-secondary">Cancel</button>
+      <button data-modal-save class="btn btn-primary" onclick="document.getElementById('addCategoryModal').classList.remove('open')">Add Category</button>
+    </div>
+  </div>
+</div>
+
+<div class="fm-overlay" id="addMetricModal">
+  <div class="fm-modal" style="width:520px;">
+    <div class="fm-head"><div class="fm-title">Add Metric</div><button data-modal-close class="fm-close">✕</button></div>
+    <div class="fm-body">
+      <p style="font-size:12.5px;color:var(--ink-3);margin:0 0 14px;line-height:1.5;">Pin a derived ratio or KPI to the P&amp;L footer. Calculated automatically from your accounts each period.</p>
+      <div class="fm-grid">
+        <div class="fm-field full"><label class="fm-label">Preset</label><select name="preset" class="fm-select" id="metricPreset" data-bind-options="presetOptions"><option value="">— Custom formula —</option></select></div>
+        <div class="fm-field"><label class="fm-label">Label <span class="req">*</span></label><input name="label" class="fm-input" type="text" placeholder="e.g. EBITDA margin"></div>
+        <div class="fm-field"><label class="fm-label">Format</label><select name="format" class="fm-select" data-bind-options="formatOptions"></select></div>
+        <div class="fm-field full">
+          <label class="fm-label">Formula <span class="req">*</span></label>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <select name="formula" class="fm-select" style="flex:1;" data-bind-options="optionsOptions5"></select>
+            <select name="formula" class="fm-select" style="width:60px;" data-bind-options="optionsOptions6"></select>
+            <select name="formula" class="fm-select" style="flex:1;" data-bind-options="optionsOptions7"></select>
+          </div>
+        </div>
+        <div class="fm-field"><label class="fm-label">Goal (optional)</label><input name="goal" class="fm-input" type="text" placeholder="e.g. ≥ 25%"></div>
+        <div class="fm-field"><label class="fm-label">Compare against</label><select name="compareAgainst" class="fm-select" data-bind-options="compareAgainstOptions"></select></div>
+        <div class="fm-field full"><label style="display:flex;align-items:center;gap:8px;font-size:12.5px;cursor:pointer;"><input name="compareAgainst" type="checkbox" checked style="accent-color:var(--terra);">Show on P&amp;L footer</label></div>
+        <div class="fm-field full"><label style="display:flex;align-items:center;gap:8px;font-size:12.5px;cursor:pointer;"><input name="showOnPandampLFooter" type="checkbox" style="accent-color:var(--terra);">Alert me when threshold is crossed</label></div>
+      </div>
+    </div>
+    <div class="fm-actions">
+      <button data-modal-close class="btn btn-secondary">Cancel</button>
+      <button data-modal-save class="btn btn-primary">Save Metric</button>
+    </div>
+  </div>
+</div>
+
+<div class="fm-overlay" id="addTaxModal">
+  <div class="fm-modal">
+    <div class="fm-head"><div class="fm-title">Add Tax Record</div><button data-modal-close class="fm-close">✕</button></div>
+    <div class="fm-body">
+      <div class="fm-grid">
+        <div class="fm-field"><label class="fm-label">Tax type <span class="req">*</span></label><select name="taxType" class="fm-select" data-bind-options="optionsOptions8"></select></div>
+        <div class="fm-field"><label class="fm-label">Year <span class="req">*</span></label><select name="year" class="fm-select" data-bind-options="optionsOptions9"></select></div>
+        <div class="fm-field"><label class="fm-label">Period</label><select name="period" class="fm-select" data-bind-options="periodOptions"></select></div>
+        <div class="fm-field"><label class="fm-label">Due date</label><input name="dueDate" class="fm-input" type="date"></div>
+        <div class="fm-field"><label class="fm-label">Revenue (period)</label><div class="fm-amount"><span class="pre">$</span><input name="revenue" class="fm-input" type="number" step="0.01" placeholder="0.00"></div></div>
+        <div class="fm-field"><label class="fm-label">Expenses (period)</label><div class="fm-amount"><span class="pre">$</span><input name="expenses" class="fm-input" type="number" step="0.01" placeholder="0.00"></div></div>
+        <div class="fm-field"><label class="fm-label">Taxable income</label><div class="fm-amount"><span class="pre">$</span><input name="taxableIncome" class="fm-input" type="number" step="0.01" placeholder="0.00"></div></div>
+        <div class="fm-field"><label class="fm-label">Tax owed <span class="req">*</span></label><div class="fm-amount"><span class="pre">$</span><input name="taxOwed" class="fm-input" type="number" step="0.01" placeholder="0.00"></div></div>
+        <div class="fm-field"><label class="fm-label">Amount paid</label><div class="fm-amount"><span class="pre">$</span><input name="amountPaid" class="fm-input" type="number" step="0.01" placeholder="0.00"></div></div>
+        <div class="fm-field"><label class="fm-label">Payment date</label><input name="paymentDate" class="fm-input" type="date"></div>
+        <div class="fm-field"><label class="fm-label">Status</label><select name="status" class="fm-select" data-bind-options="statusOptions"></select></div>
+        <div class="fm-field"><label class="fm-label">Confirmation #</label><input name="confirmationNumber" class="fm-input" type="text" placeholder="From CRA / IRS"></div>
+        <div class="fm-field full"><label class="fm-label">Notes</label><textarea name="notes" class="fm-textarea" placeholder="e.g. Refund claim, ITC details…"></textarea></div>
+        <div class="fm-field full">
+          <label class="fm-label">Supporting docs</label>
+          <div style="padding:14px;border:2px dashed var(--line-2);border-radius:6px;text-align:center;color:var(--ink-3);font-size:12.5px;">📎 Upload filing PDFs, receipts, supporting schedules</div>
+        </div>
+      </div>
+    </div>
+    <div class="fm-actions">
+      <button data-modal-close class="btn btn-secondary">Cancel</button>
+      <button data-modal-save class="btn btn-primary">Save Tax Record</button>
+    </div>
+  </div>
+</div>
+<!-- v12: Finance modal launchers (visible buttons that open modals) -->
+<div style="display:flex;gap:8px;flex-wrap:wrap;padding:0 24px 16px;">
+  <button class="s1-btn sec" data-finance-open="addExpenseModal" type="button">Add expense</button>
+  <button class="s1-btn sec" data-finance-open="recordTransactionModal" type="button">Record transaction</button>
+  <button class="s1-btn sec" data-finance-open="miscPaymentModal" type="button">Misc payment</button>
+  <button class="s1-btn sec" data-finance-open="addStaffEntryModal" type="button">Staff entry</button>
+  <button class="s1-btn sec" data-finance-open="newPeriodModal" type="button">New period</button>
+  <button class="s1-btn sec" data-finance-open="addCategoryModal" type="button">Category</button>
+  <button class="s1-btn sec" data-finance-open="addMetricModal" type="button">Metric</button>
+  <button class="s1-btn sec" data-finance-open="addTaxModal" type="button">Tax rate</button>
+</div>
+<div class="s1-overlay fm-overlay" id="addExpenseModal" role="dialog"><div class="s1-modal">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Finance</div><h4>Add expense</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Date</label><input class="s1-input" type="date" name="date"></div>
+    <div><label class="s1-mlabel">Category</label><select class="s1-select" name="categoryId" data-bind-options="categories"><option value="">Choose…</option></select></div>
+    <div class="full"><label class="s1-mlabel">Vendor</label><select class="s1-select" name="vendor" data-bind-options="vendors"><option value="">Choose…</option></select></div>
+    <div><label class="s1-mlabel">Amount</label><input class="s1-input" type="number" step="0.01" name="amount"></div>
+    <div><label class="s1-mlabel">Tax</label><select class="s1-select" name="taxRateId" data-bind-options="taxRates"><option value="">No tax</option></select></div>
+    <div><label class="s1-mlabel">Payment method</label><select class="s1-select" name="paymentMethod" data-bind-options="paymentMethods"><option value="card">Card</option></select></div>
+    <div><label class="s1-mlabel">Linked job</label><input class="s1-input" name="jobId" placeholder="(optional)"></div>
+    <div class="full"><label class="s1-mlabel">Notes</label><textarea class="s1-textarea" name="notes"></textarea></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Add expense</button></div>
+</div></div>
+<div class="s1-overlay fm-overlay" id="recordTransactionModal" role="dialog"><div class="s1-modal">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Finance</div><h4>Record transaction</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div class="full"><label class="s1-mlabel">Account</label><select class="s1-select" name="accountId" data-bind-options="accounts"><option value="">Choose…</option></select></div>
+    <div><label class="s1-mlabel">Type</label><select class="s1-select" name="kind" data-bind-options="transactionKinds"><option value="in">Money in</option></select></div>
+    <div><label class="s1-mlabel">Date</label><input class="s1-input" type="date" name="date"></div>
+    <div><label class="s1-mlabel">Amount</label><input class="s1-input" type="number" step="0.01" name="amount"></div>
+    <div><label class="s1-mlabel">Category</label><select class="s1-select" name="categoryId" data-bind-options="categories"><option value="">Choose…</option></select></div>
+    <div class="full"><label class="s1-mlabel">Counterparty</label><input class="s1-input" name="counterparty"></div>
+    <div class="full"><label class="s1-mlabel">Memo</label><textarea class="s1-textarea" name="memo"></textarea></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Record</button></div>
+</div></div>
+<div class="s1-overlay fm-overlay" id="newPeriodModal" role="dialog"><div class="s1-modal">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Finance</div><h4>New period</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div class="full"><label class="s1-mlabel">Name *</label><input class="s1-input" name="name" placeholder="e.g. 2026 Q3"></div>
+    <div><label class="s1-mlabel">Start</label><input class="s1-input" type="date" name="start"></div>
+    <div><label class="s1-mlabel">End</label><input class="s1-input" type="date" name="end"></div>
+    <div class="full"><label class="s1-mlabel">Copy categories from</label><select class="s1-select" name="copyCategoriesFrom" data-bind-options="periods"><option value="">— None —</option></select></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Create period</button></div>
+</div></div>
+<div class="s1-overlay fm-overlay" id="addStaffEntryModal" role="dialog"><div class="s1-modal">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Finance</div><h4>Add staff entry</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">User</label><input class="s1-input" name="userId" placeholder="User ID"></div>
+    <div><label class="s1-mlabel">Role</label><select class="s1-select" name="roleId" data-bind-options="staffRoles"><option value="">Choose…</option></select></div>
+    <div><label class="s1-mlabel">Base rate ($/hr)</label><input class="s1-input" type="number" step="0.01" name="baseRate"></div>
+    <div><label class="s1-mlabel">Overtime rate</label><input class="s1-input" type="number" step="0.01" name="overtimeRate"></div>
+    <div class="full"><label class="s1-mlabel">Start date</label><input class="s1-input" type="date" name="startDate"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Add staff</button></div>
+</div></div>
+<div class="s1-overlay fm-overlay" id="miscPaymentModal" role="dialog"><div class="s1-modal">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Finance</div><h4>Miscellaneous payment</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Recipient type</label><select class="s1-select" name="recipientType" data-bind-options="recipientTypeOptions"></select></div>
+    <div><label class="s1-mlabel">Recipient name</label><input class="s1-input" name="name"></div>
+    <div><label class="s1-mlabel">Amount</label><input class="s1-input" type="number" step="0.01" name="amount"></div>
+    <div><label class="s1-mlabel">Paid on</label><input class="s1-input" type="date" name="paidOn"></div>
+    <div class="full"><label class="s1-mlabel">Method</label><select class="s1-select" name="method" data-bind-options="paymentMethods"><option value="">Choose…</option></select></div>
+    <div class="full"><label class="s1-mlabel">Memo</label><textarea class="s1-textarea" name="memo"></textarea></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Pay</button></div>
+</div></div>
+<div class="s1-overlay fm-overlay" id="addCategoryModal" role="dialog"><div class="s1-modal">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Finance</div><h4>Add category</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div class="full"><label class="s1-mlabel">Name *</label><input class="s1-input" name="name"></div>
+    <div><label class="s1-mlabel">Kind</label><select class="s1-select" name="kind" data-bind-options="kindOptions"></select></div>
+    <div><label class="s1-mlabel">Parent</label><select class="s1-select" name="parentId" data-bind-options="categories"><option value="">— Top-level —</option></select></div>
+    <div><label class="s1-mlabel">Color</label><input class="s1-input" type="color" name="color" value="#0f172a"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Add category</button></div>
+</div></div>
+<div class="s1-overlay fm-overlay" id="addMetricModal" role="dialog"><div class="s1-modal">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Finance</div><h4>Add metric</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div class="full"><label class="s1-mlabel">Label *</label><input class="s1-input" name="label"></div>
+    <div class="full"><label class="s1-mlabel">Formula</label><input class="s1-input" name="formula" placeholder="e.g. Revenue - Expenses"></div>
+    <div><label class="s1-mlabel">Format</label><select class="s1-select" name="format" data-bind-options="metricFormats"><option value="currency">Currency</option></select></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Add metric</button></div>
+</div></div>
+<div class="s1-overlay fm-overlay" id="addTaxModal" role="dialog"><div class="s1-modal">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Finance</div><h4>Add tax rate</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div class="full"><label class="s1-mlabel">Name *</label><input class="s1-input" name="name" placeholder="e.g. HST 13%"></div>
+    <div><label class="s1-mlabel">Rate (%)</label><input class="s1-input" type="number" step="0.01" name="rate"></div>
+    <div><label class="s1-mlabel">Applies to</label><select class="s1-select" name="appliesTo" data-bind-options="appliesToOptions"><option value="all">All</option></select></div>
+    <div class="full"><label class="s1-mlabel">Region</label><input class="s1-input" name="region"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Add tax</button></div>
+</div></div>
 <script src="../../core/event-bus.js"></script>
 <script src="../../core/state-store.js"></script>
 <script src="../../core/schema.js"></script>
@@ -101,5 +721,45 @@
 <script src="../../core/communication.api.js"></script>
 <script src="../../core/communication.js"></script>
 <script src="../../core/render.js"></script>
+<script src="../../core/standard-page.js"></script>
+<script src="../../core/google-places.js"></script>
 <script src="./module.js"></script>
-</body></html>
+<script>
+// Tab switching
+document.querySelectorAll('#finTabs .fin-tab').forEach(t => t.addEventListener('click', () => {
+  document.querySelectorAll('#finTabs .fin-tab').forEach(x => x.classList.toggle('active', x === t));
+  document.querySelectorAll('.fin-pane').forEach(p => p.classList.toggle('active', p.dataset.pane === t.dataset.tab));
+  window.scrollTo({ top: 0 });
+}));
+// Period filter (just toggles)
+document.querySelectorAll('[data-period]').forEach(b => b.addEventListener('click', e => {
+  if (b.tagName === 'TR') return; // ignore payroll period rows
+  e.preventDefault();
+  document.querySelectorAll('[data-period]').forEach(x => { if (x.tagName !== 'TR') x.classList.toggle('active', x === b); });
+}));
+
+// Payroll period drill-in
+function openPayrollPeriod(row) {
+  const title = row.dataset.period || 'Payroll Period';
+  document.getElementById('payrollDetailTitle').textContent = title;
+  document.getElementById('payrollList').style.display = 'none';
+  document.getElementById('payrollDetail').style.display = 'block';
+  window.scrollTo({ top: 0 });
+}
+function closePayrollPeriod(e) {
+  if (e) e.preventDefault();
+  document.getElementById('payrollDetail').style.display = 'none';
+  document.getElementById('payrollList').style.display = 'block';
+  window.scrollTo({ top: 0 });
+}
+
+// Misc payment tab toggle
+document.addEventListener('click', e => {
+  const t = e.target.closest('.mp-tab');
+  if (!t) return;
+  document.querySelectorAll('.mp-tab').forEach(x => x.classList.toggle('active', x === t));
+  document.querySelectorAll('.mp-panel').forEach(p => p.style.display = (p.dataset.mppanel === t.dataset.mptab) ? '' : 'none');
+});
+</script>
+</body>
+</html>

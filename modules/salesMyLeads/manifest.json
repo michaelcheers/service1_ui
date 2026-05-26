@@ -1,0 +1,13 @@
+{
+  "name": "salesMyLeads",
+  "title": "My leads",
+  "source": "SalesMyLeads.html",
+  "fixture": "salesMyLeads",
+  "reads": [
+    "salesMyLeads"
+  ],
+  "writes": [
+    "salesMyLeads"
+  ],
+  "icon": "salesMyLeads"
+}

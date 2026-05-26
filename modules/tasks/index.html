@@ -1,30 +1,213 @@
-<!DOCTYPE html><html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Tasks</title>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tasks — Redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../../assets/css/module.css">
-</head><body>
-<div class="wrap">
-  <div class="page-bar">
-    <div class="page-title">Tasks</div>
-    <div><button class="btn btn-primary">New task</button></div>
+<link rel="stylesheet" href="_system.css">
+<template id="__bundler_thumbnail" data-bg-color="#FFFFFF"><svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg"><rect width="1200" height="800" fill="#FFFFFF"/><rect x="60" y="60" width="80" height="80" rx="12" fill="#004D40"/><text x="100" y="115" text-anchor="middle" font-family="Inter" font-weight="800" font-size="28" fill="#D4960A">S</text><rect x="200" y="80" width="260" height="22" rx="3" fill="#0A2540"/><rect x="200" y="160" width="940" height="580" rx="6" fill="#FAFBFC" stroke="#EFF2F5"/><text x="600" y="790" text-anchor="middle" font-family="Inter" font-weight="500" font-size="14" fill="#697386">Tasks · Loading…</text></svg></template>
+
+<style>
+.tasks-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+.tasks-header-left { display: flex; align-items: center; gap: 16px; }
+.view-toggle { display: flex; gap: 2px; padding: 3px; background: var(--surface-2); border: var(--hair); border-radius: 8px; }
+.view-toggle-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 12px; font-size: 12.5px; font-weight: 500;
+  color: var(--ink-2); background: transparent; border: 0;
+  border-radius: 5px; cursor: pointer; text-decoration: none;
+}
+.view-toggle-btn:hover { color: var(--ink); }
+.view-toggle-btn.active { background: #fff; color: var(--ink); box-shadow: 0 1px 2px rgba(15,23,42,.06); font-weight: 600; }
+
+.tasks-filters { display: flex; gap: 8px; align-items: center; margin-bottom: 18px; flex-wrap: wrap; }
+.tasks-filters select, .tasks-filters input {
+  height: 34px; padding: 0 10px; font-size: 12.5px;
+  border: var(--hair); border-radius: 8px; background: #fff; color: var(--ink); font-family: inherit;
+}
+
+/* Kanban */
+.kanban { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.kanban-col {
+  background: var(--surface-2); border-radius: 8px;
+  display: flex; flex-direction: column; min-height: 540px;
+}
+.kanban-col-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px 8px; }
+.kanban-col-title { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 13px; }
+.kanban-col-dot { width: 8px; height: 8px; border-radius: 999px; }
+.kanban-col-count {
+  background: #fff; border: var(--hair);
+  padding: 2px 8px; border-radius: 999px;
+  font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--ink-3);
+}
+.kanban-col-body { flex: 1; padding: 4px 10px 10px; display: flex; flex-direction: column; gap: 6px; }
+
+.task-card {
+  background: #fff; border: var(--hair); border-radius: 6px;
+  padding: 10px 12px; cursor: grab;
+  transition: box-shadow .12s, transform .12s;
+}
+.task-card:hover { box-shadow: 0 2px 8px rgba(15,23,42,.08); transform: translateY(-1px); }
+.task-card-title { font-size: 12.5px; font-weight: 600; color: var(--ink); margin-bottom: 6px; line-height: 1.3; }
+.task-card-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.task-pill {
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 2px 8px; border-radius: 10px;
+  font-size: 10px; font-weight: 600;
+}
+.task-pill.pri-Urgent { background:#FEF2F2; color:#DC2626; }
+.task-pill.pri-High   { background:#FFF7ED; color:#EA580C; }
+.task-pill.pri-Medium { background:#FFFBEB; color:#D97706; }
+.task-pill.pri-Low    { background:#F0FDF4; color:#16A34A; }
+.task-pill.proj       { background: var(--surface-2); color: var(--ink-2); max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.task-card-assignee { width: 22px; height: 22px; border-radius: 999px; background: var(--terra); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 9.5px; font-weight: 600; margin-left: auto; }
+.task-card-due { font-size: 10.5px; color: var(--ink-3); }
+.task-card-due.overdue { color: var(--bad); font-weight: 600; }
+
+/* List view */
+.tasks-list { display: none; }
+.tasks-list.active { display: block; }
+.kanban.hide { display: none; }
+
+.tasks-table { width: 100%; border-collapse: collapse; background: #fff; border: var(--hair); border-radius: 8px; overflow: hidden; }
+.tasks-table th { padding: 10px 14px; font-size: 11px; font-weight: 600; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: var(--hair); text-align: left; background: var(--surface-2); }
+.tasks-table td { padding: 12px 14px; font-size: 12.5px; border-bottom: 1px solid var(--line-2); }
+.tasks-table tbody tr:last-child td { border-bottom: 0; }
+.tasks-table tbody tr { cursor: pointer; }
+.tasks-table tbody tr:hover td { background: var(--surface-2); }
+.task-status {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11.5px; font-weight: 600;
+}
+.task-status .dot { width: 8px; height: 8px; border-radius: 999px; }
+
+/* Modal */
+.tm-overlay { position:fixed; inset:0; background:rgba(15,23,42,0.45); display:none; align-items:center; justify-content:center; z-index:1000; }
+.tm-overlay.open { display:flex; }
+.tm-modal { background:#fff; border-radius:12px; width:640px; max-width:96vw; max-height:92vh; overflow:auto; box-shadow:0 25px 60px rgba(0,0,0,0.3); }
+.tm-head { display:flex; justify-content:space-between; align-items:center; padding:18px 22px; border-bottom:var(--hair); }
+.tm-title { font-size:17px; font-weight:700; }
+.tm-close { background:transparent; border:0; cursor:pointer; font-size:20px; color:var(--ink-3); }
+.tm-body { padding:20px 22px; }
+.tm-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px 16px; }
+.tm-field { display:flex; flex-direction:column; gap:6px; }
+.tm-field.full { grid-column:1/-1; }
+.tm-label { font-size:12.5px; font-weight:600; color:var(--ink); }
+.tm-label .req { color:var(--bad); }
+.tm-input, .tm-select, .tm-textarea {
+  width:100%; padding:9px 11px; border:var(--hair); border-radius:6px; font-size:13px; font-family:inherit; outline:none; background:#fff;
+}
+.tm-textarea { min-height:90px; resize:vertical; }
+.tm-input:focus, .tm-select:focus, .tm-textarea:focus { border-color:var(--terra); box-shadow:0 0 0 3px var(--terra-soft); }
+.tm-help { font-size:11.5px; color:var(--ink-3); }
+.tm-actions { padding:14px 22px; border-top:var(--hair); display:flex; justify-content:flex-end; gap:8px; }
+.tm-checkbox-row { display:flex; align-items:center; gap:8px; padding:8px 0; }
+.tm-chip { display:inline-block; padding:2px 8px; border-radius:999px; background:var(--surface-2); font-size:11px; font-weight:600; }
+</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_aesthetic.css">
+</head>
+<body>
+<div class="app" data-screen-label="Tasks"><main class="page">
+    <div class="wrap">
+
+      <div class="tasks-header">
+        <div class="tasks-header-left">
+          <div class="page-title"><span data-bind-text="summary">Tasks</span></div>
+          <div class="view-toggle" id="viewToggle">
+            <a data-tasks-view="board" class="view-toggle-btn active" data-view="board"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Board</a>
+            <a data-tasks-view="list" class="view-toggle-btn" data-view="list"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>List</a>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button data-comm-action="action:tasks.ai.generate" class="btn btn-secondary"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" style="margin-right:4px;vertical-align:-2px;"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>AI Generate</button>
+          <button class="btn btn-secondary">+ Project</button>
+          <button class="btn btn-primary" onclick="document.getElementById('newTaskModal').classList.add('open')">+ New Task</button>
+        </div>
+      </div>
+
+      <div class="tasks-filters">
+        <select id="fProject" data-bind-options="fprojectOptions"><option value="">All Projects</option></select>
+        <select id="fAssignee" data-bind-options="fassigneeOptions"><option value="">All Assignees</option></select>
+        <select id="fPriority" data-bind-options="fpriorityOptions"><option value="">All Priorities</option></select>
+        <input type="search" placeholder="Search tasks…" id="fSearch" style="min-width:220px;">
+      </div>
+
+      <!-- Board view -->
+      <div class="kanban" id="boardView">
+        <div class="kanban-col" data-status="ToDo">
+          <div class="kanban-col-header"><span class="kanban-col-title"><span class="kanban-col-dot" style="background:#6B7280;"></span>To Do</span><span class="kanban-col-count" data-bind-text="metrics.count.0">8</span></div>
+          <div class="kanban-col-body" data-col="ToDo"></div>
+        </div>
+        <div class="kanban-col" data-status="InProgress">
+          <div class="kanban-col-header"><span class="kanban-col-title"><span class="kanban-col-dot" style="background:#2563EB;"></span>In Progress</span><span class="kanban-col-count" data-bind-text="metrics.count.1">6</span></div>
+          <div class="kanban-col-body" data-col="InProgress"></div>
+        </div>
+        <div class="kanban-col" data-status="Review">
+          <div class="kanban-col-header"><span class="kanban-col-title"><span class="kanban-col-dot" style="background:#D97706;"></span>Review</span><span class="kanban-col-count" data-bind-text="metrics.count.2">3</span></div>
+          <div class="kanban-col-body" data-col="Review"></div>
+        </div>
+        <div class="kanban-col" data-status="Done">
+          <div class="kanban-col-header"><span class="kanban-col-title"><span class="kanban-col-dot" style="background:#16A34A;"></span>Done</span><span class="kanban-col-count" data-bind-text="metrics.count.3">12</span></div>
+          <div class="kanban-col-body" data-col="Done"></div>
+        </div>
+      </div>
+
+      <!-- List view -->
+      <div class="tasks-list" id="listView">
+        <table class="tasks-table">
+          <thead><tr><th>Title</th><th>Project</th><th>Assignee</th><th>Priority</th><th class="num">Due</th><th>Status</th></tr></thead>
+          <tbody id="listBody"></tbody>
+        </table>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- New Task Modal -->
+<div class="tm-overlay" id="newTaskModal">
+  <div class="tm-modal">
+    <div class="tm-head">
+      <div class="tm-title">New Task</div>
+      <button data-modal-close class="tm-close">✕</button>
+    </div>
+    <div class="tm-body">
+      <div class="tm-grid">
+        <div class="tm-field full"><label class="tm-label">Title <span class="req">*</span></label><input name="title" class="tm-input" type="text" placeholder="Short task description"></div>
+        <div class="tm-field full"><label class="tm-label">Description</label><textarea name="description" class="tm-textarea" placeholder="Add more detail — context, blockers, acceptance criteria…"></textarea></div>
+        <div class="tm-field"><label class="tm-label">Status</label><select name="status" class="tm-select" data-bind-options="statusOptions"></select></div>
+        <div class="tm-field"><label class="tm-label">Priority</label><select name="priority" class="tm-select" data-bind-options="priorityOptions"></select></div>
+        <div class="tm-field"><label class="tm-label">Assignee</label><select name="assignee" class="tm-select" data-bind-options="assigneeOptions"><option value="Unassigned">Unassigned</option></select></div>
+        <div class="tm-field"><label class="tm-label">Project</label><select name="project" class="tm-select" data-bind-options="projectOptions"><option value="— No project —">— No project —</option></select></div>
+        <div class="tm-field"><label class="tm-label">Due date</label><input name="dueDate" class="tm-input" type="date"></div>
+        <div class="tm-field"><label class="tm-label">Due time</label><input name="dueTime" class="tm-input" type="time"></div>
+        <div class="tm-field"><label class="tm-label">Linked to</label><select name="linkedTo" class="tm-select" data-bind-options="linkedToOptions"><option value="— None —">— None —</option></select></div>
+        <div class="tm-field"><label class="tm-label">Recurrence</label><select name="recurrence" class="tm-select" data-bind-options="recurrenceOptions"><option value="None">None</option></select></div>
+        <div class="tm-field full">
+          <label class="tm-label">Tags</label>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;padding:6px 8px;border:var(--hair);border-radius:6px;">
+            <span class="tm-chip">urgent</span><span class="tm-chip">customer</span>
+            <input name="tags" style="border:0;outline:0;flex:1;padding:4px;font-size:12.5px;" placeholder="Add tag…">
+          </div>
+        </div>
+        <div class="tm-field full">
+          <label class="tm-checkbox-row"><input name="tags" type="checkbox" style="accent-color:var(--terra);">Notify assignee on save</label>
+          <label class="tm-checkbox-row"><input name="notifyAssigneeOnSave" type="checkbox" style="accent-color:var(--terra);">Add to my calendar</label>
+        </div>
+      </div>
+    </div>
+    <div class="tm-actions">
+      <button data-modal-close class="btn btn-secondary">Cancel</button>
+      <button data-modal-save class="btn btn-primary">Create Task</button>
+    </div>
   </div>
-  <section class="section">
-    <table class="tbl">
-      <thead><tr><th>#</th><th>Title</th><th>Assignee</th><th>Due</th><th>Status</th></tr></thead>
-      <tbody data-bind="tasks">
-        <template>
-          <tr>
-            <td>{{id|num}}</td>
-            <td>{{title}}</td>
-            <td>{{assignee}}</td>
-            <td>{{due|date}}</td>
-            <td><span class="tag {{status}}">{{status}}</span></td>
-          </tr>
-        </template>
-      </tbody>
-    </table>
-  </section>
 </div>
 <script src="../../core/event-bus.js"></script>
 <script src="../../core/state-store.js"></script>
@@ -34,5 +217,193 @@
 <script src="../../core/communication.api.js"></script>
 <script src="../../core/communication.js"></script>
 <script src="../../core/render.js"></script>
+<script src="../../core/standard-page.js"></script>
+<script src="../../core/google-places.js"></script>
 <script src="./module.js"></script>
-</body></html>
+<script>
+const INLINE_TASKS = ([
+  // ToDo
+  { id:1, title:"Send Q3 quote to Northside Co.",    project:"Sales pipeline",  assignee:"John Sales",      av:"JS", avc:"var(--terra)", priority:"High",   due:"Today",           overdue:false, status:"ToDo" },
+  { id:2, title:"Follow up on stalled deal · Cedar Lane HOA", project:"Sales pipeline", assignee:"John Sales", av:"JS", avc:"var(--terra)", priority:"Medium", due:"Tomorrow",       overdue:false, status:"ToDo" },
+  { id:3, title:"Update vehicle inspection SOP",     project:"Operations Q2",  assignee:"Andrew Haylton",  av:"AH", avc:"var(--info)",  priority:"Medium", due:"Fri May 23",     overdue:false, status:"ToDo" },
+  { id:4, title:"Onboard new hire · Diego Romero",   project:"HR — onboarding", assignee:"Admin User",     av:"A",  avc:"var(--plum)",  priority:"Low",    due:"May 27",         overdue:false, status:"ToDo" },
+  { id:5, title:"Refresh Google Ads campaign copy",  project:"Marketing campaign", assignee:"Jane Finance",av:"JF", avc:"var(--teal)",  priority:"Low",    due:"May 28",         overdue:false, status:"ToDo" },
+  { id:6, title:"Replace 2 dollies (Van 03)",        project:"Operations Q2",  assignee:"Andrew Haylton",  av:"AH", avc:"var(--info)",  priority:"Urgent", due:"Yesterday",      overdue:true,  status:"ToDo" },
+  { id:7, title:"Schedule quarterly safety review",  project:"Operations Q2",  assignee:"Donald James",    av:"DJ", avc:"var(--info)",  priority:"Medium", due:"Jun 02",         overdue:false, status:"ToDo" },
+  { id:8, title:"Review crew bonus structure",       project:"HR — onboarding", assignee:"Jane Finance",   av:"JF", avc:"var(--teal)",  priority:"Low",    due:"Jun 10",         overdue:false, status:"ToDo" },
+  // In Progress
+  { id:9, title:"Reconcile April Stripe payouts",    project:"Operations Q2",  assignee:"Jane Finance",   av:"JF", avc:"var(--teal)",  priority:"High",   due:"Today",          overdue:false, status:"InProgress" },
+  { id:10, title:"Draft Northside Co. contract v3",  project:"Sales pipeline", assignee:"John Sales",      av:"JS", avc:"var(--terra)", priority:"High",   due:"Tomorrow",      overdue:false, status:"InProgress" },
+  { id:11, title:"Coaching session · Alex Zu (HOS)", project:"Operations Q2",  assignee:"Admin User",      av:"A",  avc:"var(--plum)",  priority:"Urgent", due:"Today 3 PM",    overdue:false, status:"InProgress" },
+  { id:12, title:"Photo audit · Truck 14 May loads", project:"Operations Q2",  assignee:"Fred Waite",      av:"FW", avc:"var(--teal)",  priority:"Medium", due:"This week",     overdue:false, status:"InProgress" },
+  { id:13, title:"New customer survey · post-move",  project:"Marketing campaign", assignee:"Jane Finance",av:"JF", avc:"var(--teal)",  priority:"Low",    due:"May 24",        overdue:false, status:"InProgress" },
+  { id:14, title:"Migrate dashcam footage Q1",       project:"Operations Q2",  assignee:"Admin User",      av:"A",  avc:"var(--plum)",  priority:"Low",    due:"May 30",        overdue:false, status:"InProgress" },
+  // Review
+  { id:15, title:"P&L close · April",                project:"Operations Q2",  assignee:"Jane Finance",    av:"JF", avc:"var(--teal)",  priority:"High",   due:"May 03",        overdue:true,  status:"Review" },
+  { id:16, title:"Driver training video — final cut",project:"Marketing campaign", assignee:"Paul Rai",   av:"PR", avc:"var(--plum)",  priority:"Medium", due:"This week",     overdue:false, status:"Review" },
+  { id:17, title:"Update employee handbook v4",      project:"HR — onboarding", assignee:"Admin User",     av:"A",  avc:"var(--plum)",  priority:"Low",    due:"May 22",        overdue:false, status:"Review" },
+  // Done
+  { id:18, title:"Q1 tax filing · HST",              project:"Operations Q2",  assignee:"Jane Finance",    av:"JF", avc:"var(--teal)",  priority:"High",   due:"Apr 30",        overdue:false, status:"Done" },
+  { id:19, title:"Renew Truck 14 annual inspection", project:"Operations Q2",  assignee:"Andrew Haylton",  av:"AH", avc:"var(--info)",  priority:"Medium", due:"Apr 28",        overdue:false, status:"Done" },
+  { id:20, title:"Hire Diego Romero (dispatcher)",   project:"HR — onboarding", assignee:"Admin User",     av:"A",  avc:"var(--plum)",  priority:"High",   due:"Apr 20",        overdue:false, status:"Done" },
+  { id:21, title:"Spring sale email campaign",       project:"Marketing campaign", assignee:"Jane Finance",av:"JF", avc:"var(--teal)",  priority:"Low",    due:"Apr 12",        overdue:false, status:"Done" }
+]);
+
+const STATUS_COLORS = { ToDo:'#6B7280', InProgress:'#2563EB', Review:'#D97706', Done:'#16A34A' };
+const STATUS_LABEL  = { ToDo:'To Do', InProgress:'In Progress', Review:'Review', Done:'Done' };
+
+// Read fresh on every render so host state-pushes land. The live backend POCO
+// uses bucketed arrays (overdue/dueToday/thisWeek/completed) instead of a
+// single `tasks` array with a `status` field, so when no `tasks` array is
+// present we synthesize one from those buckets.
+function getTasks() {
+  const fx = (window.S1 && window.S1.fixtures && window.S1.fixtures["tasks"]) || null;
+  if (fx && Array.isArray(fx.tasks) && fx.tasks.length) {
+    return fx.tasks.map(t => Object.assign({}, t, {
+      title:    t.title    || t.name      || '',
+      project:  t.project  || t.tag       || t.deal || '',
+      priority: t.priority || '',
+      assignee: t.assignee || '',
+      av:       t.av       || t.avInitials|| '',
+      avc:      t.avc      || t.avBg      || 'var(--ink-3)',
+      due:      t.due      || '',
+      status:   t.status   || 'ToDo'
+    }));
+  }
+  if (fx) {
+    const buckets = [
+      ['overdue',   'ToDo'],
+      ['dueToday',  'ToDo'],
+      ['thisWeek',  'InProgress'],
+      ['completed', 'Done']
+    ];
+    const out = [];
+    let idCounter = 1;
+    for (const [key, status] of buckets) {
+      if (Array.isArray(fx[key])) {
+        for (const t of fx[key]) {
+          out.push({
+            id:       t.id != null ? t.id : idCounter++,
+            title:    t.name || t.title || '',
+            project:  t.deal || t.tag || '',
+            priority: t.priority || '',
+            assignee: t.assignee || '',
+            av:       t.avInitials || '',
+            avc:      t.avBg || 'var(--ink-3)',
+            due:      t.due || '',
+            overdue:  key === 'overdue',
+            status
+          });
+        }
+      }
+    }
+    if (out.length) return out;
+  }
+  return INLINE_TASKS;
+}
+
+function cardHTML(t) {
+  return `<div class="task-card" data-id="${t.id}">
+    <div class="task-card-title">${t.title}</div>
+    <div class="task-card-meta">
+      <span class="task-pill pri-${t.priority}">${t.priority}</span>
+      <span class="task-pill proj">${t.project}</span>
+      <span class="task-card-due ${t.overdue?'overdue':''}">${t.due}</span>
+      <span class="task-card-assignee" style="background:${t.avc};" title="${t.assignee}">${t.av}</span>
+    </div>
+  </div>`;
+}
+function rowHTML(t) {
+  return `<tr data-id="${t.id}">
+    <td><b>${t.title}</b></td>
+    <td><span class="task-pill proj">${t.project}</span></td>
+    <td><div class="who"><span class="who-av" style="background:${t.avc};width:22px;height:22px;font-size:9.5px;">${t.av}</span>${t.assignee}</div></td>
+    <td><span class="task-pill pri-${t.priority}">${t.priority}</span></td>
+    <td class="num cell-light ${t.overdue?'':''}" style="${t.overdue?'color:var(--bad);font-weight:600;':''}">${t.due}</td>
+    <td><span class="task-status"><span class="dot" style="background:${STATUS_COLORS[t.status]};"></span>${STATUS_LABEL[t.status]}</span></td>
+  </tr>`;
+}
+
+function applyFilters(tasks) {
+  const p = document.getElementById('fProject').value;
+  const a = document.getElementById('fAssignee').value;
+  const pr = document.getElementById('fPriority').value;
+  const q = document.getElementById('fSearch').value.trim().toLowerCase();
+  return tasks.filter(t =>
+    (!p  || t.project  === p) &&
+    (!a  || t.assignee === a) &&
+    (!pr || t.priority === pr) &&
+    (!q  || t.title.toLowerCase().includes(q))
+  );
+}
+function render() {
+  const shown = applyFilters(getTasks());
+  // Board
+  ['ToDo','InProgress','Review','Done'].forEach(s => {
+    const col = document.querySelector('.kanban-col-body[data-col="' + s + '"]');
+    const items = shown.filter(t => t.status === s);
+    col.innerHTML = items.map(cardHTML).join('');
+    col.previousElementSibling.querySelector('.kanban-col-count').textContent = items.length;
+  });
+  // List
+  document.getElementById('listBody').innerHTML = shown.map(rowHTML).join('') || '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--ink-3);">No tasks match.</td></tr>';
+}
+render();
+
+// View toggle
+document.querySelectorAll('#viewToggle .view-toggle-btn').forEach(b => b.addEventListener('click', e => {
+  e.preventDefault();
+  document.querySelectorAll('#viewToggle .view-toggle-btn').forEach(x => x.classList.toggle('active', x === b));
+  const view = b.dataset.view;
+  document.getElementById('boardView').classList.toggle('hide', view === 'list');
+  document.getElementById('listView').classList.toggle('active', view === 'list');
+}));
+// Filters
+['fProject','fAssignee','fPriority','fSearch'].forEach(id => {
+  document.getElementById(id).addEventListener('input', render);
+  document.getElementById(id).addEventListener('change', render);
+});
+
+// Click card / row → task detail modal
+function openTask(t) {
+  const m = document.createElement('div');
+  m.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:center;justify-content:center;z-index:1000;padding:24px;';
+  m.innerHTML = `<div style="background:#fff;border-radius:12px;max-width:580px;width:100%;padding:24px 26px;box-shadow:0 24px 60px -16px rgba(15,23,42,.4);">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px;">
+      <div><div style="font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;">Task #${t.id}</div><h2 style="margin:6px 0;font-size:18px;font-weight:700;letter-spacing:-0.01em;">${t.title}</h2><div style="display:flex;gap:6px;flex-wrap:wrap;"><span class="task-pill pri-${t.priority}">${t.priority}</span><span class="task-pill proj">${t.project}</span><span class="task-status"><span class="dot" style="background:${STATUS_COLORS[t.status]};"></span>${STATUS_LABEL[t.status]}</span></div></div>
+      <button class="x" style="border:0;background:transparent;font-size:24px;color:var(--ink-3);cursor:pointer;line-height:1;">×</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px;">
+      <div style="padding:10px 14px;border:var(--hair);border-radius:8px;"><div style="font-size:11px;color:var(--ink-3);">Assignee</div><div style="font-weight:600;margin-top:4px;">${t.assignee}</div></div>
+      <div style="padding:10px 14px;border:var(--hair);border-radius:8px;"><div style="font-size:11px;color:var(--ink-3);">Due</div><div style="font-weight:600;margin-top:4px;${t.overdue?'color:var(--bad);':''}">${t.due}</div></div>
+    </div>
+    <textarea placeholder="Add a note…" style="width:100%;min-height:80px;padding:10px;border:var(--hair);border-radius:8px;font-size:13px;outline:none;resize:vertical;font-family:inherit;"></textarea>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px;">
+      <button class="btn btn-secondary x">Cancel</button>
+      <button data-comm-action="action:tasks.snooze" class="btn btn-secondary">Snooze</button>
+      <button data-comm-action="action:tasks.complete" class="btn btn-primary">Mark complete</button>
+    </div>
+  </div>`;
+  document.body.appendChild(m);
+  const close = () => m.remove();
+  m.addEventListener('click', e2 => { if (e2.target === m) close(); });
+  m.querySelectorAll('.x').forEach(b => b.addEventListener('click', close));
+}
+document.getElementById('boardView').addEventListener('click', e => {
+  const c = e.target.closest('.task-card[data-id]'); if (c) openTask(getTasks().find(x => x.id === +c.dataset.id));
+});
+document.getElementById('listView').addEventListener('click', e => {
+  const tr = e.target.closest('tr[data-id]'); if (tr) openTask(getTasks().find(x => x.id === +tr.dataset.id));
+});
+
+// Re-render when the host pushes fresh state.
+if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
+  window.S1.bus.on('state:replaced', render);
+}
+</script>
+
+<div class="s1-overlay" id="snoozeTaskModal" role="dialog" aria-modal="true"><div class="s1-modal"><div class="s1-mhead"><div><h4>Snooze task</h4></div><button class="s1-x" data-modal-close type="button">×</button></div><div class="s1-mgrid"><div class="full"><label class="s1-mlabel">Task id</label><input class="s1-input" type="text" name="id"></div><div class="full"><label class="s1-mlabel">Snooze until</label><input class="s1-input" type="date" name="until"></div><div class="full"><label class="s1-mlabel">Note (optional)</label><textarea class="s1-textarea" name="note"></textarea></div></div><div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Snooze</button></div></div></div>
+
+<div class="s1-overlay" id="reassignTaskModal" role="dialog" aria-modal="true"><div class="s1-modal"><div class="s1-mhead"><div><h4>Reassign task</h4></div><button class="s1-x" data-modal-close type="button">×</button></div><div class="s1-mgrid"><div class="full"><label class="s1-mlabel">Task id</label><input class="s1-input" type="text" name="id"></div><div class="full"><label class="s1-mlabel">New assignee (user id)</label><input class="s1-input" type="text" name="userId"></div><div class="full"><label class="s1-mlabel">Reason (optional)</label><textarea class="s1-textarea" name="reason"></textarea></div></div><div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Reassign</button></div></div></div>
+</body>
+</html>

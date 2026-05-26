@@ -1,76 +1,2803 @@
-<!DOCTYPE html><html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Job Detail</title>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Job Detail — Redesign</title>
+<template id="__bundler_thumbnail" data-bg-color="#EEF0EC">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="800" fill="#EEF0EC"/>
+    <!-- Logo block -->
+    <rect x="60" y="60" width="80" height="80" rx="12" fill="#004D40"/>
+    <rect x="80" y="80" width="40" height="40" rx="6" fill="#D4960A"/>
+    <text x="100" y="108" text-anchor="middle" font-family="Inter, sans-serif" font-weight="800" font-size="22" fill="#004D40">S</text>
+    <!-- Header card -->
+    <rect x="200" y="60" width="940" height="180" rx="12" fill="#FFFFFF" stroke="#E8ECE9" stroke-width="2"/>
+    <rect x="230" y="90" width="160" height="14" rx="3" fill="#B3BCB8"/>
+    <rect x="230" y="120" width="380" height="32" rx="4" fill="#111816"/>
+    <rect x="230" y="170" width="540" height="12" rx="3" fill="#CDD4D1"/>
+    <rect x="950" y="100" width="160" height="36" rx="8" fill="#004D40"/>
+    <!-- Tabs underline -->
+    <rect x="200" y="260" width="940" height="2" fill="#E8ECE9"/>
+    <rect x="230" y="252" width="120" height="14" rx="3" fill="#111816"/>
+    <rect x="230" y="266" width="60" height="2" fill="#004D40"/>
+    <!-- Main column card -->
+    <rect x="200" y="300" width="640" height="440" rx="12" fill="#FFFFFF" stroke="#E8ECE9" stroke-width="2"/>
+    <rect x="230" y="330" width="580" height="60" rx="8" fill="#F5F7F4"/>
+    <rect x="230" y="410" width="100" height="100" rx="8" fill="#E0F2F1"/>
+    <rect x="350" y="420" width="460" height="14" rx="3" fill="#111816"/>
+    <rect x="350" y="446" width="380" height="10" rx="3" fill="#788680"/>
+    <rect x="350" y="466" width="320" height="10" rx="3" fill="#788680"/>
+    <rect x="230" y="540" width="580" height="1" fill="#E8ECE9"/>
+    <rect x="230" y="560" width="100" height="100" rx="8" fill="#EAF1F9"/>
+    <rect x="350" y="570" width="460" height="14" rx="3" fill="#111816"/>
+    <rect x="350" y="596" width="420" height="10" rx="3" fill="#788680"/>
+    <rect x="350" y="616" width="280" height="10" rx="3" fill="#788680"/>
+    <!-- Right rail -->
+    <rect x="860" y="300" width="280" height="120" rx="12" fill="#FFFFFF" stroke="#E8ECE9" stroke-width="2"/>
+    <rect x="880" y="320" width="240" height="36" rx="8" fill="#004D40"/>
+    <rect x="880" y="370" width="100" height="32" rx="8" fill="#FFFFFF" stroke="#DDE2DF"/>
+    <rect x="990" y="370" width="130" height="32" rx="8" fill="#FFFFFF" stroke="#DDE2DF"/>
+    <rect x="860" y="440" width="280" height="180" rx="12" fill="#FFFFFF" stroke="#E8ECE9" stroke-width="2"/>
+    <rect x="880" y="460" width="100" height="10" rx="3" fill="#788680"/>
+    <rect x="880" y="486" width="240" height="8" rx="3" fill="#E8ECE9"/>
+    <rect x="880" y="506" width="240" height="8" rx="3" fill="#E8ECE9"/>
+    <rect x="880" y="526" width="240" height="8" rx="3" fill="#E8ECE9"/>
+    <rect x="880" y="560" width="180" height="20" rx="3" fill="#111816"/>
+    <rect x="1080" y="568" width="60" height="14" rx="3" fill="#004D40"/>
+    <text x="600" y="780" text-anchor="middle" font-family="Inter, sans-serif" font-weight="500" font-size="14" fill="#788680">Job Detail · Loading…</text>
+  </svg>
+</template>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../../assets/css/module.css">
 <style>
-.summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
-.summary .cell { padding: 12px; background: var(--surface-2); border-radius: var(--r); }
-.summary .cell .l { font-size: 11px; color: var(--ink-3); }
-.summary .cell .v { font-size: 16px; font-weight: 600; margin-top: 4px; }
-.timeline-item { display: grid; grid-template-columns: 140px 1fr 100px; padding: 8px 0; border-top: 1px solid var(--line); }
-.timeline-item:first-child { border-top: 0; }
+/* ────────────────────────────────────────────────────────────────
+   Job Detail — Reference Redesign
+   One accent. 4 type sizes. Borders, not shadows.
+   ──────────────────────────────────────────────────────────────── */
+
+:root {
+  /* Brand */
+  --terra: #004D40;
+  --terra-hover: #003D32;
+  --terra-soft: #E0F2F1;
+
+  /* Sage-neutral grays */
+  --ink: #111816;
+  --ink-2: #44524C;
+  --ink-3: #788680;
+  --ink-4: #95A19B;
+  --line: #E8ECE9;
+  --line-2: #DDE2DF;
+  --bg: #EEF0EC;
+  --surface: #FFFFFF;
+  --surface-2: #F5F7F4;
+
+  /* Status */
+  --warn: #B5780A;
+  --warn-bg: #FDF4DE;
+  --ok: #008978;
+  --ok-bg: #E0F5F2;
+  --bad: #B23E3E;
+  --bad-bg: #FAEAEA;
+  --info: #3F6FA6;
+  --info-bg: #EAF1F9;
+
+  /* Type — only 4 active sizes */
+  --t-eyebrow: 11px;   /* section labels (uppercase) */
+  --t-body:    13px;   /* default UI text */
+  --t-emph:    15px;   /* emphasized rows, totals */
+  --t-title:   22px;   /* customer name */
+
+  /* Geometry */
+  --r: 8px;
+  --r-sm: 6px;
+  --hair: 1px solid var(--line);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', -apple-system, system-ui, sans-serif;
+  font-size: var(--t-body);
+  line-height: 1.45;
+  color: var(--ink);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+button { background: none; border: none; cursor: pointer; padding: 0; }
+a { color: inherit; text-decoration: none; }
+.muted { color: var(--ink-3); }
+
+/* ───── App shell ───── */
+.app {
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  grid-template-rows: 56px 1fr;
+  min-height: 100vh;
+}
+.search {
+  flex: 0 1 360px;
+  display: flex; align-items: center; gap: 8px;
+  height: 36px; padding: 0 12px;
+  background: var(--surface-2);
+  border: var(--hair);
+  border-radius: var(--r);
+  color: var(--ink-3);
+}
+.search input {
+  flex: 1; border: 0; background: transparent; outline: none;
+  font-size: var(--t-body);
+}
+.kbd {
+  display: inline-flex; align-items: center; height: 20px; padding: 0 6px;
+  border: var(--hair); border-radius: 4px;
+  background: #fff;
+  color: var(--ink-3); font-size: 11px; font-weight: 500;
+}
+.top-actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.icon-btn {
+  width: 32px; height: 32px; border-radius: var(--r);
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--ink-2);
+}
+.icon-btn:hover { background: var(--surface-2); color: var(--ink); }
+.user-chip {
+  display: flex; align-items: center; gap: 8px;
+  padding: 4px 10px 4px 4px;
+  border-radius: 999px;
+  border: var(--hair);
+  background: #fff;
+  font-weight: 500;
+}
+.avatar {
+  width: 24px; height: 24px; border-radius: 999px;
+  background: var(--terra); color: #fff;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600;
+}
+
+/* ───── Page ───── */
+.page {
+  grid-row: 2; grid-column: 2;
+  padding: 16px 24px 32px;
+  min-width: 0;
+}
+
+/* ───── Customer header card ───── */
+.header {
+  background: #fff;
+  border: var(--hair);
+  border-radius: var(--r);
+  padding: 18px 20px 0;
+}
+.h-row1 {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 24px;
+}
+.h-identity { min-width: 0; }
+.h-eyebrow {
+  display: flex; align-items: center; gap: 8px;
+  color: var(--ink-3); font-size: var(--t-body); font-weight: 500;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+.h-eyebrow > * { white-space: nowrap; }
+.h-eyebrow .sep { color: var(--ink-4); }
+.h-name {
+  display: flex; align-items: center; gap: 10px;
+  font-size: var(--t-title); font-weight: 600; letter-spacing: -0.01em;
+  margin: 0;
+}
+.h-name .edit {
+  width: 24px; height: 24px; border-radius: 6px; color: var(--ink-3);
+  display: inline-flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity .15s;
+}
+.h-name:hover .edit { opacity: 1; }
+.h-name .edit:hover { background: var(--surface-2); color: var(--ink); }
+
+.h-meta {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 18px;
+  margin-top: 10px;
+  color: var(--ink-3); font-size: var(--t-body);
+}
+.h-meta .item { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.h-meta .item svg { color: var(--ink-4); }
+.h-meta .item .v { color: var(--ink-2); font-weight: 500; }
+.h-meta a.link { color: var(--terra); font-weight: 500; }
+.h-meta a.link:hover { color: var(--terra-hover); }
+
+.h-actions {
+  display: flex; align-items: center; gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Buttons — ONE system */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  height: 32px; padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: var(--r);
+  font-size: var(--t-body); font-weight: 500;
+  white-space: nowrap;
+  transition: background .1s, border-color .1s, color .1s;
+}
+.btn-primary { background: var(--terra); color: #fff; }
+.btn-primary:hover { background: var(--terra-hover); }
+.btn-secondary { background: #fff; color: var(--ink); border-color: var(--line-2); }
+.btn-secondary:hover { background: var(--surface-2); }
+.btn-ghost { color: var(--ink-2); }
+.btn-ghost:hover { background: var(--surface-2); color: var(--ink); }
+.btn-danger-text { color: var(--bad); }
+.btn-danger-text:hover { background: var(--bad-bg); }
+.btn-sm { height: 28px; padding: 0 10px; font-size: 12px; }
+
+/* Status select — looks like a button */
+.status-select {
+  appearance: none;
+  -webkit-appearance: none;
+  height: 32px; padding: 0 28px 0 12px;
+  background: #fff
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23788680' stroke-width='2.2'><polyline points='6 9 12 15 18 9'/></svg>")
+    no-repeat right 10px center;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  font-size: var(--t-body); font-weight: 500;
+  cursor: pointer;
+}
+.status-select:focus { outline: 2px solid var(--terra-soft); border-color: var(--terra); }
+
+/* Status pill */
+.pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 22px; padding: 0 9px;
+  border-radius: 999px;
+  font-size: 11px; font-weight: 600;
+  background: var(--surface-2); color: var(--ink-2);
+  border: 1px solid var(--line);
+}
+.pill .dot { width: 6px; height: 6px; border-radius: 999px; background: currentColor; }
+.pill.warn   { background: var(--warn-bg); color: var(--warn); border-color: transparent; }
+.pill.ok     { background: var(--ok-bg);   color: var(--ok);   border-color: transparent; }
+.pill.info   { background: var(--info-bg); color: var(--info); border-color: transparent; }
+
+/* Header inline claim strip — single line, quiet */
+.claim {
+  margin-top: 14px;
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px;
+  background: var(--warn-bg);
+  border: 1px solid #F1E2B7;
+  border-radius: var(--r);
+  color: #6B4A0A;
+  font-size: var(--t-body);
+}
+.claim svg { flex-shrink: 0; color: var(--warn); }
+.claim .t { font-weight: 600; }
+.claim .s { color: #8a6b1f; }
+.claim .grow { flex: 1; }
+.claim .btn-primary { height: 28px; padding: 0 12px; background: var(--warn); }
+.claim .btn-primary:hover { background: #9C660A; }
+
+/* Contacts/add row */
+.contacts {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 0 0;
+  margin-top: 14px;
+  border-top: var(--hair);
+}
+.contact-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px 4px 4px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  font-size: 12px;
+  color: var(--ink-2);
+}
+.contact-chip .avatar { width: 20px; height: 20px; font-size: 10px; background: #BFC9C5; color: var(--ink); }
+.contact-chip .role { color: var(--ink-3); font-size: 11px; padding-left: 4px; border-left: 1px solid var(--line-2); margin-left: 2px; }
+.add-contact { color: var(--terra); font-weight: 500; font-size: 12px; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px; }
+
+/* ───── Tabs ───── */
+.tabs {
+  display: flex; align-items: stretch; gap: 4px;
+  border-bottom: var(--hair);
+  margin: 18px 0 0;
+}
+.tab {
+  position: relative;
+  padding: 12px 14px;
+  color: var(--ink-3);
+  font-size: var(--t-body); font-weight: 500;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color .12s;
+  white-space: nowrap;
+}
+.tab:hover { color: var(--ink); }
+.tab.active { color: var(--ink); font-weight: 600; border-bottom-color: var(--terra); }
+.tab .count {
+  display: inline-block; margin-left: 4px;
+  padding: 0 6px; min-width: 18px; height: 18px; line-height: 18px;
+  border-radius: 9px;
+  background: var(--surface-2);
+  color: var(--ink-3); font-size: 11px; font-weight: 600;
+  text-align: center;
+  vertical-align: middle;
+}
+.tab.active .count { background: var(--terra-soft); color: var(--terra); }
+
+/* ───── Two-column layout ───── */
+.cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 18px;
+  margin-top: 20px;
+  align-items: start;
+}
+.rail { position: sticky; top: 16px; max-height: calc(100vh - 80px); overflow-y: auto; }
+@media (max-width: 900px) { .cols { grid-template-columns: 1fr; } .rail { position: static; max-height: none; } }
+
+/* ───── Card / Section primitives ───── */
+.card {
+  background: #fff;
+  border: var(--hair);
+  border-radius: var(--r);
+}
+.card + .card { margin-top: 16px; }
+.s-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: var(--hair);
+}
+.s-title {
+  font-size: var(--t-eyebrow);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.s-action {
+  font-size: 12px; font-weight: 500;
+  color: var(--terra);
+  white-space: nowrap;
+}
+.s-action:hover { color: var(--terra-hover); }
+.s-body { padding: 12px 16px; }
+
+/* Row pattern — label/value */
+.row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px dashed var(--line);
+  font-size: var(--t-body);
+}
+.row:last-child { border-bottom: 0; }
+.row .l { color: var(--ink-3); }
+.row .v { color: var(--ink); font-weight: 500; white-space: nowrap; }
+.row .v.editable {
+  display: inline-flex; align-items: center; gap: 4px;
+  cursor: pointer; padding: 2px 6px; margin: -2px -6px;
+  border-radius: 4px;
+}
+.row .v.editable:hover { background: var(--surface-2); }
+.row .v.editable svg { opacity: 0; transition: opacity .12s; color: var(--ink-4); }
+.row .v.editable:hover svg { opacity: 1; }
+
+/* Field (one unified input style) */
+.field {
+  height: 30px; padding: 0 10px;
+  border: 1px solid var(--line-2);
+  border-radius: 6px;
+  background: #fff;
+  font-size: 13px; font-weight: 500;
+  outline: none;
+  color: var(--ink);
+}
+.field:focus { border-color: var(--terra); box-shadow: 0 0 0 3px var(--terra-soft); }
+select.field {
+  appearance: none; -webkit-appearance: none;
+  padding-right: 26px;
+  background:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23788680' stroke-width='2.2'><polyline points='6 9 12 15 18 9'/></svg>")
+    no-repeat right 8px center, #fff;
+  cursor: pointer;
+}
+
+/* ─────────────────────────────────────────────
+   MAIN COLUMN — Communication tab
+   ───────────────────────────────────────────── */
+
+/* Composer */
+.composer .s-head { border-bottom: 0; padding-bottom: 0; }
+.composer-tabs {
+  display: flex; gap: 2px;
+  padding: 0 16px;
+  border-bottom: var(--hair);
+}
+.composer-tab {
+  position: relative;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 10px 12px;
+  font-size: 12px; font-weight: 500;
+  color: var(--ink-3);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  white-space: nowrap;
+}
+.composer-tab:hover { color: var(--ink); }
+.composer-tab.active { color: var(--ink); border-bottom-color: var(--terra); font-weight: 600; }
+.composer-body { padding: 14px 16px; }
+.composer-body textarea {
+  width: 100%; min-height: 92px;
+  resize: vertical;
+  padding: 10px 12px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  font-size: 13px;
+  line-height: 1.5;
+  outline: none;
+  background: #fff;
+}
+.composer-body textarea:focus { border-color: var(--terra); box-shadow: 0 0 0 3px var(--terra-soft); }
+.composer-foot {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 16px 14px;
+  border-top: var(--hair);
+}
+.composer-foot .left { display: flex; gap: 4px; }
+.composer-foot .right { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+.composer-tools .icon-btn { color: var(--ink-3); }
+
+/* Timeline */
+.timeline-head {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 16px;
+  border-bottom: var(--hair);
+}
+.filter-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 26px; padding: 0 10px;
+  border-radius: 999px;
+  border: var(--hair);
+  background: #fff;
+  font-size: 12px; font-weight: 500;
+  color: var(--ink-2);
+}
+.filter-chip:hover { background: var(--surface-2); }
+.filter-chip.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+.timeline-head .right { margin-left: auto; color: var(--ink-3); font-size: 12px; white-space: nowrap; }
+
+.tl { padding: 4px 0; }
+.tl-day {
+  position: sticky; top: 0;
+  background: linear-gradient(#fff 60%, rgba(255,255,255,0.7));
+  padding: 14px 16px 6px;
+  font-size: var(--t-eyebrow);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  font-weight: 600; color: var(--ink-3);
+  z-index: 1;
+}
+.tl-item {
+  display: grid;
+  grid-template-columns: 32px 1fr auto;
+  gap: 12px;
+  padding: 12px 16px;
+  border-top: var(--hair);
+  position: relative;
+}
+.tl-item:first-of-type { border-top: 0; }
+.tl-icon {
+  width: 28px; height: 28px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--ink-2);
+  background: var(--surface-2);
+  border: var(--hair);
+  margin-top: 2px;
+}
+.tl-icon.call { color: var(--ok); background: var(--ok-bg); border-color: transparent; }
+.tl-icon.sms  { color: var(--info); background: var(--info-bg); border-color: transparent; }
+.tl-icon.mail { color: var(--terra); background: var(--terra-soft); border-color: transparent; }
+.tl-icon.note { color: var(--warn); background: var(--warn-bg); border-color: transparent; }
+
+.tl-body { min-width: 0; }
+.tl-top {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  font-size: 12px;
+}
+.tl-kind { font-weight: 600; color: var(--ink); white-space: nowrap; }
+.tl-by { color: var(--ink-3); }
+.tl-arrow { color: var(--ink-4); }
+.tl-text {
+  margin-top: 4px;
+  color: var(--ink-2);
+  font-size: 13px;
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+.tl-meta {
+  margin-top: 6px;
+  display: flex; gap: 12px; flex-wrap: wrap;
+  font-size: 11px; color: var(--ink-3);
+}
+.tl-meta .m { display: inline-flex; align-items: center; gap: 4px; }
+.tl-time {
+  font-size: 12px; color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
+.tl-bubble {
+  margin-top: 6px;
+  display: inline-block;
+  max-width: 75%;
+  padding: 8px 12px;
+  background: var(--surface-2);
+  border-radius: 12px 12px 12px 4px;
+  font-size: 13px;
+  color: var(--ink);
+  line-height: 1.45;
+}
+.tl-bubble.out {
+  background: var(--terra-soft);
+  border-radius: 12px 12px 4px 12px;
+}
+
+/* System divider event */
+.tl-system {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 16px;
+  font-size: 12px;
+  color: var(--ink-3);
+  border-top: var(--hair);
+}
+.tl-system .dot { width: 6px; height: 6px; background: var(--ink-4); border-radius: 999px; }
+.tl-system .line { flex: 1; height: 1px; background: var(--line); }
+
+/* ─────────────────────────────────────────────
+   RIGHT RAIL
+   ───────────────────────────────────────────── */
+.rail { display: flex; flex-direction: column; gap: 16px; }
+.rail .card { margin: 0; }
+
+/* Actions card */
+.actions-card { padding: 16px; }
+.actions-card .btn-primary {
+  width: 100%; height: 38px; font-size: 14px; font-weight: 600;
+}
+.actions-secondary {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0;
+  margin-top: 10px;
+  border-top: var(--hair); padding-top: 10px;
+}
+.actions-secondary .btn { height: 32px; }
+.actions-secondary .btn:first-child {
+  border-right: 1px solid var(--line);
+}
+
+/* Opportunity */
+.opp .row { padding: 8px 0; }
+.opp .row .v { font-variant-numeric: tabular-nums; }
+.opp .total {
+  margin-top: 6px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  display: flex; justify-content: space-between; align-items: baseline;
+}
+.opp .total .l { font-size: var(--t-eyebrow); text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-3); font-weight: 600; white-space: nowrap; }
+.opp .total .v { font-size: var(--t-title); font-weight: 600; font-variant-numeric: tabular-nums; }
+.opp-links {
+  margin-top: 10px;
+  display: flex; gap: 16px;
+  font-size: 12px;
+}
+.opp-links a { color: var(--terra); font-weight: 500; white-space: nowrap; }
+
+/* Schedule stack */
+.sched .row { padding: 10px 0; align-items: flex-start; }
+.sched .row .l { display: flex; align-items: center; gap: 8px; }
+.sched .row .l .ic {
+  width: 24px; height: 24px; border-radius: 6px;
+  background: var(--surface-2); color: var(--ink-2);
+  display: flex; align-items: center; justify-content: center;
+}
+.sched .row .v.empty { color: var(--ink-4); font-weight: 400; }
+
+/* Quick actions list */
+.qa-list { display: flex; flex-direction: column; }
+.qa-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px dashed var(--line);
+  font-size: 13px;
+}
+.qa-item:last-child { border-bottom: 0; }
+.qa-item .ic {
+  width: 28px; height: 28px; border-radius: 6px;
+  background: var(--surface-2);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--ink-2);
+}
+.qa-item .arr { margin-left: auto; color: var(--ink-4); }
+.qa-item:hover { color: var(--terra); }
+.qa-item:hover .arr { color: var(--terra); }
+
+/* Payments */
+.pay-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 0;
+  border-bottom: var(--hair);
+}
+.pay-item:first-child { padding-top: 0; }
+.pay-item:last-child { border-bottom: 0; }
+.pay-ic {
+  width: 32px; height: 32px; border-radius: 6px;
+  background: var(--terra-soft); color: var(--terra);
+  display: flex; align-items: center; justify-content: center;
+}
+.pay-body { flex: 1; min-width: 0; }
+.pay-top { display: flex; gap: 6px; align-items: center; font-size: 12px; font-weight: 500; }
+.pay-sub { font-size: 11px; color: var(--ink-3); margin-top: 2px; }
+.pay-amt { font-variant-numeric: tabular-nums; font-weight: 600; }
+
+/* Location chip stack */
+.loc { display: flex; flex-direction: column; gap: 8px; }
+.loc-row {
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 8px 0;
+  border-bottom: 1px dashed var(--line);
+}
+.loc-row:last-child { border-bottom: 0; }
+.loc-tag {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 18px; height: 18px; flex-shrink: 0;
+  border-radius: 4px;
+  background: var(--surface-2);
+  color: var(--ink-2); font-size: 10px; font-weight: 700;
+}
+.loc-tag.b { background: var(--terra-soft); color: var(--terra); }
+.loc-body { font-size: 13px; }
+.loc-name { font-weight: 500; }
+.loc-addr { color: var(--ink-3); font-size: 12px; }
+
+/* Inventory KPIs */
+.kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.kpi {
+  padding: 12px;
+  border: var(--hair); border-radius: var(--r);
+  background: var(--surface-2);
+}
+.kpi .v { font-size: var(--t-emph); font-weight: 600; font-variant-numeric: tabular-nums; }
+.kpi .l { font-size: 11px; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px; }
+
+/* utilities */
+.right { margin-left: auto; }
+.sr { position: absolute; left: -9999px; }
+
+/* Tab panes */
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+
+/* ═════ Growth Plan (spec builder) ═════ */
+.gp2-params {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+}
+.gp2-field {
+  display: flex; flex-direction: column;
+  padding: 14px 16px;
+  border-right: var(--hair);
+  gap: 8px;
+}
+.gp2-field:last-child { border-right: 0; }
+.gp2-label {
+  font-size: var(--t-eyebrow);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+  font-weight: 600;
+}
+.gp2-input {
+  appearance: none; -webkit-appearance: none;
+  height: 34px; padding: 0 12px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  background: #fff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  outline: none;
+  width: 100%;
+  cursor: pointer;
+}
+select.gp2-input {
+  padding-right: 30px;
+  background:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23788680' stroke-width='2.2'><polyline points='6 9 12 15 18 9'/></svg>")
+    no-repeat right 10px center, #fff;
+}
+.gp2-input:focus { border-color: var(--terra); box-shadow: 0 0 0 3px var(--terra-soft); }
+
+/* Stops */
+.gp2-stop {
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  gap: 14px;
+  padding: 16px;
+  border-bottom: var(--hair);
+}
+.gp2-stop-tag {
+  width: 32px; height: 32px;
+  border-radius: 999px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 13px;
+}
+.gp2-stop-tag.a { background: var(--terra-soft); color: var(--terra); }
+.gp2-stop-tag.b { background: #FBEEC6; color: #8B6324; }
+.gp2-stop-body { min-width: 0; }
+.gp2-stop-top {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 12px;
+}
+.gp2-stop-kind {
+  font-weight: 600; font-size: 14px;
+}
+.gp2-stop-addr {
+  color: var(--ink-3); font-size: 13px; margin-top: 2px;
+}
+.gp2-stop-x {
+  width: 28px; height: 28px;
+  border-radius: 6px;
+  color: var(--ink-4);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity .12s, background .12s, color .12s;
+}
+.gp2-stop:hover .gp2-stop-x { opacity: 1; }
+.gp2-stop-x:hover { background: var(--bad-bg); color: var(--bad); }
+
+.gp2-attrs {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  margin-top: 12px;
+}
+.gp2-attr {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px;
+  background: var(--surface-2);
+  border: var(--hair);
+  border-radius: 999px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color .12s;
+}
+.gp2-attr:hover { border-color: var(--ink-4); }
+.gp2-attr-l { color: var(--ink-3); font-weight: 500; }
+.gp2-attr-v { color: var(--ink); font-weight: 500; }
+
+/* Route metrics */
+.gp2-metrics {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  background: var(--surface-2);
+  border-bottom: var(--hair);
+}
+.gp2-metric {
+  padding: 14px 16px;
+  border-right: var(--hair);
+}
+.gp2-metric:last-child { border-right: 0; }
+.gp2-metric-l {
+  font-size: var(--t-eyebrow);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+  font-weight: 600;
+}
+.gp2-metric-v {
+  font-size: var(--t-emph);
+  font-weight: 600;
+  margin-top: 4px;
+  font-variant-numeric: tabular-nums;
+}
+.gp2-metric-u { color: var(--ink-3); font-size: 12px; font-weight: 500; }
+
+.gp2-add-stop {
+  width: 100%;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 14px;
+  color: var(--terra);
+  font-weight: 500; font-size: 13px;
+}
+.gp2-add-stop:hover { background: var(--terra-soft); }
+
+/* Charges empty */
+.gp2-charges-empty, .gp2-notes-empty {
+  padding: 36px 24px;
+  text-align: center;
+}
+.gp2-empty-icon {
+  width: 44px; height: 44px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--ink-4);
+  display: inline-flex; align-items: center; justify-content: center;
+  margin-bottom: 12px;
+}
+.gp2-empty-title { font-weight: 600; font-size: 14px; }
+.gp2-empty-sub { color: var(--ink-3); font-size: 13px; margin-top: 4px; }
+
+.gp2-quick-add {
+  display: flex; justify-content: center; gap: 8px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+.gp2-quick {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 14px 6px 6px;
+  background: #fff;
+  border: var(--hair);
+  border-radius: 999px;
+  font-size: 13px; font-weight: 500;
+  transition: border-color .12s, background .12s;
+}
+.gp2-quick:hover { border-color: var(--ink-4); background: var(--surface-2); }
+.gp2-quick-ic {
+  width: 24px; height: 24px;
+  border-radius: 999px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ═════ Growth Plan (line-item table — used by Accounting) ═════ */
+.gp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.gp-table thead th {
+  text-align: left;
+  font-size: var(--t-eyebrow);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+  font-weight: 600;
+  padding: 10px 16px;
+  border-bottom: var(--hair);
+  border-top: var(--hair);
+  background: var(--surface-2);
+}
+.gp-table thead th.num { text-align: right; }
+.gp-table tbody td {
+  padding: 12px 16px;
+  border-bottom: var(--hair);
+  vertical-align: top;
+  font-variant-numeric: tabular-nums;
+}
+.gp-table tbody td.num { text-align: right; font-weight: 500; }
+.gp-table tbody tr:hover { background: var(--surface-2); }
+.gp-item { font-weight: 500; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.gp-sub { color: var(--ink-3); font-size: 12px; margin-top: 2px; }
+.gp-row-x {
+  width: 22px; height: 22px; border-radius: 6px;
+  color: var(--ink-4); font-size: 16px; line-height: 1;
+  opacity: 0; transition: opacity .12s, background .12s;
+}
+.gp-table tbody tr:hover .gp-row-x { opacity: 1; }
+.gp-row-x:hover { background: var(--bad-bg); color: var(--bad); }
+.gp-discount td { color: var(--bad); }
+.gp-discount .gp-sub { color: #a25656; }
+
+.gp-add-row {
+  display: flex; gap: 8px;
+  padding: 10px 16px;
+  border-bottom: var(--hair);
+  background: var(--surface-2);
+}
+.gp-totals { padding: 8px 16px 16px; }
+.gp-totals .row {
+  border-bottom: 0 !important;
+  padding: 6px 0 !important;
+}
+.gp-grand {
+  border-top: 1px solid var(--line) !important;
+  padding-top: 12px !important;
+  margin-top: 6px;
+}
+.gp-grand .l {
+  font-size: var(--t-eyebrow);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+.gp-grand .v {
+  font-size: var(--t-title) !important;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.gp-msg {
+  width: 100%; min-height: 90px;
+  padding: 10px 12px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+  resize: vertical;
+  outline: none;
+}
+.gp-msg:focus { border-color: var(--terra); box-shadow: 0 0 0 3px var(--terra-soft); }
+
+/* ═════ Files & Photos ═════ */
+.files-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  padding: 14px 16px 16px;
+}
+@media (max-width: 1100px) { .files-grid { grid-template-columns: repeat(3, 1fr); } }
+.file {
+  border: var(--hair);
+  border-radius: var(--r);
+  overflow: hidden;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color .12s, transform .12s;
+}
+.file:hover { border-color: var(--ink-4); }
+.file-thumb {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  display: flex; align-items: center; justify-content: center;
+  color: rgba(255,255,255,0.6);
+}
+.file-thumb.pdf {
+  background: var(--surface-2);
+  color: var(--bad);
+}
+.file-thumb.pdf.signed { color: var(--ok); }
+.file-kind {
+  position: absolute; top: 8px; right: 8px;
+  padding: 2px 8px;
+  background: rgba(17,24,22,0.6);
+  color: #fff;
+  border-radius: 999px;
+  font-size: 10px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+.file-thumb.pdf .file-kind { background: var(--ink); }
+.file-badge {
+  position: absolute; bottom: 8px; left: 8px;
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 8px;
+  background: var(--ok); color: #fff;
+  border-radius: 999px;
+  font-size: 10px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+.file-meta { padding: 10px 12px; }
+.file-name { font-weight: 500; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.file-sub { color: var(--ink-3); font-size: 11px; margin-top: 2px; }
+.file-upload {
+  border: 1.5px dashed var(--line-2);
+  border-radius: var(--r);
+  background: var(--surface-2);
+  display: flex; align-items: center; justify-content: center;
+  aspect-ratio: 4 / 3;
+  height: 100%;
+  cursor: pointer;
+  color: var(--ink-3);
+  transition: border-color .12s, color .12s, background .12s;
+}
+.file-upload:hover { border-color: var(--terra); color: var(--terra); background: var(--terra-soft); }
+.file-upload-inner { text-align: center; padding: 12px; }
+.file-upload-title { font-size: 13px; font-weight: 500; margin-top: 6px; }
+.file-upload-sub { font-size: 11px; color: var(--ink-4); margin-top: 2px; }
+
+/* ═════ Accounting ═════ */
+.kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  padding: 4px 0 0;
+}
+
+/* Job Detail Modals (shared) */
+.jd-overlay { position:fixed; inset:0; background:rgba(15,23,42,0.45); align-items:center; justify-content:center; z-index:1000; padding:24px; }
+.jd-overlay.open { display:flex !important; }
+.jd-modal { background:#fff; border-radius:12px; max-width:96vw; max-height:90vh; overflow-y:auto; box-shadow:0 25px 50px rgba(0,0,0,0.25); }
+.jd-modal-head { display:flex; justify-content:space-between; align-items:center; padding:18px 22px; border-bottom:var(--hair); }
+.jd-modal-title { font-size:16px; font-weight:700; }
+.jd-close { font-size:20px; color:var(--ink-3); cursor:pointer; background:transparent; border:0; }
+.jd-modal-body { padding:18px 22px; }
+.jd-modal-actions { display:flex; justify-content:flex-end; gap:8px; padding:14px 22px; border-top:var(--hair); }
+.jd-section-title { font-size:11px; font-weight:700; color:var(--ink-3); text-transform:uppercase; letter-spacing:0.05em; margin:8px 0 8px; }
+.jd-mini-table { width:100%; border-collapse:collapse; font-size:13px; }
+.jd-mini-table td { padding:8px 0; border-bottom:1px solid var(--line); }
+.jd-mini-table td.num, .jd-mini-table td:last-child { text-align:right; font-variant-numeric:tabular-nums; }
+.jd-check { display:flex; align-items:center; gap:8px; padding:6px 0; font-size:13px; cursor:pointer; }
+.jd-check input { accent-color: var(--terra); }
+.jd-textarea { width:100%; padding:10px 12px; border:var(--hair); border-radius:6px; font-size:13px; min-height:64px; resize:vertical; font-family:inherit; outline:none; }
+.jd-textarea:focus { border-color: var(--terra); box-shadow:0 0 0 3px var(--terra-soft); }
+.jd-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px 16px; }
+.jd-field { display:flex; flex-direction:column; gap:5px; }
+.jd-field.full { grid-column:1/-1; }
+.jd-label { font-size:12px; font-weight:600; color:var(--ink); }
+.jd-label .req { color:var(--bad); }
+.jd-input { width:100%; padding:9px 11px; border:var(--hair); border-radius:6px; font-size:13px; background:#fff; color:var(--ink); font-family:inherit; outline:none; }
+.jd-input:focus { border-color: var(--terra); box-shadow:0 0 0 3px var(--terra-soft); }
+
+/* Wages-old style */
+.kpi-strip-old { display:grid; 
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  padding: 4px 0 0;
+}
+.kpi-card {
+  padding: 16px 18px;
+  border-right: var(--hair);
+  border-top: var(--hair);
+}
+.kpi-card:last-child { border-right: 0; }
+.kpi-card.kpi-emph { background: var(--terra-soft); }
+.kpi-card.kpi-emph .kpi-value { color: var(--terra); }
+.kpi-label {
+  font-size: var(--t-eyebrow);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+  font-weight: 600;
+}
+.kpi-value {
+  font-size: 24px; font-weight: 600;
+  margin-top: 6px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+.kpi-cents { font-size: 14px; color: var(--ink-3); font-weight: 500; }
+.kpi-foot { color: var(--ink-3); font-size: 12px; margin-top: 4px; }
+.kpi-foot.ok { color: var(--ok); }
+
+.acct-tabs { display: flex; gap: 2px; }
+.acct-tab {
+  padding: 8px 12px;
+  font-size: 12px; font-weight: 500;
+  color: var(--ink-3);
+  border-radius: 6px;
+  white-space: nowrap;
+}
+.acct-tab:hover { color: var(--ink); background: var(--surface-2); }
+.acct-tab.active { color: var(--ink); background: var(--surface-2); font-weight: 600; }
+
+.acct-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.acct-table thead th {
+  text-align: left;
+  font-size: var(--t-eyebrow);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+  font-weight: 600;
+  padding: 10px 16px;
+  border-bottom: var(--hair);
+  background: var(--surface-2);
+}
+.acct-table th.num, .acct-table td.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.acct-table tbody td {
+  padding: 12px 16px;
+  border-bottom: var(--hair);
+  vertical-align: middle;
+}
+.acct-table tbody tr:hover { background: var(--surface-2); }
+.acct-table tbody tr:hover .gp-row-x { opacity: 1; }
+.cat-dot {
+  display: inline-block; width: 8px; height: 8px; border-radius: 999px;
+  margin-right: 8px; vertical-align: 1px;
+}
+.acct-table tfoot td {
+  padding: 12px 16px;
+  font-weight: 500;
+  border-top: var(--hair);
+  background: var(--surface-2);
+}
+.acct-table tfoot tr.gp-grand-row td {
+  font-size: var(--t-emph);
+  font-weight: 600;
+  color: var(--ink);
+  background: #fff;
+  border-top: 1px solid var(--line);
+}
+
+/* ═════ Customer ═════ */
+.cust-header {
+  display: flex; align-items: flex-start; gap: 18px;
+  padding: 20px;
+  flex-wrap: wrap;
+}
+.cust-avatar {
+  width: 64px; height: 64px;
+  border-radius: var(--r);
+  background: var(--terra); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; font-weight: 600;
+  flex-shrink: 0;
+}
+.cust-stats {
+  display: flex; gap: 24px;
+  padding-left: 24px;
+  border-left: var(--hair);
+  flex-shrink: 0;
+}
+.cust-stat-v {
+  font-size: var(--t-title); font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+.cust-stat-l {
+  font-size: var(--t-eyebrow);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+  font-weight: 600;
+  margin-top: 4px;
+  white-space: nowrap;
+}
+
+.tag {
+  display: inline-flex; align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--ink-2);
+  font-size: 11px; font-weight: 500;
+  border: var(--hair);
+  white-space: nowrap;
+}
+
+.cust-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 16px;
+}
+@media (max-width: 1100px) { .cust-grid { grid-template-columns: 1fr; } }
+
+.deals { padding: 0; }
+.deal-row {
+  display: grid;
+  grid-template-columns: 100px 1fr auto 110px 16px;
+  gap: 16px;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: var(--hair);
+  color: inherit;
+}
+.deal-row:hover { background: var(--surface-2); }
+.deal-row:last-child { border-bottom: 0; }
+.deal-id {
+  font-family: 'SF Mono', monospace;
+  font-size: 12px;
+  color: var(--ink-3);
+  font-weight: 500;
+}
+.deal-name { min-width: 0; }
+.deal-sub { font-size: 12px; margin-top: 2px; }
+.deal-amt {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  text-align: right;
+}
+.deal-arr { color: var(--ink-4); }
+.deal-row:hover .deal-arr { color: var(--terra); }
+.deal-empty {
+  padding: 16px;
+  font-size: 12px;
+  text-align: center;
+}
+
+.cust-note {
+  border-left: 3px solid var(--terra-soft);
+  padding: 4px 0 4px 12px;
+}
+.cust-note-meta {
+  font-size: 11px;
+  color: var(--ink-3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+/* ═════ Empty pane ═════ */
+.empty-pane {
+  padding: 80px 24px;
+  text-align: center;
+}
+.empty-title {
+  font-size: var(--t-emph);
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.empty-sub { color: var(--ink-3); font-size: 13px; }
+
+/* ── Topbar dropdown menus ──────────────────── */
+.tb-menu { position: relative; }
+.tb-trigger { position: relative; }
+.tb-badge {
+  position: absolute; top: -4px; right: -4px;
+  min-width: 18px; height: 18px; padding: 0 5px;
+  background: #fff; color: var(--ink); border: 1px solid var(--line-2);
+  border-radius: 999px; font-size: 10px; font-weight: 700;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-variant-numeric: tabular-nums; letter-spacing: -.01em;
+  box-shadow: 0 1px 2px rgba(0,0,0,.04);
+}
+.tb-badge-red { background: #DC2626; color: #fff; border-color: #DC2626; }
+
+.tb-pop {
+  position: absolute; top: 56px; right: 12px;
+  width: 380px; max-height: 600px;
+  background: #fff; border: var(--hair); border-radius: 12px;
+  box-shadow: 0 20px 40px -12px rgba(15,23,42,.18), 0 4px 12px rgba(15,23,42,.06);
+  display: none; flex-direction: column;
+  z-index: 200;
+  overflow: hidden;
+}
+.tb-pop.open { display: flex; }
+.tb-pop-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px 10px;
+}
+.tb-eyebrow { font-size: 11px; font-weight: 700; color: var(--ink-2); letter-spacing: 0.08em; }
+.tb-link { font-size: 12px; color: var(--terra); font-weight: 600; cursor: pointer; }
+.tb-link:hover { text-decoration: underline; }
+
+.tb-list { flex: 1; overflow-y: auto; padding: 0 8px 8px; }
+.tb-item {
+  display: flex; gap: 10px; padding: 12px 10px;
+  border-radius: 8px; cursor: pointer;
+  align-items: flex-start;
+  color: inherit;
+}
+.tb-item:hover { background: var(--surface-2); }
+.tb-item + .tb-item { border-top: 1px solid var(--line); }
+.tb-dot { width: 8px; height: 8px; border-radius: 999px; background: var(--terra); flex-shrink: 0; margin-top: 6px; }
+.tb-claim {
+  width: 22px; height: 22px; border-radius: 999px;
+  background: #2563EB; color: #fff;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700; flex-shrink: 0;
+  margin-top: 1px;
+}
+.tb-item .bd { flex: 1; min-width: 0; }
+.tb-item .t { font-size: 13px; font-weight: 700; color: var(--ink); line-height: 1.35; }
+.tb-item .s { font-size: 12px; color: var(--ink-3); margin-top: 3px; line-height: 1.4; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; }
+.tb-item .m { font-size: 11px; color: var(--ink-3); margin-top: 6px; }
+
+/* Reminder cards */
+.tb-tabs { display: flex; gap: 4px; padding: 0 18px; border-bottom: var(--hair); }
+.tb-tab {
+  background: transparent; border: 0;
+  padding: 10px 4px; margin-right: 14px;
+  font-size: 12.5px; font-weight: 600; color: var(--ink-3);
+  border-bottom: 2px solid transparent; cursor: pointer;
+}
+.tb-tab.active { color: var(--terra); border-bottom-color: var(--terra); }
+
+.tb-rem {
+  display: grid; grid-template-columns: 1fr 36px;
+  gap: 8px; padding: 12px 12px;
+  border-radius: 8px; border-bottom: 1px solid var(--line);
+  align-items: start;
+}
+.tb-rem:hover { background: var(--surface-2); }
+.tb-rem:last-child { border-bottom: 0; }
+.tb-rem-head { display: flex; gap: 8px; align-items: center; }
+.tb-rem-head b { font-size: 13px; font-weight: 700; color: var(--ink); }
+.tb-tag { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; background: var(--ok-soft); color: var(--ok); letter-spacing: 0.02em; }
+.tb-tag.warn { background: var(--warn-soft); color: var(--warn); }
+.tb-tag.err { background: var(--bad-soft); color: var(--bad); }
+.tb-rem-body { font-size: 12px; color: var(--ink-2); margin-top: 4px; line-height: 1.4; }
+.tb-due { color: var(--terra); font-weight: 600; margin-left: 4px; }
+.tb-rem-sub { font-size: 11.5px; color: var(--ink-3); margin-top: 4px; }
+.tb-check {
+  grid-row: 1 / span 2; align-self: center;
+  width: 28px; height: 28px; border-radius: 999px;
+  border: 1.5px solid var(--line-2); background: #fff;
+  color: var(--ink-3); cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700;
+}
+.tb-check:hover { border-color: var(--ok); color: var(--ok); background: var(--ok-soft); }
+
+/* Scripts */
+.tb-search {
+  display: flex; align-items: center; gap: 8px;
+  padding: 0 12px; margin: 0 12px 4px;
+  height: 36px; background: var(--surface-2);
+  border: var(--hair); border-radius: 8px;
+}
+.tb-search input { flex: 1; border: 0; background: transparent; outline: none; font-size: 13px; color: var(--ink); }
+.tb-search svg { color: var(--ink-3); }
+.tb-script {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 12px; border-bottom: 1px solid var(--line);
+  cursor: pointer; color: inherit;
+}
+.tb-script:hover { background: var(--surface-2); }
+.tb-script:last-child { border-bottom: 0; }
+.tb-script-cat { font-size: 12px; font-weight: 700; color: var(--ink); letter-spacing: 0.08em; }
+.tb-chev { color: var(--ink-3); font-size: 14px; }
+
+.tb-foot {
+  padding: 10px 18px; border-top: var(--hair);
+  font-size: 12px; text-align: center;
+}
+.tb-foot a { color: var(--terra); font-weight: 600; }
+.tb-foot a:hover { text-decoration: underline; }
+
 </style>
-</head><body>
-<div class="wrap">
-  <div class="page-bar"><div class="page-title">Job Detail · <span data-bind-text="job.number"></span></div></div>
 
-  <div class="summary">
-    <div class="cell"><div class="l">Customer</div><div class="v" data-bind-text="job.customer"></div></div>
-    <div class="cell"><div class="l">Status</div><div class="v"><span class="tag in_progress" data-bind-text="job.status"></span></div></div>
-    <div class="cell"><div class="l">Address</div><div class="v" data-bind-text="job.address"></div></div>
-    <div class="cell"><div class="l">Value</div><div class="v" data-bind-text="job.value" data-fmt="usdint"></div></div>
-  </div>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_aesthetic.css">
+</head>
+<body>
 
-  <section class="section">
-    <h3 class="section-title">Contact</h3>
-    <div>Name: <strong data-bind-text="job.contact.name"></strong></div>
-    <div>Email: <strong data-bind-text="job.contact.email"></strong></div>
-    <div>Phone: <strong data-bind-text="job.contact.phone"></strong></div>
-  </section>
+<div class="app" data-screen-label="Job Detail">
 
-  <section class="section">
-    <h3 class="section-title">Invoices</h3>
-    <table class="tbl">
-      <thead><tr><th>#</th><th>Number</th><th style="text-align:right">Amount</th><th>Status</th></tr></thead>
-      <tbody data-bind="invoices">
-        <template>
-          <tr>
-            <td>{{id|num}}</td>
-            <td>{{number}}</td>
-            <td style="text-align:right">{{amount|usdint}}</td>
-            <td><span class="tag {{status}}">{{status}}</span></td>
-          </tr>
-        </template>
-      </tbody>
-    </table>
-  </section>
+  <!-- Logo --><!-- Top bar --><!-- Left nav --><!-- Page -->
+  <main class="page">
 
-  <section class="section">
-    <h3 class="section-title">Documents</h3>
-    <table class="tbl">
-      <thead><tr><th>#</th><th>Name</th><th>Folder</th></tr></thead>
-      <tbody data-bind="documents">
-        <template>
-          <tr><td>{{id|num}}</td><td>{{name}}</td><td>{{folder}}</td></tr>
-        </template>
-      </tbody>
-    </table>
-  </section>
-
-  <section class="section">
-    <h3 class="section-title">Activity</h3>
-    <div data-bind="timeline">
-      <template>
-        <div class="timeline-item">
-          <div class="section-sub">{{ts}}</div>
-          <div>{{label}}</div>
-          <div class="section-sub">{{by}}</div>
+    <!-- ─── Customer Header ─── -->
+    <section class="header">
+      <div class="h-row1">
+        <div class="h-identity">
+          <div class="h-eyebrow">
+            <span data-bind-text="header.dealLabel">Deal · 17826-1</span>
+            <span class="sep">·</span>
+            <span class="pill"><span class="dot"></span><span data-bind-text="header.statusPill">Scheduled</span></span>
+            <span class="pill warn"><span class="dot"></span><span data-bind-text="header.claimPill">Unclaimed</span></span>
+          </div>
+          <h1 class="h-name"><span data-bind-text="deal.customer">Alice Johnson</span><button class="edit" title="Edit customer">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+          </h1>
+          <div class="h-meta">
+            <span class="item">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              <span class="v" data-bind-text="customer.phone">(555) 987-6543</span>
+            </span>
+            <span class="item">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              <span class="v" data-bind-text="customer.email">alice@techstartup.com</span>
+            </span>
+            <span class="item">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <span class="v" data-bind-text="header.serviceDateTime">Mon, Jan 12, 2026 · 7:00 AM EST</span>
+            </span>
+            <span class="item">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <a data-comm-action="action:jobDetail.set-follow-up" href="#" class="link" id="jdSetFollowupBtn" data-bind-text="header.followupCta">+ Set follow-up</a>
+            </span>
+          </div>
         </div>
-      </template>
+
+        <div class="h-actions">
+          <button data-comm-action="action:jobDetail.call" class="btn btn-secondary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            Call
+          </button>
+          <select class="status-select" aria-label="Status" data-bind-options="optionsOptions"></select>
+        </div>
+      </div>
+
+      <!-- Inline claim strip -->
+      <div class="claim">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <span class="t" data-bind-text="claim.title">This lead isn't claimed yet.</span>
+        <span class="s" data-bind-text="claim.sub">Follow-up reminders won't show in anyone's bell until claimed.</span>
+        <span class="grow"></span>
+        <button data-comm-action="action:jobDetail.claim-lead" class="btn btn-primary">Claim lead</button>
+      </div>
+
+      <!-- Contacts -->
+      <div class="contacts">
+        <span class="contact-chip">
+          <span class="avatar" data-bind-text="contacts.primaryInitials">AJ</span><span data-bind-text="deal.customer">Alice Johnson</span><span class="role" data-bind-text="contacts.primaryRole">Primary</span>
+        </span>
+        <span class="contact-chip">
+          <span class="avatar" data-bind-text="contacts.referrerInitials">TW</span>
+          <span data-bind-text="customer.referrer">Tim Walsh</span>
+          <span class="role" data-bind-text="contacts.referrerRole">Referrer</span>
+        </span>
+        <button data-comm-action="action:jobDetail.add-contact" class="add-contact" id="jdAddContactBtn">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          Add contact
+        </button>
+      </div>
+
+      <!-- Tabs -->
+      <nav class="tabs" id="jdTabs">
+        <button class="tab active" data-tab="communication">Communication <span class="count" data-bind-text="metrics.count.0">12</span></button>
+        <button class="tab" data-tab="growth-plan">Growth Plan</button>
+        <button class="tab" data-tab="files">Files &amp; photos <span class="count" data-bind-text="metrics.count.1">7</span></button>
+        <button class="tab" data-tab="accounting">Accounting</button>
+        <button class="tab" data-tab="customer">Customer</button>
+        <button class="tab" data-tab="marketing">Marketing</button>
+        <button class="tab" data-tab="documents">Documents</button>
+        <button class="tab" data-tab="extras">Extras</button>
+      </nav>
+    </section>
+
+    <!-- ─── Two-column body ─── -->
+    <div class="cols">
+
+      <!-- MAIN -->
+      <div class="main">
+
+        <!-- ╔══════════════ COMMUNICATION ══════════════╗ -->
+        <div class="tab-pane active" data-pane="communication">
+
+        <!-- Composer -->
+        <section class="card composer">
+          <div class="composer-tabs">
+            <button data-comm-action="action:jobDetail.reply-by-sms" class="composer-tab active">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8z"/></svg>
+              Reply by SMS
+            </button>
+            <button data-comm-action="action:jobDetail.email" class="composer-tab">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              Email
+            </button>
+            <button data-comm-action="action:jobDetail.internal-note" class="composer-tab">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5l-7 7 7 7"/><path d="M20 12H4"/></svg>
+              Internal note
+            </button>
+            <button data-comm-action="action:jobDetail.log-call" class="composer-tab">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              Log call
+            </button>
+            <span class="right" style="display:flex;align-items:center;padding:8px 4px;gap:4px;color:var(--ink-3);font-size:11px;white-space:nowrap;">
+              <span class="kbd">⌘</span><span class="kbd">↵</span> to send
+            </span>
+          </div>
+          <div class="composer-body">
+            <textarea placeholder="Reply to Alice — she'll get this as an SMS from (555) 200-0143."></textarea>
+          </div>
+          <div class="composer-foot">
+            <div class="composer-tools left">
+              <button class="icon-btn" title="Attach"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.49"/></svg></button>
+              <button class="icon-btn" title="Insert template" id="jdInsertTplBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></button>
+              <button class="icon-btn" title="Record video" id="jdRecordVideoBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></button>
+              <button class="icon-btn" title="Emoji" id="jdEmojiBtn" style="position:relative;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><circle cx="9" cy="9" r="1" fill="currentColor"/><circle cx="15" cy="9" r="1" fill="currentColor"/></svg></button>
+            </div>
+            <div class="right">
+              <span class="muted" style="font-size:11px;">0/160</span>
+              <button data-comm-action="action:jobDetail.save-draft" class="btn btn-secondary btn-sm">Save draft</button>
+              <button data-comm-action="action:jobDetail.send" class="btn btn-primary btn-sm">
+                Send
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Timeline -->
+        <section class="card" style="margin-top:16px;">
+          <div class="timeline-head">
+            <button class="filter-chip active">All <span class="muted" style="margin-left:2px;color:rgba(255,255,255,0.5)" data-bind-text="mutedCounts.0">12</span></button>
+            <button class="filter-chip" data-bind-text="timeline.filterCalls">Calls 3</button>
+            <button class="filter-chip" data-bind-text="timeline.filterSms">SMS 5</button>
+            <button class="filter-chip" data-bind-text="timeline.filterEmail">Email 2</button>
+            <button class="filter-chip" data-bind-text="timeline.filterNotes">Notes 2</button>
+            <div class="right">Newest first</div>
+          </div>
+
+          <div class="tl">
+            <div class="tl-day" data-bind-text="timeline.daySections.0.label">Today · Jan 8, 2026</div>
+
+            <div class="tl-item">
+              <div class="tl-icon call">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              </div>
+              <div class="tl-body">
+                <div class="tl-top">
+                  <span class="tl-kind">Outbound call</span>
+                  <span class="tl-arrow">→</span>
+                  <span class="tl-by" data-bind-text="timeline.callOutboundBy">John Sales called Alice</span>
+                  <span class="pill ok"><span class="dot"></span>Connected</span>
+                </div>
+                <div class="tl-text" data-bind-text="timeline.callText">Confirmed Jan 12 7:00 AM window. Customer asked about packing add-on — sent her the box delivery FAQ. Will follow up Wednesday.</div>
+                <div class="tl-meta">
+                  <span class="m">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    <span data-bind-text="timeline.callDuration">4m 12s</span>
+                  </span>
+                  <span class="m">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    Recording
+                  </span>
+                  <span class="m">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    Transcript
+                  </span>
+                </div>
+              </div>
+              <div class="tl-time" data-bind-text="timeline.callTime">9:43 AM</div>
+            </div>
+
+            <div class="tl-item">
+              <div class="tl-icon sms">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              </div>
+              <div class="tl-body">
+                <div class="tl-top">
+                  <span class="tl-kind">SMS</span>
+                  <span class="tl-arrow">←</span>
+                  <span class="tl-by" data-bind-text="timeline.smsInboundBy">Alice → John Sales</span>
+                </div>
+                <div class="tl-bubble" data-bind-text="timeline.smsInText">Sounds good. Tim said you guys were great with his move last fall — looking forward to it. One quick Q: do you bring wardrobe boxes or do I need to grab my own?</div>
+              </div>
+              <div class="tl-time" data-bind-text="timeline.smsInTime">9:38 AM</div>
+            </div>
+
+            <div class="tl-item">
+              <div class="tl-icon sms">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              </div>
+              <div class="tl-body">
+                <div class="tl-top">
+                  <span class="tl-kind">SMS</span>
+                  <span class="tl-arrow">→</span>
+                  <span class="tl-by" data-bind-text="timeline.smsOutboundBy">John Sales → Alice</span>
+                  <span class="pill ok"><span class="dot"></span>Delivered</span>
+                </div>
+                <div class="tl-bubble out" data-bind-text="timeline.smsOutText">Hi Alice — just confirming your move for Jan 12 at 7 AM. Two movers, one truck. We'll text 30 min before arrival. Reply Y to confirm 👍</div>
+              </div>
+              <div class="tl-time" data-bind-text="timeline.smsOutTime">9:35 AM</div>
+            </div>
+
+            <div class="tl-day" data-bind-text="timeline.daySections.1.label">Wed · Jan 7, 2026</div>
+
+            <div class="tl-item">
+              <div class="tl-icon mail">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              </div>
+              <div class="tl-body">
+                <div class="tl-top">
+                  <span class="tl-kind">Email sent</span>
+                  <span class="tl-arrow">→</span>
+                  <span class="tl-by">Discovery call confirmation</span>
+                  <span class="pill ok"><span class="dot"></span>Opened 2×</span>
+                </div>
+                <div class="tl-text"><strong>Subject:</strong> <span data-bind-text="timeline.emailSubject">Your move with Service1 — Jan 12 7:00 AM</span><br><span class="muted" data-bind-text="timeline.emailPreview">Hi Alice, looking forward to helping with your move. Attached is your growth plan and a checklist of everything to have ready the morning of…</span></div>
+                <div class="tl-meta">
+                  <span class="m" data-bind-text="timeline.emailAttach1">📎 Growth Plan #17826-1.pdf</span>
+                  <span class="m" data-bind-text="timeline.emailAttach2">📎 Move-day checklist.pdf</span>
+                </div>
+              </div>
+              <div class="tl-time" data-bind-text="timeline.emailTime">2:20 PM</div>
+            </div>
+
+            <div class="tl-item">
+              <div class="tl-icon note">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              </div>
+              <div class="tl-body">
+                <div class="tl-top">
+                  <span class="tl-kind">Note</span>
+                  <span class="tl-by" data-bind-text="timeline.noteBy">John Sales</span>
+                  <span class="pill" style="background:transparent;border-color:var(--line);color:var(--ink-3);">Internal</span>
+                </div>
+                <div class="tl-text" data-bind-text="customer.internalNote">Referred by Tim Walsh (job #16204). 3-bedroom downtown apartment, no elevator on origin side. Sensitive about timing — needs to be out by 11 AM for landlord walkthrough.</div>
+              </div>
+              <div class="tl-time" data-bind-text="timeline.noteTime">11:02 AM</div>
+            </div>
+
+            <div class="tl-system">
+              <span class="dot"></span>
+              <span><span data-bind-text="timeline.systemLeadText">Lead created from website form · assigned to </span><span style="color:var(--ink-2);font-weight:500;" data-bind-text="timeline.leadAssignedTo">John Sales</span></span>
+              <span class="line"></span>
+              <span class="muted" data-bind-text="timeline.systemLeadAt">Jan 4 · 10:00 AM</span>
+            </div>
+          </div>
+        </section>
+        </div><!-- /Communication pane -->
+
+        <!-- ╔══════════════ GROWTH PLAN ══════════════╗ -->
+        <div class="tab-pane" data-pane="growth-plan">
+
+          <!-- Job parameters strip -->
+          <section class="card gp2-params">
+            <label class="gp2-field">
+              <span class="gp2-label">Size</span>
+              <select class="gp2-input" data-bind-options="optionsOptions2"><option value="Small">Small</option></select>
+            </label>
+            <label class="gp2-field">
+              <span class="gp2-label">Type</span>
+              <select class="gp2-input" data-bind-options="optionsOptions3"></select>
+            </label>
+            <label class="gp2-field">
+              <span class="gp2-label">Branch</span>
+              <select class="gp2-input" data-bind-options="optionsOptions4"><option value="— None —">— None —</option></select>
+            </label>
+            <label class="gp2-field">
+              <span class="gp2-label">Estimated hours</span>
+              <input class="gp2-input" type="number" value="2" min="0" step="0.25">
+            </label>
+          </section>
+
+          <!-- Locations & route -->
+          <section class="card" style="margin-top:16px;">
+            <div class="s-head">
+              <div class="s-title">Locations &amp; route</div>
+              <button class="s-action" onclick="document.getElementById('addStopModal').classList.add('open')">+ Add stop</button>
+            </div>
+
+            <div class="gp2-stop">
+              <span class="gp2-stop-tag a">A</span>
+              <div class="gp2-stop-body" data-record-id="origin">
+                <div class="gp2-stop-top">
+                  <div>
+                    <div class="gp2-stop-kind">Pickup</div>
+                    <div class="gp2-stop-addr" data-bind-text="route.origin.cityAddr">Toronto · 142 King St W</div>
+                  </div>
+                  <button class="gp2-stop-x" title="Remove stop">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+                  </button>
+                </div>
+                <div class="gp2-attrs">
+                  <span class="gp2-attr"><span class="gp2-attr-l">Elevator</span><span class="gp2-attr-v muted" data-bind-text="route.origin.access.elevator">—</span></span>
+                  <span class="gp2-attr"><span class="gp2-attr-l">Floor</span><span class="gp2-attr-v muted" data-bind-text="route.origin.access.floor">—</span></span>
+                  <span class="gp2-attr"><span class="gp2-attr-l">Long walk</span><span class="gp2-attr-v muted" data-bind-text="route.origin.access.longWalk">No</span></span>
+                  <span class="gp2-attr"><span class="gp2-attr-l">Stairs</span><span class="gp2-attr-v muted" data-bind-text="route.origin.access.stairs">—</span></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="gp2-stop">
+              <span class="gp2-stop-tag b">B</span>
+              <div class="gp2-stop-body" data-record-id="destination">
+                <div class="gp2-stop-top">
+                  <div>
+                    <div class="gp2-stop-kind">Delivery</div>
+                    <div class="gp2-stop-addr" data-bind-text="route.destination.cityAddr">Hamilton · 88 James St N</div>
+                  </div>
+                  <button class="gp2-stop-x" title="Remove stop">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+                  </button>
+                </div>
+                <div class="gp2-attrs">
+                  <span class="gp2-attr"><span class="gp2-attr-l">Elevator</span><span class="gp2-attr-v muted" data-bind-text="route.destination.access.elevator">—</span></span>
+                  <span class="gp2-attr"><span class="gp2-attr-l">Floor</span><span class="gp2-attr-v muted" data-bind-text="route.destination.access.floor">—</span></span>
+                  <span class="gp2-attr"><span class="gp2-attr-l">Long walk</span><span class="gp2-attr-v muted" data-bind-text="route.destination.access.longWalk">No</span></span>
+                  <span class="gp2-attr"><span class="gp2-attr-l">Stairs</span><span class="gp2-attr-v muted" data-bind-text="route.destination.access.stairs">—</span></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Route metrics -->
+            <div class="gp2-metrics">
+              <div class="gp2-metric"><div class="gp2-metric-l">Total route</div><div class="gp2-metric-v" data-bind-text="route.totalDistance">—</div></div>
+              <div class="gp2-metric"><div class="gp2-metric-l">Travel</div><div class="gp2-metric-v" data-bind-text="route.travelHours">—</div></div>
+              <div class="gp2-metric"><div class="gp2-metric-l">Office → Origin</div><div class="gp2-metric-v" data-bind-text="route.officeToOrigin">—</div></div>
+              <div class="gp2-metric"><div class="gp2-metric-l">Origin → Destination</div><div class="gp2-metric-v" data-bind-text="route.originToDest">—</div></div>
+              <div class="gp2-metric"><div class="gp2-metric-l">Destination → Office</div><div class="gp2-metric-v" data-bind-text="route.destToOffice">—</div></div>
+            </div>
+
+            <button type="button" data-jd-open="addStopModal" class="gp2-add-stop">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Add another location
+            </button>
+          </section>
+
+          <!-- Charges -->
+          <section class="card" style="margin-top:16px;">
+            <div class="s-head">
+              <div class="s-title">Charges</div>
+              <button class="btn btn-secondary btn-sm" onclick="document.getElementById('addChargeModal').classList.add('open')">+ Add charge</button>
+            </div>
+
+            <div class="gp2-charges-empty">
+              <div class="gp2-empty-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              </div>
+              <div class="gp2-empty-title">No charges added yet</div>
+              <div class="gp2-empty-sub">Pick a category to start, or add a custom charge.</div>
+              <div class="gp2-quick-add">
+                <button data-comm-action="action:jobDetail.labor" class="gp2-quick">
+                  <span class="gp2-quick-ic" style="background:var(--terra-soft);color:var(--terra);">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/></svg>
+                  </span>
+                  Labor
+                </button>
+                <button data-comm-action="action:jobDetail.travel" class="gp2-quick">
+                  <span class="gp2-quick-ic" style="background:var(--info-bg);color:var(--info);">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M12 3v18"/></svg>
+                  </span>
+                  Travel
+                </button>
+                <button data-comm-action="action:jobDetail.packing" class="gp2-quick">
+                  <span class="gp2-quick-ic" style="background:var(--warn-bg);color:var(--warn);">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                  </span>
+                  Packing
+                </button>
+                <button data-comm-action="action:jobDetail.specialty" class="gp2-quick">
+                  <span class="gp2-quick-ic" style="background:#F1E8DD;color:#8B6324;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  </span>
+                  Specialty
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <!-- Notes -->
+          <section class="card" style="margin-top:16px;">
+            <div class="s-head">
+              <div class="s-title">Notes</div>
+              <button data-jd-open="addNoteModal" class="s-action">+ Add note</button>
+            </div>
+            <div class="gp2-notes-empty">
+              <div class="gp2-empty-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
+              </div>
+              <div class="gp2-empty-title">No notes yet</div>
+              <div class="gp2-empty-sub">Add internal context, crew instructions, or anything the office should know.</div>
+            </div>
+          </section>
+
+        </div><!-- /Growth Plan pane -->
+
+        <!-- ╔══════════════ FILES & PHOTOS ══════════════╗ -->
+        <div class="tab-pane" data-pane="files">
+
+          <section class="card">
+            <div class="s-head" style="border-bottom:0;">
+              <div class="files-filters" style="display:flex;gap:8px;align-items:center;">
+                <button type="button" class="filter-chip active" data-files-filter="all">All <span class="files-filter-count" style="margin-left:2px;opacity:.6;">7</span></button>
+                <button type="button" class="filter-chip" data-files-filter="photos">Photos <span class="files-filter-count" style="margin-left:2px;opacity:.6;">4</span></button>
+                <button type="button" class="filter-chip" data-files-filter="pdfs">PDFs <span class="files-filter-count" style="margin-left:2px;opacity:.6;">2</span></button>
+                <button type="button" class="filter-chip" data-files-filter="signed">Signed <span class="files-filter-count" style="margin-left:2px;opacity:.6;">1</span></button>
+              </div>
+              <button data-comm-action="action:jobDetail.upload" class="btn btn-secondary btn-sm">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Upload
+              </button>
+            </div>
+
+            <div class="files-grid">
+              <div data-bind="files.photos" data-files-group="photos" style="display:contents;"><template><div class="file"><div class="file-thumb" style="background:{{gradient}};"><span class="file-kind">Photo</span></div><div class="file-meta"><div class="file-name">{{name}}</div><div class="file-sub">{{sub}}</div></div></div></template></div>
+              <div data-bind="files.pdfs" data-files-group="pdfs" style="display:contents;"><template><div class="file"><div class="file-thumb pdf"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span class="file-kind">PDF</span></div><div class="file-meta"><div class="file-name">{{name}}</div><div class="file-sub">{{sub}}</div></div></div></template></div>
+              <div data-bind="files.signed" data-files-group="signed" style="display:contents;"><template><div class="file"><div class="file-thumb pdf signed"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span class="file-kind">PDF</span><span class="file-badge"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Signed</span></div><div class="file-meta"><div class="file-name">{{name}}</div><div class="file-sub">{{sub}}</div></div></div></template></div>
+              <button class="file-upload">
+                <div class="file-upload-inner">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  <div class="file-upload-title">Drop files or click</div>
+                  <div class="file-upload-sub">PNG, JPG, PDF up to 25 MB</div>
+                </div>
+              </button>
+            </div>
+          </section>
+        </div><!-- /Files pane -->
+
+        <!-- ╔══════════════ ACCOUNTING ══════════════╗ -->
+        <div class="tab-pane" data-pane="accounting">
+
+          <section class="card">
+            <div class="s-head">
+              <div class="s-title">Job financials</div>
+              <div style="display:flex;gap:8px;">
+                <button class="btn btn-secondary btn-sm" onclick="document.getElementById('addWagesModal').classList.add('open')">+ Add Wages</button>
+                <button class="btn btn-primary btn-sm" onclick="document.getElementById('finalizeModal').classList.add('open')">✓ Finalize Job</button>
+              </div>
+            </div>
+            <div class="kpi-strip">
+              <div class="kpi-card">
+                <div class="kpi-label" data-bind-text="kpis.0.label">Revenue</div>
+                <div class="kpi-value"><span data-bind-text="deal.totalShort">$2,768</span><span class="kpi-cents" data-bind-text="metrics.kpi_cents.0">.50</span></div>
+                <div class="kpi-foot ok" data-bind-text="metrics.kpi_foot.0">Finalized</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label" data-bind-text="kpis.1.label">Cost</div>
+                <div class="kpi-value"><span data-bind-text="financials2.costValue">$640</span><span class="kpi-cents" data-bind-text="metrics.kpi_cents.1">.00</span></div>
+                <div class="kpi-foot" data-bind-text="metrics.kpi_foot.1">Materials + fuel</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label" data-bind-text="kpis.2.label">Wages</div>
+                <div class="kpi-value"><span data-bind-text="financials2.wagesValue">$420</span><span class="kpi-cents" data-bind-text="metrics.kpi_cents.2">.00</span></div>
+                <div class="kpi-foot" data-bind-text="metrics.kpi_foot.2">2 employees · 10h</div>
+              </div>
+              <div class="kpi-card kpi-emph">
+                <div class="kpi-label" data-bind-text="kpis.3.label">Margin</div>
+                <div class="kpi-value"><span data-bind-text="financials2.marginValue">$1,708</span><span class="kpi-cents" data-bind-text="metrics.kpi_cents.3">.50</span></div>
+                <div class="kpi-foot ok" data-bind-text="metrics.kpi_foot.3">61.7% margin</div>
+              </div>
+            </div>
+          </section>
+
+          <section class="card" style="margin-top:16px;">
+            <div class="s-head">
+              <nav class="acct-tabs">
+                <button data-comm-action="action:jobDetail.revenue" class="acct-tab active">Revenue</button>
+                <button data-comm-action="action:jobDetail.expenses" class="acct-tab">Expenses</button>
+                <button data-comm-action="action:jobDetail.wages" class="acct-tab">Wages</button>
+                <button data-comm-action="action:jobDetail.tax" class="acct-tab">Tax</button>
+              </nav>
+              <button data-comm-action="action:jobDetail.add-line" class="btn btn-secondary btn-sm">+ Add line</button>
+            </div>
+            <table class="acct-table">
+              <thead>
+                <tr><th>Category</th><th>Description</th><th>Date</th><th class="num">Amount</th><th class="num">Tax</th><th></th></tr>
+              </thead>
+              <tbody data-bind="rows"><template><tr><td><span class="cat-dot" style="background:{{c0_dotBg}};"></span> {{c0_text}}</td><td>{{c1_text}}</td><td>{{c2_text}}</td><td>{{c3_text}}</td><td>{{c4_text}}</td><td><button class="gp-row-x">×</button></td></tr></template></tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="3" style="text-align:right;font-weight:600;">Subtotal · Tax</td>
+                  <td class="num"><span data-bind-text="deal.quoteTotal">$2,450.00</span></td>
+                  <td class="num" data-bind-text="financials2.taxAmount">$344.50</td>
+                  <td></td>
+                </tr>
+                <tr class="gp-grand-row">
+                  <td colspan="3" style="text-align:right;">Customer pays</td>
+                  <td class="num" colspan="2"><span data-bind-text="deal.totalPays">$2,768.50</span></td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+          </section>
+        </div><!-- /Accounting pane -->
+
+        <!-- Finalize Job Modal -->
+        <div id="finalizeModal" class="jd-overlay" style="display:none;">
+          <div class="jd-modal" style="width:680px;">
+            <div class="jd-modal-head"><div class="jd-modal-title">Finalize Job</div><button data-modal-close class="jd-close">✕</button></div>
+            <div class="jd-modal-body">
+              <p style="font-size:13px;color:var(--ink-2);margin:0 0 16px;">Once finalized, the job is locked for editing. Revenue, expenses, wages, and tax are posted to the GL and the customer receives their final invoice.</p>
+
+              <div class="jd-section-title">Revenue summary</div>
+              <table class="jd-mini-table">
+                <tr><td>Quote total</td><td class="num"><span data-bind-text="deal.quoteTotal">$2,450.00</span></td></tr>
+                <tr><td>Discounts applied</td><td class="num" data-bind-text="finalize.discountsApplied">−$200.00</td></tr>
+                <tr><td data-bind-text="finalize.taxLabel">Tax (HST 13%)</td><td class="num" data-bind-text="finalize.taxAmount">$344.50</td></tr>
+                <tr style="font-weight:700;border-top:var(--hair);"><td>Total customer pays</td><td class="num"><span data-bind-text="deal.totalPays">$2,768.50</span></td></tr>
+              </table>
+
+              <div class="jd-section-title" style="margin-top:18px;">Payments received</div>
+              <table class="jd-mini-table">
+                <tr><td data-bind-text="finalize.depositLabel">Deposit (Jan 7)</td><td class="num"><span data-bind-text="deal.deposit">$200.00</span></td></tr>
+                <tr><td data-bind-text="finalize.balanceLabel">Balance at job (Jan 12)</td><td class="num"><span data-bind-text="deal.balanceAtJob">$2,568.50</span></td></tr>
+                <tr style="font-weight:700;border-top:var(--hair);color:var(--ok);"><td>Total received</td><td class="num"><span data-bind-text="deal.totalPays">$2,768.50</span></td></tr>
+              </table>
+
+              <div class="jd-section-title" style="margin-top:18px;">Job costs (auto-pulled)</div>
+              <table class="jd-mini-table">
+                <tr><td>Materials</td><td class="num" data-bind-text="finalize.materials">$250.00</td></tr>
+                <tr><td>Fuel</td><td class="num" data-bind-text="finalize.fuel">$98.00</td></tr>
+                <tr><td data-bind-text="finalize.wagesDesc">Wages (2 movers · 5h each)</td><td class="num" data-bind-text="finalize.wagesLine">$420.00</td></tr>
+                <tr style="font-weight:700;border-top:var(--hair);"><td>Total job cost</td><td class="num" data-bind-text="finalize.totalCost">$768.00</td></tr>
+                <tr style="font-weight:700;color:var(--ok);"><td>Net margin</td><td class="num" data-bind-text="finalize.netMargin">$1,708.50 (61.7%)</td></tr>
+              </table>
+
+              <div class="jd-section-title" style="margin-top:18px;">Final checks</div>
+              <label class="jd-check"><input type="checkbox" checked> <span data-bind-text="finalize.photosCheck">All photos uploaded (12 of 12)</span></label>
+              <label class="jd-check"><input name="allPhotosUploaded" type="checkbox" checked> Customer signed bill of lading</label>
+              <label class="jd-check"><input name="customerSignedBillOfLading" type="checkbox" checked> Final walk-through completed</label>
+              <label class="jd-check"><input name="finalWalkThroughCompleted" type="checkbox" checked> No damage claim filed</label>
+              <label class="jd-check"><input name="noDamageClaimFiled" type="checkbox"> Trigger review request email (24h delay)</label>
+              <label class="jd-check"><input name="triggerReviewRequestEmail" type="checkbox" checked> Post invoice to QuickBooks</label>
+              <label class="jd-check"><input name="postInvoiceToQuickbooks" type="checkbox" checked> Send customer their PDF receipt</label>
+
+              <div class="jd-section-title" style="margin-top:18px;">Internal notes</div>
+              <textarea name="sendCustomerTheirPdfReceipt" class="jd-textarea" placeholder="Anything ops should know about this completed job…"></textarea>
+            </div>
+            <div class="jd-modal-actions">
+              <button data-modal-close class="btn btn-secondary">Cancel</button>
+              <button data-comm-action="action:jobDetail.save-as-draft" class="btn btn-secondary">Save as Draft</button>
+              <button data-modal-save class="btn btn-primary">✓ Finalize &amp; Send Invoice</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add Wages Modal -->
+        <div id="addWagesModal" class="jd-overlay" style="display:none;">
+          <div class="jd-modal" style="width:620px;">
+            <div class="jd-modal-head"><div class="jd-modal-title">Add Wages</div><button data-modal-close class="jd-close">✕</button></div>
+            <div class="jd-modal-body">
+              <div class="jd-grid">
+                <div class="jd-field"><label class="jd-label">Employee <span class="req">*</span></label><select name="employee" class="jd-input" data-bind-options="optionsOptions5"></select></div>
+                <div class="jd-field"><label class="jd-label">Role on job</label><select name="roleOnJob" class="jd-input" data-bind-options="roleOnJobOptions"></select></div>
+                <div class="jd-field"><label class="jd-label">Clock-in</label><input name="clockIn" class="jd-input" type="time" value="07:30"></div>
+                <div class="jd-field"><label class="jd-label">Clock-out</label><input name="clockOut" class="jd-input" type="time" value="17:30"></div>
+                <div class="jd-field"><label class="jd-label">Hours billed</label><input name="hoursBilled" class="jd-input" type="number" step="0.25" value="10"></div>
+                <div class="jd-field"><label class="jd-label">Hourly rate ($)</label><input name="hourlyRate" class="jd-input" type="number" step="0.01" value="32.00"></div>
+                <div class="jd-field"><label class="jd-label">Overtime hours</label><input name="overtimeHours" class="jd-input" type="number" step="0.25" value="0"></div>
+                <div class="jd-field"><label class="jd-label">OT rate ($)</label><input name="otRate" class="jd-input" type="number" step="0.01" value="48.00"></div>
+                <div class="jd-field"><label class="jd-label">Tips</label><input name="tips" class="jd-input" type="number" step="0.01" value="0"></div>
+                <div class="jd-field"><label class="jd-label">Bonus / Other</label><input name="bonusOther" class="jd-input" type="number" step="0.01" value="0"></div>
+                <div class="jd-field full"><label class="jd-label">Notes</label><textarea name="notes" class="jd-textarea" placeholder="e.g. picked up extra at relocation…"></textarea></div>
+              </div>
+              <div style="margin-top:14px;padding:12px 14px;background:var(--surface-2);border-radius:8px;display:flex;justify-content:space-between;align-items:center;font-size:13px;">
+                <span style="color:var(--ink-3);">Total wage entry</span>
+                <span style="font-weight:700;font-size:16px;">$320.00</span>
+              </div>
+            </div>
+            <div class="jd-modal-actions">
+              <button data-modal-close class="btn btn-secondary">Cancel</button>
+              <button data-modal-save class="btn btn-primary">Add Wages Entry</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ╔══════════════ CUSTOMER ══════════════╗ -->
+        <div class="tab-pane" data-pane="customer">
+
+          <section class="card">
+            <div class="cust-header">
+              <div class="cust-avatar" data-bind-text="customer.initials">AJ</div>
+              <div style="flex:1;min-width:0;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <h2 style="margin:0;font-size:20px;font-weight:600;" data-bind-text="headings.1"><span data-bind-text="deal.customer">Alice Johnson</span></h2>
+                  <span class="pill ok"><span class="dot"></span><span data-bind-text="customer.statusPill">Active customer</span></span>
+                </div>
+                <div class="muted" style="margin-top:4px;font-size:12px;" data-bind-text="customer.sinceLine">Customer since Jan 4, 2026 · Referred by Tim Walsh</div>
+                <div style="display:flex;gap:6px;margin-top:10px;">
+                  <span class="tag" data-bind-text="customer.tags.0">VIP</span>
+                  <span class="tag" data-bind-text="customer.tags.1">Downtown</span>
+                  <span class="tag" data-bind-text="customer.tags.2">Referral</span>
+                  <button type="button" class="tag" data-jd-open="addTagModal" data-jd-action="open-add-tag" style="cursor:pointer;background:transparent;border:1px dashed var(--line);">+ Add tag</button>
+                </div>
+              </div>
+              <div class="cust-stats">
+                <div><div class="cust-stat-v"><span data-bind-text="deal.totalShort">$2,768</span></div><div class="cust-stat-l" data-bind-text="kpis.0.label">Lifetime value</div></div>
+                <div><div class="cust-stat-v" data-bind-text="kpis.0.value">1</div><div class="cust-stat-l" data-bind-text="kpis.1.label">Deals</div></div>
+                <div><div class="cust-stat-v" data-bind-text="kpis.1.value">12</div><div class="cust-stat-l" data-bind-text="kpis.2.label">Touchpoints</div></div>
+              </div>
+            </div>
+          </section>
+
+          <div class="cust-grid">
+            <section class="card">
+              <div class="s-head"><div class="s-title">Contact details</div><a data-comm-action="action:jobDetail.edit" class="s-action" href="#" id="jdEditContactDetailsBtn">Edit</a></div>
+              <div class="s-body">
+                <div class="row"><span class="l">Primary phone</span><span class="v" data-bind-text="customer.phone">(555) 987-6543</span></div>
+                <div class="row"><span class="l">Email</span><span class="v" data-bind-text="customer.email">alice@techstartup.com</span></div>
+                <div class="row"><span class="l">Source</span><span class="v" data-bind-text="customer.source">Tim Walsh referral</span></div>
+                <div class="row"><span class="l">Created</span><span class="v"><span data-bind-text="jobDates.0">Jan 4, 2026</span></span></div>
+                <div class="row"><span class="l">Last contact</span><span class="v" data-bind-text="customer.lastContact">Today · 9:43 AM</span></div>
+              </div>
+            </section>
+
+            <section class="card">
+              <div class="s-head"><div class="s-title">Addresses</div><a data-comm-action="action:jobDetail.add" class="s-action" href="#">+ Add</a></div>
+              <div class="s-body loc">
+                <div class="loc-row">
+                  <span class="loc-tag">A</span>
+                  <div class="loc-body">
+                    <div class="loc-name" data-bind-text="route.origin.heading">Origin · Toronto</div>
+                    <div class="loc-addr muted" data-bind-text="route.origin.addrFull">142 King St W, Toronto, ON M5H 1J9</div>
+                  </div>
+                </div>
+                <div class="loc-row">
+                  <span class="loc-tag b">B</span>
+                  <div class="loc-body">
+                    <div class="loc-name" data-bind-text="route.destination.heading">Destination · Hamilton</div>
+                    <div class="loc-addr muted" data-bind-text="route.destination.addrFull">88 James St N, Hamilton, ON L8R 2K3</div>
+                  </div>
+                </div>
+                <div class="loc-row">
+                  <span class="loc-tag" style="background:var(--warn-bg);color:var(--warn);">$</span>
+                  <div class="loc-body">
+                    <div class="loc-name">Billing</div>
+                    <div class="loc-addr muted" data-bind-text="route.billing">Same as origin</div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <section class="card" style="margin-top:16px;">
+            <div class="s-head">
+              <div class="s-title">Deal history</div>
+              <a data-comm-action="action:jobDetail.new-deal" class="s-action" href="#">+ New deal</a>
+            </div>
+            <div class="deals">
+              <a class="deal-row" href="#">
+                <div class="deal-id"><span data-bind-text="deal.id">17826-1</span></div>
+                <div class="deal-name">
+                  <div style="font-weight:500;" data-bind-text="route.summary">Local move · Toronto → Hamilton</div>
+                  <div class="deal-sub muted"><span data-bind-text="deal.sub">Created Jan 4 · Jan 12, 2026</span></div>
+                </div>
+                <span class="pill"><span class="dot"></span>Scheduled</span>
+                <div class="deal-amt"><span data-bind-text="deal.totalPays">$2,768.50</span></div>
+                <span class="deal-arr">→</span>
+              </a>
+              <div class="deal-empty muted" data-bind-text="customer.firstJobNote">No earlier deals — this is Alice's first job.</div>
+            </div>
+          </section>
+
+          <section class="card" style="margin-top:16px;">
+            <div class="s-head"><div class="s-title">Internal notes</div><a data-jd-open="addNoteModal" class="s-action" href="#">+ Note</a></div>
+            <div class="s-body">
+              <div class="cust-note">
+                <div class="cust-note-meta" data-bind-text="timeline.noteAuthor">John Sales · Jan 4, 11:02 AM</div>
+                <div data-bind-text="customer.internalNote">Referred by Tim Walsh (job #16204). 3-bedroom downtown apartment, no elevator on origin side. Sensitive about timing — needs to be out by 11 AM for landlord walkthrough.</div>
+              </div>
+            </div>
+          </section>
+        </div><!-- /Customer pane -->
+
+        <!-- ╔══════════════ Generic placeholder panes ══════════════╗ -->
+        <div class="tab-pane" data-pane="marketing"><div class="card empty-pane"><div class="empty-title">Marketing tab</div><div class="empty-sub">Campaign attribution, source, and audience tags for this customer.</div></div></div>
+        <div class="tab-pane" data-pane="documents"><div class="card empty-pane"><div class="empty-title">Documents tab</div><div class="empty-sub">Contracts, BOLs, COIs, and any other paperwork attached to this job.</div></div></div>
+        <div class="tab-pane" data-pane="extras"><div class="card empty-pane"><div class="empty-title">Extras tab</div><div class="empty-sub">Custom fields and one-off add-ons specific to this deal.</div></div></div>
+
+      </div>
+
+      <!-- RIGHT RAIL -->
+      <aside class="rail">
+
+        <!-- Job actions -->
+        <section class="card actions-card">
+          <button data-comm-action="action:jobDetail.book-this-lead" class="btn btn-primary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            Book this lead
+          </button>
+          <div class="actions-secondary">
+            <button data-comm-action="action:jobDetail.mark-lost" class="btn btn-ghost" id="jdMarkLostBtn">Mark lost</button>
+            <button data-comm-action="action:jobDetail.mark-bad-lead" class="btn btn-danger-text">Mark bad lead</button>
+          </div>
+        </section>
+
+        <!-- Opportunity -->
+        <section class="card opp">
+          <div class="s-head">
+            <div class="s-title">Opportunity</div>
+            <a data-comm-action="action:jobDetail.open-growth-plan" class="s-action" href="#">Open growth plan</a>
+          </div>
+          <div class="s-body">
+            <div class="row"><span class="l">Subtotal</span><span class="v muted" style="font-weight:400;">$0.00</span></div>
+            <div class="row"><span class="l">Sales tax (0%)</span><span class="v muted" style="font-weight:400;">$0.00</span></div>
+            <div class="total">
+              <span class="l">Estimated total</span>
+              <span class="v">$0.00</span>
+            </div>
+            <div class="opp-links">
+              <a data-comm-action="action:jobDetail.add-discount" href="#" id="jdAddDiscountBtn">+ Add discount</a>
+              <a data-comm-action="action:jobDetail.set-not-to-exceed" href="#" id="jdSetNteBtn">Set not-to-exceed</a>
+            </div>
+          </div>
+        </section>
+
+        <!-- Job details -->
+        <section class="card">
+          <div class="s-head">
+            <div class="s-title">Job details</div>
+            <a data-comm-action="action:jobDetail.edit-all" class="s-action" href="#" id="jdEditJobDetailsBtn">Edit all</a>
+          </div>
+          <div class="s-body">
+            <div class="row"><span class="l">File number</span><span class="v" data-bind-text="jobInfo.fileNumber">17826-1</span></div>
+            <div class="row"><span class="l">Service date</span>
+              <span class="v editable"><span data-bind-text="jobInfo.serviceDateShort">Mon, Jan 12 · 7:00 AM</span>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </span>
+            </div>
+            <div class="row"><span class="l">Discovery call</span><span class="v editable" data-bind-text="jobInfo.discoveryCall">Phone call</span></div>
+            <div class="row"><span class="l">Deal size</span><span class="v editable" data-bind-text="jobInfo.dealSize">Small</span></div>
+            <div class="row"><span class="l">Sq. footage</span><span class="v editable muted" style="font-weight:400;" data-bind-text="jobInfo.sqFootage">—</span></div>
+            <div class="row"><span class="l">Type</span><span class="v editable" data-bind-text="jobInfo.type">Local</span></div>
+            <div class="row"><span class="l">Branch</span><span class="v editable muted" style="font-weight:400;" data-bind-text="jobInfo.branch">Unassigned</span></div>
+            <div class="row"><span class="l">Assigned to</span><span class="v editable muted" style="font-weight:400;" data-bind-text="jobInfo.assignedTo">Unassigned</span></div>
+          </div>
+        </section>
+
+        <!-- Schedule -->
+        <section class="card sched">
+          <div class="s-head">
+            <div class="s-title">Schedule</div>
+          </div>
+          <div class="s-body">
+            <div class="row">
+              <span class="l">
+                <span class="ic"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>
+                Survey
+              </span>
+              <span class="v empty">Not scheduled · <a data-comm-action="action:jobDetail.schedule" href="#" style="color:var(--terra);font-weight:500;">Schedule</a></span>
+            </div>
+            <div class="row">
+              <span class="l">
+                <span class="ic"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></span>
+                Box delivery
+              </span>
+              <span class="v empty">Not scheduled · <a data-comm-action="action:jobDetail.schedule" href="#" style="color:var(--terra);font-weight:500;">Schedule</a></span>
+            </div>
+            <div class="row">
+              <span class="l">
+                <span class="ic"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+                Booked time
+              </span>
+              <span class="v" data-bind-text="schedule.bookedTime">Mon, Jan 12 · 7:00 AM EST</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Quick actions -->
+        <section class="card">
+          <div class="s-head">
+            <div class="s-title">Quick actions</div>
+          </div>
+          <div class="s-body" style="padding-top:0;padding-bottom:4px;">
+            <div class="qa-list">
+              <a data-comm-action="action:jobDetail.send-discovery-call-confirmation" class="qa-item" href="#">
+                <span class="ic"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>
+                Send discovery call confirmation
+                <span class="arr">→</span>
+              </a>
+              <a data-comm-action="action:jobDetail.send-portal-link" class="qa-item" href="#">
+                <span class="ic"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>
+                Send portal link
+                <span class="arr">→</span>
+              </a>
+              <a data-comm-action="action:jobDetail.send-growth-plan" class="qa-item" href="#">
+                <span class="ic"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
+                Send growth plan
+                <span class="arr">→</span>
+              </a>
+              <a data-comm-action="action:jobDetail.request-a-card-on-file" class="qa-item" href="#">
+                <span class="ic"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></span>
+                Request a card on file
+                <span class="arr">→</span>
+              </a>
+            </div>
+          </div>
+        </section>
+
+        <!-- Payments -->
+        <section class="card">
+          <div class="s-head">
+            <div class="s-title">Payments</div>
+            <a data-comm-action="action:jobDetail.add-payment" class="s-action" href="#">+ Add payment</a>
+          </div>
+          <div class="s-body">
+            <div class="pay-item">
+              <span class="pay-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></span>
+              <div class="pay-body">
+                <div class="pay-top">Credit card <span class="pill" style="background:var(--terra-soft);color:var(--terra);border-color:transparent;">Deposit</span></div>
+                <div class="pay-sub" data-bind-text="payment.sub">May 1, 2026 · 3:23 AM · ch_1234567890abcdef</div>
+              </div>
+              <div class="pay-amt" data-bind-text="metrics.pay_amt.0">$10,850.00</div>
+            </div>
+            <div class="row" style="border-bottom:0;padding-top:14px;">
+              <span class="l">Cards on file</span>
+              <a data-comm-action="action:jobDetail.send-link-to-customer" href="#" style="color:var(--terra);font-weight:500;font-size:12px;">+ Send link to customer</a>
+            </div>
+            <div class="muted" style="font-size:11px;margin-top:4px;">Cards stored securely by Stripe.</div>
+          </div>
+        </section>
+
+        <!-- Inventory -->
+        <section class="card">
+          <div class="s-head">
+            <div class="s-title">Inventory</div>
+            <a data-comm-action="action:jobDetail.edit" class="s-action" href="#" id="jdEditInventoryBtn">Edit</a>
+          </div>
+          <div class="s-body">
+            <div class="kpis">
+              <div class="kpi"><div class="v">0 <span class="muted" style="font-size:12px;font-weight:500;">cuft</span></div><div class="l">Volume</div></div>
+              <div class="kpi"><div class="v">0 <span class="muted" style="font-size:12px;font-weight:500;">lbs</span></div><div class="l">Weight</div></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Locations -->
+        <section class="card">
+          <div class="s-head">
+            <div class="s-title">Locations</div>
+            <a class="s-action" href="#" onclick="event.preventDefault();document.getElementById('addStopModal').classList.add('open');">+ Add stop</a>
+          </div>
+          <div class="s-body loc">
+            <div class="loc-row">
+              <span class="loc-tag">A</span>
+              <div class="loc-body">
+                <div class="loc-name" data-bind-text="route.origin.city">Toronto</div>
+                <div class="loc-addr muted" data-bind-text="route.origin.addrShort">142 King St W, Toronto, ON</div>
+              </div>
+            </div>
+            <div class="loc-row">
+              <span class="loc-tag b">B</span>
+              <div class="loc-body">
+                <div class="loc-name" data-bind-text="route.destination.city">Hamilton</div>
+                <div class="loc-addr muted" data-bind-text="route.destination.addrShort">88 James St N, Hamilton, ON</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </aside>
     </div>
-  </section>
+  </main>
 </div>
+
+<!-- Add Stop Modal + Add Charge Modal (shared) -->
+<div id="addTagModal" class="jd-overlay" style="display:none;">
+  <div class="jd-modal" style="width:420px;">
+    <div class="jd-modal-head"><div class="jd-modal-title">Add tag</div><button data-modal-close class="jd-close">✕</button></div>
+    <div class="jd-modal-body">
+      <div style="font-size:12px;color:var(--ink-3);margin-bottom:10px;">Pick a tag to add to this customer.</div>
+      <div id="addTagPicker" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+      <div id="addTagEmpty" style="display:none;font-size:13px;color:var(--ink-3);padding:8px 0;">All available tags are already applied.</div>
+    </div>
+    <div class="jd-modal-actions"><button type="button" data-modal-close class="btn btn-secondary btn-sm">Cancel</button></div>
+  </div>
+</div>
+<div id="addNoteModal" class="jd-overlay" style="display:none;">
+  <div class="jd-modal" style="width:480px;">
+    <div class="jd-modal-head"><div class="jd-modal-title">Add note</div><button data-modal-close class="jd-close">✕</button></div>
+    <div class="jd-modal-body">
+      <div class="jd-field full" style="margin-bottom:10px;">
+        <label class="jd-label">Note</label>
+        <textarea name="body" class="jd-textarea" placeholder="What should the team know?"></textarea>
+      </div>
+      <div class="jd-field">
+        <label class="jd-label">Visibility</label>
+        <select name="visibility" class="jd-input">
+          <option value="Internal">Internal</option>
+          <option value="Customer-visible">Customer-visible</option>
+        </select>
+      </div>
+    </div>
+    <div class="jd-modal-actions">
+      <button type="button" data-modal-close class="btn btn-secondary btn-sm">Cancel</button>
+      <button type="button" data-modal-save class="btn btn-primary btn-sm">Add note</button>
+    </div>
+  </div>
+</div>
+<div id="addStopModal" class="jd-overlay" style="display:none;">
+  <div class="jd-modal" style="width:580px;">
+    <div class="jd-modal-head"><div class="jd-modal-title">Add Stop</div><button data-modal-close class="jd-close">✕</button></div>
+    <div class="jd-modal-body">
+      <div class="jd-grid">
+        <div class="jd-field"><label class="jd-label">Stop type <span class="req">*</span></label><select name="stopType" class="jd-input" data-bind-options="optionsOptions6"></select></div>
+        <div class="jd-field"><label class="jd-label">Sequence</label><input name="sequence" class="jd-input" type="number" value="3" min="1"></div>
+        <div class="jd-field full"><label class="jd-label">Address <span class="req">*</span></label><input name="address" class="jd-input" type="text" placeholder="Start typing… (Google Places autocomplete)" data-places-autocomplete></div>
+        <div class="jd-field"><label class="jd-label">City</label><input name="city" class="jd-input" type="text"></div>
+        <div class="jd-field"><label class="jd-label">Province / State</label><input name="provinceState" class="jd-input" type="text"></div>
+        <div class="jd-field"><label class="jd-label">Postal / Zip</label><input name="postalZip" class="jd-input" type="text"></div>
+        <div class="jd-field"><label class="jd-label">Unit / Suite</label><input name="unitSuite" class="jd-input" type="text"></div>
+        <div class="jd-field"><label class="jd-label">Property type</label><select name="propertyType" class="jd-input" data-bind-options="propertyTypeOptions"></select></div>
+        <div class="jd-field"><label class="jd-label">Square footage</label><input name="squareFootage" class="jd-input" type="number" placeholder="sqft"></div>
+        <div class="jd-field"><label class="jd-label">Floor</label><input name="floor" class="jd-input" type="text" placeholder="e.g. 12"></div>
+        <div class="jd-field"><label class="jd-label">Elevator?</label><select name="elevator" class="jd-input" data-bind-options="elevatorOptions"></select></div>
+        <div class="jd-field"><label class="jd-label">Stairs (flights)</label><input name="stairs" class="jd-input" type="number" value="0" min="0"></div>
+        <div class="jd-field"><label class="jd-label">Long carry (&gt; 75 ft)</label><select name="longCarry" class="jd-input" data-bind-options="longCarryOptions"></select></div>
+        <div class="jd-field"><label class="jd-label">Parking restrictions</label><input name="parkingRestrictions" class="jd-input" type="text" placeholder="e.g. permit by 9 AM"></div>
+        <div class="jd-field full"><label class="jd-label">Stop notes</label><textarea name="stopNotes" class="jd-textarea" placeholder="Anything crew should know about this stop…"></textarea></div>
+      </div>
+    </div>
+    <div class="jd-modal-actions">
+      <button data-modal-close class="btn btn-secondary">Cancel</button>
+      <button data-modal-save class="btn btn-primary">Save Stop</button>
+    </div>
+  </div>
+</div>
+
+<div id="addChargeModal" class="jd-overlay" style="display:none;">
+  <div class="jd-modal" style="width:560px;">
+    <div class="jd-modal-head"><div class="jd-modal-title">Add Charge</div><button data-modal-close class="jd-close">✕</button></div>
+    <div class="jd-modal-body">
+      <div class="jd-grid">
+        <div class="jd-field full"><label class="jd-label">Preset</label><select name="preset" class="jd-input" data-bind-options="presetOptions"><option value="— None (custom charge) —">— None (custom charge) —</option></select></div>
+        <div class="jd-field full"><label class="jd-label">Description <span class="req">*</span></label><input name="description" class="jd-input" type="text" placeholder="e.g. Additional packing materials"></div>
+        <div class="jd-field"><label class="jd-label">Charge type</label><select name="chargeType" class="jd-input" data-bind-options="chargeTypeOptions"></select></div>
+        <div class="jd-field"><label class="jd-label">Category</label><select name="category" class="jd-input" data-bind-options="categoryOptions"></select></div>
+        <div class="jd-field"><label class="jd-label">Rate ($)</label><input name="rate" class="jd-input" type="number" step="0.01" placeholder="0.00"></div>
+        <div class="jd-field"><label class="jd-label">Quantity</label><input name="quantity" class="jd-input" type="number" step="0.01" value="1"></div>
+        <div class="jd-field"><label class="jd-label">Crew count</label><input name="crewCount" class="jd-input" type="number" min="0" value="0"></div>
+        <div class="jd-field"><label class="jd-label">Vehicle count</label><input name="vehicleCount" class="jd-input" type="number" min="0" value="0"></div>
+        <div class="jd-field full"><label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;"><input name="taxable" type="checkbox" checked style="accent-color:var(--terra);">Taxable</label></div>
+        <div class="jd-field full"><label class="jd-label">Notes (internal)</label><textarea name="notes" class="jd-textarea" placeholder=""></textarea></div>
+      </div>
+      <div style="margin-top:12px;padding:12px 14px;background:var(--surface-2);border-radius:8px;display:flex;justify-content:space-between;align-items:center;font-size:13px;">
+        <span style="color:var(--ink-3);">Line total</span>
+        <span id="addChargeLineTotal" style="font-weight:700;font-size:16px;">$0.00</span>
+      </div>
+    </div>
+    <div class="jd-modal-actions">
+      <button data-modal-close class="btn btn-secondary">Cancel</button>
+      <button data-modal-save class="btn btn-primary">Add Charge</button>
+    </div>
+  </div>
+</div>
+
+<!-- AI chat dock --><!-- ──── Job Detail Action Modals ──── -->
+<style>
+.jd-overlay { position:fixed; inset:0; background:rgba(15,23,42,0.45); display:none; align-items:center; justify-content:center; z-index:2000; padding:24px; }
+.jd-overlay.open { display:flex; }
+.jd-modal { background:#fff; border-radius:14px; width:520px; max-width:96vw; max-height:92vh; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 25px 60px rgba(0,0,0,0.25); }
+.jd-modal-head { display:flex; align-items:center; justify-content:space-between; padding:18px 22px; border-bottom:var(--hair); }
+.jd-modal-title { font-size:16px; font-weight:700; }
+.jd-modal-close { background:transparent; border:0; font-size:18px; color:var(--ink-3); cursor:pointer; width:30px; height:30px; border-radius:6px; display:inline-flex; align-items:center; justify-content:center; }
+.jd-modal-close:hover { background:var(--surface-2); color:var(--ink); }
+.jd-modal-body { padding:20px 22px; overflow-y:auto; }
+.jd-modal-foot { display:flex; justify-content:flex-end; gap:10px; padding:14px 22px; border-top:var(--hair); }
+
+.jd-field { display:flex; flex-direction:column; gap:6px; margin-bottom:14px; }
+.jd-field:last-child { margin-bottom:0; }
+.jd-label { font-size:12px; font-weight:600; color:var(--ink); }
+.jd-input, .jd-select, .jd-textarea {
+  width:100%; padding:10px 12px; border:var(--hair); border-radius:8px;
+  font-size:13.5px; color:var(--ink); background:#fff; font-family:inherit; outline:none;
+}
+.jd-input:focus, .jd-select:focus, .jd-textarea:focus { border-color:var(--terra); box-shadow:0 0 0 3px var(--terra-soft); }
+.jd-textarea { min-height:64px; resize:vertical; }
+
+/* Video record */
+.jd-vid-tabs { display:flex; gap:18px; padding:0 22px; border-bottom:var(--hair); }
+.jd-vid-tab { background:transparent; border:0; padding:10px 0 12px; font-size:13.5px; font-weight:600; color:var(--ink-3); border-bottom:2px solid transparent; cursor:pointer; margin-bottom:-1px; display:inline-flex; align-items:center; gap:6px; }
+.jd-vid-tab.active { color:var(--terra); border-bottom-color:var(--terra); }
+.jd-vid-preview {
+  background:#0F172A; border-radius:10px; aspect-ratio: 16/9;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  color:rgba(255,255,255,0.6); font-size:13px; gap:10px;
+}
+.jd-vid-controls { display:flex; align-items:center; justify-content:center; gap:14px; margin-top:18px; }
+.jd-vid-rec {
+  width:56px; height:56px; border-radius:999px;
+  background:#DC2626; border:4px solid #fff;
+  box-shadow:0 0 0 2px #DC2626;
+  cursor:pointer; transition:transform .12s;
+}
+.jd-vid-rec:hover { transform:scale(1.05); }
+.jd-vid-rec.recording { animation:rec-pulse 1.4s infinite; }
+@keyframes rec-pulse { 50% { opacity:.5; } }
+.jd-vid-time { font-size:15px; font-weight:700; color:var(--ink); font-variant-numeric:tabular-nums; min-width:60px; }
+.jd-vid-msg { font-size:12.5px; color:var(--ink-3); text-align:center; margin-top:14px; }
+.jd-vid-library { display:grid; grid-template-columns:repeat(2, 1fr); gap:10px; max-height:340px; overflow-y:auto; padding-right:4px; }
+.jd-vid-card { display:flex; flex-direction:column; border:var(--hair); border-radius:8px; padding:10px; cursor:pointer; transition:border .12s; }
+.jd-vid-card:hover { border-color:var(--terra); }
+.jd-vid-card .th { aspect-ratio: 16/9; background:linear-gradient(135deg, #1E293B 30%, #334155); border-radius:6px; display:flex; align-items:center; justify-content:center; color:rgba(255,255,255,0.8); margin-bottom:8px; }
+.jd-vid-card .nm { font-size:12px; font-weight:600; color:var(--ink); }
+.jd-vid-card .mt { font-size:11px; color:var(--ink-3); margin-top:2px; }
+
+/* Emoji picker */
+.jd-emoji-pop {
+  position: fixed;
+  width: 320px; background:#fff; border:var(--hair); border-radius:12px;
+  box-shadow:0 20px 40px -12px rgba(15,23,42,.18);
+  z-index:2000; display:none;
+  overflow:hidden;
+}
+.jd-emoji-pop.open { display:block; }
+.jd-emoji-search { padding:10px 12px; border-bottom:var(--hair); }
+.jd-emoji-search input {
+  width:100%; padding:8px 10px; border:var(--hair); border-radius:6px;
+  font-size:12.5px; outline:none; font-family:inherit;
+}
+.jd-emoji-cats { display:flex; gap:2px; padding:6px 8px; border-bottom:var(--hair); }
+.jd-emoji-cat {
+  flex:1; background:transparent; border:0; padding:6px; border-radius:6px;
+  font-size:14px; cursor:pointer; opacity:.55;
+}
+.jd-emoji-cat:hover, .jd-emoji-cat.active { opacity:1; background:var(--surface-2); }
+.jd-emoji-grid { display:grid; grid-template-columns:repeat(8, 1fr); padding:8px; max-height:260px; overflow-y:auto; gap:2px; }
+.jd-emoji-grid button { background:transparent; border:0; font-size:20px; padding:5px; cursor:pointer; border-radius:6px; line-height:1; }
+.jd-emoji-grid button:hover { background:var(--surface-2); }
+
+/* Followup popover */
+.jd-fu-pop {
+  position: fixed; z-index: 2000; background:#fff; border:var(--hair); border-radius:12px;
+  box-shadow:0 25px 60px rgba(0,0,0,0.18);
+  padding:14px; display:none; min-width:300px;
+}
+.jd-fu-pop.open { display:block; }
+.jd-fu-row { display:flex; gap:8px; margin-bottom:10px; }
+.jd-fu-row input { flex:1; }
+.jd-fu-presets { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
+.jd-fu-preset {
+  padding:5px 10px; background:var(--surface-2); border:var(--hair); border-radius:999px;
+  font-size:11.5px; font-weight:500; color:var(--ink); cursor:pointer;
+}
+.jd-fu-preset:hover { background:var(--cream); border-color:var(--terra-soft); color:var(--terra); }
+.jd-fu-foot { display:flex; justify-content:flex-end; gap:8px; padding-top:10px; border-top:var(--hair); }
+</style>
+
+<!-- Add Contact -->
+<div class="jd-overlay" id="jdAddContactModal">
+  <div class="jd-modal" style="width:460px;">
+    <div class="jd-modal-head"><div class="jd-modal-title">Add Contact Person</div><button class="jd-modal-close" onclick="jdCloseModal('jdAddContactModal')">✕</button></div>
+    <div class="jd-modal-body">
+      <div class="jd-field"><label class="jd-label">Name</label><input name="name" class="jd-input" type="text" placeholder="Full name"></div>
+      <div class="jd-field"><label class="jd-label">Email</label><input name="email" class="jd-input" type="email" placeholder="Email address"></div>
+      <div class="jd-field"><label class="jd-label">Phone</label><input name="phone" class="jd-input" type="tel" placeholder="Phone number"></div>
+      <div class="jd-field"><label class="jd-label">Role</label><select name="role" class="jd-select" data-bind-options="roleOptions"></select></div>
+    </div>
+    <div class="jd-modal-foot">
+      <button data-modal-close class="btn btn-secondary" onclick="jdCloseModal('jdAddContactModal')">Cancel</button>
+      <button data-modal-save class="btn btn-primary" onclick="jdCloseModal('jdAddContactModal')">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Record Video -->
+<div class="jd-overlay" id="jdVideoModal">
+  <div class="jd-modal" style="width:600px;">
+    <div class="jd-modal-head"><div class="jd-modal-title">Record Video Message</div><button class="jd-modal-close" onclick="jdCloseModal('jdVideoModal')">✕</button></div>
+    <div class="jd-vid-tabs">
+      <button class="jd-vid-tab active" data-vtab="record"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4" fill="currentColor"/></svg> Record</button>
+      <button class="jd-vid-tab" data-vtab="library"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><polyline points="10 11 14 13 10 15 10 11" fill="currentColor"/></svg> Library</button>
+    </div>
+    <div class="jd-modal-body">
+      <div class="jd-vid-panel" data-vpanel="record">
+        <div class="jd-vid-preview">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+          <span>Camera preview will appear here</span>
+        </div>
+        <div class="jd-vid-controls">
+          <button class="jd-vid-rec" id="jdVidRecBtn" aria-label="Record"></button>
+          <span class="jd-vid-time" id="jdVidTime">0:00</span>
+        </div>
+        <div class="jd-vid-msg" id="jdVidMsg">Click the record button to start. We'll attach the video to your reply.</div>
+      </div>
+      <div class="jd-vid-panel" data-vpanel="library" style="display:none;">
+        <div class="jd-vid-library">
+          <div class="jd-vid-card"><div class="th">▶</div><div class="nm">Welcome — sales intro</div><div class="mt">0:42 · 14 uses</div></div>
+          <div class="jd-vid-card"><div class="th">▶</div><div class="nm">Walkthrough: pricing</div><div class="mt">1:18 · 8 uses</div></div>
+          <div class="jd-vid-card"><div class="th">▶</div><div class="nm">Booking confirmed</div><div class="mt">0:36 · 22 uses</div></div>
+          <div class="jd-vid-card"><div class="th">▶</div><div class="nm">After your move</div><div class="mt">0:54 · 6 uses</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="jd-modal-foot"><button data-modal-close class="btn btn-secondary" onclick="jdCloseModal('jdVideoModal')">Cancel</button></div>
+  </div>
+</div>
+
+<!-- Mark Lost -->
+<div class="jd-overlay" id="jdMarkLostModal">
+  <div class="jd-modal" style="width:440px;">
+    <div class="jd-modal-head"><div class="jd-modal-title">Mark as Lost</div><button class="jd-modal-close" onclick="jdCloseModal('jdMarkLostModal')">✕</button></div>
+    <div class="jd-modal-body">
+      <div class="jd-field"><label class="jd-label">Reason for losing this deal</label>
+        <select name="reasonForLosingThisDeal" class="jd-select" data-bind-options="reasonForLosingThisDealOptions"><option value="Select a reason…">Select a reason…</option></select>
+      </div>
+      <div class="jd-field"><label class="jd-label">Notes (optional)</label><textarea name="notes" class="jd-textarea" placeholder="Anything we should remember about this one…"></textarea></div>
+    </div>
+    <div class="jd-modal-foot">
+      <button data-modal-close class="btn btn-secondary" onclick="jdCloseModal('jdMarkLostModal')">Cancel</button>
+      <button class="btn btn-danger" style="background:#DC2626;color:#fff;border:0;" onclick="jdCloseModal('jdMarkLostModal')">Mark as Lost</button>
+    </div>
+  </div>
+</div>
+
+<!-- Set Follow-up popover -->
+<div class="jd-fu-pop" id="jdFollowupPop">
+  <div class="jd-fu-row"><input class="jd-input" type="datetime-local" id="jdFuDt"></div>
+  <div class="jd-fu-presets">
+    <button data-comm-action="action:jobDetail.1-hour" class="jd-fu-preset" data-fu="1h">+1 hour</button>
+    <button data-comm-action="action:jobDetail.3-hours" class="jd-fu-preset" data-fu="3h">+3 hours</button>
+    <button data-comm-action="action:jobDetail.tomorrow-9-am" class="jd-fu-preset" data-fu="tomorrow">Tomorrow 9 AM</button>
+    <button data-comm-action="action:jobDetail.2-days" class="jd-fu-preset" data-fu="2d">+2 days</button>
+    <button data-comm-action="action:jobDetail.1-week" class="jd-fu-preset" data-fu="1w">+1 week</button>
+  </div>
+  <div class="jd-field" style="margin-bottom:0;"><label class="jd-label">Note</label><input class="jd-input" type="text" placeholder="Optional reminder note…"></div>
+  <div class="jd-fu-foot">
+    <button class="btn btn-secondary btn-sm" onclick="document.getElementById('jdFollowupPop').classList.remove('open')">Cancel</button>
+    <button class="btn btn-primary btn-sm" onclick="jdSaveFollowup()">Save</button>
+  </div>
+</div>
+
+<!-- Emoji popover (mounted next to button) -->
+<div class="jd-emoji-pop" id="jdEmojiPop">
+  <div class="jd-emoji-search"><input id="jdEmojiSearch" placeholder="Search emoji…"></div>
+  <div class="jd-emoji-cats" id="jdEmojiCats">
+    <button class="jd-emoji-cat active" data-ecat="Smileys">😀</button>
+    <button class="jd-emoji-cat" data-ecat="People">👍</button>
+    <button class="jd-emoji-cat" data-ecat="Nature">🌿</button>
+    <button class="jd-emoji-cat" data-ecat="Food">🍕</button>
+    <button class="jd-emoji-cat" data-ecat="Activities">⚽</button>
+    <button class="jd-emoji-cat" data-ecat="Travel">✈️</button>
+    <button class="jd-emoji-cat" data-ecat="Objects">📦</button>
+    <button class="jd-emoji-cat" data-ecat="Symbols">❤️</button>
+  </div>
+  <div class="jd-emoji-grid" id="jdEmojiGrid"></div>
+</div>
+
+
+
+<!-- Add Discount -->
+<div class="jd-overlay" id="jdAddDiscountModal">
+  <div class="jd-modal" style="width:460px;">
+    <div class="jd-modal-head"><div class="jd-modal-title">Add Discount</div><button class="jd-modal-close" onclick="jdCloseModal('jdAddDiscountModal')">✕</button></div>
+    <div class="jd-modal-body">
+      <div class="jd-field"><label class="jd-label">Description</label><input name="description" class="jd-input" type="text" placeholder="e.g., Loyalty discount"></div>
+      <div class="jd-field">
+        <label class="jd-label">Discount type</label>
+        <div style="display:flex;gap:8px;margin-top:4px;">
+          <label class="jd-pick"><input type="radio" name="jd-disc-type" value="fixed" checked> Fixed amount</label>
+          <label class="jd-pick"><input type="radio" name="jd-disc-type" value="percent"> Percent of subtotal</label>
+        </div>
+      </div>
+      <div class="jd-field"><label class="jd-label" id="jdDiscAmtLabel">Amount *</label>
+        <div style="display:flex;align-items:center;">
+          <span id="jdDiscAmtPrefix" style="padding:10px 12px;background:var(--surface-2);border:var(--hair);border-right:0;border-radius:8px 0 0 8px;font-weight:600;color:var(--ink-3);font-size:13px;">$</span>
+          <input id="jdDiscAmtInput" name="amount" class="jd-input" type="number" step="0.01" placeholder="0.00" style="border-radius:0 8px 8px 0;">
+        </div>
+      </div>
+      <div class="jd-field"><label class="jd-label">Apply to</label>
+        <select name="applyTo" class="jd-select" data-bind-options="applyToOptions"></select>
+      </div>
+    </div>
+    <div class="jd-modal-foot">
+      <button data-modal-close class="btn btn-secondary" onclick="jdCloseModal('jdAddDiscountModal')">Cancel</button>
+      <button data-modal-save class="btn btn-primary" onclick="jdCloseModal('jdAddDiscountModal')">Add Discount</button>
+    </div>
+  </div>
+</div>
+
+<!-- Not-to-Exceed -->
+<div class="jd-overlay" id="jdNteModal">
+  <div class="jd-modal" style="width:440px;">
+    <div class="jd-modal-head"><div class="jd-modal-title">Set Not-to-Exceed</div><button class="jd-modal-close" onclick="jdCloseModal('jdNteModal')">✕</button></div>
+    <div class="jd-modal-body">
+      <p style="font-size:12.5px;color:var(--ink-3);margin:0 0 14px;line-height:1.5;">A binding cap on the customer's final invoice. We'll warn the crew before exceeding this amount on-site.</p>
+      <div class="jd-field"><label class="jd-label">Maximum amount *</label>
+        <div style="display:flex;align-items:center;">
+          <span style="padding:10px 12px;background:var(--surface-2);border:var(--hair);border-right:0;border-radius:8px 0 0 8px;font-weight:600;color:var(--ink-3);font-size:13px;">$</span>
+          <input name="maximumAmount" class="jd-input" type="number" step="0.01" placeholder="0.00" style="border-radius:0 8px 8px 0;">
+        </div>
+      </div>
+      <div class="jd-field"><label class="jd-label">Reason / Notes</label><textarea name="reasonNotes" class="jd-textarea" placeholder="e.g., Customer approved $4,800 max on May 15"></textarea></div>
+    </div>
+    <div class="jd-modal-foot">
+      <button data-modal-close class="btn btn-secondary" onclick="jdCloseModal('jdNteModal')">Cancel</button>
+      <button data-modal-save class="btn btn-primary" onclick="jdCloseModal('jdNteModal')">Save Cap</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Job Details (Edit all) -->
+<div class="jd-overlay" id="jdJobDetailsModal">
+  <div class="jd-modal" style="width:640px;">
+    <div class="jd-modal-head"><div class="jd-modal-title">Edit Job Details</div><button class="jd-modal-close" onclick="jdCloseModal('jdJobDetailsModal')">✕</button></div>
+    <div class="jd-modal-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px 16px;">
+        <div class="jd-field"><label class="jd-label">File number</label><input name="fileNumber" class="jd-input" type="text" data-bind-value="jobInfo.fileNumber" value="17826-1" readonly style="background:var(--surface-2);"></div>
+        <div class="jd-field"><label class="jd-label">Service date</label><input name="serviceDate" class="jd-input" type="datetime-local" data-bind-value="jobInfo.serviceDateInput" value="2026-01-12T07:00"></div>
+        <div class="jd-field"><label class="jd-label">Discovery call</label><select name="discoveryCall" class="jd-select" data-bind-options="discoveryCallOptions"><option value="Phone call">Phone call</option></select></div>
+        <div class="jd-field"><label class="jd-label">Deal size</label><select name="dealSize" class="jd-select" data-bind-options="dealSizeOptions"><option value="Small">Small</option></select></div>
+        <div class="jd-field"><label class="jd-label">Sq. footage</label><input name="sqFootage" class="jd-input" type="number" placeholder="—"></div>
+        <div class="jd-field"><label class="jd-label">Type</label><select name="type" class="jd-select" data-bind-options="typeOptions"></select></div>
+        <div class="jd-field"><label class="jd-label">Branch</label><select name="branch" class="jd-select" data-bind-options="branchOptions"><option value="Unassigned">Unassigned</option></select></div>
+        <div class="jd-field"><label class="jd-label">Assigned to</label><select name="assignedTo" class="jd-select" data-bind-options="assignedToOptions"><option value="Unassigned">Unassigned</option></select></div>
+        <div class="jd-field"><label class="jd-label">Move size</label><select name="moveSize" class="jd-select" data-bind-options="moveSizeOptions"></select></div>
+        <div class="jd-field"><label class="jd-label">Source</label><select name="source" class="jd-select" data-bind-options="sourceOptions"></select></div>
+        <div class="jd-field" style="grid-column:1/-1;"><label class="jd-label">Notes</label><textarea name="notes" class="jd-textarea" placeholder="Anything the crew should know…"></textarea></div>
+      </div>
+    </div>
+    <div class="jd-modal-foot">
+      <button data-modal-close class="btn btn-secondary" onclick="jdCloseModal('jdJobDetailsModal')">Cancel</button>
+      <button data-modal-save class="btn btn-primary" onclick="jdCloseModal('jdJobDetailsModal')">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Contact Details -->
+<div class="jd-overlay" id="jdContactDetailsModal">
+  <div class="jd-modal" style="width:520px;">
+    <div class="jd-modal-head"><div class="jd-modal-title">Edit Contact Details</div><button class="jd-modal-close" onclick="jdCloseModal('jdContactDetailsModal')">✕</button></div>
+    <div class="jd-modal-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px 16px;">
+        <div class="jd-field" style="grid-column:1/-1;"><label class="jd-label">Customer name</label><input name="customerName" class="jd-input" type="text" data-bind-value="deal.customer" value="Alice Johnson"></div>
+        <div class="jd-field"><label class="jd-label">Primary phone</label><input name="primaryPhone" class="jd-input" type="tel" data-bind-value="customer.phone" value="(555) 987-6543"></div>
+        <div class="jd-field"><label class="jd-label">Secondary phone</label><input name="secondaryPhone" class="jd-input" type="tel" placeholder="Optional"></div>
+        <div class="jd-field" style="grid-column:1/-1;"><label class="jd-label">Email</label><input name="email" class="jd-input" type="email" data-bind-value="customer.email" value="alice@techstartup.com"></div>
+        <div class="jd-field"><label class="jd-label">Preferred contact</label><select name="preferredContact" class="jd-select" data-bind-options="preferredContactOptions"></select></div>
+        <div class="jd-field"><label class="jd-label">Language</label><select name="language" class="jd-select" data-bind-options="languageOptions"></select></div>
+        <div class="jd-field" style="grid-column:1/-1;"><label style="display:flex;align-items:center;gap:8px;font-size:12.5px;cursor:pointer;"><input name="language" type="checkbox" checked style="accent-color:var(--terra);"> Receives marketing emails</label></div>
+      </div>
+    </div>
+    <div class="jd-modal-foot">
+      <button data-modal-close class="btn btn-secondary" onclick="jdCloseModal('jdContactDetailsModal')">Cancel</button>
+      <button data-modal-save class="btn btn-primary" onclick="jdCloseModal('jdContactDetailsModal')">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Inventory -->
+<div class="jd-overlay" id="jdInventoryModal">
+  <div class="jd-modal" style="width:480px;">
+    <div class="jd-modal-head"><div class="jd-modal-title">Edit Inventory</div><button class="jd-modal-close" onclick="jdCloseModal('jdInventoryModal')">✕</button></div>
+    <div class="jd-modal-body">
+      <p style="font-size:12.5px;color:var(--ink-3);margin:0 0 14px;line-height:1.5;">Override the inventory totals captured during walkthrough. Used for quoting only — the crew will still scan items on the day of the move.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px 16px;">
+        <div class="jd-field"><label class="jd-label">Volume (cuft)</label><input name="volume" class="jd-input" type="number" placeholder="0" min="0"></div>
+        <div class="jd-field"><label class="jd-label">Weight (lbs)</label><input name="weight" class="jd-input" type="number" placeholder="0" min="0"></div>
+        <div class="jd-field"><label class="jd-label">Item count</label><input name="itemCount" class="jd-input" type="number" placeholder="0" min="0"></div>
+        <div class="jd-field"><label class="jd-label">Heavy items</label><input name="heavyItems" class="jd-input" type="number" placeholder="0" min="0"></div>
+        <div class="jd-field" style="grid-column:1/-1;"><label class="jd-label">Special handling</label><textarea name="specialHandling" class="jd-textarea" placeholder="e.g., Grand piano, antique armoire…"></textarea></div>
+      </div>
+      <div style="margin-top:6px;font-size:12px;"><a data-comm-action="action:jobDetail.open-full-inventory-editor" href="#" style="color:var(--terra);font-weight:600;">Open full inventory editor →</a></div>
+    </div>
+    <div class="jd-modal-foot">
+      <button data-modal-close class="btn btn-secondary" onclick="jdCloseModal('jdInventoryModal')">Cancel</button>
+      <button data-modal-save class="btn btn-primary" onclick="jdCloseModal('jdInventoryModal')">Save</button>
+    </div>
+  </div>
+</div>
+
+<style>
+.jd-pick { display:inline-flex; align-items:center; gap:6px; font-size:12.5px; padding:8px 12px; border:var(--hair); border-radius:8px; cursor:pointer; flex:1; }
+.jd-pick input { accent-color: var(--terra); }
+</style>
+
+
+
+
+<!-- v12: JobDetail action toolbar -->
+<div style="display:flex;gap:8px;flex-wrap:wrap;padding:0 24px 16px;">
+  <button class="s1-btn pri" data-jd-open="finalizeModal" type="button">Finalize</button>
+  <button class="s1-btn sec" data-jd-open="addStopModal" type="button">+ Stop</button>
+  <button class="s1-btn sec" data-jd-open="addWagesModal" type="button">+ Wages</button>
+  <button class="s1-btn sec" data-jd-open="addChargeModal" type="button">+ Charge</button>
+  <button class="s1-btn sec" data-jd-open="jdAddDiscountModal" type="button">+ Discount</button>
+  <button class="s1-btn sec" data-jd-open="jdAddContactModal" type="button">+ Contact</button>
+  <button class="s1-btn sec" data-jd-open="jdInventoryModal" type="button">Inventory</button>
+  <button class="s1-btn sec" data-jd-open="jdJobDetailsModal" type="button">Job details</button>
+  <button class="s1-btn sec" data-jd-open="jdContactDetailsModal" type="button">Contact</button>
+  <button class="s1-btn sec" data-jd-open="jdNteModal" type="button">NTE cap</button>
+  <button class="s1-btn sec" data-jd-open="jdVideoModal" type="button">Video</button>
+  <button class="s1-btn dan" data-jd-open="jdMarkLostModal" type="button">Mark lost</button>
+</div>
+<div class="s1-overlay jd-overlay" id="finalizeModal" role="dialog"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Deal</div><h4>Finalize job</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid"><input type="hidden" name="jobId">
+    <div><label class="s1-mlabel">Status</label><select class="s1-select" name="statusOverride" data-bind-options="statusOptions"><option value="">Ready to invoice</option></select></div>
+    <div><label class="s1-mlabel">Completed at</label><input class="s1-input" type="datetime-local" name="completedAt"></div>
+    <div><label class="s1-mlabel">Payment received</label><input class="s1-input" type="number" step="0.01" name="paymentReceived"></div>
+    <div><label class="s1-mlabel">Balance due</label><input class="s1-input" type="number" step="0.01" name="balanceDue"></div>
+    <div><label class="s1-mlabel">Tax override</label><input class="s1-input" name="taxOverride" placeholder="optional"></div>
+    <div><label><input type="checkbox" name="sendInvoice"> Send invoice now</label></div>
+    <div class="full"><label class="s1-mlabel">Invoice notes</label><textarea class="s1-textarea" name="invoiceNotes"></textarea></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Finalize &amp; create invoice</button></div>
+</div></div>
+<div class="s1-overlay jd-overlay" id="addStopModal" role="dialog"><div class="s1-modal">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Deal</div><h4>Add stop</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid"><input type="hidden" name="jobId">
+    <div><label class="s1-mlabel">Stop type</label><select class="s1-select" name="stopType" data-bind-options="stopKinds"><option value="pickup">Pickup</option><option value="delivery">Delivery</option><option value="other">Other</option></select></div>
+    <div><label class="s1-mlabel">Sequence</label><input class="s1-input" type="number" name="sequence" value="1"></div>
+    <div class="full"><label class="s1-mlabel">Address</label><input class="s1-input" name="address" data-places-autocomplete></div>
+    <div><label class="s1-mlabel">Floor / unit</label><input class="s1-input" name="floor"></div>
+    <div><label class="s1-mlabel">ETA</label><input class="s1-input" type="time" name="eta"></div>
+    <div class="full"><label class="s1-mlabel">Notes</label><textarea class="s1-textarea" name="notes"></textarea></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Add stop</button></div>
+</div></div>
+<div class="s1-overlay jd-overlay" id="addWagesModal" role="dialog"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Deal</div><h4>Add wages</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid"><input type="hidden" name="jobId">
+    <div><label class="s1-mlabel">Crew member</label><select class="s1-select" name="userId" data-bind-options="crew"><option value="">Choose…</option></select></div>
+    <div><label class="s1-mlabel">Role</label><select class="s1-select" name="role" data-bind-options="contactRoles"><option value="mover">Mover</option></select></div>
+    <div><label class="s1-mlabel">Hours</label><input class="s1-input" type="number" step="0.25" name="hours"></div>
+    <div><label class="s1-mlabel">Hourly rate</label><input class="s1-input" type="number" step="0.01" name="hourlyRate"></div>
+    <div><label class="s1-mlabel">Tips</label><input class="s1-input" type="number" step="0.01" name="tipsAmount"></div>
+    <div><label class="s1-mlabel">Bonus</label><input class="s1-input" type="number" step="0.01" name="bonusAmount"></div>
+    <div class="full"><label class="s1-mlabel">Pay on</label><input class="s1-input" type="date" name="payOn"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Add wages</button></div>
+</div></div>
+<div class="s1-overlay jd-overlay" id="addChargeModal" role="dialog"><div class="s1-modal">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Deal</div><h4>Add charge</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid"><input type="hidden" name="jobId">
+    <div><label class="s1-mlabel">Category</label><select class="s1-select" name="categoryId" data-bind-options="chargeCategories"><option value="">Choose…</option></select></div>
+    <div><label class="s1-mlabel">Tax</label><select class="s1-select" name="taxRateId" data-bind-options="taxRates"><option value="0">No tax</option></select></div>
+    <div class="full"><label class="s1-mlabel">Label</label><input class="s1-input" name="label"></div>
+    <div><label class="s1-mlabel">Qty</label><input class="s1-input" type="number" step="0.01" name="qty" value="1"></div>
+    <div><label class="s1-mlabel">Unit price</label><input class="s1-input" type="number" step="0.01" name="unitPrice"></div>
+    <div class="full"><label><input type="checkbox" name="taxable"> Taxable</label></div>
+    <div class="full"><label class="s1-mlabel">Memo</label><textarea class="s1-textarea" name="memo"></textarea></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Add charge</button></div>
+</div></div>
+<div class="s1-overlay jd-overlay" id="jdAddContactModal" role="dialog"><div class="s1-modal">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Deal</div><h4>Add contact</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid"><input type="hidden" name="jobId">
+    <div class="full"><label class="s1-mlabel">Name *</label><input class="s1-input" name="name"></div>
+    <div><label class="s1-mlabel">Role</label><select class="s1-select" name="role" data-bind-options="contactRoles"><option value="">Choose…</option></select></div>
+    <div><label class="s1-mlabel">Phone</label><input class="s1-input" type="tel" name="phone"></div>
+    <div class="full"><label class="s1-mlabel">Email</label><input class="s1-input" type="email" name="email"></div>
+    <div class="full"><label><input type="checkbox" name="primary"> Primary contact</label></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Add contact</button></div>
+</div></div>
+<div class="s1-overlay jd-overlay" id="jdVideoModal" role="dialog"><div class="s1-modal">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Deal</div><h4>Request video survey</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid"><input type="hidden" name="jobId">
+    <div class="full"><label class="s1-mlabel">Slot</label><select class="s1-select" name="slot" data-bind-options="videoSlots"><option value="">Choose…</option></select></div>
+    <div class="full"><label class="s1-mlabel">Notes</label><textarea class="s1-textarea" name="notes"></textarea></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Send invite</button></div>
+</div></div>
+<div class="s1-overlay jd-overlay" id="jdMarkLostModal" role="dialog"><div class="s1-modal">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Deal</div><h4>Mark lost</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid"><input type="hidden" name="jobId">
+    <div class="full"><label class="s1-mlabel">Reason</label><select class="s1-select" name="reasonId" data-bind-options="lostReasons"><option value="">Choose…</option></select></div>
+    <div class="full"><label class="s1-mlabel">Notes</label><textarea class="s1-textarea" name="notes"></textarea></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn dan" data-modal-save type="button">Mark lost</button></div>
+</div></div>
+<div class="s1-overlay jd-overlay" id="jdAddDiscountModal" role="dialog"><div class="s1-modal">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Deal</div><h4>Add discount</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid"><input type="hidden" name="jobId">
+    <div><label class="s1-mlabel">Type</label><select class="s1-select" name="type" data-bind-options="discountTypes"><option value="fixed">Fixed amount</option><option value="percent">Percentage</option></select></div>
+    <div><label class="s1-mlabel">Amount / %</label><input class="s1-input" type="number" step="0.01" name="amount"></div>
+    <div class="full"><label class="s1-mlabel">Reason</label><input class="s1-input" name="reason"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Apply</button></div>
+</div></div>
+<div class="s1-overlay jd-overlay" id="jdNteModal" role="dialog"><div class="s1-modal">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Deal</div><h4>Not-to-exceed cap</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid"><input type="hidden" name="jobId">
+    <div><label class="s1-mlabel">Cap amount</label><input class="s1-input" type="number" step="0.01" name="capAmount"></div>
+    <div><label class="s1-mlabel">Basis</label><select class="s1-select" name="basis" data-bind-options="basisOptions"></select></div>
+    <div class="full"><label><input type="checkbox" name="includeTax"> Include tax in cap</label></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Save NTE</button></div>
+</div></div>
+<div class="s1-overlay jd-overlay" id="jdJobDetailsModal" role="dialog"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Deal</div><h4>Job details</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid"><input type="hidden" name="jobId">
+    <div><label class="s1-mlabel">Job type</label><select class="s1-select" name="type" data-bind-options="jobTypes"><option value="">Choose…</option></select></div>
+    <div><label class="s1-mlabel">Crew size</label><input class="s1-input" type="number" name="crewSize" value="3"></div>
+    <div><label class="s1-mlabel">Truck size</label><select class="s1-select" name="truckSize" data-bind-options="truckSizes"><option value="">Choose…</option></select></div>
+    <div><label class="s1-mlabel">Distance (mi)</label><input class="s1-input" type="number" step="0.1" name="distance"></div>
+    <div><label class="s1-mlabel">Est. start</label><input class="s1-input" type="datetime-local" name="estStartAt"></div>
+    <div><label class="s1-mlabel">Est. end</label><input class="s1-input" type="datetime-local" name="estEndAt"></div>
+    <div class="full"><label class="s1-mlabel">Notes</label><textarea class="s1-textarea" name="notes"></textarea></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Save</button></div>
+</div></div>
+<div class="s1-overlay jd-overlay" id="jdContactDetailsModal" role="dialog"><div class="s1-modal">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Deal</div><h4>Contact details</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid"><input type="hidden" name="jobId"><input type="hidden" name="contactId">
+    <div class="full"><label class="s1-mlabel">Name</label><input class="s1-input" name="name"></div>
+    <div><label class="s1-mlabel">Phone</label><input class="s1-input" type="tel" name="phone"></div>
+    <div><label class="s1-mlabel">Email</label><input class="s1-input" type="email" name="email"></div>
+    <div class="full"><label class="s1-mlabel">Preferred contact</label><select class="s1-select" name="preferredContact" data-bind-options="preferredContactOptions2"></select></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Save</button></div>
+</div></div>
+<div class="s1-overlay jd-overlay" id="jdInventoryModal" role="dialog"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Deal</div><h4>Inventory</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid"><input type="hidden" name="jobId">
+    <div class="full">
+      <label class="s1-mlabel">Items</label>
+      <div data-row-group="items">
+        <div data-row style="display:grid;grid-template-columns:1fr 70px 70px 1fr;gap:6px;margin-bottom:6px;">
+          <input class="s1-input" name="name" placeholder="Item">
+          <input class="s1-input" type="number" name="qty" placeholder="Qty" value="1">
+          <input class="s1-input" type="number" name="cuft" placeholder="cu ft">
+          <select class="s1-select" name="category" data-bind-options="inventoryCategories"><option value="">Category</option></select>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Save inventory</button></div>
+</div></div>
 <script src="../../core/event-bus.js"></script>
 <script src="../../core/state-store.js"></script>
 <script src="../../core/schema.js"></script>
@@ -79,5 +2806,249 @@
 <script src="../../core/communication.api.js"></script>
 <script src="../../core/communication.js"></script>
 <script src="../../core/render.js"></script>
+<script src="../../core/standard-page.js"></script>
+<script src="../../core/google-places.js"></script>
 <script src="./module.js"></script>
-</body></html>
+<script>
+  // Tab switching
+  (function () {
+    const tabs = document.querySelectorAll('#jdTabs .tab');
+    const panes = document.querySelectorAll('.tab-pane');
+    tabs.forEach(t => t.addEventListener('click', () => {
+      const target = t.dataset.tab;
+      tabs.forEach(x => x.classList.toggle('active', x === t));
+      panes.forEach(p => p.classList.toggle('active', p.dataset.pane === target));
+      // smooth scroll up to the header so the user always lands at top of pane
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }));
+  })();
+
+  // Composer message-type tabs (visual only)
+  document.querySelectorAll('.composer-tabs').forEach(group => {
+    const items = group.querySelectorAll('.composer-tab');
+    items.forEach(i => i.addEventListener('click', () => {
+      items.forEach(x => x.classList.toggle('active', x === i));
+    }));
+  });
+
+  // Filter chips & accounting sub-tabs (visual only)
+  document.querySelectorAll('.timeline-head, .acct-tabs, .files-grid + *, .s-head').forEach(scope => {});
+  document.querySelectorAll('.filter-chip').forEach(c => c.addEventListener('click', e => {
+    const group = c.parentElement;
+    group.querySelectorAll('.filter-chip').forEach(x => x.classList.toggle('active', x === c));
+  }));
+  document.querySelectorAll('.acct-tab').forEach(c => c.addEventListener('click', e => {
+    const group = c.parentElement;
+    group.querySelectorAll('.acct-tab').forEach(x => x.classList.toggle('active', x === c));
+  }));
+</script>
+<script>
+// Topbar dropdown menus
+(function () {
+  const triggers = document.querySelectorAll('.tb-menu');
+  function closeAll(except) {
+    document.querySelectorAll('.tb-pop').forEach(p => { if (p !== except) p.classList.remove('open'); });
+  }
+  triggers.forEach(menu => {
+    const key = menu.dataset.menu;
+    const pop = document.getElementById('tbPop-' + key);
+    if (!pop) return;
+    const trig = menu.querySelector('.tb-trigger');
+    trig.addEventListener('click', e => {
+      e.stopPropagation();
+      const opening = !pop.classList.contains('open');
+      closeAll(opening ? pop : null);
+      pop.classList.toggle('open', opening);
+    });
+    pop.addEventListener('click', e => e.stopPropagation());
+  });
+  document.addEventListener('click', () => closeAll(null));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAll(null); });
+
+  // Reminder tabs
+  document.querySelectorAll('#tbPop-reminders .tb-tab').forEach(t => t.addEventListener('click', () => {
+    document.querySelectorAll('#tbPop-reminders .tb-tab').forEach(x => x.classList.toggle('active', x === t));
+    document.querySelectorAll('#tbPop-reminders .tb-rpane').forEach(p => p.style.display = (p.dataset.rpane === t.dataset.rtab) ? '' : 'none');
+  }));
+
+  // Claim "+" buttons claim the lead in-place
+  document.querySelectorAll('.tb-claim').forEach(btn => btn.addEventListener('click', e => {
+    e.preventDefault(); e.stopPropagation();
+    btn.style.background = 'var(--ok)';
+    btn.textContent = '✓';
+    btn.title = 'Claimed';
+  }));
+
+  // Mark-done check buttons
+  document.querySelectorAll('.tb-check').forEach(btn => btn.addEventListener('click', e => {
+    e.stopPropagation();
+    const row = btn.closest('.tb-rem');
+    if (!row) return;
+    row.style.transition = 'opacity .2s ease, transform .2s ease';
+    row.style.opacity = '0.4';
+    btn.disabled = true;
+  }));
+})();
+</script>
+<script>
+const JD_EMOJI = {
+  Smileys: ['😀','😃','😄','😁','😆','😅','🤣','😂','🙂','🙃','😉','😊','😇','🥰','😍','🤩','😘','😗','😚','😙','😋','😛','😜','🤪','😝','🤑','🤗','🤭','🤫','🤔','🤐','🤨','😐','😑','😶','😏','😒','🙄','😬','😴','😪','😵','🥴','🥺','🥹'],
+  People: ['👍','👎','👌','✌️','🤞','🤟','🤘','🤙','👈','👉','👆','🖕','👇','☝️','👋','🤚','🖐️','✋','🖖','👏','🙌','🙏','💪','🦾','🤝','💅'],
+  Nature: ['🌿','🍀','🌳','🌲','🌴','🌵','🌷','🌸','🌹','🌺','🌻','🌼','💐','🍄','🪨','🌞','🌝','🌛','🌜','🌚','🌕','🌖','🌗','🌘','🌑','🌒','🌓','🌔','⭐','🌟','💫','✨','☀️','🌤','⛅','☁️','🌧','⛈','🌩','❄️'],
+  Food: ['🍕','🍔','🍟','🌭','🥪','🌮','🌯','🥙','🍳','🥘','🍲','🍜','🍝','🍣','🍱','🍤','🍰','🎂','🍩','🍪','🍫','🍿','🥨','🍞','🥐','🥖','☕','🍵','🍺','🍷','🍸','🍹','🍾','🥛','🧃','🥤'],
+  Activities: ['⚽','🏀','🏈','⚾','🎾','🏐','🏉','🎱','🏓','🏸','🥊','🥋','🎯','⛳','🏌️','🏄','🏊','🚴','🧗','🧘','🎮','🕹','🎲','♟','🎼','🎵','🎶','🎤','🎧','🥇','🥈','🥉','🏆','🎖','🏅'],
+  Travel: ['✈️','🛩','🛫','🛬','🚀','🛸','🛶','⛵','🚤','🛥','🛳','⛴','🚢','🚂','🚃','🚄','🚅','🚆','🚇','🚈','🚉','🚊','🚝','🚞','🚋','🚌','🚍','🚎','🚐','🚑','🚒','🚓','🚔','🚕','🚖','🚗','🚘','🚙','🚚','🚛','🚜','🏍','🛵','🚲','🛺'],
+  Objects: ['📦','📫','📮','📬','📭','📤','📥','📨','📧','✉️','📩','📨','📜','📃','📄','📑','📊','📈','📉','📋','📌','📎','📐','📏','✂️','🖇','📁','📂','🗂','🗃','🗄','🗒','🗓','📅','📆','🗑','💼','📱','📲','💻','⌨️','🖥','🖨','🖱','💾','💿','📀'],
+  Symbols: ['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💞','💓','💗','💖','💘','💝','💟','☮️','✝️','☪️','🕉','☸️','✡️','♾','✅','❌','⭕','✔️','☑️','❗','❓','⚠️','♻️','✴️','🎉','🎊','🎁','💰','🏷']
+};
+function jdRenderEmoji(cat, q) {
+  const grid = document.getElementById('jdEmojiGrid');
+  let items = cat ? (JD_EMOJI[cat] || []) : Object.values(JD_EMOJI).flat();
+  if (q) {
+    const ql = q.toLowerCase();
+    items = Object.values(JD_EMOJI).flat();
+    // crude: filter to first chars of category name match
+    if (ql) {
+      const matched = ((window.S1 && window.S1.fixtures && window.S1.fixtures["jobDetail"] && Array.isArray(window.S1.fixtures["jobDetail"].matched) && window.S1.fixtures["jobDetail"].matched.length) ? window.S1.fixtures["jobDetail"].matched : []);
+      Object.entries(JD_EMOJI).forEach(([k, arr]) => {
+        if (k.toLowerCase().includes(ql)) matched.push(...arr);
+      });
+      if (matched.length) items = matched;
+    }
+  }
+  grid.innerHTML = items.map(e => `<button onclick="jdInsertEmoji('${e}')">${e}</button>`).join('');
+}
+function jdInsertEmoji(e) {
+  const ta = document.querySelector('.composer-body textarea');
+  if (ta) {
+    const start = ta.selectionStart || 0;
+    const v = ta.value;
+    ta.value = v.slice(0, start) + e + v.slice(ta.selectionEnd || start);
+    ta.focus();
+    ta.selectionStart = ta.selectionEnd = start + e.length;
+  }
+  document.getElementById('jdEmojiPop').classList.remove('open');
+}
+function jdOpenModal(id) { document.getElementById(id).classList.add('open'); }
+function jdCloseModal(id) { document.getElementById(id).classList.remove('open'); }
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Wire triggers
+  document.getElementById('jdAddContactBtn')?.addEventListener('click', e => { e.preventDefault(); jdOpenModal('jdAddContactModal'); });
+  document.getElementById('jdRecordVideoBtn')?.addEventListener('click', e => { e.preventDefault(); jdOpenModal('jdVideoModal'); });
+  document.getElementById('jdMarkLostBtn')?.addEventListener('click', e => { e.preventDefault(); jdOpenModal('jdMarkLostModal'); });
+
+  // Set follow-up popover
+  const fuBtn = document.getElementById('jdSetFollowupBtn');
+  const fuPop = document.getElementById('jdFollowupPop');
+  fuBtn?.addEventListener('click', e => {
+    e.preventDefault(); e.stopPropagation();
+    const r = fuBtn.getBoundingClientRect();
+    fuPop.style.top = (r.bottom + 6) + 'px';
+    fuPop.style.left = Math.max(8, Math.min(window.innerWidth - 320, r.left)) + 'px';
+    fuPop.classList.toggle('open');
+    // Default datetime: tomorrow 9 AM
+    if (!document.getElementById('jdFuDt').value) {
+      const d = new Date(); d.setDate(d.getDate() + 1); d.setHours(9, 0, 0, 0);
+      document.getElementById('jdFuDt').value = d.toISOString().slice(0, 16);
+    }
+  });
+  document.addEventListener('click', e => {
+    if (!fuPop.contains(e.target) && e.target !== fuBtn) fuPop.classList.remove('open');
+    const ep = document.getElementById('jdEmojiPop');
+    const eb = document.getElementById('jdEmojiBtn');
+    if (ep && !ep.contains(e.target) && !eb?.contains(e.target)) ep.classList.remove('open');
+  });
+  document.querySelectorAll('.jd-fu-preset').forEach(b => b.addEventListener('click', () => {
+    const d = new Date();
+    if (b.dataset.fu === '1h') d.setHours(d.getHours() + 1);
+    else if (b.dataset.fu === '3h') d.setHours(d.getHours() + 3);
+    else if (b.dataset.fu === 'tomorrow') { d.setDate(d.getDate() + 1); d.setHours(9, 0, 0, 0); }
+    else if (b.dataset.fu === '2d') d.setDate(d.getDate() + 2);
+    else if (b.dataset.fu === '1w') d.setDate(d.getDate() + 7);
+    document.getElementById('jdFuDt').value = d.toISOString().slice(0, 16);
+  }));
+
+  // Emoji
+  const emojiBtn = document.getElementById('jdEmojiBtn');
+  const emojiPop = document.getElementById('jdEmojiPop');
+  emojiBtn?.addEventListener('click', e => {
+    e.stopPropagation();
+    const opening = !emojiPop.classList.contains('open');
+    if (opening) {
+      const r = emojiBtn.getBoundingClientRect();
+      emojiPop.style.left = Math.max(8, Math.min(window.innerWidth - 328, r.left)) + 'px';
+      emojiPop.style.top = (r.top - 380) + 'px';
+      if (r.top - 380 < 8) emojiPop.style.top = (r.bottom + 6) + 'px';
+      jdRenderEmoji('Smileys', '');
+    }
+    emojiPop.classList.toggle('open', opening);
+  });
+  emojiPop?.addEventListener('click', e => e.stopPropagation());
+  document.querySelectorAll('.jd-emoji-cat').forEach(c => c.addEventListener('click', e => {
+    e.stopPropagation();
+    document.querySelectorAll('.jd-emoji-cat').forEach(x => x.classList.toggle('active', x === c));
+    jdRenderEmoji(c.dataset.ecat, '');
+    document.getElementById('jdEmojiSearch').value = '';
+  }));
+  document.getElementById('jdEmojiSearch')?.addEventListener('input', e => {
+    e.stopPropagation(); jdRenderEmoji(null, e.target.value);
+  });
+
+  // Video record button: animate timer
+  let vidT = 0, vidI = null;
+  document.getElementById('jdVidRecBtn')?.addEventListener('click', () => {
+    const btn = document.getElementById('jdVidRecBtn');
+    const time = document.getElementById('jdVidTime');
+    const msg = document.getElementById('jdVidMsg');
+    if (btn.classList.toggle('recording')) {
+      vidT = 0; time.textContent = '0:00';
+      msg.textContent = 'Recording… click again to stop.';
+      vidI = setInterval(() => {
+        vidT++; time.textContent = Math.floor(vidT/60) + ':' + String(vidT%60).padStart(2,'0');
+      }, 1000);
+    } else {
+      clearInterval(vidI);
+      msg.textContent = `Recorded ${time.textContent}. Click record to redo, or attach this to your reply.`;
+    }
+  });
+  document.querySelectorAll('.jd-vid-tab').forEach(t => t.addEventListener('click', () => {
+    document.querySelectorAll('.jd-vid-tab').forEach(x => x.classList.toggle('active', x === t));
+    document.querySelectorAll('.jd-vid-panel').forEach(p => p.style.display = (p.dataset.vpanel === t.dataset.vtab) ? '' : 'none');
+  }));
+
+  // Click outside / Esc closes any open modal
+  document.querySelectorAll('.jd-overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); }));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') document.querySelectorAll('.jd-overlay.open').forEach(o => o.classList.remove('open')); });
+});
+function jdSaveFollowup() {
+  const v = document.getElementById('jdFuDt').value;
+  if (v) {
+    const d = new Date(v);
+    const label = d.toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+    document.getElementById('jdSetFollowupBtn').textContent = '⏰ ' + label;
+  }
+  document.getElementById('jdFollowupPop').classList.remove('open');
+}
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const wire = (id, modalId) => document.getElementById(id)?.addEventListener('click', e => { e.preventDefault(); jdOpenModal(modalId); });
+  wire('jdAddDiscountBtn', 'jdAddDiscountModal');
+  wire('jdSetNteBtn', 'jdNteModal');
+  wire('jdEditJobDetailsBtn', 'jdJobDetailsModal');
+  wire('jdEditContactDetailsBtn', 'jdContactDetailsModal');
+  wire('jdEditInventoryBtn', 'jdInventoryModal');
+
+  // Inline-edit any .editable in Job details — single-field popover edit
+  document.querySelectorAll('.s-body .editable').forEach(el => {
+    el.style.cursor = 'pointer';
+    el.addEventListener('click', e => {
+      e.preventDefault(); e.stopPropagation();
+      jdOpenModal('jdJobDetailsModal');
+    });
+  });
+});
+</script>
+</body>
+</html>

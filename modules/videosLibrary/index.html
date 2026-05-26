@@ -1,26 +1,126 @@
-<!DOCTYPE html><html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Videos Library</title>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Video Library — Redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../../assets/css/module.css">
+<link rel="stylesheet" href="_system.css">
+<template id="__bundler_thumbnail" data-bg-color="#FFFFFF"><svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg"><rect width="1200" height="800" fill="#FFFFFF"/><rect x="60" y="60" width="80" height="80" rx="12" fill="#004D40"/><text x="100" y="115" text-anchor="middle" font-family="Inter" font-weight="800" font-size="28" fill="#D4960A">S</text><rect x="200" y="80" width="260" height="22" rx="3" fill="#0A2540"/><rect x="200" y="160" width="940" height="580" rx="6" fill="#FAFBFC" stroke="#EFF2F5"/><text x="600" y="790" text-anchor="middle" font-family="Inter" font-weight="500" font-size="14" fill="#697386">Video Library · Loading…</text></svg></template>
+
 <style>
-.video-card { border: 1px solid var(--line); border-radius: var(--r); padding: 12px; display: flex; flex-direction: column; gap: 6px; }
-.thumb { background: var(--surface-2); height: 120px; border-radius: 4px; }
+.vlib-filters { display:flex; gap:6px; margin-bottom:18px; flex-wrap:wrap; }
+.vlib-filter {
+  padding:8px 16px; font-size:13px; font-weight:500; color:var(--ink-3);
+  border-radius:var(--r-pill, 999px); text-decoration:none; cursor:pointer;
+  transition: background .12s, color .12s;
+}
+.vlib-filter:hover { color:var(--ink); background:var(--surface-2); }
+.vlib-filter.active { background:var(--terra); color:#fff; }
+
+.vlib-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:14px; }
+.vlib-card {
+  background:#fff; border:var(--hair); border-radius:var(--r-card, 12px);
+  overflow:hidden; cursor:pointer;
+  transition: transform .15s, box-shadow .15s;
+}
+.vlib-card:hover { transform:translateY(-2px); box-shadow:0 4px 12px rgba(15,23,42,.08); }
+.vlib-thumb {
+  aspect-ratio:16/9; background:linear-gradient(135deg,#0F172A,#1F3D5A);
+  position:relative; display:flex; align-items:center; justify-content:center; color:#fff;
+}
+.vlib-play {
+  width:48px; height:48px; border-radius:999px; background:rgba(255,255,255,.92);
+  display:inline-flex; align-items:center; justify-content:center; color:var(--ink);
+}
+.vlib-tag {
+  position:absolute; top:8px; left:8px; padding:3px 9px;
+  background:rgba(15,23,42,.7); color:#fff; border-radius:4px;
+  font-size:10px; font-weight:700; letter-spacing:0.04em; text-transform:uppercase;
+}
+.vlib-dur {
+  position:absolute; bottom:8px; right:8px; padding:2px 7px;
+  background:rgba(15,23,42,.85); color:#fff; border-radius:3px;
+  font-size:11px; font-weight:600; font-variant-numeric:tabular-nums;
+}
+.vlib-meta { padding:12px 14px; }
+.vlib-title { font-size:13.5px; font-weight:600; color:var(--ink); letter-spacing:-0.005em; line-height:1.35; }
+.vlib-sub { font-size:11.5px; color:var(--ink-3); margin-top:4px; font-variant-numeric:tabular-nums; }
+
+.vlib-empty { padding:80px 20px; text-align:center; color:var(--ink-3); background:#fff; border:var(--hair); border-radius:12px; }
+.vlib-empty svg { width:48px; height:48px; opacity:0.4; margin-bottom:10px; }
+.vlib-empty .t { font-size:14px; font-weight:600; color:var(--ink-2); }
+.vlib-empty .h { font-size:12.5px; margin-top:4px; }
 </style>
-</head><body>
-<div class="wrap">
-  <div class="page-bar"><div class="page-title">Videos Library</div></div>
-  <div class="cards" data-bind="videos">
-    <template>
-      <div class="video-card">
-        <div class="thumb"></div>
-        <div style="font-weight:600">{{title}}</div>
-        <div class="section-sub">{{category}} · {{duration|duration}}</div>
-        <div class="section-sub">Uploaded {{uploaded|date}}</div>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_aesthetic.css">
+</head>
+<body>
+<div class="app" data-screen-label="Video Library"><main class="page">
+    <div class="wrap">
+      <div class="page-bar">
+        <div class="page-title-row">
+          <div class="page-title"><span data-bind-text="summary">Video Library</span></div>
+          <span class="muted" data-bind-text="subtitle">Personalized sales videos · 24 in your library</span>
+        </div>
+        <div class="page-actions">
+          <button data-comm-action="action:videosLibrary.analytics.open" class="btn btn-secondary">Analytics</button>
+          <button class="btn btn-primary">+ Record new</button>
+        </div>
       </div>
-    </template>
-  </div>
+
+      <!-- Tag filters — chips are built dynamically from the actual videos
+           (see renderChips() in the inline script below) so the chip values
+           always match the data. -->
+      <nav class="vlib-filters" id="vlibFilters"></nav>
+
+      <div class="vlib-grid" id="vlibGrid"></div>
+    </div>
+  </main>
 </div>
+<!-- v12 auto-modal toolbar -->
+<div style="display:flex;gap:8px;flex-wrap:wrap;padding:0 24px 16px;">
+  <button class="s1-btn sec" data-videosLibrary-open="vidUploadModal" type="button">Upload video</button>
+  <button data-comm-action="action:videosLibrary.rename" class="s1-btn sec" data-videosLibrary-open="vidRenameModal" type="button">Rename</button>
+  <button data-comm-action="action:videosLibrary.moveToFolder" class="s1-btn sec" data-videosLibrary-open="vidMoveModal" type="button">Move to folder</button>
+  <button data-comm-action="action:videosLibrary.delete" class="s1-btn sec" data-videosLibrary-open="vidDeleteModal" type="button">Delete</button>
+</div>
+<div class="s1-overlay gm-overlay" id="vidUploadModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Videos</div><h4>Upload video</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Title</label><input class="s1-input" type="text" name="title"></div>
+    <div><label class="s1-mlabel">Folder</label><input class="s1-input" type="text" name="folder"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Upload</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="vidRenameModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Videos</div><h4>Rename</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Video id</label><input class="s1-input" type="text" name="id"></div>
+    <div><label class="s1-mlabel">New name</label><input class="s1-input" type="text" name="name"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Rename</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="vidMoveModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Videos</div><h4>Move to folder</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Video id</label><input class="s1-input" type="text" name="id"></div>
+    <div><label class="s1-mlabel">Folder</label><input class="s1-input" type="text" name="folder"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Move</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="vidDeleteModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Videos</div><h4>Delete</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Video id</label><input class="s1-input" type="text" name="id"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Delete</button></div>
+</div></div>
 <script src="../../core/event-bus.js"></script>
 <script src="../../core/state-store.js"></script>
 <script src="../../core/schema.js"></script>
@@ -29,5 +129,158 @@
 <script src="../../core/communication.api.js"></script>
 <script src="../../core/communication.js"></script>
 <script src="../../core/render.js"></script>
+<script src="../../core/standard-page.js"></script>
+<script src="../../core/google-places.js"></script>
 <script src="./module.js"></script>
-</body></html>
+<script>
+const INLINE_VIDEOS = [
+  { id:1, tag:'intro',          tagLbl:'INTRO',          title:"Hi Alice — quick intro from John at Service1",         sub:'For: A. Johnson · 14 views · 1:42', dur:'1:42' },
+  { id:2, tag:'intro',          tagLbl:'INTRO',          title:'Meeting you on Thursday — what to expect',             sub:'For: Northside Co · 9 views · 1:18',   dur:'1:18' },
+  { id:3, tag:'follow_up',      tagLbl:'FOLLOW-UP',      title:"Hi Rebecca — checking in on your move quote",          sub:'For: R. Chen · 4 views · 0:58',         dur:'0:58' },
+  { id:4, tag:'follow_up',      tagLbl:'FOLLOW-UP',      title:'Following up — Maple Court Condos quote',              sub:'For: Maple Court · 6 views · 1:24',     dur:'1:24' },
+  { id:5, tag:'discount_offer', tagLbl:'DISCOUNT OFFER', title:'Tao — a special offer that expires Friday',            sub:'For: T. Anand · 11 views · 1:08',       dur:'1:08' },
+  { id:6, tag:'discount_offer', tagLbl:'DISCOUNT OFFER', title:'For Pinewood Estates — repeat-customer discount',      sub:'For: Pinewood · 7 views · 1:32',        dur:'1:32' },
+  { id:7, tag:'authority',      tagLbl:'AUTHORITY',      title:"Why Service1 — the difference vs. cheaper movers",     sub:'For: Cedar Lane HOA · 18 views · 2:08', dur:'2:08' },
+  { id:8, tag:'authority',      tagLbl:'AUTHORITY',      title:'How we handle commercial moves — Foundry Co. tour',   sub:'For: Foundry · 22 views · 2:48',         dur:'2:48' },
+  { id:9, tag:'breakup',        tagLbl:'BREAKUP',        title:"Yorkdale — closing the file, last chance",             sub:'For: Yorkdale Properties · 3 views',    dur:'0:48' },
+  { id:10, tag:'follow_up',     tagLbl:'FOLLOW-UP',      title:"Sara — answering your questions about boxes",          sub:'For: S. Patel · 5 views · 1:12',         dur:'1:12' },
+  { id:11, tag:'intro',         tagLbl:'INTRO',          title:'Welcome to Service1 — your dedicated rep',             sub:'For: J. Lopez · 8 views · 1:36',         dur:'1:36' },
+  { id:12, tag:'discount_offer',tagLbl:'DISCOUNT OFFER', title:'Daniel — early-booking discount for June moves',       sub:'For: D. Park · 4 views · 1:04',          dur:'1:04' }
+];
+
+// Read fresh on every render so host state-pushes land, and normalize the
+// live-backend (`category`, `duration`, `views`) shape onto the frontend shape
+// (`tag`, `tagLbl`, `dur`, `sub`) the chip filter + cards expect.
+function getVideos() {
+  const raw = (window.S1 && window.S1.fixtures && window.S1.fixtures["videosLibrary"] && Array.isArray(window.S1.fixtures["videosLibrary"].videos) && window.S1.fixtures["videosLibrary"].videos.length)
+    ? window.S1.fixtures["videosLibrary"].videos
+    : INLINE_VIDEOS;
+  return raw.map((v, i) => {
+    const category = v.category || v.tagLbl || '';
+    const tag = v.tag || category.toLowerCase().replace(/[\s-]+/g, '_');
+    const tagLbl = v.tagLbl || (category ? category.toUpperCase() : '');
+    const duration = v.dur || v.duration || '';
+    let sub = v.sub;
+    if (!sub) {
+      const parts = [];
+      if (v.views) parts.push(v.views);
+      if (duration) parts.push(duration);
+      sub = parts.join(' · ');
+    }
+    return {
+      id:     v.id != null ? v.id : i + 1,
+      title:  v.title || '',
+      tag,
+      tagLbl,
+      dur:    duration,
+      sub
+    };
+  });
+}
+
+function render(tag) {
+  const all = getVideos();
+  const shown = tag === 'all' ? all : all.filter(v => v.tag === tag);
+  document.getElementById('vlibGrid').innerHTML = shown.length ? shown.map(v => `
+    <div class="vlib-card" data-id="${v.id}">
+      <div class="vlib-thumb">
+        <span class="vlib-tag">${v.tagLbl}</span>
+        <span class="vlib-play"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20"/></svg></span>
+        <span class="vlib-dur">${v.dur}</span>
+      </div>
+      <div class="vlib-meta">
+        <div class="vlib-title">${v.title}</div>
+        <div class="vlib-sub">${v.sub}</div>
+      </div>
+    </div>`).join('') : `
+    <div class="vlib-empty" style="grid-column:1/-1;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+      <div class="t">No videos in this category yet</div>
+      <div class="h">Record a video from a customer's detail page to add it here.</div>
+    </div>`;
+}
+let activeTag = 'all';
+// Build chips from the actual data so chip values always match the videos'
+// tag field (handles arbitrary backend categories).
+function renderChips() {
+  const wrap = document.getElementById('vlibFilters');
+  if (!wrap) return;
+  const vids = getVideos();
+  // Tag → label + count, in first-seen order.
+  const order = [];
+  const counts = Object.create(null);
+  const labels = Object.create(null);
+  for (const v of vids) {
+    const tag = v.tag || 'uncategorized';
+    if (!(tag in counts)) { order.push(tag); counts[tag] = 0; labels[tag] = v.tagLbl || tag; }
+    counts[tag]++;
+  }
+  // Ensure the active tag stays valid; otherwise fall back to "all".
+  if (activeTag !== 'all' && !(activeTag in counts)) activeTag = 'all';
+  const chip = (tag, label, count) =>
+    '<a class="vlib-filter' + (tag === activeTag ? ' active' : '') + '" data-tag="' + tag + '">' +
+    label + ' <span class="muted" style="margin-left:4px;font-variant-numeric:tabular-nums;">' + count + '</span></a>';
+  let html = chip('all', 'All', vids.length);
+  for (const tag of order) html += chip(tag, labels[tag], counts[tag]);
+  wrap.innerHTML = html;
+}
+function selectTag(tag) {
+  activeTag = tag;
+  document.querySelectorAll('#vlibFilters .vlib-filter').forEach(x =>
+    x.classList.toggle('active', x.getAttribute('data-tag') === tag));
+  render(tag);
+}
+renderChips();
+render('all');
+
+// Delegated click — chips are rebuilt on every state push, so we can't bind
+// directly to each <a>.
+document.getElementById('vlibFilters').addEventListener('click', (ev) => {
+  const a = ev.target.closest('.vlib-filter'); if (!a) return;
+  ev.preventDefault();
+  selectTag(a.getAttribute('data-tag') || 'all');
+});
+if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
+  window.S1.bus.on('state:replaced', () => { renderChips(); render(activeTag); });
+}
+
+// Card click → playback modal
+document.getElementById('vlibGrid').addEventListener('click', e => {
+  const c = e.target.closest('.vlib-card[data-id]'); if (!c) return;
+  const v = getVideos().find(x => x.id === +c.dataset.id); if (!v) return;
+  const m = document.createElement('div');
+  m.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.7);display:flex;align-items:center;justify-content:center;z-index:1000;padding:24px;';
+  m.innerHTML = `<div style="background:#fff;border-radius:12px;max-width:840px;width:100%;overflow:hidden;">
+    <div style="position:relative;aspect-ratio:16/9;background:linear-gradient(135deg,#0F172A,#1F3D5A);display:flex;align-items:center;justify-content:center;color:#fff;">
+      <svg width="72" height="72" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20"/></svg>
+      <button class="x" style="position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:999px;background:rgba(0,0,0,.5);color:#fff;border:0;font-size:20px;cursor:pointer;">×</button>
+      <span class="vlib-tag" style="top:14px;left:14px;">${v.tagLbl}</span>
+      <span class="vlib-dur" style="bottom:14px;right:14px;">${v.dur}</span>
+    </div>
+    <div style="padding:18px 22px;">
+      <h2 style="margin:0 0 6px;font-size:18px;font-weight:700;letter-spacing:-0.01em;">${v.title}</h2>
+      <div style="font-size:12.5px;color:var(--ink-3);font-variant-numeric:tabular-nums;">${v.sub}</div>
+      <div style="display:flex;gap:8px;margin-top:18px;justify-content:flex-end;">
+        <button class="btn btn-secondary x">Close</button>
+        <button data-comm-action="action:videosLibrary.copy.link" class="btn btn-secondary">Copy link</button>
+        <button data-comm-action="action:videosLibrary.copy.emailHtml" class="btn btn-secondary">Copy email HTML</button>
+        <button data-comm-action="action:videosLibrary.sendToCustomer" class="btn btn-primary">Send to customer</button>
+      </div>
+    </div>
+  </div>`;
+  document.body.appendChild(m);
+  const close = () => m.remove();
+  m.addEventListener('click', e2 => { if (e2.target === m) close(); });
+  m.querySelectorAll('.x').forEach(b => b.addEventListener('click', close));
+});
+
+// Re-render when the host pushes fresh state.
+if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
+  window.S1.bus.on('state:replaced', () => {
+    const active = document.querySelector('#vlibFilters .vlib-filter.active');
+    render(active ? active.dataset.tag : 'all');
+  });
+}
+</script>
+</body>
+</html>

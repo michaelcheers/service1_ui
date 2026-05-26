@@ -1,29 +1,289 @@
-<!DOCTYPE html><html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Safety Dashboard</title>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Safety Dashboard — Redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../../assets/css/module.css">
-</head><body>
-<div class="wrap">
-  <div class="page-bar"><div class="page-title">Safety Dashboard</div></div>
-  <section class="section">
-    <table class="tbl">
-      <thead><tr><th>#</th><th>Job</th><th>Severity</th><th>Description</th><th>Status</th><th>Date</th></tr></thead>
-      <tbody data-bind="incidents">
-        <template>
-          <tr>
-            <td>{{id|num}}</td>
-            <td>{{jobId|num}}</td>
-            <td class="prio-{{severity}}">{{severity}}</td>
-            <td>{{description}}</td>
-            <td><span class="tag {{status}}">{{status}}</span></td>
-            <td>{{date|date}}</td>
-          </tr>
-        </template>
-      </tbody>
-    </table>
-  </section>
+<link rel="stylesheet" href="_system.css">
+<template id="__bundler_thumbnail" data-bg-color="#FFFFFF"><svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg"><rect width="1200" height="800" fill="#FFFFFF"/><rect x="60" y="60" width="80" height="80" rx="12" fill="#004D40"/><text x="100" y="115" text-anchor="middle" font-family="Inter" font-weight="800" font-size="28" fill="#D4960A">S</text><rect x="200" y="80" width="260" height="22" rx="3" fill="#0A2540"/><rect x="200" y="160" width="940" height="580" rx="6" fill="#FAFBFC" stroke="#EFF2F5"/><text x="600" y="790" text-anchor="middle" font-family="Inter" font-weight="500" font-size="14" fill="#697386">Safety Dashboard · Loading…</text></svg></template>
+
+<style>
+.sf-tabs { display:flex; gap:2px; margin-bottom:18px; flex-wrap:wrap; border-bottom:var(--hair); padding-bottom:0; overflow-x:auto; }
+.sf-tab {
+  padding:10px 14px; font-size:13px; font-weight:500; color:var(--ink-2);
+  border-bottom:2px solid transparent; cursor:pointer; text-decoration:none;
+  white-space:nowrap; transition:color .12s, border-color .12s;
+}
+.sf-tab:hover { color:var(--terra); }
+.sf-tab.active { color:var(--terra); border-bottom-color:var(--terra); font-weight:600; }
+.sf-pane { display:none; }
+.sf-pane.active { display:block; }
+.sf-card { background:#fff; border:var(--hair); border-radius:var(--r-card, 12px); padding:18px 20px; margin-bottom:14px; }
+.sf-card-h { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+.sf-card-t { font-size:14.5px; font-weight:700; letter-spacing:-0.005em; }
+.sf-empty { padding:30px 0; text-align:center; color:var(--ink-3); font-size:13px; }
+
+.alert-sev {
+  display:inline-block; padding:3px 9px; border-radius:4px; font-size:11px; font-weight:700; letter-spacing:0.02em;
+}
+.alert-sev.red    { background:#FEE2E2; color:#991B1B; }
+.alert-sev.amber  { background:#FEF3C7; color:#92400E; }
+.alert-sev.yellow { background:#FEF9C3; color:#854D0E; }
+.alert-sev.green  { background:#D1FAE5; color:#065F46; }
+
+.score { font-weight:700; font-variant-numeric:tabular-nums; }
+.score.good { color: var(--ok); }
+.score.warn { color: var(--warn); }
+.score.bad  { color: var(--bad); }
+</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_aesthetic.css">
+</head>
+<body>
+<div class="app" data-screen-label="Safety Dashboard"><main class="page">
+    <div class="wrap">
+      <div class="page-bar">
+        <div class="page-title-row">
+          <div class="page-title"><span data-bind-text="summary">Safety Dashboard</span></div>
+          <span class="muted" data-bind-text="subtitle">Fleet, drivers &amp; HOS compliance · last 30 days</span>
+        </div>
+        <div class="page-actions">
+          <button data-comm-action="action:safetyDashboard.export-csv" class="btn btn-secondary">Export CSV</button>
+          <button data-comm-action="action:safetyDashboard.new-incident" class="btn btn-primary">+ New incident</button>
+        </div>
+      </div>
+
+      <!-- 4 KPIs match original -->
+      <div class="stat-group" style="margin-bottom:20px;">
+        <div class="stat-col"><div class="stat-eyebrow" data-bind-text="kpis.0.label">Total alerts (30d)</div><div class="stat-number" style="color:var(--bad);" data-bind-text="kpis.0.value">42</div><div class="stat-delta" data-bind-text="kpis.0.delta">8 red / 34 amber</div></div>
+        <div class="stat-col"><div class="stat-eyebrow" data-bind-text="kpis.1.label">HOS violations</div><div class="stat-number" style="color:var(--warn);" data-bind-text="kpis.1.value">3</div><div class="stat-delta" data-bind-text="kpis.1.delta">2 unresolved</div></div>
+        <div class="stat-col"><div class="stat-eyebrow" data-bind-text="kpis.2.label">Open incidents</div><div class="stat-number" style="color:var(--bad);" data-bind-text="kpis.2.value">3</div><div class="stat-delta" data-bind-text="kpis.2.delta">12 total incidents</div></div>
+        <div class="stat-col"><div class="stat-eyebrow" data-bind-text="kpis.3.label">Fleet compliance</div><div class="stat-number" style="color:var(--ok);">94<span class="small">%</span></div><div class="stat-delta" data-bind-text="metrics.stat_delta.0">21 certs / 18 docs / 14 maint.</div></div>
+      </div>
+
+      <!-- 12 tabs match original -->
+      <nav class="sf-tabs" id="sfTabs">
+        <a class="sf-tab active" data-tab="overview">Overview</a>
+        <a class="sf-tab" data-tab="alerts">Safety Alerts</a>
+        <a class="sf-tab" data-tab="leaderboard">Leaderboard</a>
+        <a class="sf-tab" data-tab="hos">HOS Compliance</a>
+        <a class="sf-tab" data-tab="incidents">Incidents</a>
+        <a class="sf-tab" data-tab="inspections">Inspections</a>
+        <a class="sf-tab" data-tab="compliance">Fleet Compliance</a>
+        <a class="sf-tab" data-tab="sessions">Driving Sessions</a>
+        <a class="sf-tab" data-tab="messages">Voice Messages</a>
+        <a class="sf-tab" data-tab="dashcam">Dashcam</a>
+        <a class="sf-tab" data-tab="deviations">Route Deviations</a>
+        <a class="sf-tab" data-tab="settings">Settings</a>
+      </nav>
+
+      <!-- ═════ OVERVIEW ═════ -->
+      <section class="sf-pane active" data-pane="overview">
+        <div class="sf-card">
+          <div class="sf-card-h"><div class="sf-card-t">Recent Critical Alerts</div><a class="section-link" href="#" onclick="event.preventDefault();showTab('alerts');">View all →</a></div>
+          <table class="tbl">
+            <thead><tr><th>Type</th><th>Driver</th><th>Vehicle</th><th class="num">Time</th><th>Severity</th><th></th></tr></thead>
+            <tbody data-bind="rows"><template><tr><td>{{c0_text}}</td><td>{{c1_text}}</td><td>{{c2_text}}</td><td>{{c3_text}}</td><td><span class="alert-sev red">RED</span></td><td><button class="btn btn-ghost">Review</button></td></tr></template></tbody>
+          </table>
+        </div>
+
+        <div class="sf-card">
+          <div class="sf-card-h"><div class="sf-card-t">Safety Leaderboard (This Week)</div><a class="section-link" href="#" onclick="event.preventDefault();showTab('leaderboard');">View all →</a></div>
+          <table class="tbl">
+            <thead><tr><th>Driver</th><th class="num">Score</th><th class="num">Trips</th><th class="num">Hard brakes</th><th class="num">Speeding</th><th class="num">Trend</th></tr></thead>
+            <tbody data-bind="rows2"><template><tr><td><b>{{c0_name}}</b><div class="cell-light" style="font-size:11px;color:var(--ink-3);display:none"></div></td><td>{{c1_text}}</td><td>{{c2_text}}</td><td>{{c3_text}}</td><td>{{c4_text}}</td><td>{{c5_text}}</td></tr></template></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ═════ SAFETY ALERTS ═════ -->
+      <section class="sf-pane" data-pane="alerts">
+        <div class="sf-card">
+          <div class="sf-card-h">
+            <div class="sf-card-t">Safety alerts · last 30 days</div>
+            <div style="display:flex;gap:8px;">
+              <select class="field-select" style="width:140px;font-size:12.5px;height:32px;" data-bind-options="optionsOptions"><option value="All types">All types</option></select>
+              <select class="field-select" style="width:140px;font-size:12.5px;height:32px;" data-bind-options="optionsOptions2"><option value="All severities">All severities</option></select>
+            </div>
+          </div>
+          <table class="tbl">
+            <thead><tr><th>Type</th><th>Driver</th><th>Vehicle</th><th class="num">When</th><th>Location</th><th>Severity</th><th>Status</th><th></th></tr></thead>
+            <tbody data-bind="rows3"><template><tr><td>{{c0_text}}</td><td>{{c1_text}}</td><td>{{c2_text}}</td><td>{{c3_text}}</td><td>{{c4_text}}</td><td><span class="alert-sev red">RED</span></td><td><span class="pill warn">Open</span></td><td><button class="btn btn-ghost">View clip</button></td></tr></template></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ═════ LEADERBOARD ═════ -->
+      <section class="sf-pane" data-pane="leaderboard">
+        <div class="sf-card">
+          <div class="sf-card-h">
+            <div class="sf-card-t">Driver leaderboard · this month</div>
+            <div style="display:flex;gap:8px;"><button data-comm-action="action:safetyDashboard.this-week" class="btn btn-secondary">This week</button><button data-comm-action="action:safetyDashboard.this-month" class="btn btn-secondary">This month</button><button data-comm-action="action:safetyDashboard.ytd" class="btn btn-secondary">YTD</button></div>
+          </div>
+          <table class="tbl">
+            <thead><tr><th>Rank</th><th>Driver</th><th class="num">Safety score</th><th class="num">Trips</th><th class="num">Miles</th><th class="num">Hard brakes</th><th class="num">Speeding</th><th class="num">Phone use</th></tr></thead>
+            <tbody data-bind="rows4"><template><tr><td><b>{{c0_name}}</b><div class="cell-light" style="font-size:11px;color:var(--ink-3);display:none"></div></td><td><b>{{c1_name}}</b><div class="cell-light" style="font-size:11px;color:var(--ink-3);display:none"></div></td><td>{{c2_text}}</td><td>{{c3_text}}</td><td>{{c4_text}}</td><td>{{c5_text}}</td><td>{{c6_text}}</td><td>{{c7_text}}</td></tr></template></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ═════ HOS COMPLIANCE ═════ -->
+      <section class="sf-pane" data-pane="hos">
+        <div class="sf-card">
+          <div class="sf-card-h"><div class="sf-card-t">Hours of Service · current cycle</div><button data-comm-action="action:safetyDashboard.export-eld-log" class="btn btn-secondary">Export ELD log</button></div>
+          <table class="tbl">
+            <thead><tr><th>Driver</th><th>Status</th><th class="num">Drive time today</th><th class="num">On duty</th><th class="num">Cycle (7-day)</th><th>Compliance</th></tr></thead>
+            <tbody data-bind="rows5"><template><tr><td><b>{{c0_name}}</b><div class="cell-light" style="font-size:11px;color:var(--ink-3);display:none"></div></td><td><span class="pill">On duty</span></td><td>{{c2_text}}</td><td>{{c3_text}}</td><td>{{c4_text}}</td><td><span style="display:inline-block;width:8px;height:8px;border-radius:999px;background:{{c5_dotBg}};margin-right:6px;"></span>{{c5_text}}</td></tr></template></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ═════ INCIDENTS ═════ -->
+      <section class="sf-pane" data-pane="incidents">
+        <div class="sf-card">
+          <div class="sf-card-h"><div class="sf-card-t">Incidents · last 12 months</div><button data-comm-action="action:safetyDashboard.report-incident" class="btn btn-primary">+ Report incident</button></div>
+          <table class="tbl">
+            <thead><tr><th>Incident #</th><th class="num">Date</th><th>Description</th><th>Severity</th><th>Crew</th><th>Status</th></tr></thead>
+            <tbody data-bind="rows6"><template><tr><td>{{c0_text}}</td><td>{{c1_text}}</td><td>{{c2_text}}</td><td><span class="alert-sev red">HIGH</span></td><td>{{c4_text}}</td><td><span class="pill warn">Open · day 4</span></td></tr></template></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ═════ INSPECTIONS ═════ -->
+      <section class="sf-pane" data-pane="inspections">
+        <div class="sf-card">
+          <div class="sf-card-h"><div class="sf-card-t">Roadside &amp; DOT inspections</div><button data-comm-action="action:safetyDashboard.filter" class="btn btn-secondary">Filter</button></div>
+          <table class="tbl">
+            <thead><tr><th>Inspection #</th><th class="num">Date</th><th>Vehicle</th><th>Driver</th><th>Inspector</th><th>Result</th><th>Violations</th></tr></thead>
+            <tbody data-bind="rows7"><template><tr><td>{{c0_text}}</td><td>{{c1_text}}</td><td>{{c2_text}}</td><td>{{c3_text}}</td><td>{{c4_text}}</td><td><span class="pill warn">Yellow sticker</span></td><td>{{c6_text}}</td></tr></template></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ═════ FLEET COMPLIANCE ═════ -->
+      <section class="sf-pane" data-pane="compliance">
+        <div class="sf-card">
+          <div class="sf-card-h"><div class="sf-card-t">Vehicle compliance</div><button data-comm-action="action:safetyDashboard.upload-doc" class="btn btn-primary">+ Upload doc</button></div>
+          <table class="tbl">
+            <thead><tr><th>Vehicle</th><th>Plate</th><th>Annual inspection</th><th>Insurance</th><th>Reg. expiry</th><th>Maintenance</th></tr></thead>
+            <tbody data-bind="rows8"><template><tr><td><b>{{c0_name}}</b> · {{c0_extra}}</td><td>{{c1_text}}</td><td><span class="pill ok">Current · Jun 14</span></td><td><span class="pill ok">Current</span></td><td>{{c4_text}}</td><td><span class="pill ok">On schedule</span></td></tr></template></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ═════ DRIVING SESSIONS ═════ -->
+      <section class="sf-pane" data-pane="sessions">
+        <div class="sf-card">
+          <div class="sf-card-h"><div class="sf-card-t">Driving sessions · today</div><button data-comm-action="action:safetyDashboard.all-drivers" class="btn btn-secondary">All drivers</button></div>
+          <table class="tbl">
+            <thead><tr><th>Driver</th><th>Vehicle</th><th class="num">Start</th><th class="num">End</th><th class="num">Distance</th><th class="num">Avg speed</th><th class="num">Score</th></tr></thead>
+            <tbody data-bind="rows9"><template><tr><td>{{c0_text}}</td><td>{{c1_text}}</td><td>{{c2_text}}</td><td>{{c3_text}}</td><td>{{c4_text}}</td><td>{{c5_text}}</td><td>{{c6_text}}</td></tr></template></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ═════ VOICE MESSAGES ═════ -->
+      <section class="sf-pane" data-pane="messages">
+        <div class="sf-card">
+          <div class="sf-card-h"><div class="sf-card-t">Coaching voice messages</div><button data-comm-action="action:safetyDashboard.new-message" class="btn btn-primary">+ New message</button></div>
+          <table class="tbl">
+            <thead><tr><th>From</th><th>To</th><th>Subject</th><th class="num">Duration</th><th class="num">Sent</th><th>Status</th></tr></thead>
+            <tbody data-bind="rows10"><template><tr><td>{{c0_text}}</td><td>{{c1_text}}</td><td>{{c2_text}}</td><td>{{c3_text}}</td><td>{{c4_text}}</td><td><span class="pill warn">Unread</span></td></tr></template></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ═════ DASHCAM ═════ -->
+      <section class="sf-pane" data-pane="dashcam">
+        <div class="sf-card">
+          <div class="sf-card-h"><div class="sf-card-t">Dashcam clips · last 7 days</div><div style="display:flex;gap:8px;"><select class="field-select" style="width:130px;height:32px;font-size:12.5px;" data-bind-options="optionsOptions3"><option value="All vehicles">All vehicles</option></select><select class="field-select" style="width:130px;height:32px;font-size:12.5px;" data-bind-options="optionsOptions4"><option value="All alerts">All alerts</option></select></div></div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;">
+            <div style="background:#0F172A;border-radius:8px;overflow:hidden;cursor:pointer;color:#fff;">
+              <div style="aspect-ratio:16/9;background:linear-gradient(135deg,#1F2937,#0F172A);position:relative;display:flex;align-items:center;justify-content:center;"><svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20"/></svg><span style="position:absolute;bottom:6px;left:8px;font-size:11px;background:rgba(0,0,0,.6);padding:2px 6px;border-radius:3px;">0:18</span><span class="alert-sev red" style="position:absolute;top:6px;left:8px;">HARD BRAKE</span></div>
+              <div style="padding:10px 12px;"><div style="font-size:12px;font-weight:600;">Truck 09 · Alex Zu</div><div style="font-size:11px;opacity:.7;">Today 9:02 AM · 401 EB</div></div>
+            </div>
+            <div style="background:#0F172A;border-radius:8px;overflow:hidden;cursor:pointer;color:#fff;">
+              <div style="aspect-ratio:16/9;background:linear-gradient(135deg,#1F2937,#0F172A);position:relative;display:flex;align-items:center;justify-content:center;"><svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20"/></svg><span style="position:absolute;bottom:6px;left:8px;font-size:11px;background:rgba(0,0,0,.6);padding:2px 6px;border-radius:3px;">0:32</span><span class="alert-sev red" style="position:absolute;top:6px;left:8px;">SPEEDING</span></div>
+              <div style="padding:10px 12px;"><div style="font-size:12px;font-weight:600;">Truck 09 · Alex Zu</div><div style="font-size:11px;opacity:.7;">Today 9:02 AM · 74/60 mph</div></div>
+            </div>
+            <div style="background:#0F172A;border-radius:8px;overflow:hidden;cursor:pointer;color:#fff;">
+              <div style="aspect-ratio:16/9;background:linear-gradient(135deg,#1F2937,#0F172A);position:relative;display:flex;align-items:center;justify-content:center;"><svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20"/></svg><span style="position:absolute;bottom:6px;left:8px;font-size:11px;background:rgba(0,0,0,.6);padding:2px 6px;border-radius:3px;">0:22</span><span class="alert-sev amber" style="position:absolute;top:6px;left:8px;">LANE DEPART</span></div>
+              <div style="padding:10px 12px;"><div style="font-size:12px;font-weight:600;">Truck 14 · J. Mungai</div><div style="font-size:11px;opacity:.7;">Yesterday 4:12 PM</div></div>
+            </div>
+            <div style="background:#0F172A;border-radius:8px;overflow:hidden;cursor:pointer;color:#fff;">
+              <div style="aspect-ratio:16/9;background:linear-gradient(135deg,#1F2937,#0F172A);position:relative;display:flex;align-items:center;justify-content:center;"><svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20"/></svg><span style="position:absolute;bottom:6px;left:8px;font-size:11px;background:rgba(0,0,0,.6);padding:2px 6px;border-radius:3px;">0:14</span><span class="alert-sev amber" style="position:absolute;top:6px;left:8px;">FOLLOWING</span></div>
+              <div style="padding:10px 12px;"><div style="font-size:12px;font-weight:600;">Van 03 · P. Rai</div><div style="font-size:11px;opacity:.7;">Yesterday 2:34 PM</div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═════ ROUTE DEVIATIONS ═════ -->
+      <section class="sf-pane" data-pane="deviations">
+        <div class="sf-card">
+          <div class="sf-card-h"><div class="sf-card-t">Route deviations · last 7 days</div><button data-comm-action="action:safetyDashboard.all-vehicles" class="btn btn-secondary">All vehicles</button></div>
+          <table class="tbl">
+            <thead><tr><th>Vehicle</th><th>Driver</th><th>Planned</th><th>Actual</th><th class="num">Extra distance</th><th class="num">Extra time</th><th class="num">Date</th></tr></thead>
+            <tbody data-bind="rows11"><template><tr><td>{{c0_text}}</td><td>{{c1_text}}</td><td>{{c2_text}}</td><td>{{c3_text}}</td><td>{{c4_text}}</td><td>{{c5_text}}</td><td>{{c6_text}}</td></tr></template></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ═════ SETTINGS ═════ -->
+      <section class="sf-pane" data-pane="settings">
+        <div class="sf-card">
+          <div class="sf-card-h"><div class="sf-card-t">Alert thresholds</div></div>
+          <div class="s-row" style="display:grid;grid-template-columns:240px 1fr;gap:16px;padding:12px 0;border-bottom:var(--hair);"><div style="font-size:13px;font-weight:600;">Hard brake</div><div style="display:flex;align-items:center;gap:8px;"><input type="number" value="0.55" step="0.05" style="width:90px;height:32px;padding:0 10px;border:var(--hair);border-radius:6px;font-size:12.5px;"> g-force</div></div>
+          <div class="s-row" style="display:grid;grid-template-columns:240px 1fr;gap:16px;padding:12px 0;border-bottom:var(--hair);"><div style="font-size:13px;font-weight:600;">Speeding · highway</div><div style="display:flex;align-items:center;gap:8px;"><input type="number" value="10" style="width:90px;height:32px;padding:0 10px;border:var(--hair);border-radius:6px;font-size:12.5px;"> mph over limit</div></div>
+          <div class="s-row" style="display:grid;grid-template-columns:240px 1fr;gap:16px;padding:12px 0;border-bottom:var(--hair);"><div style="font-size:13px;font-weight:600;">Following distance</div><div style="display:flex;align-items:center;gap:8px;"><input type="number" value="1.5" step="0.1" style="width:90px;height:32px;padding:0 10px;border:var(--hair);border-radius:6px;font-size:12.5px;"> seconds</div></div>
+          <div class="s-row" style="display:grid;grid-template-columns:240px 1fr;gap:16px;padding:12px 0;"><div style="font-size:13px;font-weight:600;">Phone use detection</div><div style="display:flex;align-items:center;gap:10px;"><span class="s-toggle on"></span><span style="font-size:12.5px;color:var(--ok);font-weight:600;">Enabled</span></div></div>
+        </div>
+        <div class="sf-card">
+          <div class="sf-card-h"><div class="sf-card-t">Notifications</div></div>
+          <div class="s-row" style="display:grid;grid-template-columns:240px 1fr;gap:16px;padding:12px 0;border-bottom:var(--hair);"><div style="font-size:13px;font-weight:600;">Red alerts</div><div style="display:flex;align-items:center;gap:10px;"><span class="s-toggle on"></span> Email · SMS · push</div></div>
+          <div class="s-row" style="display:grid;grid-template-columns:240px 1fr;gap:16px;padding:12px 0;border-bottom:var(--hair);"><div style="font-size:13px;font-weight:600;">Amber alerts</div><div style="display:flex;align-items:center;gap:10px;"><span class="s-toggle on"></span> Email only</div></div>
+          <div class="s-row" style="display:grid;grid-template-columns:240px 1fr;gap:16px;padding:12px 0;"><div style="font-size:13px;font-weight:600;">Daily safety summary</div><div style="display:flex;align-items:center;gap:10px;"><span class="s-toggle on"></span> 6:00 PM</div></div>
+        </div>
+      </section>
+
+    </div>
+  </main>
 </div>
+<!-- v12 auto-modal toolbar -->
+<div style="display:flex;gap:8px;flex-wrap:wrap;padding:0 24px 16px;">
+  <button class="s1-btn sec" data-safetyDashboard-open="safIncidentModal" type="button">Log incident</button>
+  <button data-comm-action="action:safetyDashboard.open-audit" class="s1-btn sec" data-safetyDashboard-open="safAuditModal" type="button">Open audit</button>
+  <button data-comm-action="action:safetyDashboard.acknowledge" class="s1-btn sec" data-safetyDashboard-open="safAckModal" type="button">Acknowledge</button>
+</div>
+<div class="s1-overlay gm-overlay" id="safIncidentModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Safety</div><h4>Log incident</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Kind</label><input class="s1-input" type="text" name="kind"></div>
+    <div><label class="s1-mlabel">Severity</label><select class="s1-select" name="severity" data-bind-options="severityOptions"><option value="">Choose…</option></select></div>
+    <div class="full"><label class="s1-mlabel">Notes</label><textarea class="s1-textarea" name="notes"></textarea></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Log</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="safAuditModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Safety</div><h4>Open audit</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Audit id</label><input class="s1-input" type="text" name="auditId"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Open</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="safAckModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Safety</div><h4>Acknowledge</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Incident id</label><input class="s1-input" type="text" name="incidentId"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Acknowledge</button></div>
+</div></div>
 <script src="../../core/event-bus.js"></script>
 <script src="../../core/state-store.js"></script>
 <script src="../../core/schema.js"></script>
@@ -32,5 +292,20 @@
 <script src="../../core/communication.api.js"></script>
 <script src="../../core/communication.js"></script>
 <script src="../../core/render.js"></script>
+<script src="../../core/standard-page.js"></script>
+<script src="../../core/google-places.js"></script>
 <script src="./module.js"></script>
-</body></html>
+<script>
+function showTab(name) {
+  document.querySelectorAll('#sfTabs .sf-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+  document.querySelectorAll('.sf-pane').forEach(p => p.classList.toggle('active', p.dataset.pane === name));
+  window.scrollTo({ top: 0 });
+}
+document.querySelectorAll('#sfTabs .sf-tab').forEach(t => t.addEventListener('click', e => {
+  e.preventDefault();
+  showTab(t.dataset.tab);
+}));
+window.showTab = showTab;
+</script>
+</body>
+</html>

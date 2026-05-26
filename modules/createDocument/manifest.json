@@ -1,0 +1,13 @@
+{
+  "name": "createDocument",
+  "title": "Create document",
+  "source": "CreateDocument.html",
+  "fixture": "createDocument",
+  "reads": [
+    "createDocument"
+  ],
+  "writes": [
+    "createDocument"
+  ],
+  "icon": "createDocument"
+}

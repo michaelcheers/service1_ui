@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Referrals — Redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_system.css">
+<style>
+.ref-wrap { padding: 24px 28px 56px; max-width: 1280px; margin: 0 auto; }
+.ref-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+.ref-header h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; margin: 0; }
+.ref-btn { padding: 9px 16px; background: var(--terra); color: #fff; border: 0; border-radius: 7px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.ref-btn-secondary { padding: 9px 16px; background: #fff; color: var(--ink); border: var(--hair); border-radius: 7px; font-size: 13px; font-weight: 500; cursor: pointer; }
+.ref-stats { display: grid; grid-template-columns: repeat(6, 1fr); gap: 0; background: #fff; border: var(--hair); border-radius: 10px; padding: 18px 22px; margin-bottom: 18px; }
+.ref-stat { padding: 0 18px; border-right: var(--hair); }
+.ref-stat:last-child { border-right: 0; }
+.ref-stat:first-child { padding-left: 0; }
+.ref-stat-num { font-size: 28px; font-weight: 700; line-height: 1; margin-bottom: 6px; }
+.ref-stat-label { font-size: 11px; font-weight: 600; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.05em; }
+.ref-tabs { display: flex; gap: 0; border-bottom: var(--hair); margin-bottom: 18px; }
+.ref-tab { padding: 12px 18px; font-size: 13px; font-weight: 500; color: var(--ink-3); border-bottom: 2px solid transparent; cursor: pointer; background: transparent; border-left: 0; border-right: 0; border-top: 0; }
+.ref-tab.active { color: var(--terra); font-weight: 600; border-bottom-color: var(--terra); }
+.ref-section { background: #fff; border: var(--hair); border-radius: 10px; padding: 22px 24px; }
+.ref-section-title { font-size: 15px; font-weight: 700; margin: 0 0 16px; }
+.ref-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.ref-table th { padding: 10px 14px; font-size: 11px; font-weight: 600; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: var(--hair); text-align: left; }
+.ref-table td { padding: 14px; border-bottom: 1px solid var(--line-2); }
+.ref-table tbody tr:last-child td { border-bottom: 0; }
+.pill { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+.pill.new { background: #DBEAFE; color: #1E40AF; }
+.pill.pending { background: #FEF3C7; color: #92400E; }
+.pill.paid { background: #D1FAE5; color: #065F46; }
+
+/* Modal */
+.modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.45); display: none; align-items: center; justify-content: center; z-index: 1000; }
+.modal-overlay.open { display: flex; }
+.modal { background: #fff; border-radius: 12px; width: 560px; max-width: 92vw; padding: 24px 26px; box-shadow: 0 25px 50px rgba(0,0,0,0.25); }
+.modal-title { font-size: 18px; font-weight: 700; margin: 0 0 18px; }
+.modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; margin-bottom: 14px; }
+.modal-field { display: flex; flex-direction: column; gap: 6px; }
+.modal-field.full { grid-column: 1 / -1; }
+.modal-label { font-size: 12.5px; font-weight: 600; color: var(--ink); }
+.modal-input, .modal-select, .modal-textarea {
+  width: 100%; padding: 9px 11px; border: var(--hair); border-radius: 6px; font-size: 13px; background: #fff; color: var(--ink); font-family: inherit; outline: none;
+}
+.modal-textarea { min-height: 80px; resize: vertical; }
+.modal-input:focus, .modal-select:focus, .modal-textarea:focus { border-color: var(--terra); box-shadow: 0 0 0 3px var(--terra-soft); }
+.modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; padding-top: 14px; border-top: var(--hair); }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_aesthetic.css">
+</head>
+<body>
+<div class="app" data-screen-label="Referrals"><main class="page">
+    <div class="ref-wrap">
+      <div class="ref-header">
+        <h1 data-bind-text="summary">Lead Referrals</h1>
+        <button class="ref-btn" onclick="document.getElementById('addReferrerModal').classList.add('open')">+ Add Referrer</button>
+      </div>
+
+      <div class="ref-stats">
+        <div class="ref-stat"><div class="ref-stat-num" data-bind-text="kpis.0.value">1</div><div class="ref-stat-label" data-bind-text="kpis.0.label">Active Referrers</div></div>
+        <div class="ref-stat"><div class="ref-stat-num" data-bind-text="kpis.1.value">1</div><div class="ref-stat-label" data-bind-text="kpis.1.label">Total Leads</div></div>
+        <div class="ref-stat"><div class="ref-stat-num" data-bind-text="kpis.2.value">0</div><div class="ref-stat-label" data-bind-text="kpis.2.label">Booked</div></div>
+        <div class="ref-stat"><div class="ref-stat-num" data-bind-text="kpis.3.value">0</div><div class="ref-stat-label" data-bind-text="kpis.3.label">Completed</div></div>
+        <div class="ref-stat"><div class="ref-stat-num" data-bind-text="kpis.4.value">C$0.00</div><div class="ref-stat-label" data-bind-text="kpis.4.label">Est. Value</div></div>
+        <div class="ref-stat"><div class="ref-stat-num" data-bind-text="kpis.5.value">C$0.00</div><div class="ref-stat-label" data-bind-text="kpis.5.label">Commission Paid</div></div>
+      </div>
+
+      <div class="ref-tabs">
+        <button class="ref-tab active" data-rtab="overview">Overview</button>
+        <button class="ref-tab" data-rtab="referrers">Referrers</button>
+        <button class="ref-tab" data-rtab="leads">Leads</button>
+      </div>
+
+      <div class="ref-section" data-rpanel="overview">
+        <h2 class="ref-section-title" data-bind-text="headings.1">Recent Referral Leads</h2>
+        <table class="ref-table">
+          <thead><tr><th>Referrer</th><th>Customer</th><th>Service</th><th>Est. Value</th><th>Status</th><th>Commission</th><th>Date</th></tr></thead>
+          <tbody data-bind="rows"><template><tr><td><b>{{c0_name}}</b><div class="cell-light" style="font-size:11px;color:var(--ink-3);display:none"></div></td><td>{{c1_text}}</td><td>{{c2_text}}</td><td>{{c3_text}}</td><td><span class="pill-status booked">Active</span></td><td><button class="row-action">Pay</button></td></tr></template></tbody>
+        </table>
+      </div>
+
+      <div class="ref-section" data-rpanel="referrers" style="display:none;">
+        <h2 class="ref-section-title" data-bind-text="headings.2">All Referrers</h2>
+        <table class="ref-table">
+          <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Company</th><th>Commission</th><th>Total Referred</th><th>Actions</th></tr></thead>
+          <tbody data-bind="payouts"><template><tr><td>{{c0_text}}</td><td>{{c1_text}}</td><td>{{c2_text}}</td><td>{{c3_text}}</td><td><span class="pill-status booked">Paid</span></td></tr></template></tbody>
+        </table>
+      </div>
+
+      <div class="ref-section" data-rpanel="leads" style="display:none;">
+        <h2 class="ref-section-title" data-bind-text="headings.3">All Referral Leads</h2>
+        <table class="ref-table">
+          <thead><tr><th>Date</th><th>Referrer</th><th>Customer</th><th>Service</th><th>Est. Value</th><th>Status</th><th>Commission</th></tr></thead>
+          <tbody data-bind="archive"><template><tr><td><b>{{c0_name}}</b><div class="cell-light" style="font-size:11px;color:var(--ink-3);display:none"></div></td><td>{{c1_text}}</td><td>{{c2_text}}</td><td>{{c3_text}}</td><td><span class="pill-status archived">Archived</span></td><td><button class="row-action">Restore</button></td></tr></template></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="modal-overlay" id="addReferrerModal">
+  <div class="modal">
+    <h2 class="modal-title" data-bind-text="headings.4">Add Referrer</h2>
+    <div class="modal-grid">
+      <div class="modal-field full"><label class="modal-label">Name <span style="color:var(--bad);">*</span></label><input name="name" class="modal-input" type="text" placeholder="e.g. John Smith"></div>
+      <div class="modal-field"><label class="modal-label">Email</label><input name="email" class="modal-input" type="email" placeholder="john@example.com"></div>
+      <div class="modal-field"><label class="modal-label">Phone</label><input name="phone" class="modal-input" type="tel" placeholder="(555) 123-4567"></div>
+      <div class="modal-field full"><label class="modal-label">Company / Organization</label><input name="companyOrganization" class="modal-input" type="text" placeholder="Optional"></div>
+      <div class="modal-field"><label class="modal-label">Commission Type</label><select name="commissionType" class="modal-select" data-bind-options="commissionTypeOptions"><option value="None">None</option></select></div>
+      <div class="modal-field"><label class="modal-label">Commission Amount</label><input name="commissionAmount" class="modal-input" type="number" value="0.00" step="0.01"></div>
+      <div class="modal-field full"><label class="modal-label">Notes</label><textarea name="notes" class="modal-textarea" placeholder="Any notes about this referrer…"></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <button data-modal-close class="ref-btn-secondary">Cancel</button>
+      <button data-modal-save class="ref-btn btn-primary">Add Referrer</button>
+    </div>
+  </div>
+</div>
+<div class="s1-overlay gm-overlay" id="payCommissionModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Referrals</div><h4>Pay commission</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Referrer id</label><input class="s1-input" type="text" name="referrerId"></div>
+    <div><label class="s1-mlabel">Amount</label><input class="s1-input" type="text" name="amount"></div>
+    <div><label class="s1-mlabel">Pay on</label><input class="s1-input" type="date" name="payOn"></div>
+    <div><label class="s1-mlabel">Method</label><select class="s1-select" name="method" data-bind-options="paymentMethods"><option value="">Choose…</option></select></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Pay</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="editReferrerModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Referrals</div><h4>Edit referrer</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Referrer id</label><input class="s1-input" type="text" name="id"></div>
+    <div><label class="s1-mlabel">Name</label><input class="s1-input" type="text" name="name"></div>
+    <div><label class="s1-mlabel">Email</label><input class="s1-input" type="email" name="email"></div>
+    <div><label class="s1-mlabel">Phone</label><input class="s1-input" type="tel" name="phone"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Save</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="archiveReferrerModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Referrals</div><h4>Archive</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Referrer id</label><input class="s1-input" type="text" name="id"></div>
+    <div><label class="s1-mlabel">Reason</label><input class="s1-input" type="text" name="reason"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Archive</button></div>
+</div></div>
+<script src="../../core/event-bus.js"></script>
+<script src="../../core/state-store.js"></script>
+<script src="../../core/schema.js"></script>
+<script src="../../core/fixtures.js"></script>
+<script src="../../core/communication.mock.js"></script>
+<script src="../../core/communication.api.js"></script>
+<script src="../../core/communication.js"></script>
+<script src="../../core/render.js"></script>
+<script src="../../core/standard-page.js"></script>
+<script src="../../core/google-places.js"></script>
+<script src="./module.js"></script>
+<script>
+document.querySelectorAll('.ref-tab').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.ref-tab').forEach(x => x.classList.toggle('active', x === b));
+  document.querySelectorAll('[data-rpanel]').forEach(p => p.style.display = p.dataset.rpanel === b.dataset.rtab ? '' : 'none');
+}));
+</script>
+</body>
+</html>

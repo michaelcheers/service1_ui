@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Phone System — Redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_system.css">
+<style>
+.ph-wrap { padding: 22px 24px 56px; display: grid; grid-template-columns: 380px 1fr; gap: 18px; }
+.ph-tabs { display:flex; border-bottom:var(--hair); margin-bottom:14px; }
+.ph-tab { padding:11px 16px; font-size:13px; font-weight:600; color:var(--ink-3); cursor:pointer; background:transparent; border:0; border-bottom:2px solid transparent; }
+.ph-tab.active { color:var(--terra); border-bottom-color:var(--terra); }
+
+/* Dialer */
+.dialer { background:#fff; border:var(--hair); border-radius:12px; padding:20px; }
+.dialer-disp { font-size:28px; font-weight:600; text-align:center; padding:18px 0 6px; min-height:60px; letter-spacing:0.05em; font-variant-numeric:tabular-nums; }
+.dialer-sub { text-align:center; font-size:12px; color:var(--ink-3); margin-bottom:14px; }
+.dialer-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:14px; }
+.key { aspect-ratio:1; background:var(--surface-2); border:var(--hair); border-radius:10px; font-size:22px; font-weight:600; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.key:hover { background:#fff; box-shadow:0 2px 6px rgba(15,23,42,.08); }
+.key .sub { font-size:9px; color:var(--ink-3); letter-spacing:0.15em; margin-top:2px; }
+.dialer-call { display:flex; gap:8px; }
+.dialer-call .call { flex:1; padding:14px; background:#16A34A; color:#fff; border:0; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; }
+.dialer-call .del { padding:14px 16px; background:#fff; border:var(--hair); border-radius:10px; cursor:pointer; }
+.dialer-line { display:flex; gap:8px; margin-top:14px; padding-top:14px; border-top:var(--hair); }
+.dialer-line select { flex:1; padding:8px 10px; border:var(--hair); border-radius:6px; font-size:12.5px; }
+
+/* List */
+.list-card { background:#fff; border:var(--hair); border-radius:10px; padding:18px 20px; }
+.list-card h2 { margin:0 0 14px; font-size:15px; font-weight:700; }
+.list-toolbar { display:flex; gap:8px; align-items:center; margin-bottom:12px; padding-bottom:10px; border-bottom:var(--hair); }
+.list-toolbar input { flex:1; padding:7px 10px; border:var(--hair); border-radius:6px; font-size:12.5px; }
+.list-toolbar select { padding:7px 10px; border:var(--hair); border-radius:6px; font-size:12.5px; }
+.list-row { display:grid; grid-template-columns: 32px 1fr auto auto; gap:12px; align-items:center; padding:12px 0; border-bottom:var(--hair); }
+.list-row:last-child { border-bottom:0; }
+.list-icon { width:32px; height:32px; border-radius:999px; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:600; }
+.list-icon.in { background:#D1FAE5; color:#065F46; }
+.list-icon.out { background:#DBEAFE; color:#1E40AF; }
+.list-icon.miss { background:#FEE2E2; color:#B91C1C; }
+.list-icon.vm { background:#FEF3C7; color:#92400E; }
+.list-num { font-weight:600; font-size:13px; }
+.list-meta { font-size:11px; color:var(--ink-3); margin-top:1px; }
+.list-time { font-size:12px; color:var(--ink-3); white-space:nowrap; }
+.list-actions { display:flex; gap:6px; }
+.list-actions button { padding:6px 8px; background:#fff; border:var(--hair); border-radius:5px; font-size:11.5px; cursor:pointer; }
+.audio-bar { display:flex; align-items:center; gap:8px; margin-top:6px; padding:6px 8px; background:var(--surface-2); border-radius:6px; }
+.audio-bar .play { width:24px; height:24px; border-radius:999px; background:var(--terra); color:#fff; border:0; cursor:pointer; font-size:11px; }
+.audio-bar .progress { flex:1; height:4px; background:var(--line-2); border-radius:999px; overflow:hidden; }
+.audio-bar .progress .bar { background:var(--terra); height:100%; width:32%; }
+.audio-bar .dur { font-size:11px; color:var(--ink-3); font-variant-numeric:tabular-nums; }
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_aesthetic.css">
+</head>
+<body>
+<div class="app" data-screen-label="Phone System"><main class="page">
+    <div class="ph-wrap">
+      <div>
+        <div class="dialer">
+          <div class="dialer-disp">+1 (416) 555-<span style="opacity:.4;">____</span></div>
+          <div class="dialer-sub">Outbound · From <b>+1 (416) 555-0119</b> (Customer SMS)</div>
+          <div class="dialer-grid">
+            <button data-dialer="1" class="key">1<span class="sub"></span></button>
+            <button data-dialer="2" class="key">2<span class="sub">ABC</span></button>
+            <button data-dialer="3" class="key">3<span class="sub">DEF</span></button>
+            <button data-dialer="4" class="key">4<span class="sub">GHI</span></button>
+            <button data-dialer="5" class="key">5<span class="sub">JKL</span></button>
+            <button data-dialer="6" class="key">6<span class="sub">MNO</span></button>
+            <button data-dialer="7" class="key">7<span class="sub">PQRS</span></button>
+            <button data-dialer="8" class="key">8<span class="sub">TUV</span></button>
+            <button data-dialer="9" class="key">9<span class="sub">WXYZ</span></button>
+            <button class="key">*<span class="sub"></span></button>
+            <button data-dialer="0" class="key">0<span class="sub">+</span></button>
+            <button class="key">#<span class="sub"></span></button>
+          </div>
+          <div class="dialer-call">
+            <button data-comm-action="action:phoneSystem.call.place" class="call">📞 Call</button>
+            <button class="del">⌫</button>
+          </div>
+          <div class="dialer-line">
+            <select data-bind-options="optionsOptions"></select>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="ph-tabs">
+          <button class="ph-tab active" data-ptab="recent">Recent Calls</button>
+          <button class="ph-tab" data-ptab="voicemails">Voicemails</button>
+          <button class="ph-tab" data-ptab="recordings">Call Recordings</button>
+          <button class="ph-tab" data-ptab="texts">Texts</button>
+          <button class="ph-tab" data-ptab="contacts">Contacts</button>
+        </div>
+
+        <div data-ppanel="recent">
+          <div class="list-card">
+            <h2 data-bind-text="headings.1">Recent Calls</h2>
+            <div class="list-toolbar"><input placeholder="Search number or name…"><select data-bind-options="optionsOptions2"><option value="All directions">All directions</option></select></div>
+            <div class="list-row"><div class="list-icon in">▼</div><div><div class="list-num"><span data-bind-text="recent.0.name">Johanna Kuyvenhoven</span></div><div class="list-meta">+1 (587) 920-4170 · Inbound · 4m 21s</div></div><div class="list-time">2:14 PM</div><div class="list-actions"><button>📞</button><button>💬</button><button>👤</button></div></div>
+            <div class="list-row"><div class="list-icon out">▲</div><div><div class="list-num" data-bind-text="metrics.list_num.0">Keera Roberts</div><div class="list-meta">+1 (672) 208-2675 · Outbound · 2m 08s</div></div><div class="list-time">1:08 PM</div><div class="list-actions"><button>📞</button><button>💬</button><button>👤</button></div></div>
+            <div class="list-row"><div class="list-icon miss">✕</div><div><div class="list-num" data-bind-text="metrics.list_num.1">Harman</div><div class="list-meta">+1 (778) 816-2400 · Missed</div></div><div class="list-time">12:42 PM</div><div class="list-actions"><button>📞</button><button>💬</button><button>👤</button></div></div>
+            <div class="list-row"><div class="list-icon in">▼</div><div><div class="list-num" data-bind-text="metrics.list_num.2">Vicky Milosevic-Hill</div><div class="list-meta">+1 (905) 616-3324 · Inbound · 4m 21s</div></div><div class="list-time">11:55 AM</div><div class="list-actions"><button>📞</button><button>💬</button><button>👤</button></div></div>
+            <div class="list-row"><div class="list-icon out">▲</div><div><div class="list-num" data-bind-text="metrics.list_num.3">Frances Knox</div><div class="list-meta">+1 (778) 318-2924 · Outbound · 6m 38s</div></div><div class="list-time">Yesterday</div><div class="list-actions"><button>📞</button><button>💬</button><button>👤</button></div></div>
+            <div class="list-row"><div class="list-icon miss">✕</div><div><div class="list-num" data-bind-text="metrics.list_num.4">Unknown · +1 (416) 822-9931</div><div class="list-meta">Missed</div></div><div class="list-time">Yesterday</div><div class="list-actions"><button>📞</button><button>💬</button><button>👤</button></div></div>
+          </div>
+        </div>
+
+        <div data-ppanel="voicemails" style="display:none;">
+          <div class="list-card">
+            <h2 data-bind-text="headings.2">Voicemails</h2>
+            <div class="list-row"><div class="list-icon vm">▶</div><div style="flex:1;"><div class="list-num" data-bind-text="metrics.list_num.5">Danielle Melnyk</div><div class="list-meta">+1 (403) 991-5973 · 38 sec</div><div class="audio-bar"><button class="play">▶</button><div class="progress"><div class="bar"></div></div><span class="dur">0:12 / 0:38</span></div></div><div class="list-time">Today</div><div class="list-actions"><button data-comm-action="action:phoneSystem.call.back">📞 Call back</button></div></div>
+            <div class="list-row"><div class="list-icon vm">▶</div><div style="flex:1;"><div class="list-num" data-bind-text="metrics.list_num.6">Unknown · +1 (647) 222-8801</div><div class="list-meta">1m 02s</div><div class="audio-bar"><button class="play">▶</button><div class="progress"><div class="bar"></div></div><span class="dur">0:00 / 1:02</span></div></div><div class="list-time">Yesterday</div><div class="list-actions"><button data-comm-action="action:phoneSystem.call.back">📞 Call back</button></div></div>
+          </div>
+        </div>
+
+        <div data-ppanel="recordings" style="display:none;">
+          <div class="list-card">
+            <h2 data-bind-text="headings.3">Call Recordings</h2>
+            <div class="list-row"><div class="list-icon in">▼</div><div style="flex:1;"><div class="list-num"><span data-bind-text="recent.1.name">Johanna Kuyvenhoven</span></div><div class="list-meta">+1 (587) 920-4170 · Inbound</div><div class="audio-bar"><button class="play">▶</button><div class="progress"><div class="bar"></div></div><span class="dur">0:00 / 4:21</span></div></div><div class="list-time">2:14 PM</div><div class="list-actions"><button data-comm-action="action:phoneSystem.recording.download">⬇ Download</button></div></div>
+            <div class="list-row"><div class="list-icon out">▲</div><div style="flex:1;"><div class="list-num" data-bind-text="metrics.list_num.7">Frances Knox</div><div class="list-meta">+1 (778) 318-2924 · Outbound</div><div class="audio-bar"><button class="play">▶</button><div class="progress"><div class="bar"></div></div><span class="dur">0:00 / 6:38</span></div></div><div class="list-time">Yesterday</div><div class="list-actions"><button data-comm-action="action:phoneSystem.recording.download">⬇ Download</button></div></div>
+          </div>
+        </div>
+
+        <div data-ppanel="texts" style="display:none;">
+          <div class="list-card">
+            <h2 data-bind-text="headings.4">Texts</h2>
+            <div class="list-row"><div class="list-icon in">💬</div><div><div class="list-num" data-bind-text="metrics.list_num.8">Keera Roberts</div><div class="list-meta">"Sounds good — see you at 9 sharp tomorrow."</div></div><div class="list-time">1:08 PM</div><div class="list-actions"><button data-comm-action="action:phoneSystem.sms.reply">Reply</button></div></div>
+            <div class="list-row"><div class="list-icon in">💬</div><div><div class="list-num" data-bind-text="metrics.list_num.9">Emily M</div><div class="list-meta">"Yes! Confirming for Saturday 8 AM."</div></div><div class="list-time">9:48 AM</div><div class="list-actions"><button data-comm-action="action:phoneSystem.sms.reply">Reply</button></div></div>
+            <div class="list-row"><div class="list-icon out">💬</div><div><div class="list-num" data-bind-text="metrics.list_num.10">Kim Th</div><div class="list-meta">"Hi Kim, our crew is 15 min out — see you soon!"</div></div><div class="list-time">Yesterday</div><div class="list-actions"><button data-comm-action="action:phoneSystem.view">View</button></div></div>
+          </div>
+        </div>
+
+        <div data-ppanel="contacts" style="display:none;">
+          <div class="list-card">
+            <h2 data-bind-text="headings.5">Contacts</h2>
+            <div class="list-toolbar"><input placeholder="Search contacts…"></div>
+            <div class="list-row"><div class="list-icon in" style="background:#1E40AF;color:#fff;">JK</div><div><div class="list-num"><span data-bind-text="recent.2.name">Johanna Kuyvenhoven</span></div><div class="list-meta">+1 (587) 920-4170 · jkuyvenhoven94@gmail.com</div></div><div class="list-time"></div><div class="list-actions"><button>📞</button><button>💬</button></div></div>
+            <div class="list-row"><div class="list-icon in" style="background:#16A34A;color:#fff;">KR</div><div><div class="list-num" data-bind-text="metrics.list_num.11">Keera Roberts</div><div class="list-meta">+1 (672) 208-2675</div></div><div class="list-time"></div><div class="list-actions"><button>📞</button><button>💬</button></div></div>
+            <div class="list-row"><div class="list-icon in" style="background:#EA580C;color:#fff;">H</div><div><div class="list-num" data-bind-text="metrics.list_num.12">Harman</div><div class="list-meta">+1 (778) 816-2400</div></div><div class="list-time"></div><div class="list-actions"><button>📞</button><button>💬</button></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div><div class="s1-overlay gm-overlay" id="placeCallModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Phone system</div><h4>Place call</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Phone number</label><input class="s1-input" type="tel" name="number"></div>
+    <div><label class="s1-mlabel">Line</label><select class="s1-select" name="lineId" data-bind-options="lines"><option value="">Choose…</option></select></div>
+    <div class="full"><label class="s1-mlabel">Notes</label><textarea class="s1-textarea" name="notes"></textarea></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Call</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="addPhoneContactModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Phone system</div><h4>Add contact</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Name</label><input class="s1-input" type="text" name="name"></div>
+    <div><label class="s1-mlabel">Number</label><input class="s1-input" type="tel" name="number"></div>
+    <div><label class="s1-mlabel">Company</label><input class="s1-input" type="text" name="company"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Add</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="forwardCallModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Phone system</div><h4>Forward call</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Forward to</label><select class="s1-select" name="target" data-bind-options="forwardTargets"><option value="">Choose…</option></select></div>
+    <div><label class="s1-mlabel">When</label><select class="s1-select" name="when" data-bind-options="whenOptions"><option value="">Choose…</option></select></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Save</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="voicemailSettingsModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Phone system</div><h4>Voicemail settings</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Greeting</label><select class="s1-select" name="greeting" data-bind-options="voicemailGreetings"><option value="">Choose…</option></select></div>
+    <div><label class="s1-mlabel">Notify email</label><input class="s1-input" type="email" name="notifyEmail"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Save settings</button></div>
+</div></div>
+<script src="../../core/event-bus.js"></script>
+<script src="../../core/state-store.js"></script>
+<script src="../../core/schema.js"></script>
+<script src="../../core/fixtures.js"></script>
+<script src="../../core/communication.mock.js"></script>
+<script src="../../core/communication.api.js"></script>
+<script src="../../core/communication.js"></script>
+<script src="../../core/render.js"></script>
+<script src="../../core/standard-page.js"></script>
+<script src="../../core/google-places.js"></script>
+<script src="./module.js"></script>
+<script>
+document.querySelectorAll('.ph-tab').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.ph-tab').forEach(x => x.classList.toggle('active', x === b));
+  document.querySelectorAll('[data-ppanel]').forEach(p => p.style.display = p.dataset.ppanel === b.dataset.ptab ? '' : 'none');
+}));
+</script>
+</body>
+</html>

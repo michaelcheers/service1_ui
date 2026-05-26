@@ -1,0 +1,13 @@
+{
+  "name": "incomingCall",
+  "title": "Incoming call",
+  "source": "IncomingCall.html",
+  "fixture": "incomingCall",
+  "reads": [
+    "incomingCall"
+  ],
+  "writes": [
+    "incomingCall"
+  ],
+  "icon": "incomingCall"
+}

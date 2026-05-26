@@ -1,0 +1,13 @@
+{
+  "name": "salesFollowUps",
+  "title": "Sales follow-ups",
+  "source": "SalesFollowUps.html",
+  "fixture": "salesFollowUps",
+  "reads": [
+    "salesFollowUps"
+  ],
+  "writes": [
+    "salesFollowUps"
+  ],
+  "icon": "salesFollowUps"
+}

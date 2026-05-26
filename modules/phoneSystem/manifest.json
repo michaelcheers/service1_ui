@@ -1,0 +1,13 @@
+{
+  "name": "phoneSystem",
+  "title": "Phone system",
+  "source": "PhoneSystem.html",
+  "fixture": "phoneSystem",
+  "reads": [
+    "phoneSystem"
+  ],
+  "writes": [
+    "phoneSystem"
+  ],
+  "icon": "phoneSystem"
+}

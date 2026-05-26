@@ -1,0 +1,13 @@
+{
+  "name": "createCustomer",
+  "title": "Create customer",
+  "source": "CreateCustomer.html",
+  "fixture": "createCustomer",
+  "reads": [
+    "createCustomer"
+  ],
+  "writes": [
+    "createCustomer"
+  ],
+  "icon": "createCustomer"
+}

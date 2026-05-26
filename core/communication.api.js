@@ -1,107 +1,157 @@
-// ApiComm — talks to the real ASP.NET backend. Used when service1_ui is
-// embedded by the Service1 app (window.SERVICE1_UI_MODE = 'api').
-// Classic-script build (file:// safe): no ES module; reads bus from window.S1.
+// PostMessageComm — talks to the host page via postMessage RPC.
 //
-// All methods share the same surface as MockComm. Endpoints follow the
-// resource catalogue in the plan; resources with a "/" map to nested
-// paths (e.g. "finance/invoices" -> /api/finance/invoices).
+// ui.service1.app is hosted on GitHub Pages (no backend, no API). When the
+// host (business_card) iframes us, every comm op flows over postMessage:
 //
-// NOTE: this backend only works over http(s) against the host. Opening the
-// site via file:// always uses MockComm; api mode is a prod-embed concern.
+//   us  → host: { type:'s1ui:rpc', id, method, resource, payload }
+//   host → us:  { type:'s1ui:rpc:reply', id, ok:true,  data }
+//             | { type:'s1ui:rpc:reply', id, ok:false, error }
+//
+// The host also pushes state proactively:
+//
+//   host → us:  { type:'s1ui:state', fixture, state }   // initial + after mutations
+//   host → us:  { type:'s1ui:event', resource, event }  // for subscribers
+//
+// Classic-script build (file:// safe): no ES modules; reads bus from window.S1.
+// Standalone access is blocked one level up in communication.js, so by the
+// time this is selected we're guaranteed to have a parent window.
 (function () {
   const bus = window.S1.bus;
 
-  const BASE = (typeof window !== 'undefined' && window.SERVICE1_UI_API_BASE) || '/api';
-
-  function endpoint(resource, id) {
-    const path = resource.replace(/\/:id\b/, '');
-    return BASE + '/' + path + (id != null ? '/' + encodeURIComponent(id) : '');
+  const RPC_TIMEOUT_MS = 30000;
+  // Host origin pin. Set by the embedding host via a meta tag when the
+  // page boots, e.g. <meta name="s1ui-host-origin" content="https://app.service1.app">.
+  // Fall back to '*' only if the host didn't pin (dev). Outbound posts go
+  // to window.parent regardless; inbound messages are filtered by origin.
+  function hostOrigin() {
+    const m = document.querySelector('meta[name="s1ui-host-origin"]');
+    const v = m && m.getAttribute('content');
+    return v && v.length ? v : '*';
   }
+  const HOST_ORIGIN = hostOrigin();
 
-  function csrf() {
-    const m = document.querySelector('meta[name="csrf-token"]');
-    return m ? m.getAttribute('content') : '';
-  }
+  let rpcSeq = 0;
+  const pending = new Map();  // id -> { resolve, reject, timer }
+  const subscribers = new Map();  // resource -> Set<cb>
 
-  async function call(method, url, body) {
-    const res = await fetch(url, {
-      method,
-      credentials: 'include',
-      headers: {
-        'Accept': 'application/json',
-        ...(body ? { 'Content-Type': 'application/json' } : {}),
-        ...(csrf() ? { 'X-CSRF-Token': csrf() } : {})
-      },
-      body: body ? JSON.stringify(body) : undefined
+  function newId() { rpcSeq = (rpcSeq + 1) | 0; return 'r' + rpcSeq + '_' + Date.now().toString(36); }
+
+  function rpc(method, resource, payload) {
+    return new Promise(function (resolve, reject) {
+      const id = newId();
+      const timer = setTimeout(function () {
+        pending.delete(id);
+        reject(new Error('s1ui:rpc timeout: ' + method + ' ' + resource));
+      }, RPC_TIMEOUT_MS);
+      pending.set(id, { resolve: resolve, reject: reject, timer: timer });
+      try {
+        window.parent.postMessage(
+          { type: 's1ui:rpc', id: id, method: method, resource: resource, payload: payload },
+          HOST_ORIGIN
+        );
+      } catch (e) {
+        clearTimeout(timer);
+        pending.delete(id);
+        reject(e);
+      }
     });
-    if (!res.ok) throw new Error(method + ' ' + url + ' -> ' + res.status);
-    const ct = res.headers.get('content-type') || '';
-    return ct.includes('application/json') ? res.json() : res.text();
   }
 
-  class ApiComm {
-    constructor() { this._subs = new Map(); this._log = []; }
+  window.addEventListener('message', function (ev) {
+    // Drop messages from origins other than the pinned host (when pinned).
+    if (HOST_ORIGIN !== '*' && ev.origin !== HOST_ORIGIN) return;
+    const d = ev.data;
+    if (!d || typeof d !== 'object') return;
+
+    if (d.type === 's1ui:rpc:reply') {
+      const p = pending.get(d.id);
+      if (!p) return;
+      clearTimeout(p.timer);
+      pending.delete(d.id);
+      if (d.ok) p.resolve(d.data);
+      else      p.reject(new Error(d.error || 's1ui:rpc failed'));
+      return;
+    }
+
+    if (d.type === 's1ui:event') {
+      const set = subscribers.get(d.resource);
+      if (set) set.forEach(function (cb) { try { cb(d.event); } catch {} });
+      bus.emit('resource:' + d.resource, d.event || { kind: 'event' });
+      return;
+    }
+  });
+
+  class PostMessageComm {
+    constructor() { this._log = []; }
 
     _record(kind, resource, payload, result) {
-      const e = { t: Date.now(), kind, resource, payload, result };
+      const e = { t: Date.now(), kind: kind, resource: resource, payload: payload, result: result };
       this._log.push(e); if (this._log.length > 500) this._log.shift();
       bus.emit('comm:log', e);
+      if (window.parent && window.parent !== window) {
+        try { window.parent.postMessage({ type: 's1ui:comm:log', entry: e }, '*'); } catch {}
+      }
     }
 
     async get(resource, params) {
-      const url = endpoint(resource) + (params ? '?' + new URLSearchParams(params) : '');
-      const out = await call('GET', url);
+      const out = await rpc('get', resource, params || null);
       this._record('get', resource, params, out);
       return out;
     }
 
     async save(resource, payload) {
-      const hasId = payload && payload.id != null;
-      const url = endpoint(resource, hasId ? payload.id : null);
-      const out = await call(hasId ? 'PUT' : 'POST', url, payload);
+      const out = await rpc('save', resource, payload);
       this._record('save', resource, payload, out);
       return out;
     }
 
     async delete(resource, id) {
-      const url = endpoint(resource, id);
-      const out = await call('DELETE', url);
-      this._record('delete', resource, { id }, out);
+      const out = await rpc('delete', resource, { id: id });
+      this._record('delete', resource, { id: id }, out);
       return out;
     }
 
-    subscribe(resource, cb) {
-      // Best-effort SignalR-ish stub: poll every 10s. The real hub
-      // connection should be wired here when the prod hub is settled.
-      const t = setInterval(async () => {
-        try { cb({ kind: 'poll', data: await this.get(resource) }); } catch {}
-      }, 10000);
-      this._record('subscribe', resource, null, '(polling)');
-      return () => clearInterval(t);
-    }
-
     async action(name, payload) {
-      const out = await call('POST', BASE + '/actions/' + name, payload);
+      const out = await rpc('action', name, payload);
       this._record('action', name, payload, out);
       return out;
     }
 
     async upload(file, meta) {
-      const fd = new FormData();
-      fd.append('file', file);
-      if (meta) fd.append('meta', JSON.stringify(meta));
-      const res = await fetch(BASE + '/upload', {
-        method: 'POST', credentials: 'include',
-        headers: csrf() ? { 'X-CSRF-Token': csrf() } : {}, body: fd
+      // Files don't survive postMessage cleanly; read to a data URL and
+      // forward. Large uploads should be redirected to a host-served form.
+      const dataUrl = await new Promise(function (resolve, reject) {
+        const r = new FileReader();
+        r.onload = function () { resolve(r.result); };
+        r.onerror = function () { reject(r.error || new Error('read failed')); };
+        r.readAsDataURL(file);
       });
-      if (!res.ok) throw new Error('upload ' + res.status);
-      const out = await res.json();
-      this._record('upload', 'file', { name: file?.name, size: file?.size }, out);
+      const out = await rpc('upload', 'file', {
+        name: file && file.name, size: file && file.size, type: file && file.type,
+        meta: meta || null, dataUrl: dataUrl
+      });
+      this._record('upload', 'file', { name: file && file.name, size: file && file.size }, out);
       return out;
     }
 
+    subscribe(resource, cb) {
+      let set = subscribers.get(resource);
+      if (!set) { set = new Set(); subscribers.set(resource, set); }
+      set.add(cb);
+      // Tell the host so it can push events for this resource.
+      try { window.parent.postMessage({ type: 's1ui:subscribe', resource: resource }, HOST_ORIGIN); } catch {}
+      this._record('subscribe', resource, null, '(subscribed)');
+      return function unsubscribe() {
+        set.delete(cb);
+        if (!set.size) {
+          subscribers.delete(resource);
+          try { window.parent.postMessage({ type: 's1ui:unsubscribe', resource: resource }, HOST_ORIGIN); } catch {}
+        }
+      };
+    }
+
     async currentUser() {
-      const u = await call('GET', BASE + '/me');
+      const u = await rpc('get', 'auth/me', null);
       this._record('get', 'auth/me', null, u);
       return u;
     }
@@ -110,5 +160,5 @@
   }
 
   window.S1 = window.S1 || {};
-  window.S1.ApiComm = ApiComm;
+  window.S1.ApiComm = PostMessageComm;
 })();

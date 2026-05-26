@@ -1,36 +1,345 @@
-<!DOCTYPE html><html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Crew Processes</title>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Crew Job Processes — Redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../../assets/css/module.css">
+<link rel="stylesheet" href="_system.css">
+<template id="__bundler_thumbnail" data-bg-color="#FFFFFF"><svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg"><rect width="1200" height="800" fill="#FFFFFF"/><rect x="60" y="60" width="80" height="80" rx="12" fill="#004D40"/><text x="100" y="115" text-anchor="middle" font-family="Inter" font-weight="800" font-size="28" fill="#D4960A">S</text><rect x="200" y="80" width="260" height="22" rx="3" fill="#0A2540"/><rect x="200" y="160" width="940" height="580" rx="6" fill="#FAFBFC" stroke="#EFF2F5"/><text x="600" y="790" text-anchor="middle" font-family="Inter" font-weight="500" font-size="14" fill="#697386">Crew Processes · Loading…</text></svg></template>
+
 <style>
-.proc { border:1px solid var(--line); border-radius: var(--r); padding: 16px; margin-bottom: 16px; }
-.proc-head { display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px; }
-.step { display: grid; grid-template-columns: 24px 1fr 100px; gap: 10px; padding: 6px 0; border-top: 1px dashed var(--line); }
-.step:first-child { border-top: 0; }
-.step-n { font-weight: 600; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.cpw-card {
+  background:#fff; border:var(--hair); border-radius:var(--r-card, 12px); padding:18px 20px; margin-bottom:14px;
+}
+.cpw-card-head { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:10px; gap:14px; }
+.cpw-card-title { font-size:15px; font-weight:700; letter-spacing:-0.01em; }
+.cpw-card-desc { font-size:12.5px; color:var(--ink-3); margin-top:3px; line-height:1.4; }
+.cpw-card-meta { font-size:11px; color:var(--ink-3); display:flex; gap:14px; margin-top:8px; }
+.cpw-card-meta b { color:var(--ink); font-variant-numeric:tabular-nums; }
+.cpw-pill { display:inline-block; padding:3px 10px; border-radius:999px; font-size:11px; font-weight:600; }
+.cpw-pill.active { background:var(--ok-soft); color:var(--ok); }
+.cpw-pill.default { background:var(--terra-soft); color:var(--terra); }
+.cpw-pill.inactive { background:var(--surface-2); color:var(--ink-3); }
+
+.cpw-steps { display:flex; flex-direction:column; gap:8px; padding-top:14px; border-top:var(--hair); margin-top:14px; }
+.cpw-step { display:grid; grid-template-columns:24px 1fr auto; gap:10px; align-items:center; font-size:12.5px; }
+.cpw-step-num {
+  width:22px; height:22px; border-radius:999px; background:var(--surface-2); color:var(--ink-3);
+  display:inline-flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:700;
+}
+.cpw-step-req { font-size:10px; padding:1px 7px; border-radius:4px; background:var(--bad-soft); color:var(--bad); font-weight:700; }
+.cpw-step-opt { font-size:10px; padding:1px 7px; border-radius:4px; background:var(--surface-2); color:var(--ink-3); font-weight:600; }
+
+.cpw-empty { padding:60px 20px; text-align:center; color:var(--ink-3); background:#fff; border:var(--hair); border-radius:8px; }
+
+.cpw-actions { display:flex; gap:6px; }
+.cpw-actions button {
+  font-size:12px; padding:6px 10px; background:transparent; border:var(--hair); border-radius:6px;
+  color:var(--ink-2); cursor:pointer;
+}
+.cpw-actions button:hover { background:var(--surface-2); color:var(--ink); }
+.cpw-actions button.danger { color:var(--bad); }
 </style>
-</head><body>
-<div class="wrap">
-  <div class="page-bar"><div class="page-title">Crew Processes</div></div>
 
-  <section class="section">
-    <h3 class="section-title">Active crews</h3>
-    <table class="tbl">
-      <thead><tr><th>#</th><th>Name</th></tr></thead>
-      <tbody data-bind="crews">
-        <template>
-          <tr><td>{{id|num}}</td><td>{{name}}</td></tr>
-        </template>
-      </tbody>
-    </table>
-  </section>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_aesthetic.css">
+</head>
+<body>
+<div class="app" data-screen-label="Crew Processes"><main class="page">
+    <div class="wrap">
 
-  <section class="section">
-    <h3 class="section-title">Processes</h3>
-    <div id="processes-host"></div>
-  </section>
+      <div class="page-bar">
+        <div class="page-title-row">
+          <div class="page-title"><span data-bind-text="summary">Crew Job Processes</span></div>
+          <span class="muted" data-bind-text="subtitle">Define step-by-step processes for crew members to follow on jobs</span>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-primary" onclick="document.getElementById('newProcModal').classList.add('open')">+ New Process</button>
+        </div>
+      </div>
+
+      <!-- List of process templates -->
+      <div id="cpwList">
+        <div class="cpw-card">
+          <div class="cpw-card-head">
+            <div>
+              <div class="cpw-card-title">Standard Job Process</div>
+              <div class="cpw-card-desc">Default end-to-end process for a typical residential local move</div>
+              <div class="cpw-card-meta"><span><b>9</b> steps</span><span><b>~35 min</b> avg</span><span>Used <b>248</b> times this month</span></div>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:6px;flex-shrink:0;">
+              <span class="cpw-pill active">Active</span>
+              <span class="cpw-pill default">Default</span>
+            </div>
+          </div>
+          <div class="cpw-steps">
+            <div class="cpw-step"><span class="cpw-step-num">1</span><div><b>Sign contracts</b> · confirm scope with customer</div><span class="cpw-step-req">Required</span></div>
+            <div class="cpw-step"><span class="cpw-step-num">2</span><div><b>Do walkthrough</b> · photograph rooms &amp; items</div><span class="cpw-step-req">Required</span></div>
+            <div class="cpw-step"><span class="cpw-step-num">3</span><div><b>Pad &amp; wrap furniture</b></div><span class="cpw-step-req">Required</span></div>
+            <div class="cpw-step"><span class="cpw-step-num">4</span><div><b>Load truck</b> · count items into manifest</div><span class="cpw-step-req">Required</span></div>
+            <div class="cpw-step"><span class="cpw-step-num">5</span><div><b>Drive to destination</b></div><span class="cpw-step-opt">Auto</span></div>
+            <div class="cpw-step"><span class="cpw-step-num">6</span><div><b>Destination walkthrough</b></div><span class="cpw-step-req">Required</span></div>
+            <div class="cpw-step"><span class="cpw-step-num">7</span><div><b>Unload &amp; place</b></div><span class="cpw-step-req">Required</span></div>
+            <div class="cpw-step"><span class="cpw-step-num">8</span><div><b>Damage report</b> · if applicable</div><span class="cpw-step-opt">Optional</span></div>
+            <div class="cpw-step"><span class="cpw-step-num">9</span><div><b>Customer signoff &amp; photos</b></div><span class="cpw-step-req">Required</span></div>
+          </div>
+          <div class="cpw-actions" style="margin-top:14px;justify-content:flex-end;">
+            <button data-comm-action="action:crewProcesses.duplicate">Duplicate</button>
+            <button>Edit</button>
+            <button data-comm-action="action:crewProcesses.delete" class="danger">Delete</button>
+          </div>
+        </div>
+
+        <div class="cpw-card">
+          <div class="cpw-card-head">
+            <div>
+              <div class="cpw-card-title">Commercial inventory move</div>
+              <div class="cpw-card-desc">For office, retail and warehouse jobs — adds inventory labels &amp; sign-off</div>
+              <div class="cpw-card-meta"><span><b>12</b> steps</span><span><b>~55 min</b> avg</span><span>Used <b>22</b> times this month</span></div>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:6px;flex-shrink:0;">
+              <span class="cpw-pill active">Active</span>
+            </div>
+          </div>
+          <div class="cpw-steps">
+            <div class="cpw-step"><span class="cpw-step-num">1</span><div><b>Pre-arrival call</b></div><span class="cpw-step-req">Required</span></div>
+            <div class="cpw-step"><span class="cpw-step-num">2</span><div><b>On-site inventory verification</b></div><span class="cpw-step-req">Required</span></div>
+            <div class="cpw-step"><span class="cpw-step-num">3</span><div><b>Server rack labeling</b></div><span class="cpw-step-req">Required</span></div>
+            <div class="cpw-step"><span class="cpw-step-num">4</span><div><b>Photo: each labeled item</b></div><span class="cpw-step-req">Required</span></div>
+            <div class="cpw-step"><span class="cpw-step-num">5</span><div><b>Pad &amp; wrap</b></div><span class="cpw-step-req">Required</span></div>
+            <div class="cpw-step"><span class="cpw-step-num">6</span><div>+ 7 more steps</div><span class="cpw-step-opt">…</span></div>
+          </div>
+          <div class="cpw-actions" style="margin-top:14px;justify-content:flex-end;">
+            <button data-comm-action="action:crewProcesses.duplicate">Duplicate</button>
+            <button>Edit</button>
+            <button data-comm-action="action:crewProcesses.delete" class="danger">Delete</button>
+          </div>
+        </div>
+
+        <div class="cpw-card">
+          <div class="cpw-card-head">
+            <div>
+              <div class="cpw-card-title">Box delivery only</div>
+              <div class="cpw-card-desc">Short process for box deliveries to customer addresses</div>
+              <div class="cpw-card-meta"><span><b>4</b> steps</span><span><b>~12 min</b> avg</span><span>Used <b>38</b> times this month</span></div>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:6px;flex-shrink:0;">
+              <span class="cpw-pill active">Active</span>
+            </div>
+          </div>
+          <div class="cpw-steps">
+            <div class="cpw-step"><span class="cpw-step-num">1</span><div><b>Customer call</b> · confirm address &amp; receiver</div><span class="cpw-step-req">Required</span></div>
+            <div class="cpw-step"><span class="cpw-step-num">2</span><div><b>Photo: box count loaded</b></div><span class="cpw-step-req">Required</span></div>
+            <div class="cpw-step"><span class="cpw-step-num">3</span><div><b>Customer signoff at delivery</b></div><span class="cpw-step-req">Required</span></div>
+            <div class="cpw-step"><span class="cpw-step-num">4</span><div><b>Photo: dropoff complete</b></div><span class="cpw-step-req">Required</span></div>
+          </div>
+          <div class="cpw-actions" style="margin-top:14px;justify-content:flex-end;">
+            <button data-comm-action="action:crewProcesses.duplicate">Duplicate</button>
+            <button>Edit</button>
+            <button data-comm-action="action:crewProcesses.delete" class="danger">Delete</button>
+          </div>
+        </div>
+
+        <div class="cpw-card">
+          <div class="cpw-card-head">
+            <div>
+              <div class="cpw-card-title">Long distance · multi-day</div>
+              <div class="cpw-card-desc">Inactive — replaced by Standard Job Process v3.2</div>
+              <div class="cpw-card-meta"><span><b>14</b> steps</span><span>Last used Mar 22, 2026</span></div>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:6px;flex-shrink:0;">
+              <span class="cpw-pill inactive">Inactive</span>
+            </div>
+          </div>
+          <div class="cpw-actions" style="justify-content:flex-end;">
+            <button data-comm-action="action:crewProcesses.restore">Restore</button>
+            <button>View</button>
+            <button data-comm-action="action:crewProcesses.delete" class="danger">Delete</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
 </div>
+
+
+
+<!-- Edit Crew Process Modal -->
+<style>
+.ep-overlay { position:fixed; inset:0; background:rgba(15,23,42,0.45); display:none; align-items:center; justify-content:center; z-index:1000; padding:24px; }
+.ep-overlay.open { display:flex; }
+.ep-modal { background:#fff; border-radius:14px; width:760px; max-width:96vw; max-height:90vh; display:flex; flex-direction:column; box-shadow:0 25px 60px rgba(0,0,0,0.25); }
+.ep-head { display:flex; justify-content:space-between; align-items:center; padding:18px 22px; border-bottom:var(--hair); }
+.ep-head .lt { display:flex; align-items:center; gap:10px; }
+.ep-head .lt .ic { width:32px;height:32px;border-radius:8px;background:var(--terra-soft);color:var(--terra);display:inline-flex;align-items:center;justify-content:center; }
+.ep-title { font-size:16px; font-weight:700; }
+.ep-sub { font-size:11.5px; color:var(--ink-3); margin-top:2px; }
+.ep-close { font-size:20px; color:var(--ink-3); cursor:pointer; background:transparent; border:0; }
+.ep-tabs { display:flex; gap:2px; padding:0 22px; border-bottom:var(--hair); background:#fff; }
+.ep-tab { background:transparent;border:0;padding:12px 14px;font-size:13px;font-weight:600;color:var(--ink-3);cursor:pointer;border-bottom:2px solid transparent; }
+.ep-tab.active { color:var(--ink); border-bottom-color:var(--terra); }
+.ep-body { padding:18px 22px; overflow-y:auto; flex:1; }
+.ep-pane { display:none; }
+.ep-pane.active { display:block; }
+.ep-row { display:flex; gap:12px; margin-bottom:14px; }
+.ep-row .cp-field { flex:1; }
+
+.ep-step-row {
+  display:grid; grid-template-columns:18px 22px 1.4fr 1.6fr 110px 24px;
+  gap:8px; align-items:center; padding:6px 0;
+}
+.ep-handle { color:var(--ink-4); cursor:grab; user-select:none; font-size:12px; text-align:center; }
+.ep-num {
+  width:22px;height:22px;border-radius:999px;background:var(--surface-2);color:var(--ink-2);
+  display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;
+}
+.ep-step-row .cp-input { padding:7px 10px; font-size:12.5px; }
+.ep-step-row select.cp-input { padding-right:24px; }
+.ep-step-del { background:transparent;border:0;color:var(--ink-3);cursor:pointer;font-size:14px; width:24px;height:24px;border-radius:4px; }
+.ep-step-del:hover { background:var(--bad-soft); color:var(--bad); }
+.ep-add-step { font-size:12.5px;color:var(--terra);font-weight:600;background:transparent;border:1px dashed var(--terra-soft);padding:8px 12px;border-radius:6px;cursor:pointer;margin-top:10px; }
+.ep-add-step:hover { background:var(--terra-soft); }
+
+.ep-actions { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:14px 22px; border-top:var(--hair); }
+.ep-meta-pill { font-size:11px;color:var(--ink-3);background:var(--surface-2);padding:4px 9px;border-radius:6px; }
+
+.ep-trigger-row { display:flex; align-items:flex-start; gap:10px; padding:12px; border:var(--hair); border-radius:8px; margin-bottom:8px; }
+.ep-trigger-row .ic { width:28px;height:28px;border-radius:6px;background:var(--surface-2);color:var(--ink-2);display:inline-flex;align-items:center;justify-content:center;flex-shrink:0; }
+.ep-trigger-row .ti { font-size:13px; font-weight:600; }
+.ep-trigger-row .ts { font-size:11.5px; color:var(--ink-3); margin-top:2px; line-height:1.4; }
+</style>
+<div class="ep-overlay" id="editProcModal">
+  <div class="ep-modal">
+    <div class="ep-head">
+      <div class="lt">
+        <span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span>
+        <div>
+          <div class="ep-title" id="epTitle">Edit Process</div>
+          <div class="ep-sub">Changes apply to new jobs only. Active jobs keep their current process.</div>
+        </div>
+      </div>
+      <button data-modal-close class="ep-close">✕</button>
+    </div>
+
+    <div class="ep-tabs">
+      <button class="ep-tab active" data-eptab="details">Details</button>
+      <button class="ep-tab" data-eptab="steps">Steps <span id="epStepCount" class="ep-meta-pill" style="margin-left:6px;"></span></button>
+      <button class="ep-tab" data-eptab="rules">Rules &amp; triggers</button>
+      <button class="ep-tab" data-eptab="permissions">Permissions</button>
+    </div>
+
+    <div class="ep-body">
+      <!-- Details -->
+      <div class="ep-pane active" data-eppane="details">
+        <input type="hidden" name="id" id="epId">
+        <div class="cp-field"><label class="cp-label">Process Name <span class="req">*</span></label><input class="cp-input" id="epName" name="name" type="text"></div>
+        <div class="cp-field"><label class="cp-label">Description</label><textarea class="cp-textarea" id="epDesc" name="description"></textarea></div>
+        <div class="ep-row">
+          <div class="cp-field"><label class="cp-label">Applies to job type</label>
+            <select class="cp-input" name="appliesTo" data-bind-options="appliesToJobTypeOptions"></select>
+          </div>
+          <div class="cp-field"><label class="cp-label">Branch</label>
+            <select class="cp-input" name="branch" data-bind-options="branchOptions"><option value="All branches">All branches</option></select>
+          </div>
+        </div>
+        <label class="cp-check-row"><input type="checkbox" id="epActive" name="isActive" style="accent-color:var(--terra);"><div><div class="l">Active</div><div class="h">Inactive processes are hidden from crew assignment dropdowns.</div></div></label>
+        <label class="cp-check-row"><input type="checkbox" id="epDefault" name="isDefault" style="accent-color:var(--terra);"><div><div class="l">Use as default for new jobs</div><div class="h">When a new job is created without a specified process, this one is applied.</div></div></label>
+      </div>
+
+      <!-- Steps -->
+      <div class="ep-pane" data-eppane="steps">
+        <div style="font-size:12px;color:var(--ink-3);margin-bottom:10px;">Drag <b>⋮⋮</b> to reorder. Required steps block job completion until the crew confirms them.</div>
+        <div id="epStepList" data-row-group="steps"></div>
+        <button class="ep-add-step" onclick="addEpStep()">+ Add step</button>
+      </div>
+
+      <!-- Rules & triggers -->
+      <div class="ep-pane" data-eppane="rules">
+        <div style="font-size:12px;color:var(--ink-3);margin-bottom:10px;">Fire automatic actions as crew advances through the process.</div>
+        <div class="ep-trigger-row"><span class="ic">⚡</span><div style="flex:1;"><div class="ti">On step 1 complete · Notify office</div><div class="ts">Send a Slack ping to <b>#dispatch</b> when contracts are signed.</div></div><span class="cpw-pill active">On</span></div>
+        <div class="ep-trigger-row"><span class="ic">📷</span><div style="flex:1;"><div class="ti">Require photo before step 4</div><div class="ts">Crew must upload at least 1 walkthrough photo before loading the truck.</div></div><span class="cpw-pill active">On</span></div>
+        <div class="ep-trigger-row"><span class="ic">🕒</span><div style="flex:1;"><div class="ti">Auto-flag if step &gt; 90 min</div><div class="ts">If any required step runs over 90 minutes, raise a yellow ticket to the on-call dispatcher.</div></div><span class="cpw-pill inactive">Off</span></div>
+        <div class="ep-trigger-row"><span class="ic">✉️</span><div style="flex:1;"><div class="ti">On finish · Email customer signoff PDF</div><div class="ts">Sends the customer a signed copy of all photos &amp; signoff sheets.</div></div><span class="cpw-pill active">On</span></div>
+        <button class="ep-add-step" style="margin-top:6px;">+ Add rule</button>
+      </div>
+
+      <!-- Permissions -->
+      <div class="ep-pane" data-eppane="permissions">
+        <div style="font-size:12px;color:var(--ink-3);margin-bottom:14px;">Who can pick this process, and who can edit it.</div>
+        <div class="cp-field"><label class="cp-label">Visible to</label>
+          <select class="cp-input" name="visibleTo" data-bind-options="visibleToOptions"><option value="All crew leads &amp; dispatchers">All crew leads &amp; dispatchers</option></select>
+        </div>
+        <div class="cp-field"><label class="cp-label">Editable by</label>
+          <select class="cp-input" name="editableBy" data-bind-options="editableByOptions"></select>
+        </div>
+        <div class="cp-field"><label class="cp-label">Process owner</label>
+          <select class="cp-input" name="ownerUserId" data-bind-options="processOwnerOptions"></select>
+        </div>
+        <label class="cp-check-row"><input type="checkbox" name="requireSignoff" checked style="accent-color:var(--terra);"><div><div class="l">Require sign-off for changes</div><div class="h">An Ops manager must approve edits before they reach the field.</div></div></label>
+      </div>
+    </div>
+
+    <div class="ep-actions">
+      <span style="font-size:11.5px;color:var(--ink-3);">Last edited Mar 14, 2026 by Alex Morgan · v3.2</span>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-secondary" data-modal-close onclick="document.getElementById('editProcModal').classList.remove('open')">Cancel</button>
+        <button class="btn btn-primary" data-modal-save type="button">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- New Crew Process Modal -->
+<style>
+.cp-overlay { position:fixed; inset:0; background:rgba(15,23,42,0.45); display:none; align-items:center; justify-content:center; z-index:1000; padding:24px; }
+.cp-overlay.open { display:flex; }
+.cp-modal { background:#fff; border-radius:12px; width:560px; max-width:96vw; max-height:90vh; overflow-y:auto; box-shadow:0 25px 50px rgba(0,0,0,0.25); }
+.cp-head { display:flex; justify-content:space-between; align-items:center; padding:18px 22px; border-bottom:var(--hair); }
+.cp-title { font-size:16px; font-weight:700; }
+.cp-close { font-size:20px; color:var(--ink-3); cursor:pointer; }
+.cp-body { padding:18px 22px; }
+.cp-field { display:flex; flex-direction:column; gap:6px; margin-bottom:14px; }
+.cp-label { font-size:12px; font-weight:600; color:var(--ink); }
+.cp-label .req { color:var(--bad); }
+.cp-input, .cp-textarea { width:100%; padding:9px 11px; border:var(--hair); border-radius:6px; font-size:13px; background:#fff; color:var(--ink); font-family:inherit; outline:none; }
+.cp-textarea { min-height:80px; resize:vertical; }
+.cp-input:focus, .cp-textarea:focus { border-color:var(--terra); box-shadow:0 0 0 3px var(--terra-soft); }
+.cp-actions { display:flex; justify-content:flex-end; gap:8px; padding:14px 22px; border-top:var(--hair); }
+.cp-check-row { display:flex; align-items:flex-start; gap:10px; padding:10px; border:var(--hair); border-radius:6px; margin-bottom:8px; cursor:pointer; }
+.cp-check-row input { margin-top:2px; }
+.cp-check-row .l { font-size:13px; font-weight:600; color:var(--ink); }
+.cp-check-row .h { font-size:11.5px; color:var(--ink-3); margin-top:2px; }
+</style>
+<div class="cp-overlay" id="newProcModal">
+  <div class="cp-modal">
+    <div class="cp-head"><div class="cp-title">Create New Process</div><div class="cp-close" onclick="document.getElementById('newProcModal').classList.remove('open')">✕</div></div>
+    <div class="cp-body">
+      <div class="cp-field"><label class="cp-label">Process Name <span class="req">*</span></label><input name="processName" class="cp-input" type="text" placeholder="e.g. Local Move - Standard"></div>
+      <div class="cp-field"><label class="cp-label">Description</label><textarea name="description" class="cp-textarea" placeholder="What this process covers…"></textarea></div>
+      <label class="cp-check-row"><input name="description" type="checkbox" checked style="accent-color:var(--terra);"><div><div class="l">Active</div><div class="h">Inactive processes are hidden from crew assignment dropdowns.</div></div></label>
+      <label class="cp-check-row"><input name="activeinactiveProcessesAreHiddenFromCrewAssignmentDropdowns" type="checkbox" style="accent-color:var(--terra);"><div><div class="l">Use as default for new jobs</div><div class="h">When a new job is created without a specified process, this one is applied.</div></div></label>
+    </div>
+    <div class="cp-actions">
+      <button data-modal-close class="btn btn-secondary">Cancel</button>
+      <button data-modal-save class="btn btn-primary">Create</button>
+    </div>
+  </div>
+</div>
+<!-- v12: CrewProcesses toolbar -->
+<div style="display:flex;gap:8px;padding:0 24px 16px;">
+  <button class="s1-btn pri" data-cp-open="newProcModal" type="button">+ New process</button>
+  <button class="s1-btn sec" data-cp-open="editProcModal" type="button">Edit process</button>
+</div>
+
+
 <script src="../../core/event-bus.js"></script>
 <script src="../../core/state-store.js"></script>
 <script src="../../core/schema.js"></script>
@@ -39,5 +348,101 @@
 <script src="../../core/communication.api.js"></script>
 <script src="../../core/communication.js"></script>
 <script src="../../core/render.js"></script>
+<script src="../../core/standard-page.js"></script>
+<script src="../../core/google-places.js"></script>
 <script src="./module.js"></script>
-</body></html>
+<script>
+// Wire all Edit buttons to open the Edit modal, pre-filled from the card.
+document.addEventListener('click', e => {
+  const btn = e.target.closest('.cpw-actions button');
+  if (!btn) return;
+  const label = (btn.textContent || '').trim().toLowerCase();
+  const card = btn.closest('.cpw-card');
+  if (!card) return;
+  if (label === 'edit' || label === 'view') {
+    const title = card.querySelector('.cpw-card-title')?.textContent || '';
+    const desc  = card.querySelector('.cpw-card-desc')?.textContent || '';
+    const steps = ((window.S1 && window.S1.fixtures && window.S1.fixtures["crewProcesses"] && Array.isArray(window.S1.fixtures["crewProcesses"].steps) && window.S1.fixtures["crewProcesses"].steps.length) ? window.S1.fixtures["crewProcesses"].steps : [...card.querySelectorAll('.cpw-step')]);
+    const isActive  = !!card.querySelector('.cpw-pill.active');
+    const isDefault = !!card.querySelector('.cpw-pill.default');
+
+    document.getElementById('epId').value = card.dataset.processId || title.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+    document.getElementById('epName').value = title;
+    document.getElementById('epDesc').value = desc;
+    document.getElementById('epActive').checked = isActive;
+    document.getElementById('epDefault').checked = isDefault;
+
+    const list = document.getElementById('epStepList');
+    list.innerHTML = '';
+    steps.forEach((s, i) => {
+      const txt = s.querySelector('div b')?.textContent || `Step ${i+1}`;
+      const detail = (s.querySelector('div')?.textContent || '').replace(txt, '').replace(/^[·\s]+/, '').trim();
+      const reqEl = s.querySelector('.cpw-step-req, .cpw-step-opt');
+      const reqVal = reqEl ? reqEl.textContent.trim().toLowerCase() : 'required';
+      list.appendChild(buildStepRow(i + 1, txt, detail, reqVal));
+    });
+    if (!steps.length) list.appendChild(buildStepRow(1, '', '', 'required'));
+    renumberSteps();
+
+    document.getElementById('epTitle').textContent = label === 'view' ? 'View Process' : 'Edit Process';
+    document.getElementById('editProcModal').classList.add('open');
+  } else if (label === 'duplicate') {
+    const t = card.querySelector('.cpw-card-title')?.textContent || '';
+    alert(`Duplicated "${t}" — a copy has been created as a draft.`);
+  } else if (label === 'delete') {
+    const t = card.querySelector('.cpw-card-title')?.textContent || '';
+    if (confirm(`Delete "${t}"? Crews already mid-job will keep their current process.`)) card.style.display = 'none';
+  } else if (label === 'restore') {
+    card.querySelector('.cpw-pill.inactive')?.classList.replace('inactive', 'active');
+    const p = card.querySelector('.cpw-pill.active'); if (p) p.textContent = 'Active';
+  }
+});
+
+function buildStepRow(num, name, detail, req) {
+  const row = document.createElement('div');
+  row.className = 'ep-step-row';
+  row.setAttribute('data-row', '');
+  row.innerHTML = `
+    <span class="ep-handle" title="Drag to reorder">⋮⋮</span>
+    <span class="ep-num">${num}</span>
+    <input class="cp-input ep-step-name" name="name" type="text" placeholder="Step name (e.g. Sign contracts)" value="${name.replace(/"/g, '&quot;')}">
+    <input class="cp-input ep-step-detail" name="detail" type="text" placeholder="Optional detail" value="${detail.replace(/"/g, '&quot;')}">
+    <select class="cp-input ep-step-req" name="required" data-bind-options="optionsOptions"></select>
+    <button class="ep-step-del" type="button" title="Remove step">✕</button>
+  `;
+  // Pre-select the required/optional value
+  const sel = row.querySelector('.ep-step-req');
+  // Add the variants if not bound; the select gets options from fixture if available.
+  if (!sel.options.length) {
+    ['required','optional','auto'].forEach(v => {
+      const o = document.createElement('option');
+      o.value = v; o.textContent = v.charAt(0).toUpperCase() + v.slice(1);
+      sel.appendChild(o);
+    });
+  }
+  sel.value = req || 'required';
+  row.querySelector('.ep-step-del').onclick = () => { row.remove(); renumberSteps(); };
+  return row;
+}
+function renumberSteps() {
+  [...document.querySelectorAll('#epStepList .ep-step-row')].forEach((r, i) => {
+    r.querySelector('.ep-num').textContent = i + 1;
+  });
+}
+function addEpStep() {
+  const list = document.getElementById('epStepList');
+  list.appendChild(buildStepRow(list.children.length + 1, '', '', 'required'));
+  renumberSteps();
+}
+</script>
+<script>
+document.querySelectorAll('#editProcModal .ep-tab').forEach(t => t.addEventListener('click', () => {
+  document.querySelectorAll('#editProcModal .ep-tab').forEach(x => x.classList.toggle('active', x === t));
+  document.querySelectorAll('#editProcModal .ep-pane').forEach(p => p.classList.toggle('active', p.dataset.eppane === t.dataset.eptab));
+  if (t.dataset.eptab === 'steps') {
+    document.getElementById('epStepCount').textContent = document.querySelectorAll('#epStepList .ep-step-row').length;
+  }
+}));
+</script>
+</body>
+</html>

@@ -26,6 +26,24 @@
       const qs = new URLSearchParams(location.search);
       const fx = qs.get('fixture');
       if (fx) this.loadFixture(fx);
+      // Lab "open standalone" passes the user's edited state via the URL
+      // hash (#state=<uri-encoded JSON>); apply it after the fixture so it
+      // wins over the fixture defaults. Modules render straight out of
+      // window.S1.fixtures[<name>], so we have to overwrite the fixture
+      // entry — replacing only the store is invisible to the render layer.
+      if (location.hash && location.hash.indexOf('state=') !== -1) {
+        try {
+          const m = location.hash.match(/(?:^#|&)state=([^&]+)/);
+          if (m) {
+            const json = JSON.parse(decodeURIComponent(m[1]));
+            store.replaceAll(json);
+            if (fx && window.S1 && window.S1.fixtures) {
+              window.S1.fixtures[fx] = json;
+            }
+            bus.emit('state:replaced', json);
+          }
+        } catch {}
+      }
     }
 
     _loadFromStorage() {
@@ -44,18 +62,18 @@
       this._log.push(entry);
       if (this._log.length > 500) this._log.shift();
       bus.emit('comm:log', entry);
+      if (window.parent && window.parent !== window) {
+        try { window.parent.postMessage({ type: 's1ui:comm:log', entry: entry }, '*'); } catch {}
+      }
     }
 
     async get(resource, params) {
-      const raw = store.has(resource) ? store.get(resource) : undefined;
+      const raw = store.get(resource);
       let out;
-      if (raw === undefined) {
-        // Missing keys: return null so consumers can branch on shape themselves.
-        out = null;
-      } else if (Array.isArray(raw)) {
+      if (Array.isArray(raw)) {
         out = params ? raw.filter(r => matches(r, params)) : raw;
       } else {
-        out = raw;
+        out = raw == null ? null : raw;
       }
       out = clone(out);
       this._record('get', resource, params, out);
@@ -150,4 +168,45 @@
 
   window.S1 = window.S1 || {};
   window.S1.MockComm = MockComm;
+})();
+
+// Host bridge: when embedded in an iframe by another origin (e.g. the
+// business_card .cshtml pages iframe ui.service1.app), the host posts
+// the page's state in via postMessage instead of the URL hash. This
+// channel is cross-origin friendly where the hash trick was a file://
+// workaround. Same effect: overwrite the fixture, replace the store,
+// re-render. Lives next to the hash handler in MockComm but applies in
+// any mode — the host might want to override state for an API page too.
+(function () {
+  if (typeof window === 'undefined' || window.parent === window) return;
+  const qs = new URLSearchParams(location.search);
+  const defaultFixture = qs.get('fixture');
+
+  function apply(fixtureName, state) {
+    if (!state) return;
+    try {
+      if (fixtureName && window.S1 && window.S1.fixtures) {
+        window.S1.fixtures[fixtureName] = state;
+      }
+      if (window.S1 && window.S1.store && typeof window.S1.store.replaceAll === 'function') {
+        window.S1.store.replaceAll(state);
+      }
+      if (window.S1 && window.S1.bus) window.S1.bus.emit('state:replaced', state);
+      if (window.S1 && window.S1.render && typeof window.S1.render.bind === 'function') {
+        window.S1.render.bind(document, state);
+      }
+    } catch {}
+  }
+
+  window.addEventListener('message', (ev) => {
+    const d = ev.data;
+    if (!d || typeof d !== 'object' || d.type !== 's1ui:state') return;
+    apply(d.fixture || defaultFixture, d.state);
+  });
+
+  // Tell the host we're ready to receive state. The host must wait for
+  // this — posting before the listener attaches drops the message on the
+  // floor. Posted to '*' for now; the host's `event.source` already
+  // identifies the iframe, and we don't need to authenticate the host.
+  try { window.parent.postMessage({ type: 's1ui:ready', fixture: defaultFixture }, '*'); } catch {}
 })();

@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Follow-Ups — Redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_system.css">
+<style>
+.sales-subnav { display:flex; gap:6px; padding:14px 0 18px; }
+.sales-subnav a { padding:8px 14px; font-size:13px; font-weight:600; color:var(--ink-3); border-radius:999px; }
+.sales-subnav a:hover { color:var(--ink); background:var(--surface-2); }
+.sales-subnav a.active { color:var(--terra); background:var(--terra-soft); }
+
+.st-pill { display:inline-block; padding:3px 10px; border-radius:999px; font-size:11px; font-weight:600; white-space:nowrap; }
+.st-pill.active   { background:var(--info-soft); color:var(--info); }
+.st-pill.hot      { background:var(--warn-soft); color:var(--warn); }
+.st-pill.accepted { background:var(--ok-soft); color:var(--ok); }
+.st-pill.booked   { background:var(--terra-soft); color:var(--terra); }
+.st-pill.new-lead { background:var(--gold-soft); color:var(--gold); }
+.st-pill.closed   { background:var(--surface-3); color:var(--ink-3); }
+
+.lead-badge { display:inline-block; padding:3px 10px; border-radius:6px; font-size:11px; font-weight:600; }
+.lead-badge.hot       { color:var(--bad);  background:var(--bad-soft); }
+.lead-badge.follow-up { color:var(--warn); background:var(--warn-soft); }
+.lead-badge.on-ice    { color:var(--ink-3); background:var(--surface-2); }
+.lead-badge.new       { color:var(--info); background:var(--info-soft); }
+
+.fu-date-overdue { color:var(--bad); font-weight:600; }
+
+.bulk-bar {
+  display:none; align-items:center; gap:10px;
+  padding:10px 16px; margin-bottom:14px;
+  background:var(--warn-soft); border:1px solid var(--warn); border-radius:8px;
+}
+.bulk-bar.show { display:flex; }
+.bulk-bar .ct { font-weight:600; font-size:12.5px; }
+.bulk-bar .btn { padding:6px 14px; font-size:12.5px; font-weight:600; border-radius:6px; cursor:pointer; border:var(--hair); background:#fff; color:var(--ink); }
+.bulk-bar .btn:hover { background:var(--surface-2); }
+.bulk-bar .btn.primary { background:var(--terra); color:#fff; border-color:var(--terra); }
+.bulk-bar .btn.primary:hover { background:var(--terra-hover); }
+.bulk-bar .btn.danger  { background:var(--bad); color:#fff; border-color:var(--bad); }
+
+.pager { display:flex; justify-content:center; align-items:center; gap:6px; padding:20px 0 4px; }
+.pager .pb { padding:6px 12px; font-size:12.5px; font-weight:500; color:var(--ink-2); background:#fff; border:var(--hair); border-radius:6px; cursor:pointer; }
+.pager .pb:hover { background:var(--surface-2); color:var(--ink); }
+.pager .pb.active { background:var(--terra); color:#fff; border-color:var(--terra); }
+.pager .pb.disabled { opacity:.4; cursor:default; pointer-events:none; }
+
+.link-job { color:var(--terra); font-weight:500; display:inline-flex; align-items:center; gap:5px; }
+.link-job:hover { text-decoration:underline; }
+</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_aesthetic.css">
+</head>
+<body>
+<div class="app" data-screen-label="Sales / Follow-Ups"><main class="page">
+    <div class="wrap">
+      <div class="page-bar">
+        <div class="page-title-row"><div class="page-title"><span data-bind-text="summary">Follow-Ups</span></div><span class="muted" data-bind-text="subtitle">113 total · 5 overdue · 40 due today</span></div>
+        <div class="page-actions"><button data-comm-action="action:salesFollowUps.export-csv" class="btn btn-secondary">Export CSV</button><button data-comm-action="action:salesFollowUps.new-follow-up" class="btn btn-primary">+ New follow-up</button></div>
+      </div>
+
+      <nav class="sales-subnav">
+        <a href="SalesDashboard.html">Dashboard</a>
+        <a href="SalesNewLeads.html">New Leads</a>
+        <a href="SalesMyLeads.html">My Opportunities</a>
+        <a class="active" href="SalesFollowUps.html">Follow-Ups</a>
+      </nav>
+
+      <div class="stat-group" style="margin-bottom:24px;">
+        <div class="stat-col"><div class="stat-eyebrow" data-bind-text="kpis.0.label">Total follow-ups</div><div class="stat-number" data-bind-text="kpis.0.value">113</div><div class="stat-delta" data-bind-text="kpis.0.delta">across 24 reps</div></div>
+        <div class="stat-col"><div class="stat-eyebrow" data-bind-text="kpis.1.label">Overdue</div><div class="stat-number" style="color:var(--bad);" data-bind-text="kpis.1.value">5</div><div class="stat-delta" data-bind-text="kpis.1.delta">needs immediate action</div></div>
+        <div class="stat-col"><div class="stat-eyebrow" data-bind-text="kpis.2.label">Due today</div><div class="stat-number" style="color:var(--warn);" data-bind-text="kpis.2.value">40</div><div class="stat-delta" data-bind-text="kpis.2.delta">most before 5 PM</div></div>
+        <div class="stat-col"><div class="stat-eyebrow" data-bind-text="kpis.3.label">This week</div><div class="stat-number" data-bind-text="kpis.3.value">28</div><div class="stat-delta" data-bind-text="metrics.stat_delta.0">remaining after today</div></div>
+      </div>
+
+      <div class="toolbar">
+        <div class="fchips" id="fuChips">
+          <button data-comm-action="action:salesFollowUps.all" class="fchip active" data-filter="all">All</button>
+          <button data-comm-action="action:salesFollowUps.active" class="fchip" data-filter="active">Active</button>
+          <button data-comm-action="action:salesFollowUps.hot" class="fchip" data-filter="hot">Hot</button>
+          <button data-comm-action="action:salesFollowUps.follow-up" class="fchip" data-filter="follow-up">Follow Up</button>
+          <button data-comm-action="action:salesFollowUps.on-ice" class="fchip" data-filter="on-ice">On Ice</button>
+          <button data-comm-action="action:salesFollowUps.accepted" class="fchip" data-filter="accepted">Accepted</button>
+          <button data-comm-action="action:salesFollowUps.booked" class="fchip" data-filter="booked">Booked</button>
+          <button data-comm-action="action:salesFollowUps.closed" class="fchip" data-filter="closed">Closed</button>
+          <button data-comm-action="action:salesFollowUps.unassigned" class="fchip" data-filter="unassigned">Unassigned</button>
+        </div>
+        <div class="grow"></div>
+        <select class="field-select" style="width:140px;" data-bind-options="optionsOptions"><option value="All sources">All sources</option></select>
+      </div>
+
+      <!-- Bulk actions bar -->
+      <div class="bulk-bar" id="fuBulkBar">
+        <span class="ct"><span id="fuBulkCount">0</span> selected</span>
+        <button data-comm-action="action:salesFollowUps.mark-complete" class="btn primary">Mark Complete</button>
+        <button data-comm-action="action:salesFollowUps.claim-selected" class="btn" style="background:var(--gold);color:#fff;border-color:var(--gold);">Claim selected</button>
+        <span style="font-size:12px;color:var(--ink-3);margin-left:4px;">Reassign to:</span>
+        <select class="field-select" style="width:160px;" data-bind-options="optionsOptions2"><option value="Select user…">Select user…</option></select>
+        <button data-comm-action="action:salesFollowUps.delete" class="btn danger" style="margin-left:auto;">Delete</button>
+      </div>
+
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th style="width:32px;"><input type="checkbox" id="fuSelectAll"></th>
+            <th>Customer</th>
+            <th>Job</th>
+            <th>Follow-up date</th>
+            <th>Service date</th>
+            <th>Status</th>
+            <th>Lead</th>
+            <th>Last contact</th>
+            <th>Owner</th>
+          </tr>
+        </thead>
+        <tbody id="fuBody"></tbody>
+      </table>
+
+      <div class="pager salesFollowUps-pager" id="salesFollowUpsPager"></div>
+      <div style="text-align:center;font-size:12px;color:var(--ink-3);padding:4px 0 0;">Showing <span data-bind-text="pagination.shown">12</span> of <span data-bind-text="pagination.total">12</span></div>
+    </div>
+  </main>
+</div>
+<div class="s1-overlay gm-overlay" id="scheduleFollowUpModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Sales follow-ups</div><h4>Schedule follow-up</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Lead id</label><input class="s1-input" type="text" name="leadId"></div>
+    <div><label class="s1-mlabel">When</label><input class="s1-input" type="datetime-local" name="when"></div>
+    <div><label class="s1-mlabel">Method</label><select class="s1-select" name="method" data-bind-options="contactMethods"><option value="">Choose…</option></select></div>
+    <div><label class="s1-mlabel">Reason</label><select class="s1-select" name="reason" data-bind-options="reasonOptions"><option value="">Choose…</option></select></div>
+    <div class="full"><label class="s1-mlabel">Notes</label><textarea class="s1-textarea" name="notes"></textarea></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Schedule</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="markContactedModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Sales follow-ups</div><h4>Mark contacted</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Lead id</label><input class="s1-input" type="text" name="leadId"></div>
+    <div><label class="s1-mlabel">Outcome</label><input class="s1-input" type="text" name="outcome"></div>
+    <div class="full"><label class="s1-mlabel">Notes</label><textarea class="s1-textarea" name="notes"></textarea></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Save</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="reassignFollowUpModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Sales follow-ups</div><h4>Reassign</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Lead id</label><input class="s1-input" type="text" name="leadId"></div>
+    <div><label class="s1-mlabel">To user</label><select class="s1-select" name="toUserId" data-bind-options="reps"><option value="">Choose…</option></select></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Reassign</button></div>
+</div></div>
+<script src="../../core/event-bus.js"></script>
+<script src="../../core/state-store.js"></script>
+<script src="../../core/schema.js"></script>
+<script src="../../core/fixtures.js"></script>
+<script src="../../core/communication.mock.js"></script>
+<script src="../../core/communication.api.js"></script>
+<script src="../../core/communication.js"></script>
+<script src="../../core/render.js"></script>
+<script src="../../core/standard-page.js"></script>
+<script src="../../core/google-places.js"></script>
+<script src="./module.js"></script>
+<script>
+const INLINE_ROWS = ([
+  { id:2316, customer:'Testpauk',            job:'J2026-0001', followUp:'May 12, 2026', overdue:true,  service:'Jun 10, 2026', status:'booked',   lead:'Hot',       last:'May 09', owner:'Paul Kihara' },
+  { id:2317, customer:'Alice Johnson',       job:'J2026-0512', followUp:'May 16, 2026', overdue:false, service:'May 22, 2026', status:'booked',   lead:'Hot',       last:'Today',  owner:'John Sales' },
+  { id:2318, customer:'Northside Co.',       job:'J2026-0514', followUp:'May 16, 2026', overdue:false, service:'May 24, 2026', status:'accepted', lead:'Hot',       last:'2h ago', owner:'John Sales' },
+  { id:2319, customer:'Rebecca Chen',        job:'J2026-0511', followUp:'May 14, 2026', overdue:true,  service:'May 28, 2026', status:'active',   lead:'Follow Up', last:'2d ago', owner:'Jane Finance' },
+  { id:2320, customer:'Tao Anand',           job:'J2026-0509', followUp:'May 18, 2026', overdue:false, service:'May 30, 2026', status:'active',   lead:'Follow Up', last:'3d ago', owner:'John Sales' },
+  { id:2321, customer:'Sara Patel',          job:'J2026-0508', followUp:'May 16, 2026', overdue:false, service:'May 29, 2026', status:'new-lead', lead:'New',       last:'1d ago', owner:'A. Haylton' },
+  { id:2322, customer:'Maple Court Condos',  job:'J2026-0505', followUp:'May 13, 2026', overdue:true,  service:'Jun 08, 2026', status:'active',   lead:'Follow Up', last:'4d ago', owner:'John Sales' },
+  { id:2323, customer:'Daniel Park',         job:'J2026-0497', followUp:'May 19, 2026', overdue:false, service:'Jun 12, 2026', status:'active',   lead:'Follow Up', last:'1d ago', owner:'P. Kihara' },
+  { id:2324, customer:'Cedar Lane HOA',      job:'J2026-0499', followUp:'May 21, 2026', overdue:false, service:'Jun 04, 2026', status:'active',   lead:'On Ice',    last:'1 wk',   owner:'John Sales' },
+  { id:2325, customer:'Yorkdale Properties', job:'J2026-0501', followUp:'May 02, 2026', overdue:true,  service:'—',           status:'closed',   lead:'On Ice',    last:'2 wks',  owner:'Unassigned' },
+  { id:2326, customer:'M. Tran',             job:'J2026-0504', followUp:'May 20, 2026', overdue:false, service:'May 22, 2026', status:'booked',   lead:'Hot',       last:'Today',  owner:'A. Haylton' },
+  { id:2327, customer:'Pinewood Estates',    job:'J2026-0498', followUp:'May 17, 2026', overdue:false, service:'Jun 02, 2026', status:'active',   lead:'Follow Up', last:'5d ago', owner:'John Sales' }
+]);
+
+const STATUS_LBL = { active:'Active', hot:'Hot', booked:'Booked', accepted:'Accepted', 'new-lead':'New Lead', closed:'Closed' };
+
+// Read fresh on every render so host state-pushes land. The live backend POCO
+// (SalesFollowUpsStateRow) only ships `id`/`name`, so when those rows arrive
+// we map `name` → `customer` for display and leave the chip-filter fields
+// undefined; rows without `lead`/`status` simply don't match status chips.
+function getRows() {
+  const raw = (window.S1 && window.S1.fixtures && window.S1.fixtures["salesFollowUps"] && Array.isArray(window.S1.fixtures["salesFollowUps"].rows) && window.S1.fixtures["salesFollowUps"].rows.length)
+    ? window.S1.fixtures["salesFollowUps"].rows
+    : INLINE_ROWS;
+  return raw.map(r => Object.assign({}, r, {
+    customer: r.customer || r.name || '',
+    job:      r.job      || '',
+    followUp: r.followUp || '',
+    service:  r.service  || '',
+    status:   r.status   || '',
+    lead:     r.lead     || '',
+    last:     r.last     || '',
+    owner:    r.owner    || ''
+  }));
+}
+function leadCls(l) {
+  if (l === 'Hot') return 'hot';
+  if (l === 'Follow Up') return 'follow-up';
+  if (l === 'On Ice') return 'on-ice';
+  return 'new';
+}
+
+function render(filter) {
+  const shown = getRows().filter(r => {
+    if (filter === 'all') return true;
+    if (filter === 'unassigned') return r.owner === 'Unassigned';
+    if (filter === 'hot') return r.lead === 'Hot';
+    if (filter === 'follow-up') return r.lead === 'Follow Up';
+    if (filter === 'on-ice') return r.lead === 'On Ice';
+    return r.status === filter;
+  });
+  document.getElementById('fuBody').innerHTML = shown.map(r => `
+    <tr data-id="${r.id}">
+      <td onclick="event.stopPropagation();"><input type="checkbox" class="fu-row-check"></td>
+      <td>
+        <div style="font-weight:600;"><a class="link-job" href="#">${r.customer}</a></div>
+        <div class="cell-light" style="margin-top:2px;font-size:11px;font-variant-numeric:tabular-nums;">#${r.job}</div>
+      </td>
+      <td><a class="link-job" href="#">${r.job}<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a></td>
+      <td class="${r.overdue ? 'fu-date-overdue' : ''}">${r.followUp}${r.overdue ? ' · overdue' : ''}</td>
+      <td>${r.service}</td>
+      <td><span class="st-pill ${r.status}">${STATUS_LBL[r.status]}</span></td>
+      <td><span class="lead-badge ${leadCls(r.lead)}">${r.lead}</span></td>
+      <td class="cell-light">${r.last}</td>
+      <td>${r.owner === 'Unassigned' ? '<span class="cell-light" style="font-style:italic;">Unassigned</span>' : r.owner}</td>
+    </tr>`).join('') || '<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--ink-3);">No follow-ups match.</td></tr>';
+  wireCheckboxes();
+}
+
+function wireCheckboxes() {
+  const checks = document.querySelectorAll('.fu-row-check');
+  checks.forEach(c => c.addEventListener('change', updateBulk));
+  const sa = document.getElementById('fuSelectAll');
+  sa.checked = false;
+  sa.onchange = e => { checks.forEach(c => c.checked = e.target.checked); updateBulk(); };
+}
+function updateBulk() {
+  const n = document.querySelectorAll('.fu-row-check:checked').length;
+  document.getElementById('fuBulkCount').textContent = n;
+  document.getElementById('fuBulkBar').classList.toggle('show', n > 0);
+}
+
+render('all');
+
+document.querySelectorAll('#fuChips .fchip').forEach(c => c.addEventListener('click', () => {
+  document.querySelectorAll('#fuChips .fchip').forEach(x => x.classList.toggle('active', x === c));
+  render(c.dataset.filter);
+}));
+
+// Row click → open follow-up drawer
+document.getElementById('fuBody').addEventListener('click', e => {
+  const tr = e.target.closest('tr[data-id]'); if (!tr) return;
+  const r = getRows().find(x => x.id === +tr.dataset.id); if (!r) return;
+  const m = document.createElement('div');
+  m.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:center;justify-content:center;z-index:1000;padding:24px;';
+  m.innerHTML = `<div style="background:#fff;border-radius:12px;max-width:640px;width:100%;max-height:84vh;overflow:auto;box-shadow:0 24px 60px -16px rgba(15,23,42,.4);">
+    <div style="padding:22px 26px 16px;border-bottom:var(--hair);display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+      <div><div style="font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;">Follow-up · ${r.followUp}${r.overdue ? ' · OVERDUE' : ''}</div><h2 style="margin:6px 0 8px;font-size:20px;font-weight:700;letter-spacing:-0.01em;">${r.customer}</h2><div style="display:flex;gap:6px;flex-wrap:wrap;"><span class="st-pill ${r.status}">${STATUS_LBL[r.status]}</span><span class="lead-badge ${leadCls(r.lead)}">${r.lead}</span></div></div>
+      <button class="x" style="border:0;background:transparent;font-size:24px;color:var(--ink-3);cursor:pointer;line-height:1;">×</button>
+    </div>
+    <div style="padding:18px 26px;">
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:18px;">
+        <div style="padding:10px 14px;border:var(--hair);border-radius:8px;"><div style="font-size:11px;color:var(--ink-3);">Job</div><div style="font-weight:600;margin-top:4px;font-variant-numeric:tabular-nums;">${r.job}</div></div>
+        <div style="padding:10px 14px;border:var(--hair);border-radius:8px;"><div style="font-size:11px;color:var(--ink-3);">Service date</div><div style="font-weight:600;margin-top:4px;">${r.service}</div></div>
+        <div style="padding:10px 14px;border:var(--hair);border-radius:8px;"><div style="font-size:11px;color:var(--ink-3);">Last contact</div><div style="font-weight:600;margin-top:4px;">${r.last}</div></div>
+        <div style="padding:10px 14px;border:var(--hair);border-radius:8px;"><div style="font-size:11px;color:var(--ink-3);">Owner</div><div style="font-weight:600;margin-top:4px;">${r.owner}</div></div>
+      </div>
+      <div style="font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:8px;">Notes</div>
+      <textarea placeholder="Add a note about this follow-up…" style="width:100%;min-height:80px;padding:12px;border:var(--hair);border-radius:8px;font-size:13px;outline:none;resize:vertical;font-family:inherit;"></textarea>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;">
+        <div style="display:flex;gap:8px;"><button data-comm-action="action:salesFollowUps.snooze-1d" class="btn btn-secondary">Snooze 1d</button><button data-comm-action="action:salesFollowUps.reassign" class="btn btn-secondary">Reassign…</button></div>
+        <div style="display:flex;gap:8px;"><button class="btn btn-secondary x">Cancel</button><button data-comm-action="action:salesFollowUps.mark-complete" class="btn btn-primary">Mark complete</button></div>
+      </div>
+    </div>
+  </div>`;
+  document.body.appendChild(m);
+  const close = () => m.remove();
+  m.addEventListener('click', e2 => { if (e2.target === m) close(); });
+  m.querySelectorAll('.x').forEach(b => b.addEventListener('click', close));
+});
+
+// Re-render when the host pushes fresh state.
+if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
+  window.S1.bus.on('state:replaced', () => {
+    const active = document.querySelector('#fuChips .fchip.active');
+    render(active ? active.dataset.filter : 'all');
+  });
+}
+
+// pager click handled in module.js via server-side pagination wiring.
+</script>
+</body>
+</html>

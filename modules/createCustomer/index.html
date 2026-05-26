@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Create Customer — Redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_system.css">
+<style>
+.cc-wrap { max-width: 1100px; margin: 0 auto; padding: 24px 28px 64px; }
+.cc-header { display: flex; align-items: center; gap: 14px; background: #fff; border: var(--hair); border-radius: 10px; padding: 18px 22px; margin-bottom: 18px; }
+.cc-header-icon { width: 46px; height: 46px; border-radius: 999px; background: var(--surface-2); display: flex; align-items: center; justify-content: center; color: var(--ink-3); }
+.cc-header h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 4px; }
+.cc-header a { font-size: 12.5px; color: var(--terra); }
+.cc-card { background: #fff; border: var(--hair); border-radius: 10px; padding: 24px 26px; margin-bottom: 14px; }
+.cc-section-title { font-size: 14px; font-weight: 700; color: var(--ink); margin: 0 0 14px; }
+.cc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 18px; }
+.cc-grid.full > div { grid-column: 1 / -1; }
+.cc-field { display: flex; flex-direction: column; gap: 6px; }
+.cc-field.full { grid-column: 1 / -1; }
+.cc-label { font-size: 13px; font-weight: 600; color: var(--ink); }
+.cc-label .req { color: var(--bad); }
+.cc-input, .cc-select, .cc-textarea {
+  width: 100%; padding: 10px 12px; border: var(--hair); border-radius: 7px; font-size: 13.5px; background: #fff; color: var(--ink); font-family: inherit; outline: none;
+}
+.cc-textarea { min-height: 110px; resize: vertical; }
+.cc-input:focus, .cc-select:focus, .cc-textarea:focus { border-color: var(--terra); box-shadow: 0 0 0 3px var(--terra-soft); }
+.cc-help { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
+.cc-stop-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border: var(--hair); border-radius: 7px; background: #fff; font-size: 13px; font-weight: 500; cursor: pointer; }
+.cc-stop-btn:hover { background: var(--surface-2); }
+.cc-divider { border-top: var(--hair); margin: 20px 0; }
+.cc-actions { display: flex; justify-content: flex-end; gap: 10px; padding-top: 6px; }
+.cc-btn-primary { padding: 10px 18px; background: var(--terra); color: #fff; border: 0; border-radius: 7px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.cc-btn-primary:hover { background: var(--terra-hover); }
+.cc-btn-secondary { padding: 10px 18px; background: #fff; color: var(--ink); border: var(--hair); border-radius: 7px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.cc-input.error, .cc-select.error { border-color: #DC2626; box-shadow: 0 0 0 3px rgba(220,38,38,.15); }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_aesthetic.css">
+</head>
+<body>
+<div class="app" data-screen-label="Create Customer"><main class="page">
+    <div class="cc-wrap">
+      <div class="cc-header">
+        <div class="cc-header-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/></svg></div>
+        <div>
+          <h1 data-bind-text="summary">Create Customer</h1>
+          <a href="Customers.html">← Back to Customers</a>
+        </div>
+      </div>
+
+      <form>
+        <div class="cc-card">
+          <div class="cc-section-title">Basic Information</div>
+          <div class="cc-grid">
+            <div class="cc-field"><label class="cc-label">First Name <span class="req">*</span></label><input class="cc-input" type="text" required></div>
+            <div class="cc-field"><label class="cc-label">Last Name</label><input class="cc-input" type="text"></div>
+            <div class="cc-field full"><label class="cc-label">Company Name</label><input class="cc-input" type="text"></div>
+          </div>
+        </div>
+
+        <div class="cc-card">
+          <div class="cc-section-title">Contact Information</div>
+          <div class="cc-grid">
+            <div class="cc-field"><label class="cc-label">Email</label><input class="cc-input" type="email"></div>
+            <div class="cc-field"><label class="cc-label">Phone Number</label><input class="cc-input" type="tel"></div>
+          </div>
+        </div>
+
+        <div class="cc-card">
+          <div class="cc-section-title">Location Details</div>
+          <div class="cc-grid full">
+            <div class="cc-field"><label class="cc-label">Service location</label><input class="cc-input" type="text" placeholder="Enter service location" data-places-autocomplete></div>
+            <div class="cc-field"><label class="cc-label">Delivery location</label><input class="cc-input" type="text" placeholder="Enter delivery location" data-places-autocomplete></div>
+            <div class="cc-field"><label class="cc-label">Additional Stops <span style="color:var(--ink-3);font-weight:400;">(Optional)</span></label><div id="cc-stops" style="display:flex;flex-direction:column;gap:8px;"></div><button type="button" class="cc-stop-btn" onclick="(function(){const el=document.createElement('div');el.style.cssText='display:grid;grid-template-columns:32px 1fr auto;gap:8px;align-items:center;';el.innerHTML='<span style=&quot;font-weight:700;color:var(--ink-3);&quot;>'+(document.querySelectorAll('#cc-stops > div').length+1)+'.</span><input class=&quot;cc-input&quot; type=&quot;text&quot; placeholder=&quot;Stop address&quot; data-places-autocomplete><button type=&quot;button&quot; style=&quot;padding:8px 10px;color:#B91C1C;background:transparent;border:0;font-size:13px;cursor:pointer;&quot; onclick=&quot;this.parentNode.remove()&quot;>Remove</button>';document.getElementById('cc-stops').appendChild(el);try{window.S1&&window.S1.placesAutocomplete&&window.S1.placesAutocomplete.attachAll();}catch(e){}})()">+ Add Stop</button></div>
+            <div class="cc-field"><label class="cc-label">Job size</label><select class="cc-select" data-bind-options="jobSizeOptions"><option value="-- Select Size --">-- Select Size --</option></select></div>
+          </div>
+        </div>
+
+        <div class="cc-card">
+          <div class="cc-section-title">Additional Details</div>
+          <div class="cc-grid">
+            <div class="cc-field"><label class="cc-label">Status <span class="req">*</span></label><select class="cc-select" data-bind-options="optionsOptions" required></select></div>
+            <div class="cc-field"><label class="cc-label">Source</label><select class="cc-select" data-bind-options="sourceOptions"><option value="-- Select Source --">-- Select Source --</option></select></div>
+            <div class="cc-field"><label class="cc-label">Type</label><select class="cc-select" data-bind-options="typeOptions"><option value="-- Select Type --">-- Select Type --</option></select></div>
+            <div class="cc-field"><label class="cc-label">Square Footage</label><input class="cc-input" type="number" placeholder="e.g. 1500"></div>
+            <div class="cc-field full"><label class="cc-label">Location / Branch</label><select class="cc-select" data-bind-options="locationBranchOptions"></select><div class="cc-help">Email From, branding, and Estimate Portal will use this branch's identity.</div></div>
+            <div class="cc-field full"><label class="cc-label">Notes</label><textarea class="cc-textarea"></textarea></div>
+          </div>
+        </div>
+
+        <div class="cc-actions">
+          <button data-comm-action="action:createCustomer.create" type="submit" class="cc-btn-primary">Create Customer</button>
+          <a href="Customers.html" class="cc-btn-secondary" style="display:inline-flex;align-items:center;">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </main>
+</div><div class="s1-overlay gm-overlay" id="addAddressModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Create customer</div><h4>Add address</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Type</label><select class="s1-select" name="kind" data-bind-options="addressTypes"><option value="">Choose…</option></select></div>
+    <div><label class="s1-mlabel">Street</label><input class="s1-input" type="text" name="street" data-places-autocomplete></div>
+    <div><label class="s1-mlabel">City</label><input class="s1-input" type="text" name="city"></div>
+    <div><label class="s1-mlabel">ZIP</label><input class="s1-input" type="text" name="zip"></div>
+    <div><label class="s1-mlabel">Country</label><input class="s1-input" type="text" name="country"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Add</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="addContactModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Create customer</div><h4>Add contact</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Name</label><input class="s1-input" type="text" name="name"></div>
+    <div><label class="s1-mlabel">Role</label><select class="s1-select" name="role" data-bind-options="roleOptions"><option value="">Choose…</option></select></div>
+    <div><label class="s1-mlabel">Phone</label><input class="s1-input" type="tel" name="phone"></div>
+    <div><label class="s1-mlabel">Email</label><input class="s1-input" type="email" name="email"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Add</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="saveAndNewModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Create customer</div><h4>Save & new</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div class="full"><label class="s1-mlabel">Notes</label><textarea class="s1-textarea" name="notes"></textarea></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Save and start new</button></div>
+</div></div>
+<script src="../../core/event-bus.js"></script>
+<script src="../../core/state-store.js"></script>
+<script src="../../core/schema.js"></script>
+<script src="../../core/fixtures.js"></script>
+<script src="../../core/communication.mock.js"></script>
+<script src="../../core/communication.api.js"></script>
+<script src="../../core/communication.js"></script>
+<script src="../../core/render.js"></script>
+<script src="../../core/standard-page.js"></script>
+<script src="../../core/google-places.js"></script>
+<script src="./module.js"></script>
+</body>
+</html>

@@ -1,28 +1,119 @@
-<!DOCTYPE html><html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Pre-Office Submissions</title>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Checklist Submissions — Redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../../assets/css/module.css">
-</head><body>
-<div class="wrap">
-  <div class="page-bar"><div class="page-title">Pre-Office Submissions</div></div>
-  <section class="section">
-    <table class="tbl">
-      <thead><tr><th>#</th><th>Customer</th><th>Date</th><th>Status</th><th>Assignee</th></tr></thead>
-      <tbody data-bind="submissions">
-        <template>
+<link rel="stylesheet" href="_system.css">
+<template id="__bundler_thumbnail" data-bg-color="#FFFFFF"><svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg"><rect width="1200" height="800" fill="#FFFFFF"/><rect x="60" y="60" width="80" height="80" rx="12" fill="#004D40"/><text x="100" y="115" text-anchor="middle" font-family="Inter" font-weight="800" font-size="28" fill="#D4960A">S</text><rect x="200" y="80" width="260" height="22" rx="3" fill="#0A2540"/><rect x="200" y="160" width="940" height="580" rx="6" fill="#FAFBFC" stroke="#EFF2F5"/><text x="600" y="790" text-anchor="middle" font-family="Inter" font-weight="500" font-size="14" fill="#697386">Checklist Submissions · Loading…</text></svg></template>
+
+<style>
+.pofc-filterbar {
+  display:flex; gap:10px; align-items:center; padding:14px 16px;
+  background:#fff; border:var(--hair); border-radius:8px;
+  margin-bottom:14px; flex-wrap:wrap;
+}
+.pofc-filterbar input[type="date"], .pofc-filterbar select {
+  height:32px; padding:0 10px; font-size:12.5px;
+  border:var(--hair); border-radius:6px; font-family:inherit;
+  background:#fff; color:var(--ink);
+}
+.pofc-checkbox { display:inline-flex; align-items:center; gap:6px; font-size:12.5px; color:var(--ink-2); cursor:pointer; }
+.pofc-checkbox input { cursor:pointer; }
+.pofc-arrow { color:var(--ink-3); font-size:13px; }
+
+.pofc-status { display:inline-block; padding:3px 10px; border-radius:999px; font-size:11px; font-weight:600; }
+.pofc-status.submitted { background:var(--info-soft); color:var(--info); }
+.pofc-status.reviewed  { background:var(--ok-soft); color:var(--ok); }
+.pofc-status.flagged   { background:var(--warn-soft); color:var(--warn); }
+.pofc-status.rejected  { background:var(--bad-soft); color:var(--bad); }
+
+.pofc-empty { padding:60px 20px; text-align:center; color:var(--ink-3); background:#fff; border:var(--hair); border-radius:8px; }
+</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_aesthetic.css">
+</head>
+<body>
+<div class="app" data-screen-label="Checklist Submissions"><main class="page">
+    <div class="wrap">
+
+      <div class="page-bar">
+        <div class="page-title-row">
+          <div class="page-title"><span data-bind-text="summary">Checklist Submissions</span></div>
+          <span class="muted" data-bind-text="subtitle">Review crew pre-office-leaving checklist submissions</span>
+        </div>
+        <div class="page-actions">
+          <a class="btn btn-secondary" href="PreOfficeTemplates.html">Manage Templates</a>
+        </div>
+      </div>
+
+      <!-- Filter bar (match original) -->
+      <form class="pofc-filterbar" id="pofcFilter">
+        <input type="date" name="From" id="pofcFrom">
+        <span class="pofc-arrow">→</span>
+        <input type="date" name="To" id="pofcTo">
+        <select name="Status" id="pofcStatus" data-bind-options="statusOptions"><option value="">All Statuses</option></select>
+        <label class="pofc-checkbox"><input type="checkbox" id="pofcFlagged"> Flagged only</label>
+        <div style="margin-left:auto;display:flex;gap:8px;">
+          <button data-comm-action="action:preOfficeSubmissions.apply" class="btn btn-primary" type="button" id="pofcApply">Apply</button>
+          <button data-comm-action="action:preOfficeSubmissions.export" class="btn btn-secondary" type="button">Export CSV</button>
+        </div>
+      </form>
+
+      <table class="tbl" id="pofcTable">
+        <thead>
           <tr>
-            <td>{{id|num}}</td>
-            <td>{{customer}}</td>
-            <td>{{date|date}}</td>
-            <td><span class="tag {{status}}">{{status}}</span></td>
-            <td>{{assignee}}</td>
+            <th>Crew member</th>
+            <th>Template</th>
+            <th class="num">Submitted</th>
+            <th class="num">Items</th>
+            <th>GPS</th>
+            <th>Status</th>
+            <th></th>
           </tr>
-        </template>
-      </tbody>
-    </table>
-  </section>
+        </thead>
+        <tbody id="pofcBody"></tbody>
+      </table>
+    </div>
+  </main>
 </div>
+<!-- v12 auto-modal toolbar -->
+<div style="display:flex;gap:8px;flex-wrap:wrap;padding:0 24px 16px;">
+  <button data-comm-action="action:preOfficeSubmissions.approve" class="s1-btn sec" data-preOfficeSubmissions-open="poApproveModal" type="button">Approve</button>
+  <button data-comm-action="action:preOfficeSubmissions.reject" class="s1-btn sec" data-preOfficeSubmissions-open="poRejectModal" type="button">Reject</button>
+  <button data-comm-action="action:preOfficeSubmissions.requestChanges" class="s1-btn sec" data-preOfficeSubmissions-open="poChangesModal" type="button">Request changes</button>
+</div>
+<div class="s1-overlay gm-overlay" id="poApproveModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Pre-office submissions</div><h4>Approve</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Submission id</label><input class="s1-input" type="text" name="id"></div>
+    <div class="full"><label class="s1-mlabel">Notes</label><textarea class="s1-textarea" name="notes"></textarea></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Approve</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="poRejectModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Pre-office submissions</div><h4>Reject</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Submission id</label><input class="s1-input" type="text" name="id"></div>
+    <div><label class="s1-mlabel">Reason</label><input class="s1-input" type="text" name="reason"></div>
+    <div class="full"><label class="s1-mlabel">Notes</label><textarea class="s1-textarea" name="notes"></textarea></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Reject</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="poChangesModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Pre-office submissions</div><h4>Request changes</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Submission id</label><input class="s1-input" type="text" name="id"></div>
+    <div class="full"><label class="s1-mlabel">Changes</label><textarea class="s1-textarea" name="changes"></textarea></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Request</button></div>
+</div></div>
 <script src="../../core/event-bus.js"></script>
 <script src="../../core/state-store.js"></script>
 <script src="../../core/schema.js"></script>
@@ -31,5 +122,106 @@
 <script src="../../core/communication.api.js"></script>
 <script src="../../core/communication.js"></script>
 <script src="../../core/render.js"></script>
+<script src="../../core/standard-page.js"></script>
+<script src="../../core/google-places.js"></script>
 <script src="./module.js"></script>
-</body></html>
+<script>
+const INLINE_ROWS = ([
+  { id:1, who:'Andrew Haylton',  role:'Team Lead',  tpl:'Standard End-of-Day', submitted:'Today 5:48 PM',  items:'22/22', gps:'On site',        status:'submitted', flagged:false },
+  { id:2, who:'Donald James',    role:'Team Lead',  tpl:'Standard End-of-Day', submitted:'Today 5:52 PM',  items:'22/22', gps:'On site',        status:'reviewed',  flagged:false },
+  { id:3, who:'Fred Waite',      role:'Team Lead',  tpl:'Standard End-of-Day', submitted:'Today 4:58 PM',  items:'22/22', gps:'On site',        status:'submitted', flagged:false },
+  { id:4, who:'Paul Rai',        role:'Driver',     tpl:'Standard End-of-Day', submitted:'Today 5:01 PM',  items:'14/14', gps:'2.4 km from yard', status:'flagged',  flagged:true  },
+  { id:5, who:'Alex Zu',         role:'Driver',     tpl:'Standard End-of-Day', submitted:'Today 5:14 PM',  items:'17/18', gps:'On site',        status:'flagged',  flagged:true  },
+  { id:6, who:'Jackson Mungai',  role:'Mover',      tpl:'Standard End-of-Day', submitted:'Today 5:22 PM',  items:'14/14', gps:'On site',        status:'submitted', flagged:false },
+  { id:7, who:'Gurtsik Ann',     role:'Helper',     tpl:'Standard End-of-Day', submitted:'Today 5:38 PM',  items:'13/14', gps:'On site',        status:'reviewed',  flagged:false },
+  { id:8, who:'Maya Kapoor',     role:'Driver',     tpl:'Standard End-of-Day', submitted:'Yesterday',     items:'17/18', gps:'On site',        status:'rejected',  flagged:false }
+]);
+
+const STATUS_LBL = { submitted:'Submitted', reviewed:'Reviewed', flagged:'Flagged', rejected:'Rejected' };
+
+// Read fresh on every render so host state-pushes land. Backend ships its
+// list under `submissions` (POCO uses `name`/`template`/`duration` instead of
+// `who`/`tpl`/`gps`) — accept either array key and alias renamed fields.
+function getRows() {
+  const fx = (window.S1 && window.S1.fixtures && window.S1.fixtures["preOfficeSubmissions"]) || null;
+  const raw = (fx && Array.isArray(fx.rows)        && fx.rows.length)        ? fx.rows
+            : (fx && Array.isArray(fx.submissions) && fx.submissions.length) ? fx.submissions
+            : INLINE_ROWS;
+  return raw.map((r, i) => Object.assign({}, r, {
+    id:        r.id != null ? r.id : i + 1,
+    who:       r.who       || r.name     || '',
+    role:      r.role      || '',
+    tpl:       r.tpl       || r.template || '',
+    submitted: r.submitted || '',
+    items:     r.items     || '',
+    gps:       r.gps       || r.duration || '',
+    status:    r.status    || '',
+    flagged:   r.flagged != null ? r.flagged : (r.status === 'flagged')
+  }));
+}
+
+function render() {
+  const st = document.getElementById('pofcStatus').value.toLowerCase();
+  const fl = document.getElementById('pofcFlagged').checked;
+  const shown = getRows().filter(r => {
+    if (st && r.status !== st) return false;
+    if (fl && !r.flagged) return false;
+    return true;
+  });
+  const tb = document.getElementById('pofcBody');
+  if (!shown.length) {
+    tb.innerHTML = '<tr><td colspan="7"><div class="pofc-empty">No submissions match your filters.</div></td></tr>';
+    return;
+  }
+  tb.innerHTML = shown.map(r => `
+    <tr style="cursor:pointer;" data-id="${r.id}">
+      <td><div class="who"><span class="who-av" style="background:var(--terra);">${r.who.split(' ').map(s=>s[0]).join('').slice(0,2)}</span><div><div class="who-nm">${r.who}</div><div class="who-sub">${r.role}</div></div></div></td>
+      <td>${r.tpl}</td>
+      <td class="num cell-light">${r.submitted}</td>
+      <td class="num" style="${r.items.split('/')[0]!==r.items.split('/')[1]?'color:var(--warn);font-weight:600;':''}">${r.items}</td>
+      <td class="cell-light">${r.gps}</td>
+      <td><span class="pofc-status ${r.status}">${STATUS_LBL[r.status]}</span></td>
+      <td><button data-comm-action="action:preOfficeSubmissions.review" class="btn btn-ghost" style="font-size:11.5px;">Review</button></td>
+    </tr>`).join('');
+}
+
+document.getElementById('pofcApply').addEventListener('click', render);
+['pofcStatus','pofcFlagged'].forEach(id => document.getElementById(id).addEventListener('change', render));
+render();
+
+// Row click → submission detail modal
+document.getElementById('pofcBody').addEventListener('click', e => {
+  const tr = e.target.closest('tr[data-id]'); if (!tr) return;
+  const r = getRows().find(x => x.id === +tr.dataset.id); if (!r) return;
+  const m = document.createElement('div');
+  m.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:center;justify-content:center;z-index:1000;padding:24px;';
+  m.innerHTML = `<div style="background:#fff;border-radius:12px;max-width:580px;width:100%;max-height:84vh;overflow:auto;padding:24px 26px;box-shadow:0 24px 60px -16px rgba(15,23,42,.4);">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:16px;">
+      <div><div style="font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;">Checklist submission #${r.id}</div><h2 style="margin:6px 0 8px;font-size:20px;font-weight:700;letter-spacing:-0.01em;">${r.who}</h2><div><span class="pofc-status ${r.status}">${STATUS_LBL[r.status]}</span></div></div>
+      <button class="x" style="border:0;background:transparent;font-size:24px;color:var(--ink-3);cursor:pointer;line-height:1;">×</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:18px;">
+      <div style="padding:10px 14px;border:var(--hair);border-radius:8px;"><div style="font-size:11px;color:var(--ink-3);">Template</div><div style="font-weight:600;margin-top:4px;">${r.tpl}</div></div>
+      <div style="padding:10px 14px;border:var(--hair);border-radius:8px;"><div style="font-size:11px;color:var(--ink-3);">Submitted</div><div style="font-weight:600;margin-top:4px;">${r.submitted}</div></div>
+      <div style="padding:10px 14px;border:var(--hair);border-radius:8px;"><div style="font-size:11px;color:var(--ink-3);">Items completed</div><div style="font-weight:600;margin-top:4px;">${r.items}</div></div>
+      <div style="padding:10px 14px;border:var(--hair);border-radius:8px;"><div style="font-size:11px;color:var(--ink-3);">GPS location</div><div style="font-weight:600;margin-top:4px;">${r.gps}</div></div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;">
+      <button class="btn btn-secondary x">Close</button>
+      <button data-comm-action="action:preOfficeSubmissions.flag" class="btn btn-secondary">Flag</button>
+      <button data-comm-action="action:preOfficeSubmissions.markReviewed" class="btn btn-primary">Mark reviewed</button>
+    </div>
+  </div>`;
+  document.body.appendChild(m);
+  const close = () => m.remove();
+  m.addEventListener('click', e2 => { if (e2.target === m) close(); });
+  m.querySelectorAll('.x').forEach(b => b.addEventListener('click', close));
+});
+
+// Re-render when the host pushes fresh state.
+if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
+  window.S1.bus.on('state:replaced', render);
+}
+</script>
+</body>
+</html>

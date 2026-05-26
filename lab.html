@@ -79,6 +79,9 @@ const $$ = (s) => Array.from(document.querySelectorAll(s));
 
 let modules = [];
 let current = null;
+// State to inject into the next iframe load, set by Apply / Load fixture.
+// Read by the iframe's `load` handler below, then cleared.
+let pendingFrameState = null;
 let mode = localStorage.getItem('s1ui_mode') || 'mock';
 
 function toast(msg) {
@@ -150,6 +153,18 @@ bus.on('iframe:comm:log', (entry) => {
   renderOps();
 });
 
+// Cross-origin path: the iframe forwards every comm op to its parent via
+// postMessage (see core/communication.mock.js + communication.api.js
+// `_record`). file:// origins make direct contentWindow.bus access fail,
+// so this is the only channel that reliably surfaces the iframe's I/O.
+window.addEventListener('message', (ev) => {
+  const d = ev.data;
+  if (!d || typeof d !== 'object') return;
+  if (d.type === 's1ui:comm:log' && d.entry) {
+    bus.emit('iframe:comm:log', d.entry);
+  }
+});
+
 const opsPane = $('#opsPane');
 function renderOps() {
   if (!current) { opsPane.innerHTML = ''; return; }
@@ -173,22 +188,58 @@ $$('.tabs-bar button').forEach(b => b.addEventListener('click', () => {
   if (b.dataset.tab === 'ops') renderOps();
 }));
 
-async function openModule(name) {
+async function openModule(name, opts) {
+  opts = opts || {};
   current = modules.find(m => m.name === name);
   if (!current) return;
   renderModuleList(modules);
   logEntries.length = 0; renderLog(logEntries); renderOps();
-  const url = './modules/' + name + '/index.html?mode=' + mode + '&fixture=' + current.fixture + '&embedded=1';
+  const baseUrl = './modules/' + name + '/index.html?mode=' + mode + '&fixture=' + current.fixture + '&embedded=1';
+  // file:// treats every page as a unique origin, so the lab can't reach
+  // into the iframe's window after load to seed state — those writes are
+  // blocked as cross-origin. Same channel as the standalone link: encode
+  // the pending state into the URL hash so MockComm picks it up on boot.
+  // Cache-bust with &_t=… because changing only the hash (or re-setting
+  // the same src) does not trigger a reload; without this Apply on the
+  // currently-open module would be a no-op.
+  const bust = '&_t=' + Date.now();
+  let frameUrl = baseUrl + bust;
+  if (pendingFrameState != null) {
+    try { frameUrl = baseUrl + bust + '#state=' + encodeURIComponent(JSON.stringify(pendingFrameState)); } catch {}
+    pendingFrameState = null;
+  }
   $('#crumb').textContent = 'iframe · ' + current.title;
-  $('#frameUrl').textContent = url;
-  $('#btnStandalone').href = url;
-  $('#frame').src = url;
-  // Try to preload fixture into textarea so user can see/edit
-  try {
-    const fx = (window.S1.fixtures || {})[current.fixture];
-    if (fx != null) $('#stateText').value = JSON.stringify(fx, null, 2);
-  } catch {}
+  $('#frameUrl').textContent = baseUrl;
+  $('#btnStandalone').dataset.baseUrl = baseUrl;
+  $('#frame').src = frameUrl;
+  // Only refresh the editor from the fixture on a fresh navigation —
+  // never after Apply / Load fixture, where the user's textarea is the
+  // source of truth and would otherwise visibly revert.
+  if (!opts.keepText && !pendingFrameState) {
+    try {
+      const fx = (window.S1.fixtures || {})[current.fixture];
+      if (fx != null) $('#stateText').value = JSON.stringify(fx, null, 2);
+    } catch {}
+  }
 }
+
+// Standalone link: stamp the current textarea JSON into the URL hash on
+// click so the new tab boots with the edited state, not the bare fixture.
+// (A new tab is a separate document — it can't read the lab's textarea.)
+$('#btnStandalone').addEventListener('click', (e) => {
+  const base = e.currentTarget.dataset.baseUrl;
+  if (!base) { e.preventDefault(); return; }
+  let href = base;
+  const txt = $('#stateText').value.trim();
+  if (txt && txt !== '{}') {
+    try {
+      JSON.parse(txt);  // validate; if it throws we just open the bare URL
+      href = base + '#state=' + encodeURIComponent(txt);
+    } catch {}
+  }
+  e.currentTarget.href = href;
+});
+
 
 $('#btnReload').addEventListener('click', () => location.reload());
 $('#btnReloadFrame').addEventListener('click', () => { if (current) openModule(current.name); });
@@ -197,18 +248,10 @@ $('#btnApply').addEventListener('click', () => {
   let json;
   try { json = JSON.parse($('#stateText').value); }
   catch (e) { toast('Invalid JSON: ' + e.message); return; }
-  // push state into the iframe's mock store, then reload it
-  try {
-    const w = $('#frame').contentWindow;
-    if (w && w.__s1ui_store) {
-      w.__s1ui_store.replaceAll(json);
-      try { w.localStorage.setItem('s1ui_state', JSON.stringify(json)); } catch {}
-    } else {
-      // fallback: write to our localStorage so iframe picks it up on load
-      try { localStorage.setItem('s1ui_state', JSON.stringify(json)); } catch {}
-    }
-  } catch {}
-  if (current) openModule(current.name);
+  // Queue the state for the iframe's `load` handler; the reload below
+  // would otherwise destroy any pre-load mutation we did to the store.
+  pendingFrameState = json;
+  if (current) openModule(current.name, { keepText: true });
   toast('State applied.');
 });
 
@@ -235,12 +278,8 @@ $('#btnDownload').addEventListener('click', () => {
 
 $('#btnReset').addEventListener('click', () => {
   $('#stateText').value = '{}';
-  try {
-    const w = $('#frame').contentWindow;
-    if (w && w.__s1ui_store) w.__s1ui_store.replaceAll({});
-    if (w) try { w.localStorage.removeItem('s1ui_state'); } catch {}
-  } catch {}
-  if (current) openModule(current.name);
+  pendingFrameState = {};
+  if (current) openModule(current.name, { keepText: true });
   toast('State cleared.');
 });
 

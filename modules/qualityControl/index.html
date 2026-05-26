@@ -1,30 +1,199 @@
-<!DOCTYPE html><html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Quality Control</title>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Quality Control — Redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../../assets/css/module.css">
-</head><body>
-<div class="wrap">
-  <div class="page-bar"><div class="page-title">Quality Control</div></div>
-  <section class="section">
-    <table class="tbl">
-      <thead><tr><th>#</th><th>Job</th><th>Severity</th><th>Description</th><th>Status</th><th>Reported by</th><th>Date</th></tr></thead>
-      <tbody data-bind="incidents">
-        <template>
-          <tr>
-            <td>{{id|num}}</td>
-            <td>{{jobId|num}}</td>
-            <td class="prio-{{severity}}">{{severity}}</td>
-            <td>{{description}}</td>
-            <td><span class="tag {{status}}">{{status}}</span></td>
-            <td>{{reportedBy}}</td>
-            <td>{{date|date}}</td>
-          </tr>
-        </template>
-      </tbody>
-    </table>
-  </section>
+<link rel="stylesheet" href="_system.css">
+<template id="__bundler_thumbnail" data-bg-color="#FFFFFF"><svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg"><rect width="1200" height="800" fill="#FFFFFF"/><rect x="60" y="60" width="80" height="80" rx="12" fill="#004D40"/><text x="100" y="115" text-anchor="middle" font-family="Inter" font-weight="800" font-size="28" fill="#D4960A">S</text><rect x="200" y="80" width="260" height="22" rx="3" fill="#0A2540"/><rect x="200" y="160" width="940" height="580" rx="6" fill="#FAFBFC" stroke="#EFF2F5"/><text x="600" y="790" text-anchor="middle" font-family="Inter" font-weight="500" font-size="14" fill="#697386">Quality Control · Loading…</text></svg></template>
+
+<style>
+.qc-tabs { display:flex; gap:2px; margin-bottom:18px; border-bottom:var(--hair); }
+.qc-tab {
+  padding:10px 16px; font-size:13px; font-weight:500; color:var(--ink-2);
+  border-bottom:2px solid transparent; cursor:pointer; text-decoration:none;
+  transition:color .12s, border-color .12s;
+}
+.qc-tab:hover { color:var(--terra); }
+.qc-tab.active { color:var(--terra); border-bottom-color:var(--terra); font-weight:600; }
+
+.qc-pane { display:none; }
+.qc-pane.active { display:block; }
+
+.qc-kpis { display:grid; grid-template-columns:repeat(6, 1fr); gap:12px; margin-bottom:20px; }
+.qc-kpi {
+  background:#fff; border:var(--hair); border-radius:var(--r-card, 12px);
+  padding:14px 16px; display:flex; align-items:center; gap:12px;
+}
+.qc-kpi-ico {
+  width:34px; height:34px; border-radius:8px;
+  display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.qc-kpi-ico.green  { background:var(--ok-soft);  color:var(--ok); }
+.qc-kpi-ico.yellow { background:var(--warn-soft);color:var(--warn); }
+.qc-kpi-ico.red    { background:var(--bad-soft); color:var(--bad); }
+.qc-kpi-ico.blue   { background:var(--info-soft);color:var(--info); }
+.qc-kpi-ico.accent { background:var(--terra-soft);color:var(--terra); }
+.qc-kpi-ico.purple { background:var(--plum-soft);color:var(--plum); }
+.qc-kpi-val { font-size:20px; font-weight:700; font-variant-numeric:tabular-nums; letter-spacing:-0.01em; line-height:1.1; }
+.qc-kpi-lbl { font-size:11px; color:var(--ink-3); margin-top:3px; }
+@media (max-width: 1200px) { .qc-kpis { grid-template-columns:repeat(3, 1fr); } }
+@media (max-width: 720px)  { .qc-kpis { grid-template-columns:repeat(2, 1fr); } }
+
+.qc-pill { display:inline-block; padding:3px 9px; border-radius:999px; font-size:11px; font-weight:600; }
+.qc-pill.ok    { background:var(--ok-soft); color:var(--ok); }
+.qc-pill.warn  { background:var(--warn-soft); color:var(--warn); }
+.qc-pill.bad   { background:var(--bad-soft); color:var(--bad); }
+</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_aesthetic.css">
+</head>
+<body>
+<div class="app" data-screen-label="Quality Control"><main class="page">
+    <div class="wrap">
+      <div class="page-bar">
+        <div class="page-title-row">
+          <div class="page-title"><span data-bind-text="summary">Quality Control</span></div>
+          <span class="muted" data-bind-text="subtitle">Sales call &amp; lead-handling compliance · last 30 days</span>
+        </div>
+        <div class="page-actions">
+          <a href="CrewProcesses.html" class="btn btn-secondary" style="text-decoration:none;display:inline-flex;align-items:center;">Manage Processes →</a>
+        </div>
+      </div>
+
+      <!-- Tabs (match original) -->
+      <nav class="qc-tabs" id="qcTabs">
+        <a class="qc-tab active" data-tab="dashboard">Dashboard</a>
+        <a class="qc-tab" data-tab="checks">Lead Checks</a>
+        <a class="qc-tab" data-tab="alerts">Alerts</a>
+        <a class="qc-tab" data-tab="agents">Agent Performance</a>
+      </nav>
+
+      <!-- 6 KPIs (match original) -->
+      <div class="qc-kpis">
+        <div class="qc-kpi"><div class="qc-kpi-ico green"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><div><div class="qc-kpi-val" data-bind-text="metrics.qc_kpi_val.0">142</div><div class="qc-kpi-lbl">Compliant</div></div></div>
+        <div class="qc-kpi"><div class="qc-kpi-ico yellow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><div><div class="qc-kpi-val" data-bind-text="metrics.qc_kpi_val.1">11</div><div class="qc-kpi-lbl">At Risk</div></div></div>
+        <div class="qc-kpi"><div class="qc-kpi-ico red"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div><div><div class="qc-kpi-val" data-bind-text="metrics.qc_kpi_val.2">4</div><div class="qc-kpi-lbl">Non-Compliant</div></div></div>
+        <div class="qc-kpi"><div class="qc-kpi-ico blue"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg></div><div><div class="qc-kpi-val">92<span style="font-size:13px;">%</span></div><div class="qc-kpi-lbl">Compliance Rate</div></div></div>
+        <div class="qc-kpi"><div class="qc-kpi-ico accent"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div><div><div class="qc-kpi-val" data-bind-text="metrics.qc_kpi_val.3">4.6</div><div class="qc-kpi-lbl">Avg Call Rating</div></div></div>
+        <div class="qc-kpi"><div class="qc-kpi-ico purple"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div><div class="qc-kpi-val" data-bind-text="metrics.qc_kpi_val.4">7</div><div class="qc-kpi-lbl">Missed Follow-ups</div></div></div>
+      </div>
+
+      <!-- DASHBOARD pane -->
+      <section class="qc-pane active" data-pane="dashboard">
+        <div class="two-col">
+          <section class="section">
+            <div class="section-head"><div class="section-title">Recent lead checks</div><a class="section-link" href="#" onclick="event.preventDefault();show('checks');">All →</a></div>
+            <table class="tbl">
+              <thead><tr><th>Lead</th><th>Agent</th><th class="num">Score</th><th>Result</th><th class="num">When</th></tr></thead>
+              <tbody data-bind="rows"><template><tr style="cursor:pointer;"><td><b>{{c0_name}}</b> · {{c0_extra}}</td><td>{{c1_text}}</td><td class="num" style="color:var(--ok);font-weight:600;">{{c2_text}}</td><td><span class="qc-pill {{c3_cls}}">{{c3_label}}</span></td><td class="num cell-light">{{c4_text}}</td></tr></template></tbody>
+            </table>
+          </section>
+          <section class="section">
+            <div class="section-head"><div class="section-title">Open alerts</div><a class="section-link" href="#" onclick="event.preventDefault();show('alerts');">All →</a></div>
+            <table class="tbl">
+              <thead><tr><th>Alert</th><th>Agent</th><th class="num">Opened</th></tr></thead>
+              <tbody data-bind="rows2"><template><tr><td><b>{{c0_name}}</b><div class="cell-light" style="font-size:11px;color:var(--ink-3);">{{c0_sub}}</div></td><td>{{c1_text}}</td><td>{{c2_text}}</td></tr></template></tbody>
+            </table>
+          </section>
+        </div>
+
+        <section class="section">
+          <div class="section-head"><div class="section-title">Agent performance · this month</div></div>
+          <table class="tbl">
+            <thead><tr><th>Agent</th><th class="num">Leads handled</th><th class="num">Checks passed</th><th class="num">Avg score</th><th class="num">Missed follow-ups</th><th class="num">Avg call rating</th></tr></thead>
+            <tbody data-bind="rows3"><template><tr><td><div class="who"><span class="who-av" style="background:{{c0_avBg}};">{{c0_avInitials}}</span><div><div class="who-nm">{{c0_name}}</div></div></div></td><td>{{c1_text}}</td><td>{{c2_text}}</td><td>{{c3_text}}</td><td>{{c4_text}}</td><td>{{c5_text}}</td></tr></template></tbody>
+          </table>
+        </section>
+      </section>
+
+      <!-- LEAD CHECKS pane -->
+      <section class="qc-pane" data-pane="checks">
+        <div class="toolbar">
+          <input class="search-input" placeholder="Search by lead or agent…">
+          <div class="grow"></div>
+          <select class="field-select" style="width:140px;" data-bind-options="optionsOptions"><option value="All agents">All agents</option></select>
+          <select class="field-select" style="width:140px;" data-bind-options="optionsOptions2"><option value="All results">All results</option></select>
+        </div>
+        <table class="tbl">
+          <thead><tr><th>Lead</th><th>Agent</th><th class="num">Score</th><th>Result</th><th>Process</th><th class="num">When</th><th></th></tr></thead>
+          <tbody data-bind="rows4"><template><tr style="cursor:pointer;"><td><b>{{c0_name}}</b> · {{c0_extra}}</td><td>{{c1_text}}</td><td class="num" style="color:var(--ok);font-weight:600;">{{c2_text}}</td><td><span class="qc-pill {{c3_cls}}">{{c3_label}}</span></td><td>{{c4_text}}</td><td class="num cell-light">{{c5_text}}</td><td><button class="btn btn-ghost">{{c6_label}}</button></td></tr></template></tbody>
+        </table>
+      </section>
+
+      <!-- ALERTS pane -->
+      <section class="qc-pane" data-pane="alerts">
+        <div class="toolbar">
+          <input class="search-input" placeholder="Search alerts…">
+          <div class="grow"></div>
+          <select class="field-select" style="width:140px;" data-bind-options="optionsOptions3"><option value="All severities">All severities</option></select>
+          <select class="field-select" style="width:140px;" data-bind-options="optionsOptions4"></select>
+        </div>
+        <table class="tbl">
+          <thead><tr><th>Alert</th><th>Lead</th><th>Agent</th><th>Severity</th><th class="num">Opened</th><th></th></tr></thead>
+          <tbody data-bind="rows5"><template><tr><td><b>{{c0_name}}</b><div class="cell-light" style="font-size:11px;color:var(--ink-3);display:none"></div></td><td>{{c1_text}}</td><td>{{c2_text}}</td><td><span class="qc-pill warn">Medium</span></td><td>{{c4_text}}</td><td><button class="btn btn-ghost">Resolve</button></td></tr></template></tbody>
+        </table>
+      </section>
+
+      <!-- AGENT PERFORMANCE pane -->
+      <section class="qc-pane" data-pane="agents">
+        <div class="toolbar">
+          <select class="field-select" style="width:160px;" data-bind-options="optionsOptions5"></select>
+          <div class="grow"></div>
+          <button data-comm-action="action:qualityControl.export" class="btn btn-secondary">Export</button>
+        </div>
+        <table class="tbl">
+          <thead><tr><th>Agent</th><th class="num">Leads handled</th><th class="num">Checks passed</th><th class="num">Avg score</th><th class="num">Missed follow-ups</th><th class="num">Avg call rating</th><th class="num">CSAT</th></tr></thead>
+          <tbody data-bind="rows6"><template><tr><td><div class="who"><span class="who-av" style="background:{{c0_avBg}};">{{c0_avInitials}}</span><div><div class="who-nm">{{c0_name}}</div></div></div></td><td>{{c1_text}}</td><td>{{c2_text}}</td><td>{{c3_text}}</td><td>{{c4_text}}</td><td>{{c5_text}}</td><td>{{c6_text}}</td></tr></template></tbody>
+        </table>
+      </section>
+    </div>
+  </main>
 </div>
+<!-- v12 auto-modal toolbar -->
+<div style="display:flex;gap:8px;flex-wrap:wrap;padding:0 24px 16px;">
+  <button data-comm-action="action:qualityControl.audit.open" class="s1-btn sec" data-qualityControl-open="qcAuditModal" type="button">Open audit</button>
+  <button data-comm-action="action:qualityControl.resolve-issue" class="s1-btn sec" data-qualityControl-open="qcResolveModal" type="button">Resolve issue</button>
+  <button data-comm-action="action:qualityControl.escalate" class="s1-btn sec" data-qualityControl-open="qcEscalateModal" type="button">Escalate</button>
+  <button data-comm-action="action:qualityControl.add-note" class="s1-btn sec" data-qualityControl-open="qcNoteModal" type="button">Add note</button>
+</div>
+<div class="s1-overlay gm-overlay" id="qcAuditModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">QC</div><h4>Open audit</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Audit id</label><input class="s1-input" type="text" name="auditId"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Open</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="qcResolveModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">QC</div><h4>Resolve issue</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Issue id</label><input class="s1-input" type="text" name="issueId"></div>
+    <div><label class="s1-mlabel">Resolution</label><input class="s1-input" type="text" name="resolution"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Resolve</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="qcEscalateModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">QC</div><h4>Escalate</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Issue id</label><input class="s1-input" type="text" name="issueId"></div>
+    <div class="full"><label class="s1-mlabel">Notes</label><textarea class="s1-textarea" name="notes"></textarea></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Escalate</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="qcNoteModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">QC</div><h4>Add note</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Issue id</label><input class="s1-input" type="text" name="issueId"></div>
+    <div class="full"><label class="s1-mlabel">Note</label><textarea class="s1-textarea" name="body"></textarea></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Save note</button></div>
+</div></div>
 <script src="../../core/event-bus.js"></script>
 <script src="../../core/state-store.js"></script>
 <script src="../../core/schema.js"></script>
@@ -33,5 +202,17 @@
 <script src="../../core/communication.api.js"></script>
 <script src="../../core/communication.js"></script>
 <script src="../../core/render.js"></script>
+<script src="../../core/standard-page.js"></script>
+<script src="../../core/google-places.js"></script>
 <script src="./module.js"></script>
-</body></html>
+<script>
+function show(name) {
+  document.querySelectorAll('#qcTabs .qc-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+  document.querySelectorAll('.qc-pane').forEach(p => p.classList.toggle('active', p.dataset.pane === name));
+  window.scrollTo({ top: 0 });
+}
+window.show = show;
+document.querySelectorAll('#qcTabs .qc-tab').forEach(t => t.addEventListener('click', e => { e.preventDefault(); show(t.dataset.tab); }));
+</script>
+</body>
+</html>

@@ -1,61 +1,309 @@
-<!DOCTYPE html><html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Sales Dashboard</title>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sales Dashboard — Redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../../assets/css/module.css">
-</head><body>
-<div class="wrap">
-  <div class="page-bar"><div class="page-title">Sales Dashboard</div></div>
+<link rel="stylesheet" href="_system.css">
+<style>
+/* Sub-nav linking the four Sales pages */
+.sales-subnav { display:flex; gap:6px; padding:14px 0 18px; }
+.sales-subnav a { padding:8px 14px; font-size:13px; font-weight:600; color:var(--ink-3); border-radius:var(--r-pill,999px); }
+.sales-subnav a:hover { color:var(--ink); background:var(--surface-2); }
+.sales-subnav a.active { color:var(--terra); background:var(--terra-soft); }
 
-  <section class="section">
-    <h3 class="section-title">Pipeline</h3>
-    <div class="cards" data-bind="pipeline">
-      <template>
-        <div class="card">
-          <div class="section-sub">{{stage}}</div>
-          <div style="font-size:24px;font-weight:600">{{deals|num}}</div>
-          <div class="section-sub">{{value|usdint}}</div>
+/* 4-tab pane switcher */
+.sd-pane { display:none; }
+.sd-pane.active { display:block; }
+
+/* KPI strip */
+.sd-kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px; }
+.sd-kpi { background:#fff; border:var(--hair); border-radius:8px; padding:16px 18px; display:flex; align-items:center; gap:14px; }
+.sd-kpi .ico { width:38px; height:38px; border-radius:8px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
+.sd-kpi .ico.terra { background:var(--terra-soft); color:var(--terra); }
+.sd-kpi .ico.info  { background:var(--info-soft); color:var(--info); }
+.sd-kpi .ico.gold  { background:var(--gold-soft); color:var(--gold); }
+.sd-kpi .ico.ok    { background:var(--ok-soft); color:var(--ok); }
+.sd-kpi .v { font-size:20px; font-weight:700; font-variant-numeric:tabular-nums; letter-spacing:-0.01em; }
+.sd-kpi .l { font-size:11.5px; color:var(--ink-3); margin-top:2px; }
+@media (max-width: 1100px) { .sd-kpis { grid-template-columns:repeat(2,1fr); } }
+
+/* Main 3-col grid */
+.sd-grid { display:grid; grid-template-columns:5fr 4fr 3fr; gap:14px; margin-bottom:14px; }
+.sd-grid2 { display:grid; grid-template-columns:2fr 1fr; gap:14px; }
+@media (max-width: 1280px) {
+  .sd-grid { grid-template-columns:1fr 1fr; }
+  .sd-grid > .sd-revenue-card { grid-column:span 2; }
+  .sd-grid > .sd-upcoming-card { grid-column:span 2; }
+  .sd-grid2 { grid-template-columns:1fr; }
+}
+
+/* Funnel bars */
+.funnel { display:flex; flex-direction:column; gap:9px; }
+.fn-row { display:flex; align-items:center; gap:12px; }
+.fn-bar { flex:1; height:30px; background:var(--surface-2); border-radius:6px; overflow:hidden; }
+.fn-fill { height:100%; display:flex; align-items:center; padding:0 12px; color:#fff; font-weight:600; font-size:11.5px; white-space:nowrap; }
+.fn-count { font-weight:700; font-variant-numeric:tabular-nums; min-width:30px; text-align:right; font-size:13px; }
+
+/* Upcoming list */
+.up-list { display:flex; flex-direction:column; }
+.up-row { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px dashed var(--line); }
+.up-row:first-child { padding-top:0; }
+.up-row:last-child  { border-bottom:0; padding-bottom:0; }
+.up-row:hover { background:var(--surface-2); }
+.up-name { font-size:13px; font-weight:600; }
+.up-date { font-size:11px; color:var(--ink-3); margin-top:2px; }
+.up-amt  { font-weight:700; font-variant-numeric:tabular-nums; font-size:13px; color:var(--terra); white-space:nowrap; }
+
+/* Revenue chart */
+.rv-chart { display:flex; gap:10px; height:200px; }
+.rv-y { display:flex; flex-direction:column; justify-content:space-between; padding-bottom:24px; min-width:48px; text-align:right; font-size:11px; color:var(--ink-3); font-variant-numeric:tabular-nums; }
+.rv-bars { flex:1; display:flex; align-items:flex-end; gap:8px; padding-bottom:24px; border-bottom:1px solid var(--line); position:relative; }
+.rv-col { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; position:relative; }
+.rv-bar { width:60%; max-width:36px; background:var(--gold); border-radius:6px 6px 0 0; min-height:3px; cursor:pointer; transition:opacity .12s; }
+.rv-bar.cur { background:var(--terra); }
+.rv-bar:hover { opacity:.85; }
+.rv-bar-tip { display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--ink); color:#fff; font-size:11px; font-weight:600; padding:4px 8px; border-radius:4px; white-space:nowrap; font-variant-numeric:tabular-nums; }
+.rv-col:hover .rv-bar-tip { display:block; }
+.rv-lbl { position:absolute; bottom:-22px; font-size:11px; color:var(--ink-3); }
+
+/* Quick actions */
+.qa-list { display:flex; flex-direction:column; gap:8px; }
+.qa-btn { padding:10px 14px; font-size:12.5px; font-weight:600; text-align:center; border-radius:var(--r-input,10px); cursor:pointer; }
+.qa-btn.primary { background:var(--terra); color:#fff; border:0; }
+.qa-btn.primary:hover { background:var(--terra-hover); }
+.qa-btn.secondary { background:#fff; color:var(--ink); border:var(--hair); }
+.qa-btn.secondary:hover { background:var(--surface-2); }
+
+/* Pipeline kanban (Pipeline tab) */
+.kanban { display:grid; grid-template-columns:repeat(5, 1fr); gap:12px; }
+.kc { background:#fff; border:var(--hair); border-radius:8px; padding:12px; min-height:340px; }
+.kc-head { padding-bottom:10px; border-bottom:var(--hair); margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; }
+.kc-name { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-3); }
+.kc-meta { font-size:11px; color:var(--ink-3); font-variant-numeric:tabular-nums; }
+.kc-card { background:var(--surface-2); border:1px solid transparent; border-radius:6px; padding:10px 12px; margin-bottom:8px; cursor:grab; }
+.kc-card:hover { border-color:var(--line-2); transform:translateY(-1px); }
+.kc-card.muted { background:transparent; border:1px dashed var(--line); color:var(--ink-3); text-align:center; cursor:pointer; }
+.kc-nm  { font-size:12.5px; font-weight:600; }
+.kc-sub { font-size:11px; color:var(--ink-3); margin-top:2px; }
+.kc-val { font-size:12.5px; font-weight:700; margin-top:6px; font-variant-numeric:tabular-nums; color:var(--terra); }
+@media (max-width: 1280px) { .kanban { grid-template-columns:repeat(3, 1fr); } }
+@media (max-width: 880px)  { .kanban { grid-template-columns:1fr; } }
+
+/* Goals grid */
+.goals-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; }
+.goal { background:#fff; border:var(--hair); border-radius:8px; padding:16px 18px; }
+.goal-h { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px; }
+.goal-n { font-size:13px; font-weight:600; }
+.goal-p { font-size:18px; font-weight:700; font-variant-numeric:tabular-nums; }
+.goal-bar { height:7px; background:var(--surface-2); border-radius:999px; overflow:hidden; }
+.goal-bar span { display:block; height:100%; border-radius:999px; }
+.goal-f { font-size:11.5px; color:var(--ink-2); margin-top:8px; }
+.goal-f b { font-variant-numeric:tabular-nums; }
+@media (max-width: 980px) { .goals-grid { grid-template-columns:1fr; } }
+</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_aesthetic.css">
+</head>
+<body>
+<div class="app" data-screen-label="Sales Dashboard"><main class="page">
+    <div class="wrap">
+
+      <div class="page-bar">
+        <div class="page-title-row">
+          <div class="page-title"><span data-bind-text="summary">Sales</span></div>
+          <span class="muted" data-bind-text="subtitle">John Sales · May performance</span>
         </div>
-      </template>
+        <div class="page-actions">
+          <button class="range-picker">May 2026 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>
+          <button data-comm-action="action:salesDashboard.customize" class="btn btn-secondary">Customize</button>
+        </div>
+      </div>
+
+      <!-- Sales sub-nav (4 pages) -->
+      <nav class="sales-subnav">
+        <a class="active" href="SalesDashboard.html">Dashboard</a>
+        <a href="SalesNewLeads.html">New Leads</a>
+        <a href="SalesMyLeads.html">My Opportunities</a>
+        <a href="SalesFollowUps.html">Follow-Ups</a>
+      </nav>
+
+      <!-- 1-tab — Overview only -->
+      <nav class="subtabs" id="sdTabs" style="margin-bottom:24px;">
+        <button data-comm-action="action:salesDashboard.overview" class="subtab active" data-pane="perf">Overview</button>
+      </nav>
+
+      <!-- ═══════════════ OVERVIEW ═══════════════ -->
+      <div class="sd-pane active" data-pane="perf">
+
+        <div class="sd-kpis">
+          <div class="sd-kpi"><div class="ico terra"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div><div class="v">8</div><div class="l">Leads today</div></div></div>
+          <div class="sd-kpi"><div class="ico info"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div><div class="v">21</div><div class="l">Estimates sent</div></div></div>
+          <div class="sd-kpi"><div class="ico ok"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div><div><div class="v">14</div><div class="l">Moves booked</div></div></div>
+          <div class="sd-kpi"><div class="ico gold"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div><div class="v"><span data-bind-text="amounts.0">$42,640</span></div><div class="l">Revenue this month</div></div></div>
+        </div>
+
+        <div class="sd-grid">
+          <!-- My Activity -->
+          <section class="section sd-activity-card" style="margin:0;">
+            <div class="section-head"><div class="section-title">My Activity</div></div>
+            <table class="tbl">
+              <thead><tr><th></th><th class="num">Today</th><th class="num">Week</th><th class="num">Month</th></tr></thead>
+              <tbody data-bind="rows"><template><tr><td>{{c0_text}}</td><td>{{c1_text}}</td><td>{{c2_text}}</td><td>{{c3_text}}</td></tr></template></tbody>
+            </table>
+          </section>
+
+          <!-- My Pipeline summary -->
+          <section class="section" style="margin:0;">
+            <div class="section-head"><div class="section-title">My Pipeline</div><span class="muted" style="font-size:12px;">23 deals · $61.2k</span></div>
+            <div class="funnel">
+              <div class="fn-row"><div class="fn-bar"><div class="fn-fill" style="width:35%;background:var(--ink-3);">New leads</div></div><div class="fn-count" data-bind-text="metrics.fn_count.0">8</div></div>
+              <div class="fn-row"><div class="fn-bar"><div class="fn-fill" style="width:26%;background:var(--info);">Discovery</div></div><div class="fn-count" data-bind-text="metrics.fn_count.1">6</div></div>
+              <div class="fn-row"><div class="fn-bar"><div class="fn-fill" style="width:22%;background:var(--plum);">Plan sent</div></div><div class="fn-count" data-bind-text="metrics.fn_count.2">5</div></div>
+              <div class="fn-row"><div class="fn-bar"><div class="fn-fill" style="width:13%;background:var(--warn);">Negotiation</div></div><div class="fn-count" data-bind-text="metrics.fn_count.3">3</div></div>
+              <div class="fn-row"><div class="fn-bar"><div class="fn-fill" style="width:4%;background:var(--ok);">Booked</div></div><div class="fn-count" data-bind-text="metrics.fn_count.4">1</div></div>
+            </div>
+          </section>
+
+          <!-- My Upcoming -->
+          <section class="section sd-upcoming-card" style="margin:0;">
+            <div class="section-head"><div class="section-title">Upcoming moves</div><a class="section-link" href="SalesMyLeads.html">All →</a></div>
+            <div class="up-list" data-bind="upcoming"><template><a class="up-row" href="#"><div><div class="up-name">{{name}}</div><div class="up-date">{{date}}</div></div><div class="up-amt" data-bind-text="metrics.amt.0">{{amount}}</div></a></template></div>
+          </section>
+        </div>
+
+        <div class="sd-grid2">
+          <!-- My Revenue chart -->
+          <section class="section sd-revenue-card" style="margin:0;">
+            <div class="section-head">
+              <div class="section-title">My Revenue</div>
+              <select class="field-select" style="width:120px;height:32px;font-size:12px;" data-bind-options="optionsOptions"></select>
+            </div>
+            <div class="rv-chart">
+              <div class="rv-y"><span>$50k</span><span>$38k</span><span>$25k</span><span>$13k</span><span><span data-bind-text="amounts.1">$0</span></span></div>
+              <div class="rv-bars" data-bind="chartCols"><template><div class="rv-col"><div class="rv-bar {{cls}}" style="height:{{height}}"><span class="rv-bar-tip">{{tip}}</span></div><span class="rv-lbl">{{label}}</span></div></template></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Quick actions -->
+          <section class="section" style="margin:0;">
+            <div class="section-head"><div class="section-title">Quick actions</div></div>
+            <div class="qa-list">
+              <a href="CreateCustomer.html" class="qa-btn primary" style="text-decoration:none;text-align:left;">+ Create lead</a>
+              <button data-comm-action="action:salesDashboard.make-a-call" class="qa-btn secondary">Make a call</button>
+              <button data-comm-action="action:salesDashboard.send-estimate" class="qa-btn secondary">Send estimate</button>
+              <button data-comm-action="action:salesDashboard.schedule-move" class="qa-btn secondary">Schedule move</button>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <!-- ═══════════════ PIPELINE ═══════════════ -->
+      <div class="sd-pane" data-pane="pipeline">
+        <section class="section" style="margin:0;">
+          <div class="section-head">
+            <div class="section-title">Pipeline · 23 opportunities · $61,200</div>
+            <div style="display:flex;gap:8px;">
+              <button data-comm-action="action:salesDashboard.filter" class="btn btn-secondary">Filter</button>
+              <button data-comm-action="action:salesDashboard.group-stage" class="btn btn-secondary">Group: Stage</button>
+              <button data-comm-action="action:salesDashboard.new-opportunity" class="btn btn-primary">+ New opportunity</button>
+            </div>
+          </div>
+          <div class="kanban"><div class="kc">
+              <div class="kc-head"><div class="kc-name" style="color:var(--ink-3);">New leads</div><div class="kc-meta">8 · $21.4k</div></div><div data-bind="kanban0" style="display:contents"><template><div class="kc-card {{cls}}"><div class="kc-nm">{{name}}</div><div class="kc-sub">{{sub}}</div><div class="kc-val">{{value}}</div></div></template></div></div>
+            <div class="kc">
+              <div class="kc-head"><div class="kc-name" style="color:var(--info);">Discovery</div><div class="kc-meta">6 · $18.2k</div></div><div data-bind="kanban1" style="display:contents"><template><div class="kc-card {{cls}}"><div class="kc-nm">{{name}}</div><div class="kc-sub">{{sub}}</div><div class="kc-val">{{value}}</div></div></template></div></div>
+            <div class="kc">
+              <div class="kc-head"><div class="kc-name" style="color:var(--plum);">Plan sent</div><div class="kc-meta">5 · $14.6k</div></div><div data-bind="kanban2" style="display:contents"><template><div class="kc-card {{cls}}"><div class="kc-nm">{{name}}</div><div class="kc-sub">{{sub}}</div><div class="kc-val">{{value}}</div></div></template></div></div>
+            <div class="kc">
+              <div class="kc-head"><div class="kc-name" style="color:var(--warn);">Negotiation</div><div class="kc-meta">3 · $5.8k</div></div><div data-bind="kanban3" style="display:contents"><template><div class="kc-card {{cls}}"><div class="kc-nm">{{name}}</div><div class="kc-sub">{{sub}}</div><div class="kc-val">{{value}}</div></div></template></div></div>
+            <div class="kc">
+              <div class="kc-head"><div class="kc-name" style="color:var(--ok);">Booked</div><div class="kc-meta">1 · $1.2k</div></div><div data-bind="kanban4" style="display:contents"><template><div class="kc-card {{cls}}"><div class="kc-nm">{{name}}</div><div class="kc-sub">{{sub}}</div><div class="kc-val">{{value}}</div></div></template></div></div>
+          </div>
+        </section>
+      </div>
+
+      <!-- ═══════════════ LEADERBOARD ═══════════════ -->
+      <div class="sd-pane" data-pane="leaderboard">
+        <section class="section" style="margin:0 0 14px 0;">
+          <div class="section-head"><div class="section-title">Team leaderboard · May</div><span class="muted" style="font-size:12px;">4 reps</span></div>
+          <table class="tbl">
+            <thead><tr><th>Rep</th><th class="num">Calls</th><th class="num">Quotes</th><th class="num">Booked</th><th class="num">Revenue</th><th class="num">Close rate</th><th class="num">Goal</th></tr></thead>
+            <tbody data-bind="rows2"><template><tr><td><div class="who"><span class="who-av" style="background:{{c0_avBg}};">{{c0_avInitials}}</span><div><div class="who-nm">{{c0_name}}</div><div class="who-sub">{{c0_sub}}</div></div></div></td><td>{{c1_text}}</td><td>{{c2_text}}</td><td>{{c3_text}}</td><td>{{c4_text}}</td><td>{{c5_text}}</td><td>{{c6_text}}</td></tr></template></tbody>
+          </table>
+        </section>
+        <section class="section" style="margin:0;">
+          <div class="section-head"><div class="section-title">Trends · Revenue per rep, last 6 months</div></div>
+          <table class="tbl">
+            <thead><tr><th>Rep</th><th class="num">Dec</th><th class="num">Jan</th><th class="num">Feb</th><th class="num">Mar</th><th class="num">Apr</th><th class="num">May</th></tr></thead>
+            <tbody data-bind="rows3"><template><tr><td>{{c0_text}}</td><td>{{c1_text}}</td><td>{{c2_text}}</td><td>{{c3_text}}</td><td>{{c4_text}}</td><td>{{c5_text}}</td><td><b>{{c6_name}}</b><div class="cell-light" style="font-size:11px;color:var(--ink-3);display:none"></div></td></tr></template></tbody>
+          </table>
+        </section>
+      </div>
+
+      <!-- ═══════════════ GOALS ═══════════════ -->
+      <div class="sd-pane" data-pane="goals">
+        <section class="section" style="margin:0 0 14px 0;">
+          <div class="section-head"><div class="section-title">May goals</div><button data-comm-action="action:salesDashboard.edit-goals" class="btn btn-secondary">Edit goals</button></div>
+          <div class="goals-grid">
+            <div class="goal"><div class="goal-h"><div class="goal-n">Revenue</div><div class="goal-p">85%</div></div><div class="goal-bar"><span style="width:85%;background:var(--ok);"></span></div><div class="goal-f"><b><span data-bind-text="amounts.2">$42,640</span></b> of $50,000 · 11 days left</div></div>
+            <div class="goal"><div class="goal-h"><div class="goal-n">Deals closed</div><div class="goal-p">93%</div></div><div class="goal-bar"><span style="width:93%;background:var(--ok);"></span></div><div class="goal-f"><b>14</b> of 15 · <span style="color:var(--ok);">on pace</span></div></div>
+            <div class="goal"><div class="goal-h"><div class="goal-n">Quotes sent</div><div class="goal-p">70%</div></div><div class="goal-bar"><span style="width:70%;background:var(--info);"></span></div><div class="goal-f"><b>21</b> of 30 · <span style="color:var(--warn);">behind by 4</span></div></div>
+            <div class="goal"><div class="goal-h"><div class="goal-n">Calls logged</div><div class="goal-p">102%</div></div><div class="goal-bar"><span style="width:100%;background:var(--ok);"></span></div><div class="goal-f"><b>82</b> of 80 · <span style="color:var(--ok);">target hit</span></div></div>
+            <div class="goal"><div class="goal-h"><div class="goal-n">Close rate</div><div class="goal-p">115%</div></div><div class="goal-bar"><span style="width:100%;background:var(--ok);"></span></div><div class="goal-f"><b>92%</b> vs 80% target · best on team</div></div>
+            <div class="goal"><div class="goal-h"><div class="goal-n">New leads worked</div><div class="goal-p">62%</div></div><div class="goal-bar"><span style="width:62%;background:var(--warn);"></span></div><div class="goal-f"><b>31</b> of 50 · <span style="color:var(--warn);">push needed</span></div></div>
+          </div>
+        </section>
+        <section class="section" style="margin:0;">
+          <div class="section-head"><div class="section-title">Quarterly outlook</div></div>
+          <table class="tbl">
+            <thead><tr><th>Quarter</th><th class="num">Target</th><th class="num">Booked</th><th class="num">Pipeline</th><th class="num">Forecast</th><th class="num">Variance</th></tr></thead>
+            <tbody data-bind="rows4"><template><tr><td>{{c0_text}}</td><td>{{c1_text}}</td><td>{{c2_text}}</td><td>{{c3_text}}</td><td><b>{{c4_name}}</b><div class="cell-light" style="font-size:11px;color:var(--ink-3);display:none"></div></td><td>{{c5_text}}</td></tr></template></tbody>
+          </table>
+        </section>
+      </div>
+
     </div>
-  </section>
-
-  <section class="section">
-    <h3 class="section-title">Deals</h3>
-    <table class="tbl">
-      <thead><tr><th>#</th><th>Customer</th><th>Stage</th><th style="text-align:right">Value</th><th>Owner</th><th>Updated</th></tr></thead>
-      <tbody data-bind="deals">
-        <template>
-          <tr>
-            <td>{{id|num}}</td>
-            <td>{{customer}}</td>
-            <td>{{stage}}</td>
-            <td style="text-align:right">{{value|usdint}}</td>
-            <td>{{owner}}</td>
-            <td>{{updated|date}}</td>
-          </tr>
-        </template>
-      </tbody>
-    </table>
-  </section>
-
-  <section class="section">
-    <h3 class="section-title">Customers</h3>
-    <table class="tbl">
-      <thead><tr><th>#</th><th>Name</th><th>Email</th><th>Phone</th></tr></thead>
-      <tbody data-bind="customers">
-        <template>
-          <tr>
-            <td>{{id|num}}</td>
-            <td>{{name}}</td>
-            <td>{{email}}</td>
-            <td>{{phone}}</td>
-          </tr>
-        </template>
-      </tbody>
-    </table>
-  </section>
+  </main>
 </div>
+<!-- v12 auto-modal toolbar -->
+<div style="display:flex;gap:8px;flex-wrap:wrap;padding:0 24px 16px;">
+  <button class="s1-btn sec" data-salesDashboard-open="sdOppAddModal" type="button">Add opportunity</button>
+  <button data-comm-action="action:salesDashboard.move-stage" class="s1-btn sec" data-salesDashboard-open="sdStageMoveModal" type="button">Move stage</button>
+  <button data-comm-action="action:salesDashboard.followUp.snooze" class="s1-btn sec" data-salesDashboard-open="sdSnoozeModal" type="button">Snooze follow-up</button>
+</div>
+<div class="s1-overlay gm-overlay" id="sdOppAddModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Sales</div><h4>Add opportunity</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Name</label><input class="s1-input" type="text" name="name"></div>
+    <div><label class="s1-mlabel">Amount</label><input class="s1-input" type="text" name="amount"></div>
+    <div><label class="s1-mlabel">Stage</label><input class="s1-input" type="text" name="stage"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Add</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="sdStageMoveModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Sales</div><h4>Move stage</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Opp id</label><input class="s1-input" type="text" name="id"></div>
+    <div><label class="s1-mlabel">New stage</label><input class="s1-input" type="text" name="stage"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Move</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="sdSnoozeModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Sales</div><h4>Snooze follow-up</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Opp id</label><input class="s1-input" type="text" name="id"></div>
+    <div><label class="s1-mlabel">Until</label><input class="s1-input" type="date" name="until"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Snooze</button></div>
+</div></div>
 <script src="../../core/event-bus.js"></script>
 <script src="../../core/state-store.js"></script>
 <script src="../../core/schema.js"></script>
@@ -64,5 +312,20 @@
 <script src="../../core/communication.api.js"></script>
 <script src="../../core/communication.js"></script>
 <script src="../../core/render.js"></script>
+<script src="../../core/standard-page.js"></script>
+<script src="../../core/google-places.js"></script>
 <script src="./module.js"></script>
-</body></html>
+<script>
+(function () {
+  const tabs = document.querySelectorAll('#sdTabs .subtab[data-pane]');
+  const panes = document.querySelectorAll('.sd-pane[data-pane]');
+  tabs.forEach(t => t.addEventListener('click', () => {
+    const name = t.dataset.pane;
+    tabs.forEach(x => x.classList.toggle('active', x === t));
+    panes.forEach(p => p.classList.toggle('active', p.dataset.pane === name));
+    window.scrollTo({ top: 0 });
+  }));
+})();
+</script>
+</body>
+</html>

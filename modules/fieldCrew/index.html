@@ -1,52 +1,285 @@
-<!DOCTYPE html><html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Field Crew</title>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Field Crew — Redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../../assets/css/module.css">
+<link rel="stylesheet" href="_system.css">
+<template id="__bundler_thumbnail" data-bg-color="#FFFFFF"><svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg"><rect width="1200" height="800" fill="#FFFFFF"/><rect x="60" y="60" width="80" height="80" rx="12" fill="#004D40"/><text x="100" y="115" text-anchor="middle" font-family="Inter" font-weight="800" font-size="28" fill="#D4960A">S</text><rect x="200" y="80" width="260" height="22" rx="3" fill="#0A2540"/><rect x="200" y="160" width="940" height="580" rx="6" fill="#FAFBFC" stroke="#EFF2F5"/><text x="600" y="790" text-anchor="middle" font-family="Inter" font-weight="500" font-size="14" fill="#697386">Field Crew · Loading…</text></svg></template>
+
 <style>
-.crew-card { border:1px solid var(--line); border-radius: var(--r); padding: 14px; display: flex; flex-direction: column; gap: 6px; }
-.crew-head { display:flex; align-items:center; justify-content:space-between; }
-.dot { width: 8px; height: 8px; border-radius: 999px; display: inline-block; margin-right: 6px; }
-.in { background: var(--ok); } .out { background: var(--ink-4); }
+.fc-tab-groups { display: flex; gap: 32px; margin-bottom: 18px; border-bottom: var(--hair); padding-bottom: 0; flex-wrap: wrap; }
+.fc-tab-group { display: flex; gap: 2px; align-items: center; }
+.fc-tab-group-label {
+  font-size: 10px; font-weight: 700; color: var(--ink-3); text-transform: uppercase;
+  letter-spacing: 0.07em; padding-right: 10px; margin-right: 4px;
+  border-right: 1px solid var(--line);
+}
+.fc-tab {
+  padding: 8px 14px; font-size: 13px; font-weight: 500;
+  color: var(--ink-2); border-bottom: 2px solid transparent;
+  cursor: pointer; transition: color .12s, border-color .12s; text-decoration: none;
+}
+.fc-tab:hover { color: var(--terra); }
+.fc-tab.active { color: var(--terra); border-bottom-color: var(--terra); font-weight: 600; }
+
+.fc-filters { display: flex; gap: 8px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
+.fc-filters select, .fc-filters input {
+  height: 34px; padding: 0 10px; font-size: 12.5px; border: var(--hair);
+  border-radius: var(--r-input, 8px); background: #fff; color: var(--ink); font-family: inherit;
+}
+
+.fc-pane { display: none; }
+.fc-pane.active { display: block; }
+
+.fc-empty {
+  padding: 60px 20px; text-align: center; color: var(--ink-3); font-size: 13px;
+  background: #fff; border: var(--hair); border-radius: var(--r-card, 12px);
+}
+
+.fc-thumb {
+  width: 44px; height: 44px; border-radius: 6px;
+  background: linear-gradient(135deg, var(--surface-2), var(--cream, #FCF7E0));
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--ink-3); font-size: 16px;
+}
+
+.fc-type {
+  display: inline-block; padding: 3px 9px; border-radius: 4px;
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.02em;
+}
+.fc-type.loadq    { background: #FEF3C7; color: #92400E; }
+.fc-type.speed    { background: #FEE2E2; color: #991B1B; }
+.fc-type.contract { background: #E0E7FF; color: #3730A3; }
+.fc-type.photo    { background: #F3F4F6; color: #374151; }
+.fc-type.aiload   { background: #FEF3C7; color: #92400E; }
+
+.fc-status {
+  display: inline-block; padding: 2px 8px; border-radius: 4px;
+  font-size: 11px; font-weight: 600;
+}
+.fc-status.open      { background: #FEF3C7; color: #92400E; }
+.fc-status.resolved  { background: #D1FAE5; color: #065F46; }
+.fc-status.reviewed  { background: #E0E7FF; color: #3730A3; }
+.fc-status.signed    { background: #D1FAE5; color: #065F46; }
+.fc-status.pending   { background: #FEF3C7; color: #92400E; }
+.fc-status.unsigned  { background: #FEE2E2; color: #991B1B; }
+.fc-status.passed    { background: #D1FAE5; color: #065F46; }
+.fc-status.failed    { background: #FEE2E2; color: #991B1B; }
+
+.fc-mph { font-variant-numeric: tabular-nums; font-weight: 600; }
+.fc-mph.over { color: var(--bad); }
+
+.fc-action {
+  padding: 4px 10px; border: var(--hair); border-radius: 6px;
+  background: #fff; font-size: 11.5px; font-weight: 600;
+  color: var(--ink-2); cursor: pointer;
+}
+.fc-action:hover { border-color: var(--terra); color: var(--terra); }
+.fc-action.primary { background: var(--terra); color: #fff; border-color: var(--terra); }
+.fc-action.primary:hover { background: var(--terra-hover); }
+
+.fc-modal {
+  display: none; position: fixed; inset: 0; background: rgba(15,23,42,.5);
+  z-index: 1000; align-items: center; justify-content: center; padding: 24px;
+}
+.fc-modal.show { display: flex; }
+.fc-modal .box {
+  background: #fff; border-radius: 12px; padding: 26px;
+  max-width: 480px; width: 100%;
+  box-shadow: 0 24px 60px -16px rgba(15,23,42,.4);
+}
+.fc-modal h3 { margin: 0 0 12px; font-size: 16px; font-weight: 700; }
+.fc-modal textarea {
+  width: 100%; min-height: 100px; padding: 10px 12px;
+  border: var(--hair); border-radius: 8px; font-size: 13px;
+  outline: none; resize: vertical; font-family: inherit;
+}
+.fc-modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
 </style>
-</head><body>
-<div class="wrap">
-  <div class="page-bar"><div class="page-title">Field Crew</div></div>
 
-  <section class="section">
-    <h3 class="section-title">Crews</h3>
-    <div class="cards" data-bind="crews">
-      <template>
-        <div class="crew-card">
-          <div class="crew-head">
-            <strong>{{name}}</strong>
-            <span class="section-sub"><span class="dot in"></span>last ping {{lastPing}}</span>
-          </div>
-          <div class="section-sub">Members: {{members}}</div>
-          <div class="section-sub">Location: {{location}}</div>
-          <div class="section-sub">Current job: {{currentJobId|num}}</div>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_aesthetic.css">
+</head>
+<body>
+<div class="app" data-screen-label="Field Crew"><main class="page">
+    <div class="wrap">
+      <div class="page-bar">
+        <div class="page-title-row">
+          <div class="page-title"><span data-bind-text="summary">Field Crew Reports</span></div>
+          <span class="muted" data-bind-text="subtitle">Loads, contracts &amp; driving — last 30 days</span>
         </div>
-      </template>
-    </div>
-  </section>
+        <div class="page-actions">
+          <button data-comm-action="action:fieldCrew.export" class="btn btn-secondary">Export CSV</button>
+        </div>
+      </div>
 
-  <section class="section">
-    <h3 class="section-title">Active jobs</h3>
-    <table class="tbl">
-      <thead><tr><th>#</th><th>Customer</th><th>Status</th><th>Crew</th></tr></thead>
-      <tbody data-bind="jobs">
-        <template>
-          <tr>
-            <td>{{id|num}}</td>
-            <td>{{customer}}</td>
-            <td><span class="tag {{status}}">{{status}}</span></td>
-            <td>{{crewId|num}}</td>
-          </tr>
-        </template>
-      </tbody>
-    </table>
-  </section>
+      <!-- KPI strip — matches original 4 cards -->
+      <div class="stat-group" style="margin-bottom:24px;">
+        <div class="stat-col"><div class="stat-eyebrow" data-bind-text="kpis.0.label">Unresolved reports</div><div class="stat-number" style="color:var(--bad);" data-bind-text="kpis.0.value">8</div><div class="stat-delta" data-bind-text="kpis.0.delta">11 total (30 days)</div></div>
+        <div class="stat-col"><div class="stat-eyebrow" data-bind-text="kpis.1.label">Load quality issues</div><div class="stat-number" style="color:var(--warn);" data-bind-text="kpis.1.value">4</div><div class="stat-delta" data-bind-text="kpis.1.delta">42 passed / 4 failed</div></div>
+        <div class="stat-col"><div class="stat-eyebrow" data-bind-text="kpis.2.label">Speeding violations</div><div class="stat-number" style="color:var(--bad);" data-bind-text="kpis.2.value">3</div><div class="stat-delta" data-bind-text="kpis.2.delta">Last 30 days</div></div>
+        <div class="stat-col"><div class="stat-eyebrow" data-bind-text="kpis.3.label">Unsigned contracts</div><div class="stat-number" style="color:var(--warn);" data-bind-text="kpis.3.value">2</div><div class="stat-delta" data-bind-text="metrics.stat_delta.0">186 total load photos</div></div>
+      </div>
+
+      <!-- Tabs in groups (matches original Loading / Driving / Manage) -->
+      <div class="fc-tab-groups" id="fcTabs">
+        <div class="fc-tab-group">
+          <span class="fc-tab-group-label">Loading</span>
+          <a class="fc-tab active" data-tab="reports">All Reports</a>
+          <a class="fc-tab"        data-tab="photos">Load Photos</a>
+          <a class="fc-tab"        data-tab="contracts">Contracts</a>
+        </div>
+        <div class="fc-tab-group">
+          <span class="fc-tab-group-label">Driving</span>
+          <a class="fc-tab" data-tab="logbooks">Logbooks</a>
+          <a class="fc-tab" data-tab="dvirs">DVIRs</a>
+          <a class="fc-tab" data-tab="speeding">Speeding</a>
+        </div>
+        <div class="fc-tab-group">
+          <span class="fc-tab-group-label">Manage</span>
+          <a class="fc-tab" data-tab="crew">Crew Members</a>
+        </div>
+      </div>
+
+      <!-- ────── All reports ────── -->
+      <section class="fc-pane active" data-pane="reports">
+        <div class="fc-filters">
+          <select id="fcrType" data-bind-options="fcrtypeOptions"><option value="">All Types</option></select>
+          <select id="fcrEmp" data-bind-options="fcrempOptions"><option value="">All Employees</option></select>
+          <select data-bind-options="optionsOptions"><option value="Status: All">Status: All</option></select>
+        </div>
+        <table class="tbl"><thead><tr>
+          <th>Type</th><th>Employee</th><th>Vehicle</th><th>Job</th><th class="num">Date</th><th>Status</th><th></th>
+        </tr></thead><tbody id="fcReports"></tbody></table>
+      </section>
+
+      <!-- ────── Load Photos ────── -->
+      <section class="fc-pane" data-pane="photos">
+        <div class="fc-filters">
+          <select data-bind-options="optionsOptions2"><option value="All vehicles">All vehicles</option></select>
+          <select data-bind-options="optionsOptions3"><option value="All employees">All employees</option></select>
+          <select data-bind-options="optionsOptions4"><option value="AI status: All">AI status: All</option></select>
+        </div>
+        <div id="fcPhotos" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;"></div>
+      </section>
+
+      <!-- ────── Contracts ────── -->
+      <section class="fc-pane" data-pane="contracts">
+        <div class="fc-filters">
+          <select data-bind-options="optionsOptions5"><option value="All statuses">All statuses</option></select>
+          <select data-bind-options="optionsOptions6"><option value="All customers">All customers</option></select>
+        </div>
+        <table class="tbl"><thead><tr>
+          <th>Customer</th><th>Job</th><th>Crew</th><th class="num">Created</th><th class="num">Signed</th><th>Status</th><th></th>
+        </tr></thead><tbody id="fcContracts"></tbody></table>
+      </section>
+
+      <!-- ────── Logbooks ────── -->
+      <section class="fc-pane" data-pane="logbooks">
+        <div class="fc-filters">
+          <select data-bind-options="optionsOptions7"><option value="All drivers">All drivers</option></select>
+          <select data-bind-options="optionsOptions8"></select>
+        </div>
+        <table class="tbl"><thead><tr>
+          <th>Driver</th><th class="num">Date</th><th>Vehicle</th><th class="num">On duty</th><th class="num">Driving</th><th class="num">Off duty</th><th>Compliance</th>
+        </tr></thead><tbody id="fcLogbooks"></tbody></table>
+      </section>
+
+      <!-- ────── DVIRs ────── -->
+      <section class="fc-pane" data-pane="dvirs">
+        <div class="fc-filters">
+          <select data-bind-options="optionsOptions9"><option value="All vehicles">All vehicles</option></select>
+          <select data-bind-options="optionsOptions10"><option value="Pass / Fail: All">Pass / Fail: All</option></select>
+        </div>
+        <table class="tbl"><thead><tr>
+          <th>Vehicle</th><th>Driver</th><th class="num">Date</th><th>Defects</th><th>Status</th><th></th>
+        </tr></thead><tbody id="fcDvirs"></tbody></table>
+      </section>
+
+      <!-- ────── Speeding ────── -->
+      <section class="fc-pane" data-pane="speeding">
+        <div class="fc-filters">
+          <select data-bind-options="optionsOptions11"><option value="All vehicles">All vehicles</option></select>
+          <select data-bind-options="optionsOptions12"></select>
+        </div>
+        <table class="tbl"><thead><tr>
+          <th>Driver</th><th>Vehicle</th><th class="num">Date</th><th class="num">Speed</th><th class="num">Limit</th><th class="num">Over</th><th>Location</th>
+        </tr></thead><tbody id="fcSpeeding"></tbody></table>
+      </section>
+
+      <!-- ────── Crew Members ────── -->
+      <section class="fc-pane" data-pane="crew">
+        <div class="fc-filters">
+          <input type="text" placeholder="Search crew…">
+          <select data-bind-options="optionsOptions13"><option value="All roles">All roles</option></select>
+        </div>
+        <table class="tbl"><thead><tr>
+          <th>Member</th><th>Role</th><th>License</th><th>Phone</th><th class="num">Hire date</th><th>Status</th><th></th>
+        </tr></thead><tbody id="fcCrew"></tbody></table>
+      </section>
+    </div>
+  </main>
 </div>
+
+<!-- Resolve report modal -->
+<div class="fc-modal" id="resolveModal">
+  <div class="box">
+    <h3>Resolve report</h3>
+    <input type="hidden" name="issueId">
+    <textarea name="resolution" placeholder="Resolution notes (optional)…"></textarea>
+    <label style="display:block;font-size:12px;color:var(--ink-3);margin-top:8px;"><input type="checkbox" name="notifyCustomer"> Notify customer</label>
+    <div class="fc-modal-actions">
+      <button data-modal-close class="btn btn-secondary" data-close>Cancel</button>
+      <button data-modal-save class="btn btn-primary">Mark resolved</button>
+    </div>
+  </div>
+</div>
+<!-- v12: FieldCrew action toolbar -->
+<div style="display:flex;gap:8px;flex-wrap:wrap;padding:0 24px 16px;">
+  <button class="s1-btn pri" data-fc-open="resolveModal" type="button">Resolve issue</button>
+  <button class="s1-btn sec" data-fc-open="assignCrewModal" type="button">Assign crew</button>
+  <button class="s1-btn sec" data-fc-open="reassignCrewModal" type="button">Reassign</button>
+  <button class="s1-btn sec" data-fc-open="messageCrewModal" type="button">Message crew</button>
+  <button class="s1-btn sec" data-fc-open="addNoteModal" type="button">Add note</button>
+</div>
+
+<div class="s1-overlay fc-overlay" id="assignCrewModal" role="dialog"><div class="s1-modal">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Field crew</div><h4>Assign crew</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid"><input type="hidden" name="jobId">
+    <div class="full"><label class="s1-mlabel">Crew</label><select class="s1-select" name="crewId" data-bind-options="crews"><option value="">Choose…</option></select></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Assign</button></div>
+</div></div>
+<div class="s1-overlay fc-overlay" id="reassignCrewModal" role="dialog"><div class="s1-modal">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Field crew</div><h4>Reassign crew</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid"><input type="hidden" name="jobId">
+    <div><label class="s1-mlabel">From crew</label><select class="s1-select" name="fromCrewId" data-bind-options="crews"><option value="">Choose…</option></select></div>
+    <div><label class="s1-mlabel">To crew</label><select class="s1-select" name="toCrewId" data-bind-options="crews"><option value="">Choose…</option></select></div>
+    <div class="full"><label class="s1-mlabel">Reason</label><textarea class="s1-textarea" name="reason"></textarea></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Reassign</button></div>
+</div></div>
+<div class="s1-overlay fc-overlay" id="messageCrewModal" role="dialog"><div class="s1-modal">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Field crew</div><h4>Message crew</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div class="full"><label class="s1-mlabel">Crew</label><select class="s1-select" name="crewId" data-bind-options="crews"><option value="">Choose…</option></select></div>
+    <div class="full"><label class="s1-mlabel">Message</label><textarea class="s1-textarea" name="body"></textarea></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Send</button></div>
+</div></div>
+<div class="s1-overlay fc-overlay" id="addNoteModal" role="dialog"><div class="s1-modal">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Field crew</div><h4>Add note</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid"><input type="hidden" name="jobId">
+    <div class="full"><label class="s1-mlabel">Note</label><textarea class="s1-textarea" name="body"></textarea></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Save</button></div>
+</div></div>
 <script src="../../core/event-bus.js"></script>
 <script src="../../core/state-store.js"></script>
 <script src="../../core/schema.js"></script>
@@ -55,5 +288,218 @@
 <script src="../../core/communication.api.js"></script>
 <script src="../../core/communication.js"></script>
 <script src="../../core/render.js"></script>
+<script src="../../core/standard-page.js"></script>
+<script src="../../core/google-places.js"></script>
 <script src="./module.js"></script>
-</body></html>
+<script>
+// ── REPORTS data
+const INLINE_REPORTS = ([
+  { type:'Load Quality',        emp:'Paul Rai',       veh:'Van 03',   job:'17801 · T. Anand',  date:'Today 10:42 AM', status:'open',     cls:'loadq' },
+  { type:'AI Load Failed',      emp:'Donald James',   veh:'Truck 09', job:'17820 · Garcia',    date:'Today 9:18 AM',  status:'open',     cls:'aiload' },
+  { type:'Speeding',            emp:'Alex Zu',        veh:'Truck 09', job:'17820 · Garcia',    date:'Today 9:02 AM',  status:'reviewed', cls:'speed' },
+  { type:'Missed Photo',        emp:'Jackson Mungai', veh:'Truck 14', job:'17826 · Johnson',   date:'Today 8:14 AM',  status:'open',     cls:'photo' },
+  { type:'Contract Not Signed', emp:'Andrew Haylton', veh:'Truck 14', job:'17812 · Chen',      date:'Yesterday',      status:'open',     cls:'contract' },
+  { type:'Load Quality',        emp:'Fred Waite',     veh:'Truck 02', job:'17821 · Northside', date:'Yesterday',      status:'resolved', cls:'loadq' },
+  { type:'Speeding',            emp:'Alex Zu',        veh:'Truck 09', job:'17790 · Ng',        date:'2 days ago',     status:'reviewed', cls:'speed' },
+  { type:'AI Load Failed',      emp:'Paul Rai',       veh:'Van 03',   job:'17815 · Foundry',   date:'3 days ago',     status:'resolved', cls:'aiload' }
+]);
+
+// ── PHOTOS data
+const INLINE_PHOTOS = ([
+  { title:'Pre-load · Truck 14',          who:'A. Haylton · 7:14 AM',    ai:'pass', tag:'PASS' },
+  { title:'Pad &amp; wrap · sofa',         who:'J. Mungai · 8:22 AM',     ai:'pass', tag:'PASS' },
+  { title:'Pre-load · Van 03',             who:'P. Rai · 7:42 AM',        ai:'fail', tag:'BLURRY' },
+  { title:'Inside truck · final',          who:'A. Haylton · 11:08 AM',   ai:'pass', tag:'PASS' },
+  { title:'Box inventory · staging',       who:'M. Lee · 9:38 AM',        ai:'pass', tag:'PASS' },
+  { title:'Damage report · dresser',       who:'P. Rai · 10:42 AM',       ai:'fail', tag:'FLAG' },
+  { title:'Customer signoff',              who:'F. Waite · 12:14 PM',     ai:'pass', tag:'PASS' },
+  { title:'Wrap &amp; pad · piano',        who:'D. James · 8:51 AM',      ai:'pass', tag:'PASS' }
+]);
+
+// ── CONTRACTS data
+const INLINE_CONTRACTS = ([
+  { cust:'Alice Johnson',  job:'17826',     crew:'Truck 14',  created:'May 14', signed:'May 14', status:'signed', stCls:'signed' },
+  { cust:'Northside Co.',  job:'17821',     crew:'Truck 02',  created:'May 12', signed:'—',      status:'pending', stCls:'pending' },
+  { cust:'Rebecca Chen',   job:'17812',     crew:'Truck 14',  created:'May 06', signed:'—',      status:'unsigned',stCls:'unsigned' },
+  { cust:'Tao Anand',      job:'17801',     crew:'Van 03',    created:'May 04', signed:'May 04', status:'signed', stCls:'signed' },
+  { cust:'Foundry Co.',    job:'17815',     crew:'Van 03',    created:'May 02', signed:'May 02', status:'signed', stCls:'signed' }
+]);
+
+// ── LOGBOOKS data
+const INLINE_LOGBOOKS = ([
+  { driver:'Andrew Haylton',  date:'Today',     veh:'Truck 14',  onDuty:'8h 12m',  driving:'4h 22m',  offDuty:'15h 48m', comp:'green' },
+  { driver:'Donald James',    date:'Today',     veh:'Truck 09',  onDuty:'7h 48m',  driving:'5h 04m',  offDuty:'16h 12m', comp:'green' },
+  { driver:'Alex Zu',         date:'Today',     veh:'Truck 09',  onDuty:'9h 21m',  driving:'6h 18m',  offDuty:'14h 39m', comp:'yellow' },
+  { driver:'Fred Waite',      date:'Today',     veh:'Truck 02',  onDuty:'6h 14m',  driving:'3h 02m',  offDuty:'17h 46m', comp:'green' },
+  { driver:'Paul Rai',        date:'Yesterday', veh:'Van 03',    onDuty:'8h 04m',  driving:'4h 11m',  offDuty:'15h 56m', comp:'green' },
+  { driver:'Jackson Mungai',  date:'Yesterday', veh:'Truck 14',  onDuty:'10h 22m', driving:'7h 04m',  offDuty:'13h 38m', comp:'red' }
+]);
+
+// ── DVIRs
+const INLINE_DVIRS = ([
+  { veh:'Truck 14',  driver:'Andrew Haylton',  date:'Today 6:48 AM',  defects:'None',           status:'passed' },
+  { veh:'Truck 09',  driver:'Alex Zu',          date:'Today 6:51 AM',  defects:'Tire pressure 22 psi (target 35)', status:'failed' },
+  { veh:'Van 03',    driver:'Paul Rai',         date:'Today 6:42 AM',  defects:'None',           status:'passed' },
+  { veh:'Truck 02',  driver:'Fred Waite',       date:'Today 6:58 AM',  defects:'None',           status:'passed' },
+  { veh:'Van 11',    driver:'Maya Kapoor',      date:'Today 6:55 AM',  defects:'Mirror damage',  status:'failed' }
+]);
+
+// ── SPEEDING
+const INLINE_SPEEDING = ([
+  { driver:'Alex Zu',         veh:'Truck 09', date:'Today 9:02 AM',  speed:74, limit:60, over:14, loc:'401 EB · Pickering' },
+  { driver:'Alex Zu',         veh:'Truck 09', date:'2 days ago',     speed:68, limit:60, over:8,  loc:'427 NB · Toronto' },
+  { driver:'Jackson Mungai',  veh:'Truck 14', date:'May 12 4:12 PM', speed:62, limit:50, over:12, loc:'Yonge · Vaughan' }
+]);
+
+// ── CREW
+const INLINE_CREW = ([
+  { name:'Andrew Haylton',   role:'Team lead', license:'CDL · expires 2027', phone:'(416) 555-0184', hire:'Feb 2024', status:'on duty' },
+  { name:'Donald James',     role:'Team lead', license:'CDL · expires 2026', phone:'(416) 555-0142', hire:'May 2023', status:'on duty' },
+  { name:'Fred Waite',       role:'Team lead', license:'CDL · expires 2026', phone:'(416) 555-0122', hire:'Aug 2022', status:'on duty' },
+  { name:'Paul Rai',         role:'Driver',    license:'G · expires 2028',   phone:'(416) 555-0179', hire:'Jan 2024', status:'off' },
+  { name:'Jackson Mungai',   role:'Mover',     license:'G · expires 2027',   phone:'(416) 555-0118', hire:'Mar 2024', status:'on duty' },
+  { name:'Alex Zu',          role:'Driver',    license:'CDL · expires 2025', phone:'(416) 555-0166', hire:'Oct 2023', status:'on duty' },
+  { name:'Gurtsik Ann',      role:'Helper',    license:'G · expires 2029',   phone:'(416) 555-0190', hire:'Nov 2024', status:'on duty' },
+  { name:'Maya Kapoor',      role:'Driver',    license:'CDL · expires 2028', phone:'(416) 555-0151', hire:'Apr 2025', status:'off' }
+]);
+
+// Read fresh on every render so host state-pushes land. The backend POCO for
+// this module uses an entirely different shape (t1..t6 nested objects, no
+// per-list arrays like `reports`/`photos`/etc.), so when no matching backend
+// array is present we just keep using the inline default.
+function _fcArr(key, fallback) {
+  const fx = window.S1 && window.S1.fixtures && window.S1.fixtures["fieldCrew"];
+  return (fx && Array.isArray(fx[key]) && fx[key].length) ? fx[key] : fallback;
+}
+function getReports()   { return _fcArr('reports',   INLINE_REPORTS); }
+function getPhotos()    { return _fcArr('photos',    INLINE_PHOTOS); }
+function getContracts() { return _fcArr('contracts', INLINE_CONTRACTS); }
+function getLogbooks()  { return _fcArr('logbooks',  INLINE_LOGBOOKS); }
+function getDvirs()     { return _fcArr('dvirs',     INLINE_DVIRS); }
+function getSpeeding()  { return _fcArr('speeding',  INLINE_SPEEDING); }
+function getCrew()      { return _fcArr('crew',      INLINE_CREW); }
+
+// ── render functions
+function renderReports() {
+  document.getElementById('fcReports').innerHTML = getReports().map(r => `
+    <tr style="cursor:pointer;">
+      <td><span class="fc-type ${r.cls}">${r.type.toUpperCase()}</span></td>
+      <td>${r.emp}</td>
+      <td>${r.veh}</td>
+      <td>${r.job}</td>
+      <td class="num cell-light">${r.date}</td>
+      <td><span class="fc-status ${r.status}">${r.status[0].toUpperCase()+r.status.slice(1)}</span></td>
+      <td><button class="fc-action" onclick="document.getElementById('resolveModal').classList.add('show');event.stopPropagation();">Resolve</button></td>
+    </tr>`).join('');
+}
+function renderPhotos() {
+  document.getElementById('fcPhotos').innerHTML = getPhotos().map(p => `
+    <div style="background:#fff;border:var(--hair);border-radius:8px;overflow:hidden;cursor:pointer;">
+      <div style="aspect-ratio:4/3;background:linear-gradient(135deg,var(--cream),var(--surface-2));position:relative;">
+        <span style="position:absolute;top:8px;right:8px;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;${p.ai==='pass'?'background:#D1FAE5;color:#065F46;':'background:#FEE2E2;color:#991B1B;'}">${p.tag}</span>
+      </div>
+      <div style="padding:10px 12px;">
+        <div style="font-size:12.5px;font-weight:600;">${p.title}</div>
+        <div style="font-size:11px;color:var(--ink-3);margin-top:2px;">${p.who}</div>
+      </div>
+    </div>`).join('');
+}
+function renderContracts() {
+  document.getElementById('fcContracts').innerHTML = getContracts().map(c => `
+    <tr style="cursor:pointer;">
+      <td><b>${c.cust}</b></td>
+      <td class="cell-light">#${c.job}</td>
+      <td>${c.crew}</td>
+      <td class="num cell-light">${c.created}</td>
+      <td class="num cell-light">${c.signed}</td>
+      <td><span class="fc-status ${c.stCls}">${c.status[0].toUpperCase()+c.status.slice(1)}</span></td>
+      <td><button class="fc-action">View</button></td>
+    </tr>`).join('');
+}
+function renderLogbooks() {
+  document.getElementById('fcLogbooks').innerHTML = getLogbooks().map(l => `
+    <tr>
+      <td><b>${l.driver}</b></td>
+      <td class="num cell-light">${l.date}</td>
+      <td>${l.veh}</td>
+      <td class="num">${l.onDuty}</td>
+      <td class="num">${l.driving}</td>
+      <td class="num">${l.offDuty}</td>
+      <td><span style="display:inline-block;width:8px;height:8px;border-radius:999px;background:${l.comp==='green'?'#16a34a':l.comp==='yellow'?'#f59e0b':'#DC2626'};margin-right:6px;vertical-align:1px;"></span>${l.comp==='green'?'Compliant':l.comp==='yellow'?'Warning':'Violation'}</td>
+    </tr>`).join('');
+}
+function renderDvirs() {
+  document.getElementById('fcDvirs').innerHTML = getDvirs().map(d => `
+    <tr>
+      <td><b>${d.veh}</b></td>
+      <td>${d.driver}</td>
+      <td class="num cell-light">${d.date}</td>
+      <td>${d.defects}</td>
+      <td><span class="fc-status ${d.status}">${d.status[0].toUpperCase()+d.status.slice(1)}</span></td>
+      <td><button class="fc-action">View</button></td>
+    </tr>`).join('');
+}
+function renderSpeeding() {
+  document.getElementById('fcSpeeding').innerHTML = getSpeeding().map(s => `
+    <tr>
+      <td><b>${s.driver}</b></td>
+      <td>${s.veh}</td>
+      <td class="num cell-light">${s.date}</td>
+      <td class="num fc-mph over">${s.speed} mph</td>
+      <td class="num cell-light">${s.limit} mph</td>
+      <td class="num fc-mph over">+${s.over}</td>
+      <td>${s.loc}</td>
+    </tr>`).join('');
+}
+function renderCrew() {
+  document.getElementById('fcCrew').innerHTML = getCrew().map(c => `
+    <tr>
+      <td><div class="who"><span class="who-av" style="background:var(--terra);">${c.name.split(' ').map(s=>s[0]).join('').slice(0,2)}</span><div class="who-nm">${c.name}</div></div></td>
+      <td>${c.role}</td>
+      <td class="cell-light" style="font-size:11.5px;">${c.license}</td>
+      <td class="cell-light" style="font-variant-numeric:tabular-nums;">${c.phone}</td>
+      <td class="num cell-light">${c.hire}</td>
+      <td><span class="fc-status ${c.status==='on duty'?'signed':'open'}" style="${c.status==='on duty'?'background:var(--ok-soft);color:var(--ok);':'background:var(--surface-2);color:var(--ink-3);'}">${c.status[0].toUpperCase()+c.status.slice(1)}</span></td>
+      <td><button class="fc-action">View</button></td>
+    </tr>`).join('');
+}
+
+function renderAll() {
+  renderReports(); renderPhotos(); renderContracts(); renderLogbooks(); renderDvirs(); renderSpeeding(); renderCrew();
+}
+renderAll();
+
+// Re-render when the host pushes fresh state.
+if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
+  window.S1.bus.on('state:replaced', renderAll);
+}
+
+// Tab switching
+document.querySelectorAll('#fcTabs .fc-tab').forEach(t => t.addEventListener('click', () => {
+  document.querySelectorAll('#fcTabs .fc-tab').forEach(x => x.classList.toggle('active', x === t));
+  document.querySelectorAll('.fc-pane').forEach(p => p.classList.toggle('active', p.dataset.pane === t.dataset.tab));
+}));
+
+// Filter Reports by type / employee (basic wiring)
+document.getElementById('fcrType').addEventListener('change', filterReports);
+document.getElementById('fcrEmp').addEventListener('change', filterReports);
+function filterReports() {
+  const t = document.getElementById('fcrType').value;
+  const e = document.getElementById('fcrEmp').value;
+  document.querySelectorAll('#fcReports tr').forEach(tr => {
+    const okType = !t || tr.children[0].textContent.trim().toLowerCase().includes(t.toLowerCase());
+    const okEmp  = !e || tr.children[1].textContent.trim() === e;
+    tr.style.display = (okType && okEmp) ? '' : 'none';
+  });
+}
+
+// Close modals
+document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.fc-modal.show').forEach(m => m.classList.remove('show'));
+}));
+document.querySelectorAll('.fc-modal').forEach(m => m.addEventListener('click', e => {
+  if (e.target === m) m.classList.remove('show');
+}));
+</script>
+</body>
+</html>

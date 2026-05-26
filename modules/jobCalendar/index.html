@@ -1,39 +1,226 @@
-<!DOCTYPE html><html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Job Calendar</title>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Meeting Calendar — Redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../../assets/css/module.css">
+<link rel="stylesheet" href="_system.css">
+<template id="__bundler_thumbnail" data-bg-color="#FFFFFF"><svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg"><rect width="1200" height="800" fill="#FFFFFF"/><rect x="60" y="60" width="80" height="80" rx="12" fill="#004D40"/><text x="100" y="115" text-anchor="middle" font-family="Inter" font-weight="800" font-size="28" fill="#D4960A">S</text><rect x="200" y="80" width="260" height="22" rx="3" fill="#0A2540"/><rect x="200" y="160" width="940" height="580" rx="6" fill="#FAFBFC" stroke="#EFF2F5"/><text x="600" y="790" text-anchor="middle" font-family="Inter" font-weight="500" font-size="14" fill="#697386">Meeting Calendar · Loading…</text></svg></template>
+
 <style>
-.cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-.cal .cell { background: var(--surface-2); padding: 8px; min-height: 80px; border-radius: 4px; }
-.cal .cell .date { font-size: 11px; color: var(--ink-3); margin-bottom: 6px; }
-.pill { display: inline-block; padding: 2px 6px; border-radius: 4px; color: #fff; font-size: 11px; font-weight: 600; margin-bottom: 4px; }
+.jc-header {
+  display:flex; align-items:center; justify-content:space-between;
+  gap:14px; padding:14px 18px; margin-bottom:14px;
+  background:#fff; border:var(--hair); border-radius:var(--r-card, 12px); flex-wrap:wrap;
+}
+.jc-title { font-size:18px; font-weight:700; letter-spacing:-0.012em; }
+.jc-view-toggle { display:inline-flex; padding:3px; background:var(--surface-2); border:var(--hair); border-radius:999px; gap:2px; margin-left:8px; }
+.jc-view-toggle a {
+  padding:5px 14px; font-size:12.5px; font-weight:500; color:var(--ink-3);
+  border-radius:999px; text-decoration:none; cursor:pointer;
+}
+.jc-view-toggle a:hover { color:var(--ink); }
+.jc-view-toggle a.active { background:var(--terra); color:#fff; }
+
+.jc-loc {
+  display:inline-flex; align-items:center; gap:6px;
+  padding:6px 12px; background:#fff; border:var(--hair); border-radius:8px;
+  font-size:12.5px; font-weight:600; cursor:pointer;
+}
+
+.jc-et-filter { display:inline-flex; align-items:center; gap:8px; font-size:12px; color:var(--ink-3); }
+.jc-et-filter select { height:30px; padding:0 8px; border:var(--hair); border-radius:6px; font-size:12px; font-family:inherit; background:#fff; color:var(--ink); }
+.jc-et-legend { display:inline-flex; gap:10px; font-size:11px; color:var(--ink-3); margin-left:6px; }
+.jc-et-legend .sw { display:inline-block; width:10px; height:10px; border-radius:2px; vertical-align:middle; margin-right:4px; }
+
+.jc-month-nav { display:inline-flex; align-items:center; gap:10px; margin-left:auto; }
+.jc-nav-btn {
+  width:30px; height:30px; border-radius:6px;
+  display:inline-flex; align-items:center; justify-content:center;
+  background:#fff; border:var(--hair); color:var(--ink-2); cursor:pointer;
+}
+.jc-nav-btn:hover { background:var(--surface-2); color:var(--ink); }
+.jc-month-label { font-size:14px; font-weight:700; min-width:120px; text-align:center; }
+
+.jc-main { display:grid; grid-template-columns:200px minmax(0, 1fr); gap:12px; align-items:start; }
+.jc-main.has-selected-day { grid-template-columns:200px minmax(0, 1fr) 300px; }
+@media (max-width: 980px) { .jc-main { grid-template-columns: minmax(0, 1fr); } .jc-main.has-selected-day { grid-template-columns: minmax(0, 1fr) 300px; } .jc-config-card { display:none; } }
+@media (max-width: 720px)  { .jc-main, .jc-main.has-selected-day { grid-template-columns:1fr; } .jc-day-panel { position:static; max-height:none; } }
+.jc-day-panel { background:#fff; border:var(--hair); border-radius:var(--r-card, 12px); padding:16px; max-height:calc(100vh - 80px); overflow-y:auto; position:sticky; top:14px; }
+.jc-day-panel-h { font-size:11px; font-weight:700; color:var(--ink-3); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:6px; }
+.jc-day-panel-d { font-size:18px; font-weight:700; margin-bottom:18px; }
+.jc-day-section { font-size:11px; font-weight:700; color:var(--ink-3); text-transform:uppercase; letter-spacing:0.05em; margin:14px 0 8px; padding-bottom:6px; border-bottom:var(--hair); display:flex; justify-content:space-between; align-items:baseline; }
+.jc-day-item { display:flex; gap:10px; padding:10px 8px; border-radius:6px; cursor:pointer; margin-bottom:2px; text-decoration:none; color:inherit; }
+.jc-day-item:hover { background:var(--surface-2); }
+.jc-day-time { width:60px; flex-shrink:0; font-size:11.5px; font-weight:600; color:var(--ink-3); padding-top:1px; }
+.jc-day-body { flex:1; min-width:0; }
+.jc-day-title { font-size:13px; font-weight:600; color:var(--ink); line-height:1.3; }
+.jc-day-sub { font-size:11.5px; color:var(--ink-3); margin-top:2px; }
+.jc-day-pill { display:inline-block; padding:1px 7px; border-radius:10px; font-size:10px; font-weight:600; margin-top:4px; }
+.jc-day-pill.job { background:var(--terra-soft); color:var(--terra); }
+.jc-day-pill.meet { background:#DBEAFE; color:#1E40AF; }
+.jc-day-pill.lead { background:#F3E8FF; color:#6B21A8; }
+.jc-day-pill.fu { background:#FEF3C7; color:#92400E; }
+.jc-config-card { background:#fff; border:var(--hair); border-radius:var(--r-card, 12px); padding:14px 16px; }
+.jc-config-title { font-size:11px; font-weight:700; color:var(--ink-3); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:10px; }
+.jc-config-row { display:flex; align-items:center; gap:10px; padding:7px 0; font-size:13px; cursor:pointer; }
+.jc-config-row input { cursor:pointer; }
+.jc-config-dot { width:10px; height:10px; border-radius:2px; }
+.jc-config-dot.job { background:var(--terra); }
+.jc-config-dot.meet { background:#3b82f6; }
+.jc-config-dot.lead { background:#a855f7; }
+
+.cal-grid {
+  display:grid; grid-template-columns:repeat(7, 1fr);
+  background:#fff; border:var(--hair); border-radius:var(--r-card, 12px);
+  overflow:hidden;
+}
+.cal-dow { padding:10px 12px; background:var(--surface-2); font-size:11px; color:var(--ink-3); font-weight:700; text-transform:uppercase; letter-spacing:0.06em; border-right:var(--hair); border-bottom:var(--hair); }
+.cal-dow:last-child { border-right:0; }
+.cal-cell { min-height:96px; border-right:var(--hair); border-bottom:var(--hair); padding:6px 8px; cursor:pointer; display:flex; flex-direction:column; gap:3px; position:relative; }
+.cal-cell:hover { background:var(--surface-2); }
+.cal-cell.selected { background:var(--terra-soft); outline: 1px solid var(--terra); outline-offset:-1px; }
+.cal-cell.other { background:var(--surface-2); }
+.cal-cell.other .cal-num { color:var(--ink-4); }
+.cal-num { font-size:12px; font-weight:600; color:var(--ink-2); margin-bottom:2px; }
+.cal-num.today {
+  width:22px; height:22px; background:var(--terra); color:#fff; border-radius:999px;
+  display:inline-flex; align-items:center; justify-content:center; font-weight:700;
+}
+.cal-evt {
+  font-size:11px; padding:3px 7px; border-radius:4px; font-weight:600;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  border-left:3px solid;
+}
+.cal-evt.in-person { background:#dbeafe; color:#1e40af; border-color:#3b82f6; }
+.cal-evt.virtual   { background:#f3e8ff; color:#6b21a8; border-color:#a855f7; }
+.cal-evt.none      { background:var(--surface-2); color:var(--ink-2); border-color:var(--ink-3); }
+.cal-evt.job       { background:var(--terra-soft); color:var(--terra); border-color:var(--terra); }
+.cal-more { font-size:10.5px; color:var(--ink-3); font-weight:500; padding:2px 7px; }
 </style>
-</head><body>
-<div class="wrap">
-  <div class="page-bar"><div class="page-title">Job Calendar</div></div>
-  <section class="section">
-    <div id="cal-host"></div>
-  </section>
-  <section class="section">
-    <h3 class="section-title">Jobs</h3>
-    <table class="tbl">
-      <thead><tr><th>#</th><th>Title</th><th>Customer</th><th>Date</th><th>Hours</th><th>Status</th></tr></thead>
-      <tbody data-bind="jobs">
-        <template>
-          <tr>
-            <td>{{id|num}}</td>
-            <td>{{title}}</td>
-            <td>{{customer}}</td>
-            <td>{{date|date}}</td>
-            <td>{{startHour|num}}–{{endHour|num}}</td>
-            <td><span class="tag {{status}}">{{status}}</span></td>
-          </tr>
-        </template>
-      </tbody>
-    </table>
-  </section>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_aesthetic.css">
+</head>
+<body>
+<div class="app" data-screen-label="Meeting Calendar"><main class="page">
+    <div class="wrap">
+
+      <!-- Header (match original) -->
+      <div class="jc-header">
+        <span class="jc-title">Meeting Calendar</span>
+        <div class="jc-view-toggle">
+          <a data-jobCalendar-filter="company" class="active" href="#">Company</a>
+          <a data-jobCalendar-filter="personal" href="#">Personal</a>
+        </div>
+        <span class="jc-loc">All Locations <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></span>
+        <div class="jc-et-filter">
+          <label>Estimate type:</label>
+          <select id="etFilter" data-bind-options="estimateTypeOptions"></select>
+          <span class="jc-et-legend">
+            <span><span class="sw" style="background:#3b82f6;"></span>In-person</span>
+            <span><span class="sw" style="background:#a855f7;"></span>Virtual</span>
+            <span><span class="sw" style="background:#9ca3af;"></span>None</span>
+          </span>
+        </div>
+        <div class="jc-month-nav">
+          <button class="jc-nav-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg></button>
+          <span class="jc-month-label" data-bind-text="monthLabel">May 2026</span>
+          <button class="jc-nav-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg></button>
+        </div>
+      </div>
+
+      <div class="jc-main">
+        <!-- Config sidebar (match original) -->
+        <aside class="jc-config-card">
+          <div class="jc-config-title">Show on Calendar</div>
+          <label class="jc-config-row"><input type="checkbox" data-jc-show="job"  checked> <span class="jc-config-dot job"></span> Booked Jobs</label>
+          <label class="jc-config-row"><input type="checkbox" data-jc-show="meet" checked> <span class="jc-config-dot meet"></span> Meetings</label>
+          <label class="jc-config-row"><input type="checkbox" data-jc-show="lead" checked> <span class="jc-config-dot lead"></span> Leads</label>
+          <div class="jc-config-title" style="margin-top:18px;">Quick filters</div>
+          <label class="jc-config-row"><input type="checkbox" data-jc-quick="mine">       <span style="color:var(--ink-2);font-size:12.5px;">Mine only</span></label>
+          <label class="jc-config-row"><input type="checkbox" data-jc-quick="unassigned"> <span style="color:var(--ink-2);font-size:12.5px;">Unassigned</span></label>
+          <label class="jc-config-row"><input type="checkbox" data-jc-quick="overdue">    <span style="color:var(--ink-2);font-size:12.5px;">Overdue</span></label>
+        </aside>
+
+        <!-- Calendar grid -->
+        <div class="cal-grid">
+          <div class="cal-dow">Mon</div>
+          <div class="cal-dow">Tue</div>
+          <div class="cal-dow">Wed</div>
+          <div class="cal-dow">Thu</div>
+          <div class="cal-dow">Fri</div>
+          <div class="cal-dow">Sat</div>
+          <div class="cal-dow">Sun</div>
+          <div style="display:contents" data-bind="days"><template><div class="cal-cell {{class}}" data-assigned="{{assignedTo}}" data-overdue="{{overdue}}"><span class="cal-num">{{num}}</span><div class="cal-evt {{kind}}">{{label}}</div></div></template></div>
+        </div>
+
+        <!-- Right: selected-day list (hidden until a day is clicked) -->
+        <aside class="jc-day-panel" style="display:none;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+            <div>
+              <div class="jc-day-panel-h" data-bind-text="selectedDay.header">Selected day</div>
+              <div class="jc-day-panel-d" data-bind-text="selectedDay.date">Sat, May 16</div>
+            </div>
+            <button type="button" id="jcDayPanelClose" title="Close" aria-label="Close" style="width:24px;height:24px;border:0;background:transparent;cursor:pointer;font-size:18px;line-height:1;color:var(--ink-3);border-radius:6px;">×</button>
+          </div>
+
+          <div class="jc-day-section">Booked jobs <span style="font-weight:500;color:var(--ink-4);font-size:11px;" data-bind-text="selectedDay.booked.count">3</span></div>
+          <div data-bind="selectedDay.booked.items" style="display:contents;"><template><a class="jc-day-item" href="{{href}}"><div class="jc-day-time">{{time}}</div><div class="jc-day-body"><div class="jc-day-title">{{title}}</div><div class="jc-day-sub">{{sub}}</div><span class="jc-day-pill {{pillKind}}">{{pillLabel}}</span></div></a></template></div>
+
+          <div class="jc-day-section">Meetings &amp; estimates <span style="font-weight:500;color:var(--ink-4);font-size:11px;" data-bind-text="selectedDay.meetings.count">2</span></div>
+          <div data-bind="selectedDay.meetings.items" style="display:contents;"><template><a class="jc-day-item" href="{{href}}"><div class="jc-day-time">{{time}}</div><div class="jc-day-body"><div class="jc-day-title">{{title}}</div><div class="jc-day-sub">{{sub}}</div><span class="jc-day-pill {{pillKind}}">{{pillLabel}}</span></div></a></template></div>
+
+          <div class="jc-day-section">Follow-ups &amp; tasks <span style="font-weight:500;color:var(--ink-4);font-size:11px;" data-bind-text="selectedDay.followups.count">2</span></div>
+          <div data-bind="selectedDay.followups.items" style="display:contents;"><template><a class="jc-day-item" href="{{href}}"><div class="jc-day-time">{{time}}</div><div class="jc-day-body"><div class="jc-day-title">{{title}}</div><div class="jc-day-sub">{{sub}}</div><span class="jc-day-pill {{pillKind}}">{{pillLabel}}</span></div></a></template></div>
+        </aside>
+    </div>
+  </main>
 </div>
+<!-- v12 auto-modal toolbar -->
+<div style="display:flex;gap:8px;flex-wrap:wrap;padding:0 24px 16px;">
+  <button class="s1-btn sec" data-jobCalendar-open="calBookModal" type="button">Book job</button>
+  <button data-comm-action="action:jobCalendar.reschedule" class="s1-btn sec" data-jobCalendar-open="calRescheduleModal" type="button">Reschedule</button>
+  <button class="s1-btn sec" data-jobCalendar-open="calBlockOutModal" type="button">Block out</button>
+  <button class="s1-btn sec" data-jobCalendar-open="calFilterCrewModal" type="button">Filter by crew</button>
+</div>
+<div class="s1-overlay gm-overlay" id="calBookModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Job calendar</div><h4>Book job</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Customer</label><input class="s1-input" type="text" name="customer"></div>
+    <div><label class="s1-mlabel">When</label><input class="s1-input" type="datetime-local" name="when"></div>
+    <div><label class="s1-mlabel">Crew</label><input class="s1-input" type="text" name="crewId"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Book</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="calRescheduleModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Job calendar</div><h4>Reschedule</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Job id</label><input class="s1-input" type="text" name="jobId"></div>
+    <div><label class="s1-mlabel">New time</label><input class="s1-input" type="datetime-local" name="when"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Reschedule</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="calBlockOutModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Job calendar</div><h4>Block out</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">When</label><input class="s1-input" type="date" name="when"></div>
+    <div><label class="s1-mlabel">Reason</label><input class="s1-input" type="text" name="reason"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Block out</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="calFilterCrewModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Job calendar</div><h4>Filter by crew</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Crew</label><input class="s1-input" type="text" name="crewId"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Filter</button></div>
+</div></div>
 <script src="../../core/event-bus.js"></script>
 <script src="../../core/state-store.js"></script>
 <script src="../../core/schema.js"></script>
@@ -42,5 +229,54 @@
 <script src="../../core/communication.api.js"></script>
 <script src="../../core/communication.js"></script>
 <script src="../../core/render.js"></script>
+<script src="../../core/standard-page.js"></script>
+<script src="../../core/google-places.js"></script>
 <script src="./module.js"></script>
-</body></html>
+<script>
+// Day click → popup
+document.querySelectorAll('.cal-cell').forEach(cell => {
+  cell.addEventListener('click', () => {
+    const num = cell.querySelector('.cal-num'); if (!num) return;
+    const day = num.textContent.trim();
+    const evts = Array.from(cell.querySelectorAll('.cal-evt')).map(e => e.textContent.trim());
+    if (cell.classList.contains('other')) return;
+    const m = document.createElement('div');
+    m.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:center;justify-content:center;z-index:1000;padding:24px;';
+    const wd = new Date(2026, 4, +day).toLocaleDateString('en-US', { weekday: 'long' });
+    m.innerHTML = `<div style="background:#fff;border-radius:12px;max-width:520px;width:100%;padding:24px 26px;box-shadow:0 24px 60px -16px rgba(15,23,42,.4);">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
+        <div><div style="font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;">${wd} · May ${day}, 2026</div><h2 style="margin:6px 0 0;font-size:20px;font-weight:700;letter-spacing:-0.01em;">${evts.length} ${evts.length===1?'event':'events'} scheduled</h2></div>
+        <button class="x" style="border:0;background:transparent;font-size:24px;color:var(--ink-3);cursor:pointer;line-height:1;">×</button>
+      </div>
+      ${evts.length ? evts.map(e => `<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border:var(--hair);border-radius:8px;margin-bottom:6px;cursor:pointer;font-size:13px;">${e}</div>`).join('') : '<div style="padding:30px;text-align:center;color:var(--ink-3);font-size:13px;border:1px dashed var(--line);border-radius:8px;">No events scheduled.</div>'}
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px;border-top:var(--hair);padding-top:14px;">
+        <button class="btn btn-secondary x">Close</button>
+        <button class="btn btn-primary">+ New meeting</button>
+      </div>
+    </div>`;
+    document.body.appendChild(m);
+    const close = () => m.remove();
+    m.addEventListener('click', e2 => { if (e2.target === m) close(); });
+    m.querySelectorAll('.x').forEach(b => b.addEventListener('click', close));
+  });
+});
+
+// Estimate type filter
+document.getElementById('etFilter').addEventListener('change', e => {
+  const v = e.target.value;
+  document.querySelectorAll('.cal-evt').forEach(evt => {
+    if (v === 'All') { evt.style.display = ''; return; }
+    if (v === 'in_person') evt.style.display = evt.classList.contains('in-person') ? '' : 'none';
+    else if (v === 'virtual') evt.style.display = evt.classList.contains('virtual') ? '' : 'none';
+    else if (v === 'none') evt.style.display = evt.classList.contains('none') ? '' : 'none';
+  });
+});
+
+// View toggle (Company / Personal)
+document.querySelectorAll('.jc-view-toggle a').forEach(a => a.addEventListener('click', e => {
+  e.preventDefault();
+  document.querySelectorAll('.jc-view-toggle a').forEach(x => x.classList.toggle('active', x === a));
+}));
+</script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "name": "referrals",
+  "title": "Referrals",
+  "source": "Referrals.html",
+  "fixture": "referrals",
+  "reads": [
+    "referrals"
+  ],
+  "writes": [
+    "referrals"
+  ],
+  "icon": "referrals"
+}

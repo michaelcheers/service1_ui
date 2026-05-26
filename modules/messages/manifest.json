@@ -1,0 +1,13 @@
+{
+  "name": "messages",
+  "title": "Messages",
+  "source": "Messages.html",
+  "fixture": "messages",
+  "reads": [
+    "messages"
+  ],
+  "writes": [
+    "messages"
+  ],
+  "icon": "messages"
+}

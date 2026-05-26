@@ -1,28 +1,104 @@
-<!DOCTYPE html><html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Pre-Office Templates</title>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pre-Office-Leaving Checklists — Redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../../assets/css/module.css">
-</head><body>
-<div class="wrap">
-  <div class="page-bar"><div class="page-title">Pre-Office Templates</div></div>
-  <section class="section">
-    <table class="tbl">
-      <thead><tr><th>#</th><th>Name</th><th>Fields</th><th>Updated</th><th>Created by</th></tr></thead>
-      <tbody data-bind="templates">
-        <template>
+<link rel="stylesheet" href="_system.css">
+<template id="__bundler_thumbnail" data-bg-color="#FFFFFF"><svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg"><rect width="1200" height="800" fill="#FFFFFF"/><rect x="60" y="60" width="80" height="80" rx="12" fill="#004D40"/><text x="100" y="115" text-anchor="middle" font-family="Inter" font-weight="800" font-size="28" fill="#D4960A">S</text><rect x="200" y="80" width="260" height="22" rx="3" fill="#0A2540"/><rect x="200" y="160" width="940" height="580" rx="6" fill="#FAFBFC" stroke="#EFF2F5"/><text x="600" y="790" text-anchor="middle" font-family="Inter" font-weight="500" font-size="14" fill="#697386">Checklists · Loading…</text></svg></template>
+
+<style>
+.pofc-table { width:100%; border-collapse:collapse; background:#fff; border:var(--hair); border-radius:8px; overflow:hidden; }
+.pofc-table th { padding:10px 14px; font-size:11px; font-weight:600; color:var(--ink-3); text-transform:uppercase; letter-spacing:0.05em; background:var(--surface-2); border-bottom:var(--hair); text-align:left; }
+.pofc-table td { padding:12px 14px; font-size:13px; border-bottom:1px solid var(--line-2); }
+.pofc-table tbody tr:last-child td { border-bottom:0; }
+.pofc-muted { color:var(--ink-3); font-size:11.5px; margin-top:2px; }
+.pofc-yes { display:inline-flex; align-items:center; gap:5px; font-weight:600; color:var(--ok); }
+.pofc-no  { color:var(--ink-3); }
+.pofc-actions { display:flex; gap:8px; align-items:center; }
+.pofc-actions a, .pofc-actions button {
+  font-size:12px; color:var(--terra); background:transparent; border:0; padding:0;
+  cursor:pointer; font-weight:500; text-decoration:none;
+}
+.pofc-actions a:hover, .pofc-actions button:hover { text-decoration:underline; }
+.pofc-link-danger { color:var(--bad) !important; }
+
+.pofc-toolbar { display:flex; gap:8px; align-items:center; margin-bottom:14px; }
+</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_aesthetic.css">
+</head>
+<body>
+<div class="app" data-screen-label="Pre-Office Checklists"><main class="page">
+    <div class="wrap">
+
+      <div class="page-bar">
+        <div class="page-title-row">
+          <div class="page-title"><span data-bind-text="summary">Pre-Office-Leaving Checklists</span></div>
+          <span class="muted" data-bind-text="subtitle">Configure checklists crew members must complete before leaving the office</span>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-primary">+ New Template</button>
+        </div>
+      </div>
+
+      <div class="pofc-toolbar">
+        <a class="btn btn-secondary" href="PreOfficeSubmissions.html">View Submissions</a>
+      </div>
+
+      <table class="pofc-table">
+        <thead>
           <tr>
-            <td>{{id|num}}</td>
-            <td>{{name}}</td>
-            <td>{{fields|num}}</td>
-            <td>{{updated|date}}</td>
-            <td>{{createdBy}}</td>
+            <th>Name</th>
+            <th class="num">Fields</th>
+            <th>Default</th>
+            <th>Active</th>
+            <th>GPS</th>
+            <th>Blocks Clock-Out</th>
+            <th class="num">Last edit</th>
+            <th></th>
           </tr>
-        </template>
-      </tbody>
-    </table>
-  </section>
+        </thead>
+        <tbody data-bind="rows"><template><tr><td><strong>{{c0_name}}</strong><div class="pofc-muted">{{c0_sub}}</div></td><td>{{c1_text}}</td><td><span class="pofc-yes">✓</span></td><td>{{c3_text}}</td><td><span class="pofc-yes">✓</span></td><td><span class="pofc-yes">✓</span></td><td>{{c6_text}}</td><td><div class="pofc-actions"><a>Edit</a><button class="pofc-link-danger">Delete</button></div></td></tr></template></tbody>
+      </table>
+    </div>
+  </main>
 </div>
+<!-- v12 auto-modal toolbar -->
+<div style="display:flex;gap:8px;flex-wrap:wrap;padding:0 24px 16px;">
+  <button class="s1-btn sec" data-preOfficeTemplates-open="ptNewModal" type="button">New template</button>
+  <button data-comm-action="action:preOfficeTemplates.duplicate" class="s1-btn sec" data-preOfficeTemplates-open="ptDuplicateModal" type="button">Duplicate</button>
+  <button data-comm-action="action:preOfficeTemplates.archive" class="s1-btn sec" data-preOfficeTemplates-open="ptArchiveModal" type="button">Archive</button>
+</div>
+<div class="s1-overlay gm-overlay" id="ptNewModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Pre-office templates</div><h4>New template</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Template name</label><input class="s1-input" type="text" name="name"></div>
+    <div><label class="s1-mlabel">Type</label><input class="s1-input" type="text" name="type"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Create</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="ptDuplicateModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Pre-office templates</div><h4>Duplicate</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Template id</label><input class="s1-input" type="text" name="id"></div>
+    <div><label class="s1-mlabel">New name</label><input class="s1-input" type="text" name="name"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Duplicate</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="ptArchiveModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Pre-office templates</div><h4>Archive</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Template id</label><input class="s1-input" type="text" name="id"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Archive</button></div>
+</div></div>
 <script src="../../core/event-bus.js"></script>
 <script src="../../core/state-store.js"></script>
 <script src="../../core/schema.js"></script>
@@ -31,5 +107,8 @@
 <script src="../../core/communication.api.js"></script>
 <script src="../../core/communication.js"></script>
 <script src="../../core/render.js"></script>
+<script src="../../core/standard-page.js"></script>
+<script src="../../core/google-places.js"></script>
 <script src="./module.js"></script>
-</body></html>
+</body>
+</html>

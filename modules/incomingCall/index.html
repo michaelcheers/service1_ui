@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Incoming Call — Redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_system.css">
+<style>
+.ic-stage { min-height: calc(100vh - 56px); display:flex; align-items:center; justify-content:center; background: radial-gradient(circle at center, #0A2540 0%, #060f21 100%); padding: 40px 20px; }
+.ic-card { width: 560px; max-width: 96vw; background: #fff; border-radius: 16px; box-shadow: 0 30px 80px rgba(0,0,0,0.35); padding: 40px 36px 28px; text-align: center; position: relative; }
+.ic-status { display:inline-flex; align-items:center; gap:8px; padding:4px 12px; border-radius:999px; background:#D1FAE5; color:#065F46; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:18px; }
+.ic-status .pulse { width:8px; height:8px; border-radius:999px; background:#10B981; animation: pulse 1.4s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{ opacity:1; transform:scale(1); } 50%{ opacity:.5; transform:scale(1.4); } }
+.ic-av { width:120px; height:120px; border-radius:999px; background: linear-gradient(135deg, #1E40AF 0%, #6366F1 100%); color:#fff; display:flex; align-items:center; justify-content:center; font-size:42px; font-weight:700; margin:0 auto 18px; }
+.ic-name { font-size:26px; font-weight:700; letter-spacing:-0.02em; margin:0 0 6px; }
+.ic-num { font-size:15px; color:var(--ink-3); margin:0 0 4px; }
+.ic-line { font-size:12px; color:var(--ink-3); margin-bottom:24px; }
+.ic-meta { display:grid; grid-template-columns:1fr 1fr; gap:12px; background:var(--surface-2); border-radius:10px; padding:14px 16px; margin-bottom:24px; text-align:left; }
+.ic-meta-item .l { font-size:10.5px; color:var(--ink-3); text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:3px; }
+.ic-meta-item .v { font-size:13px; font-weight:600; }
+.ic-actions { display:flex; gap:16px; justify-content:center; margin-bottom:18px; }
+.ic-btn { display:flex; flex-direction:column; align-items:center; gap:6px; padding:8px; background:transparent; border:0; cursor:pointer; }
+.ic-btn .circle { width:64px; height:64px; border-radius:999px; display:flex; align-items:center; justify-content:center; font-size:24px; color:#fff; }
+.ic-btn.answer .circle { background:#16A34A; box-shadow:0 0 0 0 rgba(22,163,74,0.6); animation: ring 1.6s infinite; }
+@keyframes ring { 0%{ box-shadow:0 0 0 0 rgba(22,163,74,0.6); } 70%{ box-shadow:0 0 0 18px rgba(22,163,74,0); } 100%{ box-shadow:0 0 0 0 rgba(22,163,74,0); } }
+.ic-btn.decline .circle { background:#DC2626; }
+.ic-btn.mute .circle { background:var(--surface-2); color:var(--ink); border:var(--hair); }
+.ic-btn.transfer .circle { background:var(--surface-2); color:var(--ink); border:var(--hair); }
+.ic-btn .label { font-size:11.5px; font-weight:600; color:var(--ink-2); }
+.ic-quick { display:flex; gap:8px; justify-content:center; padding-top:18px; border-top:var(--hair); flex-wrap:wrap; }
+.ic-quick button { padding:8px 14px; background:var(--surface-2); border:var(--hair); border-radius:7px; font-size:12.5px; font-weight:500; cursor:pointer; display:inline-flex; align-items:center; gap:6px; }
+.ic-history { margin-top:20px; padding-top:20px; border-top:var(--hair); text-align:left; }
+.ic-history-title { font-size:11px; font-weight:700; color:var(--ink-3); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:10px; }
+.ic-history-row { display:flex; justify-content:space-between; padding:8px 0; font-size:12.5px; border-bottom:var(--hair); }
+.ic-history-row:last-child { border-bottom:0; }
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_aesthetic.css">
+</head>
+<body>
+<div class="app" data-screen-label="Incoming Call"><main class="page" style="padding:0;">
+    <div class="ic-stage">
+      <div class="ic-card">
+        <div class="ic-status"><span class="pulse"></span>Incoming Call</div>
+        <div class="ic-av">JK</div>
+        <h1 class="ic-name" data-bind-text="summary"><span data-bind-text="caller.name">Johanna Kuyvenhoven</span></h1>
+        <p class="ic-num">+1 (587) 920-4170</p>
+        <p class="ic-line">Ringing on <b>+1 (416) 555-0119</b> · Vancouver Lead</p>
+
+        <div class="ic-meta">
+          <div class="ic-meta-item"><div class="l">Status</div><div class="v">Lead · Tentative</div></div>
+          <div class="ic-meta-item"><div class="l">Last contact</div><div class="v">SMS · Yesterday</div></div>
+          <div class="ic-meta-item"><div class="l">Open quote</div><div class="v">QT-2026-0588 · C$1,840</div></div>
+          <div class="ic-meta-item"><div class="l">Assigned to</div><div class="v">John Sales</div></div>
+        </div>
+
+        <div class="ic-actions">
+          <button data-comm-action="action:incomingCall.accept" class="ic-btn answer"><span class="circle">📞</span><span class="label">Answer</span></button>
+          <button data-comm-action="action:incomingCall.silence" class="ic-btn mute"><span class="circle">🔇</span><span class="label">Silence</span></button>
+          <button data-comm-action="action:incomingCall.forward" class="ic-btn transfer"><span class="circle">↪</span><span class="label">Forward</span></button>
+          <button data-comm-action="action:incomingCall.decline" class="ic-btn decline"><span class="circle">✕</span><span class="label">Decline</span></button>
+        </div>
+
+        <div class="ic-quick">
+          <button data-comm-action="action:incomingCall.customer.open">📋 Open customer record</button>
+          <button data-comm-action="action:incomingCall.decline.sendSms">💬 Decline + send SMS</button>
+          <button data-comm-action="action:incomingCall.toVoicemail">📅 Send to voicemail</button>
+        </div>
+
+        <div class="ic-history">
+          <div class="ic-history-title">Recent contact history</div>
+          <div class="ic-history-row"><span>📧 Email · Re: Your moving quote</span><span style="color:var(--ink-3);">2 hours ago</span></div>
+          <div class="ic-history-row"><span>📞 Inbound call · 4m 21s</span><span style="color:var(--ink-3);">Yesterday</span></div>
+          <div class="ic-history-row"><span>💬 SMS · "Sounds good"</span><span style="color:var(--ink-3);">2 days ago</span></div>
+          <div class="ic-history-row"><span>📧 Email · Quote sent</span><span style="color:var(--ink-3);">3 days ago</span></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="s1-overlay gm-overlay" id="acceptCallModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Incoming call</div><h4>Accept call</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Call id</label><input class="s1-input" type="text" name="callId"></div>
+    <div class="full"><label class="s1-mlabel">Notes</label><textarea class="s1-textarea" name="notes"></textarea></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Accept</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="declineCallModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Incoming call</div><h4>Decline</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Call id</label><input class="s1-input" type="text" name="callId"></div>
+    <div><label class="s1-mlabel">Reason</label><input class="s1-input" type="text" name="reason"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Decline</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="voicemailModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Incoming call</div><h4>Send to voicemail</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Call id</label><input class="s1-input" type="text" name="callId"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">To voicemail</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="quickNoteModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Incoming call</div><h4>Quick note</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Call id</label><input class="s1-input" type="text" name="callId"></div>
+    <div class="full"><label class="s1-mlabel">Note</label><textarea class="s1-textarea" name="note"></textarea></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Save</button></div>
+</div></div>
+<script src="../../core/event-bus.js"></script>
+<script src="../../core/state-store.js"></script>
+<script src="../../core/schema.js"></script>
+<script src="../../core/fixtures.js"></script>
+<script src="../../core/communication.mock.js"></script>
+<script src="../../core/communication.api.js"></script>
+<script src="../../core/communication.js"></script>
+<script src="../../core/render.js"></script>
+<script src="../../core/standard-page.js"></script>
+<script src="../../core/google-places.js"></script>
+<script src="./module.js"></script>
+</body>
+</html>

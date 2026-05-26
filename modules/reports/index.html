@@ -1,26 +1,205 @@
-<!DOCTYPE html><html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Reports</title>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Reports — Redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../../assets/css/module.css">
+<link rel="stylesheet" href="_system.css">
+<template id="__bundler_thumbnail" data-bg-color="#FFFFFF"><svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg"><rect width="1200" height="800" fill="#FFFFFF"/><rect x="60" y="60" width="80" height="80" rx="12" fill="#004D40"/><text x="100" y="115" text-anchor="middle" font-family="Inter" font-weight="800" font-size="28" fill="#D4960A">S</text><rect x="200" y="80" width="260" height="22" rx="3" fill="#0A2540"/><rect x="200" y="160" width="940" height="580" rx="6" fill="#FAFBFC" stroke="#EFF2F5"/><text x="600" y="790" text-anchor="middle" font-family="Inter" font-weight="500" font-size="14" fill="#697386">Reports · Loading…</text></svg></template>
+
 <style>
-.kpi-card { border: 1px solid var(--line); border-radius: var(--r); padding: 16px; }
-.kpi-card .v { font-size: 28px; font-weight: 600; letter-spacing: -0.02em; margin-top: 6px; }
-.spark { height: 36px; }
+.rep-filter-bar { display:flex; gap:6px; margin-bottom:18px; flex-wrap:wrap; }
+.rep-filter {
+  padding:8px 18px; font-size:13px; font-weight:500; color:var(--ink-3);
+  border-radius:var(--r-pill, 999px); text-decoration:none; cursor:pointer;
+  transition: background .12s, color .12s;
+}
+.rep-filter:hover { color:var(--ink); background:var(--surface-2); }
+.rep-filter.active { background:var(--terra); color:#fff; }
+
+.rep-grid { display:grid; grid-template-columns:repeat(2, 1fr); gap:14px; }
+@media (max-width: 900px) { .rep-grid { grid-template-columns:1fr; } }
+
+.rep-card { background:#fff; border:var(--hair); border-radius:var(--r-card, 12px); overflow:hidden; }
+.rep-card-hdr {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 18px; border-bottom:var(--hair);
+}
+.rep-card-title { display:inline-flex; align-items:center; gap:10px; font-size:14px; font-weight:700; letter-spacing:-0.005em; }
+.rep-card-icon {
+  width:28px; height:28px; border-radius:6px; display:inline-flex; align-items:center; justify-content:center;
+}
+.rep-card.category-sales      .rep-card-icon { background:var(--terra-soft); color:var(--terra); }
+.rep-card.category-operations .rep-card-icon { background:var(--info-soft); color:var(--info); }
+.rep-card.category-accounting .rep-card-icon { background:var(--ok-soft); color:var(--ok); }
+.rep-card.category-marketing  .rep-card-icon { background:var(--plum-soft); color:var(--plum); }
+
+.rep-badge { display:inline-block; padding:2px 9px; border-radius:999px; font-size:11px; font-weight:700; font-variant-numeric:tabular-nums; }
+.rep-card.category-sales      .rep-badge { background:var(--terra-soft); color:var(--terra); }
+.rep-card.category-operations .rep-badge { background:var(--info-soft); color:var(--info); }
+.rep-card.category-accounting .rep-badge { background:var(--ok-soft); color:var(--ok); }
+.rep-card.category-marketing  .rep-badge { background:var(--plum-soft); color:var(--plum); }
+
+.rep-list { display:flex; flex-direction:column; }
+.rep-row {
+  display:flex; justify-content:space-between; align-items:center; gap:12px;
+  padding:12px 18px; border-bottom:var(--hair); cursor:pointer; text-decoration:none; color:inherit;
+  transition: background .12s;
+}
+.rep-row:last-child { border-bottom:0; }
+.rep-row:hover { background:var(--surface-2); }
+.rep-name { font-size:13px; font-weight:600; color:var(--ink); }
+.rep-desc { font-size:11.5px; color:var(--ink-3); margin-top:2px; line-height:1.35; }
+.rep-row svg { color:var(--ink-3); flex-shrink:0; }
 </style>
-</head><body>
-<div class="wrap">
-  <div class="page-bar"><div class="page-title">Reports</div></div>
-  <div class="cards" data-bind="reports">
-    <template>
-      <div class="kpi-card">
-        <div class="section-sub">{{label}}</div>
-        <div class="v">{{value|num}}</div>
-        <div class="section-sub">{{id}}</div>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_aesthetic.css">
+</head>
+<body>
+<div class="app" data-screen-label="Reports"><main class="page">
+    <div class="wrap">
+      <div class="page-bar">
+        <div class="page-title-row">
+          <div class="page-title"><span data-bind-text="summary">Reports</span></div>
+          <span class="muted" data-bind-text="subtitle">27 reports across Sales · Operations · Accounting · Marketing</span>
+        </div>
       </div>
-    </template>
-  </div>
+
+      <!-- Filter bar — match original 5 buttons -->
+      <nav class="rep-filter-bar" id="repFilters">
+        <a data-comm-action="action:reports.all-reports" class="rep-filter active" data-cat="all">All Reports</a>
+        <a data-comm-action="action:reports.sales" class="rep-filter" data-cat="sales">Sales</a>
+        <a data-comm-action="action:reports.operations" class="rep-filter" data-cat="operations">Operations</a>
+        <a data-comm-action="action:reports.accounting" class="rep-filter" data-cat="accounting">Accounting</a>
+        <a data-comm-action="action:reports.marketing" class="rep-filter" data-cat="marketing">Marketing</a>
+      </nav>
+
+      <!-- Reports grid — 4 category cards -->
+      <div class="rep-grid" id="repGrid">
+
+        <div class="rep-card category-sales" data-cat="sales">
+          <div class="rep-card-hdr">
+            <span class="rep-card-title">
+              <span class="rep-card-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></span>
+              Sales Reports
+            </span>
+            <span class="rep-badge">10</span>
+          </div>
+          <div class="rep-list">
+            <a class="rep-row" href="ReportDetail.html"><div><div class="rep-name">Account Manager Performance</div><div class="rep-desc">An overview of how your account managers are performing</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a data-comm-action="action:reports.lost-leadsleads-marked-lost-with-reasons-and-recov" class="rep-row"><div><div class="rep-name">Lost Leads</div><div class="rep-desc">Leads marked lost with reasons and recovery candidates</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a data-comm-action="action:reports.booked-deals-by-dateconfirmed-bookings-grouped-by-" class="rep-row"><div><div class="rep-name">Booked Deals by Date</div><div class="rep-desc">Confirmed bookings grouped by booking date</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a data-comm-action="action:reports.booked-deals-by-service-dateconfirmed-bookings-gro" class="rep-row"><div><div class="rep-name">Booked Deals by Service Date</div><div class="rep-desc">Confirmed bookings grouped by the move date</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a class="rep-row"><div><div class="rep-name">Lost Leads &amp; Opportunity Details</div><div class="rep-desc">Detailed breakdown of why opportunities were lost</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a class="rep-row"><div><div class="rep-name">New Leads</div><div class="rep-desc">New leads received over a date range</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a data-comm-action="action:reports.account-manager-activitycalls-quotes-follow-ups-by" class="rep-row"><div><div class="rep-name">Account Manager Activity</div><div class="rep-desc">Calls, quotes, follow-ups by rep</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a data-comm-action="action:reports.cancellation-summarycancellations-and-refund-amoun" class="rep-row"><div><div class="rep-name">Cancellation Summary</div><div class="rep-desc">Cancellations and refund amounts by period</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a data-comm-action="action:reports.open-opportunities-by-deal-datepipeline-view-group" class="rep-row"><div><div class="rep-name">Open Opportunities by Deal Date</div><div class="rep-desc">Pipeline view grouped by when opportunity opened</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a data-comm-action="action:reports.lead-activityactivity-log-per-lead-calls-emails-st" class="rep-row"><div><div class="rep-name">Lead Activity</div><div class="rep-desc">Activity log per lead — calls, emails, status changes</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+          </div>
+        </div>
+
+        <div class="rep-card category-operations" data-cat="operations">
+          <div class="rep-card-hdr">
+            <span class="rep-card-title">
+              <span class="rep-card-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
+              Operations Reports
+            </span>
+            <span class="rep-badge">5</span>
+          </div>
+          <div class="rep-list">
+            <a data-comm-action="action:reports.login-historyuser-sign-in-history-across-the-team" class="rep-row"><div><div class="rep-name">Login history</div><div class="rep-desc">User sign-in history across the team</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a data-comm-action="action:reports.crew-utilizationhours-scheduled-vs-available-by-te" class="rep-row"><div><div class="rep-name">Crew Utilization</div><div class="rep-desc">Hours scheduled vs. available, by team and date</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a data-comm-action="action:reports.job-status-summarycount-of-jobs-in-each-status-ove" class="rep-row"><div><div class="rep-name">Job Status Summary</div><div class="rep-desc">Count of jobs in each status over time</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a data-comm-action="action:reports.closed-jobs-reportall-jobs-marked-closed-in-the-pe" class="rep-row"><div><div class="rep-name">Closed Jobs Report</div><div class="rep-desc">All jobs marked closed in the period, with revenue</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a data-comm-action="action:reports.follow-up-activityfollow-up-completion-and-overdue" class="rep-row"><div><div class="rep-name">Follow-Up Activity</div><div class="rep-desc">Follow-up completion and overdue counts</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+          </div>
+        </div>
+
+        <div class="rep-card category-accounting" data-cat="accounting">
+          <div class="rep-card-hdr">
+            <span class="rep-card-title">
+              <span class="rep-card-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
+              Accounting Reports
+            </span>
+            <span class="rep-badge">10</span>
+          </div>
+          <div class="rep-list">
+            <a data-comm-action="action:reports.customer-service-ticketsall-tickets-opened-amp-res" class="rep-row"><div><div class="rep-name">Customer service tickets</div><div class="rep-desc">All tickets opened &amp; resolved in the period</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a data-comm-action="action:reports.invoice-aging-summaryoutstanding-receivables-by-0-" class="rep-row"><div><div class="rep-name">Invoice Aging Summary</div><div class="rep-desc">Outstanding receivables by 0–30, 31–60, 61–90, 90+</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a data-comm-action="action:reports.expense-breakdownexpenses-by-category-account-vend" class="rep-row"><div><div class="rep-name">Expense Breakdown</div><div class="rep-desc">Expenses by category, account, vendor</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a data-comm-action="action:reports.payroll-summarywages-overtime-and-reimbursements-p" class="rep-row"><div><div class="rep-name">Payroll Summary</div><div class="rep-desc">Wages, overtime, and reimbursements per pay period</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a data-comm-action="action:reports.job-revenue-breakdownrevenue-per-job-with-type-sou" class="rep-row"><div><div class="rep-name">Job Revenue Breakdown</div><div class="rep-desc">Revenue per job with type, source, crew</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a data-comm-action="action:reports.payment-ratio-of-jobs-collected-on-time-vs-late" class="rep-row"><div><div class="rep-name">Payment Ratio</div><div class="rep-desc">% of jobs collected on time vs. late</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a data-comm-action="action:reports.payment-summaryall-payments-received-refunds-issue" class="rep-row"><div><div class="rep-name">Payment Summary</div><div class="rep-desc">All payments received, refunds issued</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a data-comm-action="action:reports.refundsrefund-history-with-reasons-and-approvals" class="rep-row"><div><div class="rep-name">Refunds</div><div class="rep-desc">Refund history with reasons and approvals</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a data-comm-action="action:reports.expense-reportingsubmitted-expense-reports-with-re" class="rep-row"><div><div class="rep-name">Expense Reporting</div><div class="rep-desc">Submitted expense reports with receipts</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a data-comm-action="action:reports.tax-reporthst-collected-and-remitted-by-quarter" class="rep-row"><div><div class="rep-name">Tax Report</div><div class="rep-desc">HST collected and remitted by quarter</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+          </div>
+        </div>
+
+        <div class="rep-card category-marketing" data-cat="marketing">
+          <div class="rep-card-hdr">
+            <span class="rep-card-title">
+              <span class="rep-card-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>
+              Marketing Reports
+            </span>
+            <span class="rep-badge">2</span>
+          </div>
+          <div class="rep-list">
+            <a data-comm-action="action:reports.revenue-by-sourcerevenue-grouped-by-lead-source-we" class="rep-row"><div><div class="rep-name">Revenue by Source</div><div class="rep-desc">Revenue grouped by lead source (Website, Referral, Ads, etc.)</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a data-comm-action="action:reports.google-reviews-summarynew-reviews-average-rating-r" class="rep-row"><div><div class="rep-name">Google Reviews Summary</div><div class="rep-desc">New reviews, average rating, response rate</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
 </div>
+<!-- v12 auto-modal toolbar -->
+<div style="display:flex;gap:8px;flex-wrap:wrap;padding:0 24px 16px;">
+  <button class="s1-btn sec" data-reports-open="rptRunModal" type="button">Run report</button>
+  <button class="s1-btn sec" data-reports-open="rptScheduleModal" type="button">Schedule</button>
+  <button class="s1-btn sec" data-reports-open="rptExportModal" type="button">Export</button>
+  <button class="s1-btn sec" data-reports-open="rptPresetModal" type="button">Save preset</button>
+</div>
+<div class="s1-overlay gm-overlay" id="rptRunModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Reports</div><h4>Run report</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Report</label><input class="s1-input" type="text" name="reportId"></div>
+    <div><label class="s1-mlabel">Range</label><input class="s1-input" type="text" name="range"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Run</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="rptScheduleModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Reports</div><h4>Schedule</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Report</label><input class="s1-input" type="text" name="reportId"></div>
+    <div><label class="s1-mlabel">Schedule</label><input class="s1-input" type="text" name="cron"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Schedule</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="rptExportModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Reports</div><h4>Export</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Report</label><input class="s1-input" type="text" name="reportId"></div>
+    <div><label class="s1-mlabel">Format</label><select class="s1-select" name="format" data-bind-options="formatOptions"><option value="">Choose…</option></select></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Export</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="rptPresetModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Reports</div><h4>Save preset</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Preset name</label><input class="s1-input" type="text" name="name"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Save preset</button></div>
+</div></div>
 <script src="../../core/event-bus.js"></script>
 <script src="../../core/state-store.js"></script>
 <script src="../../core/schema.js"></script>
@@ -29,5 +208,47 @@
 <script src="../../core/communication.api.js"></script>
 <script src="../../core/communication.js"></script>
 <script src="../../core/render.js"></script>
+<script src="../../core/standard-page.js"></script>
+<script src="../../core/google-places.js"></script>
 <script src="./module.js"></script>
-</body></html>
+<script>
+// Filter by category
+document.querySelectorAll('#repFilters .rep-filter').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#repFilters .rep-filter').forEach(x => x.classList.toggle('active', x === b));
+  const cat = b.dataset.cat;
+  document.querySelectorAll('#repGrid .rep-card').forEach(c => {
+    c.style.display = (cat === 'all' || c.dataset.cat === cat) ? '' : 'none';
+  });
+}));
+
+// Row click → preview modal
+document.querySelectorAll('.rep-row').forEach(r => r.addEventListener('click', e => {
+  e.preventDefault();
+  const name = r.querySelector('.rep-name').textContent;
+  const desc = r.querySelector('.rep-desc').textContent;
+  const cat = r.closest('.rep-card').dataset.cat;
+  const m = document.createElement('div');
+  m.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:center;justify-content:center;z-index:1000;padding:24px;';
+  m.innerHTML = `<div style="background:#fff;border-radius:12px;max-width:680px;width:100%;max-height:84vh;overflow:auto;padding:24px 26px;box-shadow:0 24px 60px -16px rgba(15,23,42,.4);">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;">
+      <div><div style="font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;">${cat} report</div><h2 style="margin:6px 0 8px;font-size:22px;font-weight:700;letter-spacing:-0.01em;">${name}</h2><div style="font-size:13px;color:var(--ink-2);line-height:1.5;">${desc}</div></div>
+      <button class="x" style="border:0;background:transparent;font-size:24px;color:var(--ink-3);cursor:pointer;line-height:1;">×</button>
+    </div>
+    <div style="background:var(--surface-2);border:1px dashed var(--line);border-radius:8px;padding:60px 20px;text-align:center;color:var(--ink-3);font-size:13px;margin-bottom:18px;">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.4;margin-bottom:10px;"><path d="M3 3v18h18"/><path d="m9 17 3-5 3 4 4-7"/></svg>
+      <div>Choose a date range and run the report</div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;">
+      <button class="btn btn-secondary x">Close</button>
+      <button data-comm-action="action:reports.schedule" class="btn btn-secondary">Schedule</button>
+      <button data-comm-action="action:reports.run-report" class="btn btn-primary">Run report</button>
+    </div>
+  </div>`;
+  document.body.appendChild(m);
+  const close = () => m.remove();
+  m.addEventListener('click', e2 => { if (e2.target === m) close(); });
+  m.querySelectorAll('.x').forEach(b => b.addEventListener('click', close));
+}));
+</script>
+</body>
+</html>

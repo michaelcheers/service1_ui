@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>New Leads — Redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_system.css">
+<style>
+.sales-subnav { display:flex; gap:6px; padding:14px 0 18px; }
+.sales-subnav a { padding:8px 14px; font-size:13px; font-weight:600; color:var(--ink-3); border-radius:999px; }
+.sales-subnav a:hover { color:var(--ink); background:var(--surface-2); }
+.sales-subnav a.active { color:var(--terra); background:var(--terra-soft); }
+
+.nl-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(340px, 1fr)); gap:14px; }
+.nl-card { background:#fff; border:var(--hair); border-radius:8px; padding:16px 18px; cursor:pointer; transition:transform .12s, box-shadow .12s; }
+.nl-card:hover { transform:translateY(-2px); box-shadow:0 4px 12px rgba(15,23,42,.08); }
+.nl-head { display:flex; align-items:flex-start; gap:10px; margin-bottom:12px; }
+.nl-head .gap { flex:1; min-width:0; }
+.nl-name { font-size:14px; font-weight:700; letter-spacing:-0.01em; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.nl-region { font-size:10px; font-weight:700; letter-spacing:0.04em; padding:3px 9px; border-radius:10px; }
+.nl-region.toronto   { background:#fee2e2; color:#991b1b; }
+.nl-region.calgary   { background:#fff3e0; color:#c2410c; }
+.nl-region.vancouver { background:#dbeafe; color:#1e40af; }
+.nl-phone { font-size:12px; color:var(--ink-3); margin-top:3px; font-variant-numeric:tabular-nums; }
+.nl-status { padding:4px 10px; border-radius:999px; font-size:11px; font-weight:600; white-space:nowrap; }
+.nl-status.hot  { background:var(--bad-soft); color:var(--bad); }
+.nl-status.new  { background:var(--terra-soft); color:var(--terra); }
+.nl-status.warm { background:var(--warn-soft); color:var(--warn); }
+.nl-details { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+.nl-d-l { font-size:11px; color:var(--ink-3); margin-bottom:2px; }
+.nl-d-v { font-size:12.5px; font-weight:500; color:var(--ink); }
+.nl-actions { display:flex; gap:8px; padding-top:12px; border-top:var(--hair); }
+.btn-grab { flex:1; padding:8px 14px; background:var(--terra); color:#fff; border:0; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer; }
+.btn-grab:hover { background:var(--terra-hover); }
+.btn-more { padding:8px 12px; background:#fff; color:var(--ink-3); border:var(--hair); border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; letter-spacing:.05em; }
+.btn-more:hover { background:var(--surface-2); color:var(--ink); }
+.pager { display:flex; justify-content:center; align-items:center; gap:6px; padding:20px 0 4px; }
+.pager .pb { padding:6px 12px; font-size:12.5px; font-weight:500; color:var(--ink-2); background:#fff; border:var(--hair); border-radius:6px; cursor:pointer; }
+.pager .pb:hover { background:var(--surface-2); color:var(--ink); }
+.pager .pb.active { background:var(--terra); color:#fff; border-color:var(--terra); }
+.pager .pb.disabled { opacity:.4; cursor:default; pointer-events:none; }
+</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_aesthetic.css">
+</head>
+<body>
+<div class="app" data-screen-label="Sales / New Leads"><main class="page">
+    <div class="wrap">
+      <div class="page-bar">
+        <div class="page-title-row">
+          <div class="page-title"><span data-bind-text="summary">New Leads</span></div>
+          <span class="muted" data-bind-text="subtitle">593 total · 8 hot · 4 grabbed today</span>
+        </div>
+        <div class="page-actions">
+          <button data-comm-action="action:salesNewLeads.import" class="btn btn-secondary">Import CSV</button>
+          <a href="CreateCustomer.html" class="btn btn-primary" style="text-decoration:none;display:inline-flex;align-items:center;">+ New lead</a>
+        </div>
+      </div>
+
+      <nav class="sales-subnav">
+        <a href="SalesDashboard.html">Dashboard</a>
+        <a class="active" href="SalesNewLeads.html">New Leads</a>
+        <a href="SalesMyLeads.html">My Opportunities</a>
+        <a href="SalesFollowUps.html">Follow-Ups</a>
+      </nav>
+
+      <div class="stat-group" style="margin-bottom:24px;">
+        <div class="stat-col"><div class="stat-eyebrow" data-bind-text="kpis.0.label">Total leads</div><div class="stat-number" data-bind-text="kpis.0.value">593</div><div class="stat-delta" data-bind-text="kpis.0.delta">all sources, all statuses</div></div>
+        <div class="stat-col"><div class="stat-eyebrow" data-bind-text="kpis.1.label">Hot · last 15m</div><div class="stat-number" style="color:var(--bad);" data-bind-text="kpis.1.value">8</div><div class="stat-delta" data-bind-text="kpis.1.delta">need immediate response</div></div>
+        <div class="stat-col"><div class="stat-eyebrow" data-bind-text="kpis.2.label">Grabbed today</div><div class="stat-number" style="color:var(--ok);" data-bind-text="kpis.2.value">4</div><div class="stat-delta" data-bind-text="metrics.stat_delta.0">across 3 reps</div></div>
+      </div>
+
+      <div class="toolbar">
+        <div class="fchips" id="nlChips">
+          <button class="fchip active" data-filter="all">All <span class="fc-count" data-bind-text="metrics.fc_count.0">593</span></button>
+          <button class="fchip" data-filter="hot">Hot <span class="fc-count" data-bind-text="metrics.fc_count.1">8</span></button>
+          <button class="fchip" data-filter="new">New <span class="fc-count" data-bind-text="metrics.fc_count.2">412</span></button>
+          <button class="fchip" data-filter="warm">Warm <span class="fc-count" data-bind-text="metrics.fc_count.3">173</span></button>
+        </div>
+        <div class="grow"></div>
+        <select class="field-select" style="width:160px;" data-bind-options="optionsOptions"><option value="All sources">All sources</option></select>
+        <input class="search-input" placeholder="Search name, phone…" id="nlSearch">
+      </div>
+
+      <div class="nl-grid" id="nlGrid"></div>
+
+      <div class="pager salesNewLeads-pager" id="salesNewLeadsPager"></div>
+      <div style="text-align:center;font-size:12px;color:var(--ink-3);padding:4px 0 0;">Showing <span data-bind-text="pagination.shown">8</span> of <span data-bind-text="pagination.total">8</span></div>
+    </div>
+  </main>
+</div>
+<div class="s1-overlay gm-overlay" id="claimLeadModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">New leads</div><h4>Claim lead</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Lead id</label><input class="s1-input" type="text" name="id"></div>
+    <div class="full"><label class="s1-mlabel">Notes</label><textarea class="s1-textarea" name="notes"></textarea></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Claim</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="declineLeadModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">New leads</div><h4>Decline lead</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Lead id</label><input class="s1-input" type="text" name="id"></div>
+    <div><label class="s1-mlabel">Reason</label><select class="s1-select" name="reason" data-bind-options="declineReasonOptions"><option value="">Choose…</option></select></div>
+    <div class="full"><label class="s1-mlabel">Notes</label><textarea class="s1-textarea" name="notes"></textarea></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Decline</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="bulkImportLeadsModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">New leads</div><h4>Bulk import</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Source</label><select class="s1-select" name="source" data-bind-options="sources"><option value="">Choose…</option></select></div>
+    <div><label class="s1-mlabel">Count</label><input class="s1-input" type="text" name="count"></div>
+    <div class="full"><label class="s1-mlabel">Notes</label><textarea class="s1-textarea" name="notes"></textarea></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Import</button></div>
+</div></div>
+<script src="../../core/event-bus.js"></script>
+<script src="../../core/state-store.js"></script>
+<script src="../../core/schema.js"></script>
+<script src="../../core/fixtures.js"></script>
+<script src="../../core/communication.mock.js"></script>
+<script src="../../core/communication.api.js"></script>
+<script src="../../core/communication.js"></script>
+<script src="../../core/render.js"></script>
+<script src="../../core/standard-page.js"></script>
+<script src="../../core/google-places.js"></script>
+<script src="./module.js"></script>
+<script>
+const INLINE_LEADS = ([
+  { id:1382, name:'Max Yeh',           phone:'(416) 999-8233', region:'toronto',   regionLbl:'TORONTO',   status:'hot',  date:'May 30, 2026', size:'Medium', from:'Toronto, ON',    to:'Hamilton, ON',  type:'Local',         source:'Advertisement' },
+  { id:1381, name:'Elisa Gentile',     phone:'(647) 926-1610', region:'toronto',   regionLbl:'TORONTO',   status:'new',  date:'Jun 4, 2026',  size:'Large',  from:'North York, ON', to:'Toronto, ON',   type:'Local',         source:'Website' },
+  { id:1380, name:'Marcus Brown',      phone:'(403) 555-1144', region:'calgary',   regionLbl:'CALGARY',   status:'new',  date:'May 26, 2026', size:'Small',  from:'Calgary, AB',    to:'Calgary, AB',   type:'Local',         source:'Referral' },
+  { id:1379, name:'Aisha Khan',        phone:'(905) 401-8290', region:'toronto',   regionLbl:'TORONTO',   status:'hot',  date:'May 22, 2026', size:'Large',  from:'Mississauga, ON',to:'Vaughan, ON',   type:'Local',         source:'Website' },
+  { id:1378, name:'Daniel Park',       phone:'(604) 730-2014', region:'vancouver', regionLbl:'VANCOUVER', status:'warm', date:'Jun 12, 2026', size:'Medium', from:'Vancouver, BC',  to:'Burnaby, BC',   type:'Local',         source:'Other' },
+  { id:1377, name:'Sara Patel',        phone:'(416) 240-1192', region:'toronto',   regionLbl:'TORONTO',   status:'new',  date:'May 29, 2026', size:'Small',  from:'Toronto, ON',    to:'Mississauga, ON',type:'Boxes only',    source:'Website' },
+  { id:1376, name:'Jordan Chen',       phone:'(587) 226-9128', region:'calgary',   regionLbl:'CALGARY',   status:'warm', date:'Jun 18, 2026', size:'Medium', from:'Calgary, AB',    to:'Edmonton, AB',  type:'Long distance', source:'Advertisement' },
+  { id:1375, name:'Rebecca Chen',      phone:'(416) 808-1245', region:'toronto',   regionLbl:'TORONTO',   status:'hot',  date:'May 28, 2026', size:'Large',  from:'Toronto, ON',    to:'Montreal, QC',  type:'Long distance', source:'Referral' }
+]);
+
+// Read fresh on every render so host state-pushes land. Backend ships its
+// list under `rows` (POCO only exposes `id`/`name`) — accept either array.
+function getLeads() {
+  const fx = (window.S1 && window.S1.fixtures && window.S1.fixtures["salesNewLeads"]) || null;
+  const raw = (fx && Array.isArray(fx.leads) && fx.leads.length) ? fx.leads
+            : (fx && Array.isArray(fx.rows)  && fx.rows.length)  ? fx.rows
+            : INLINE_LEADS;
+  return raw.map(l => Object.assign({}, l, {
+    name:      l.name      || '',
+    phone:     l.phone     || '',
+    region:    l.region    || '',
+    regionLbl: l.regionLbl || (l.region ? l.region.toUpperCase() : ''),
+    status:    l.status    || 'new',
+    date:      l.date      || '',
+    size:      l.size      || '',
+    from:      l.from      || '',
+    to:        l.to        || '',
+    type:      l.type      || '',
+    source:    l.source    || ''
+  }));
+}
+
+function renderLeads(filter, q) {
+  const shown = getLeads().filter(l => {
+    if (filter !== 'all' && l.status !== filter) return false;
+    if (q && !(l.name.toLowerCase() + ' ' + l.phone).includes(q)) return false;
+    return true;
+  });
+  document.getElementById('nlGrid').innerHTML = shown.map(l => `
+    <div class="nl-card" data-id="${l.id}">
+      <div class="nl-head">
+        <div class="gap">
+          <div class="nl-name">${l.name}<span class="nl-region ${l.region}">${l.regionLbl}</span></div>
+          <div class="nl-phone">${l.phone}</div>
+        </div>
+        <span class="nl-status ${l.status}">${l.status[0].toUpperCase()+l.status.slice(1)}</span>
+      </div>
+      <div class="nl-details">
+        <div><div class="nl-d-l">Move date</div><div class="nl-d-v">${l.date}</div></div>
+        <div><div class="nl-d-l">Home size</div><div class="nl-d-v">${l.size}</div></div>
+        <div style="grid-column:span 2;"><div class="nl-d-l">From → To</div><div class="nl-d-v">${l.from} → ${l.to}</div></div>
+        <div><div class="nl-d-l">Type</div><div class="nl-d-v">${l.type}</div></div>
+        <div><div class="nl-d-l">Source</div><div class="nl-d-v">${l.source}</div></div>
+      </div>
+      <div class="nl-actions">
+        <button data-comm-action="action:salesNewLeads.grab-lead" class="btn-grab" data-action="grab">Grab Lead</button>
+        <button class="btn-more" data-action="more">⋯</button>
+      </div>
+    </div>`).join('') || '<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--ink-3);font-size:13px;">No leads match.</div>';
+}
+
+let activeFilter = 'all', activeQuery = '';
+function refresh() { renderLeads(activeFilter, activeQuery); }
+refresh();
+
+document.querySelectorAll('#nlChips .fchip').forEach(c => c.addEventListener('click', () => {
+  document.querySelectorAll('#nlChips .fchip').forEach(x => x.classList.toggle('active', x === c));
+  activeFilter = c.dataset.filter;
+  refresh();
+}));
+document.getElementById('nlSearch').addEventListener('input', e => { activeQuery = e.target.value.trim().toLowerCase(); refresh(); });
+
+// Click a card → open detail modal; click Grab → toast
+document.getElementById('nlGrid').addEventListener('click', e => {
+  const btnGrab = e.target.closest('[data-action="grab"]');
+  if (btnGrab) {
+    e.stopPropagation();
+    const card = btnGrab.closest('.nl-card');
+    btnGrab.textContent = '✓ Grabbed';
+    btnGrab.style.background = 'var(--ok)';
+    setTimeout(() => card.style.opacity = '.5', 240);
+    return;
+  }
+  const card = e.target.closest('.nl-card');
+  if (!card) return;
+  const l = getLeads().find(x => x.id === +card.dataset.id);
+  if (!l) return;
+  const m = document.createElement('div');
+  m.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:center;justify-content:center;z-index:1000;padding:24px;';
+  m.innerHTML = `<div style="background:#fff;border-radius:12px;max-width:540px;width:100%;padding:24px 26px;box-shadow:0 24px 60px -16px rgba(15,23,42,.4);">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;">
+      <div><div style="font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;">New lead · ${l.regionLbl}</div><h2 style="margin:6px 0 0;font-size:22px;font-weight:700;letter-spacing:-0.01em;">${l.name}</h2><div style="margin-top:4px;color:var(--ink-3);font-variant-numeric:tabular-nums;">${l.phone}</div></div>
+      <button class="x" style="border:0;background:transparent;font-size:24px;color:var(--ink-3);cursor:pointer;line-height:1;">×</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:18px;">
+      <div style="padding:10px 14px;border:var(--hair);border-radius:8px;"><div style="font-size:11px;color:var(--ink-3);">Move date</div><div style="font-weight:600;margin-top:4px;">${l.date}</div></div>
+      <div style="padding:10px 14px;border:var(--hair);border-radius:8px;"><div style="font-size:11px;color:var(--ink-3);">Home size</div><div style="font-weight:600;margin-top:4px;">${l.size}</div></div>
+      <div style="padding:10px 14px;border:var(--hair);border-radius:8px;grid-column:span 2;"><div style="font-size:11px;color:var(--ink-3);">From → To</div><div style="font-weight:600;margin-top:4px;">${l.from} → ${l.to}</div></div>
+      <div style="padding:10px 14px;border:var(--hair);border-radius:8px;"><div style="font-size:11px;color:var(--ink-3);">Type</div><div style="font-weight:600;margin-top:4px;">${l.type}</div></div>
+      <div style="padding:10px 14px;border:var(--hair);border-radius:8px;"><div style="font-size:11px;color:var(--ink-3);">Source</div><div style="font-weight:600;margin-top:4px;">${l.source}</div></div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;">
+      <button class="btn btn-secondary x">Close</button>
+      <button data-comm-action="action:salesNewLeads.call-now" class="btn btn-secondary">Call now</button>
+      <button data-comm-action="action:salesNewLeads.grab-lead" class="btn btn-primary">Grab lead</button>
+    </div>
+  </div>`;
+  document.body.appendChild(m);
+  const close = () => m.remove();
+  m.addEventListener('click', e2 => { if (e2.target === m) close(); });
+  m.querySelectorAll('.x').forEach(b => b.addEventListener('click', close));
+});
+
+// pager click handled in module.js via server-side pagination wiring.
+
+// Re-render when the host pushes fresh state.
+if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
+  window.S1.bus.on('state:replaced', refresh);
+}
+</script>
+</body>
+</html>

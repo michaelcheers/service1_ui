@@ -1,0 +1,13 @@
+{
+  "name": "customers",
+  "title": "Customers",
+  "source": "Customers.html",
+  "fixture": "customers",
+  "reads": [
+    "customers"
+  ],
+  "writes": [
+    "customers"
+  ],
+  "icon": "customers"
+}

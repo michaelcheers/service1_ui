@@ -1,56 +1,1406 @@
-<!DOCTYPE html><html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Scheduling</title>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Scheduling — Redesign</title>
+<template id="__bundler_thumbnail" data-bg-color="#EEF0EC">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="800" fill="#EEF0EC"/>
+    <rect x="60" y="60" width="80" height="80" rx="12" fill="#004D40"/>
+    <rect x="80" y="80" width="40" height="40" rx="6" fill="#D4960A"/>
+    <rect x="200" y="60" width="940" height="60" rx="12" fill="#FFFFFF" stroke="#E8ECE9" stroke-width="2"/>
+    <rect x="220" y="80" width="140" height="20" rx="4" fill="#111816"/>
+    <rect x="200" y="140" width="940" height="40" rx="8" fill="#FFFFFF" stroke="#E8ECE9" stroke-width="2"/>
+    <rect x="220" y="156" width="120" height="14" rx="3" fill="#004D40"/>
+    <rect x="360" y="156" width="100" height="14" rx="3" fill="#788680"/>
+    <rect x="480" y="156" width="160" height="14" rx="3" fill="#788680"/>
+    <rect x="200" y="200" width="260" height="540" rx="12" fill="#FFFFFF" stroke="#E8ECE9" stroke-width="2"/>
+    <rect x="220" y="220" width="100" height="10" rx="3" fill="#788680"/>
+    <circle cx="240" cy="270" r="14" fill="#004D40"/>
+    <rect x="270" y="262" width="140" height="10" rx="3" fill="#111816"/>
+    <rect x="270" y="278" width="100" height="8" rx="3" fill="#788680"/>
+    <circle cx="240" cy="320" r="14" fill="#3F6FA6"/>
+    <rect x="270" y="312" width="140" height="10" rx="3" fill="#111816"/>
+    <rect x="270" y="328" width="100" height="8" rx="3" fill="#788680"/>
+    <circle cx="240" cy="370" r="14" fill="#0E7C8F"/>
+    <rect x="270" y="362" width="140" height="10" rx="3" fill="#111816"/>
+    <rect x="270" y="378" width="100" height="8" rx="3" fill="#788680"/>
+    <rect x="480" y="200" width="500" height="540" rx="12" fill="#FFFFFF" stroke="#E8ECE9" stroke-width="2"/>
+    <rect x="480" y="240" width="500" height="1" fill="#E8ECE9"/>
+    <rect x="500" y="270" width="60" height="40" rx="6" fill="#FFFFFF" stroke="#E8ECE9"/>
+    <rect x="510" y="282" width="40" height="8" rx="3" fill="#111816"/>
+    <rect x="510" y="296" width="30" height="6" rx="3" fill="#788680"/>
+    <rect x="580" y="282" width="200" height="20" rx="4" fill="#E0F2F1"/>
+    <rect x="580" y="282" width="3" height="20" fill="#004D40"/>
+    <rect x="500" y="340" width="60" height="40" rx="6" fill="#FFFFFF" stroke="#E8ECE9"/>
+    <rect x="600" y="352" width="160" height="20" rx="4" fill="#EAF1F9"/>
+    <rect x="600" y="352" width="3" height="20" fill="#3F6FA6"/>
+    <rect x="500" y="410" width="60" height="40" rx="6" fill="#FFFFFF" stroke="#E8ECE9"/>
+    <rect x="640" y="422" width="240" height="20" rx="4" fill="#DDF1F5"/>
+    <rect x="640" y="422" width="3" height="20" fill="#0E7C8F"/>
+    <rect x="1000" y="200" width="140" height="540" rx="12" fill="#FFFFFF" stroke="#E8ECE9" stroke-width="2"/>
+    <rect x="1020" y="220" width="80" height="10" rx="3" fill="#788680"/>
+    <rect x="1020" y="250" width="100" height="50" rx="6" fill="#FFFFFF" stroke="#E8ECE9"/>
+    <rect x="1020" y="320" width="100" height="50" rx="6" fill="#FFFFFF" stroke="#E8ECE9"/>
+    <text x="600" y="780" text-anchor="middle" font-family="Inter, sans-serif" font-weight="500" font-size="14" fill="#788680">Scheduling · Loading…</text>
+  </svg>
+</template>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../../assets/css/module.css">
 <style>
-.grid { display: grid; grid-template-columns: 100px repeat(10, 1fr); gap: 2px; }
-.cell, .hd, .lane { background: var(--surface-2); padding: 6px 8px; font-size: 12px; }
-.hd { background: var(--line); font-weight: 600; }
-.lane { background: var(--line); font-weight: 600; }
-.pill { padding: 4px 8px; border-radius: 4px; color: #fff; font-size: 11px; font-weight: 600; }
+/* ════════════════════════════════════════════════════
+   Scheduling — Reference Redesign
+   Reuses Job Detail design system (terra / sage)
+   ════════════════════════════════════════════════════ */
+
+:root {
+  --terra: #004D40; --terra-hover: #003D32; --terra-soft: #E0F2F1;
+  --gold: #D4960A; --gold-soft: #FBEEC6;
+  --ink: #111816; --ink-2: #44524C; --ink-3: #788680; --ink-4: #95A19B;
+  --line: #E8ECE9; --line-2: #DDE2DF;
+  --bg: #EEF0EC; --surface: #FFFFFF; --surface-2: #F5F7F4;
+  --warn: #B5780A; --warn-bg: #FDF4DE;
+  --ok: #008978; --ok-bg: #E0F5F2;
+  --bad: #B23E3E; --bad-bg: #FAEAEA;
+  --info: #3F6FA6; --info-bg: #EAF1F9;
+  --plum: #7B4B94; --plum-bg: #EFE5F5;
+  --teal: #0E7C8F; --teal-bg: #DDF1F5;
+  --rose: #B5476A; --rose-bg: #FBE7EE;
+  --slate: #56636E; --slate-bg: #ECEFF1;
+  --t-eyebrow: 11px;  --t-body: 13px;  --t-emph: 15px;  --t-title: 22px;
+  --r: 8px; --r-sm: 6px;
+  --hair: 1px solid var(--line);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', -apple-system, system-ui, sans-serif;
+  font-size: var(--t-body); line-height: 1.45;
+  color: var(--ink); background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+button { background: none; border: none; cursor: pointer; padding: 0; }
+a { color: inherit; text-decoration: none; }
+.muted { color: var(--ink-3); }
+
+/* ── App shell ── */
+.app {
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  grid-template-rows: 56px 1fr;
+  min-height: 100vh;
+  min-width: 0;
+}
+.search {
+  flex: 0 1 360px;
+  display: flex; align-items: center; gap: 8px;
+  height: 36px; padding: 0 12px;
+  background: var(--surface-2);
+  border: var(--hair);
+  border-radius: var(--r);
+  color: var(--ink-3);
+}
+.search input { flex: 1; border: 0; background: transparent; outline: none; font-size: var(--t-body); }
+.kbd {
+  display: inline-flex; align-items: center; height: 20px; padding: 0 6px;
+  border: var(--hair); border-radius: 4px; background: #fff;
+  color: var(--ink-3); font-size: 11px; font-weight: 500;
+}
+.top-actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.icon-btn {
+  width: 32px; height: 32px; border-radius: var(--r);
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--ink-2);
+}
+.icon-btn:hover { background: var(--surface-2); color: var(--ink); }
+.user-chip {
+  display: flex; align-items: center; gap: 8px;
+  padding: 4px 10px 4px 4px;
+  border-radius: 999px; border: var(--hair); background: #fff;
+  font-weight: 500;
+}
+.avatar {
+  width: 24px; height: 24px; border-radius: 999px;
+  background: var(--terra); color: #fff;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600;
+}
+
+/* ── Page ── */
+.page { grid-row: 2; grid-column: 2; min-width: 0; display: flex; flex-direction: column; }
+
+/* ── Buttons (shared) ── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  height: 32px; padding: 0 12px;
+  border: 1px solid transparent; border-radius: var(--r);
+  font-size: var(--t-body); font-weight: 500; white-space: nowrap;
+}
+.btn-primary { background: var(--terra); color: #fff; }
+.btn-primary:hover { background: var(--terra-hover); }
+.btn-secondary { background: #fff; color: var(--ink); border-color: var(--line-2); }
+.btn-secondary:hover { background: var(--surface-2); }
+.btn-ghost { color: var(--ink-2); }
+.btn-ghost:hover { background: var(--surface-2); color: var(--ink); }
+.btn-danger-text { color: var(--bad); }
+.btn-danger-text:hover { background: var(--bad-bg); }
+.btn-sm { height: 28px; padding: 0 10px; font-size: 12px; }
+
+/* Pills (shared) */
+.pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 22px; padding: 0 9px; border-radius: 999px;
+  font-size: 11px; font-weight: 600;
+  background: var(--surface-2); color: var(--ink-2);
+  border: 1px solid var(--line); white-space: nowrap;
+}
+.pill .dot { width: 6px; height: 6px; border-radius: 999px; background: currentColor; }
+.pill.warn  { background: var(--warn-bg); color: var(--warn); border-color: transparent; }
+.pill.ok    { background: var(--ok-bg);   color: var(--ok);   border-color: transparent; }
+.pill.info  { background: var(--info-bg); color: var(--info); border-color: transparent; }
+.pill.bad   { background: var(--bad-bg);  color: var(--bad);  border-color: transparent; }
+
+/* Page header + sub-tabs */
+.page-header {
+  background: #fff;
+  border-bottom: var(--hair);
+  padding: 14px 24px 0;
+}
+.ph-row1 {
+  display: flex; align-items: center; gap: 16px;
+}
+.ph-title {
+  font-size: 18px; font-weight: 600; letter-spacing: -0.01em;
+  display: flex; align-items: center; gap: 10px;
+}
+.ph-loc {
+  display: flex; align-items: center; gap: 6px;
+  height: 30px; padding: 0 10px;
+  background: var(--surface-2);
+  border: var(--hair); border-radius: var(--r);
+  font-size: 12px; color: var(--ink-2); font-weight: 500;
+  cursor: pointer;
+}
+.ph-loc svg { color: var(--ink-3); }
+
+/* Date strip */
+.date-strip {
+  margin-left: auto;
+  display: flex; align-items: center; gap: 4px;
+  height: 32px;
+  border: var(--hair); border-radius: var(--r);
+  background: #fff; padding: 0 2px;
+}
+.date-strip button {
+  width: 28px; height: 28px; border-radius: 6px;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--ink-2);
+}
+.date-strip button:hover { background: var(--surface-2); }
+.date-cur {
+  padding: 0 12px; height: 28px;
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 500;
+  border-left: var(--hair); border-right: var(--hair);
+  white-space: nowrap;
+}
+.date-today {
+  padding: 0 10px; height: 26px;
+  display: inline-flex; align-items: center;
+  font-size: 11px; font-weight: 600;
+  border-radius: 5px;
+  background: var(--surface-2);
+}
+.date-today:hover { background: var(--terra-soft); color: var(--terra); }
+
+.sched-tabs {
+  display: flex; gap: 4px; margin-top: 12px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.sched-tab {
+  position: relative;
+  padding: 12px 14px;
+  color: var(--ink-3);
+  font-size: var(--t-body); font-weight: 500;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  white-space: nowrap;
+}
+.sched-tab:hover { color: var(--ink); }
+.sched-tab.active { color: var(--ink); font-weight: 600; border-bottom-color: var(--terra); }
+.sched-tab .count {
+  display: inline-block; margin-left: 4px;
+  padding: 0 6px; min-width: 18px; height: 18px; line-height: 18px;
+  border-radius: 9px; background: var(--surface-2);
+  color: var(--ink-3); font-size: 11px; font-weight: 600;
+  text-align: center; vertical-align: middle;
+}
+.sched-tab.active .count { background: var(--terra-soft); color: var(--terra); }
+.sched-tab .count.warn { background: var(--warn-bg); color: var(--warn); }
+
+/* ── Tab panes ── */
+.tab-pane { display: none; flex: 1; min-height: 0; min-width: 0; }
+.tab-pane.active { display: flex; flex-direction: column; }
+
+/* ════════════════════════════════════════════════
+   SCHEDULING / DAILY — main timeline view
+   ════════════════════════════════════════════════ */
+.sched-body {
+  flex: 1; display: grid;
+  grid-template-columns: 280px 1fr 320px;
+  min-height: 0;
+}
+
+/* Resources column (left) */
+.resources {
+  border-right: var(--hair);
+  background: #fff;
+  display: flex; flex-direction: column;
+  min-height: 0;
+}
+.r-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: var(--hair);
+}
+.r-title {
+  font-size: var(--t-eyebrow);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--ink-3); font-weight: 600;
+}
+.r-search {
+  margin: 12px 16px 0;
+  display: flex; align-items: center; gap: 6px;
+  height: 32px; padding: 0 10px;
+  background: var(--surface-2); border: var(--hair); border-radius: var(--r);
+  color: var(--ink-3);
+}
+.r-search input { border: 0; background: transparent; outline: none; flex: 1; font-size: 12px; }
+
+.r-list { overflow-y: auto; padding: 8px 8px 16px; flex: 1; }
+.r-section-title {
+  padding: 12px 8px 6px;
+  font-size: var(--t-eyebrow);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--ink-3); font-weight: 600;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.r-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px;
+  border-radius: 6px;
+  cursor: grab;
+  min-width: 0;
+}
+.r-row > div { min-width: 0; flex: 1; }
+.r-row .nm { font-size: 13px; font-weight: 500; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.r-row .rl { font-size: 11px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.r-row .cap {
+  flex-shrink: 0;
+  font-size: 10px; color: var(--ink-3);
+  background: var(--surface-2); padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.r-row .toggle {
+  flex-shrink: 0;
+  width: 28px; height: 16px; border-radius: 999px; background: var(--line-2);
+  position: relative; cursor: pointer; transition: background .15s;
+}
+.r-row .toggle::after {
+  content: ''; position: absolute; left: 2px; top: 2px; width: 12px; height: 12px;
+  border-radius: 999px; background: #fff; transition: left .15s;
+}
+.r-row .toggle.on { background: var(--terra); }
+.r-row .toggle.on::after { left: 14px; }
+.r-row.disabled { opacity: 0.4; }
+.r-row .badge {
+  flex-shrink: 0;
+  width: 16px; height: 16px; border-radius: 999px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--ok-bg); color: var(--ok);
+}
+.r-row:hover { background: var(--surface-2); }
+.r-row.assigned { opacity: 0.55; }
+.r-row .av {
+  width: 28px; height: 28px; border-radius: 999px;
+  background: var(--terra); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600;
+  flex-shrink: 0;
+}
+.r-row .av.driver  { background: var(--info); }
+.r-row .av.helper  { background: var(--plum); }
+.r-row .av.mover   { background: var(--teal); }
+.r-row .av.lead    { background: var(--terra); }
+.r-row .av.veh     { background: var(--slate); border-radius: 6px; }
+
+/* Center: timeline */
+.timeline {
+  display: flex; flex-direction: column;
+  min-width: 0; background: var(--surface-2);
+}
+.tl-bar {
+  display: flex; align-items: center; gap: 4px;
+  padding: 8px 16px;
+  background: #fff;
+  border-bottom: var(--hair);
+}
+.content-tabs { display: flex; gap: 2px; }
+.content-tab {
+  padding: 8px 12px;
+  font-size: 12px; font-weight: 500;
+  color: var(--ink-3);
+  border-radius: 6px;
+}
+.content-tab:hover { color: var(--ink); background: var(--surface-2); }
+.content-tab.active { background: var(--surface-2); color: var(--ink); font-weight: 600; }
+.content-tab .ct-count {
+  display: inline-block;
+  margin-left: 6px; padding: 0 6px;
+  height: 16px; line-height: 16px;
+  border-radius: 8px;
+  background: var(--terra-soft); color: var(--terra);
+  font-size: 10px; font-weight: 700;
+}
+.tl-bar .right { margin-left: auto; display: flex; gap: 6px; align-items: center; }
+
+/* Hour header */
+.tl-scroll {
+  flex: 1; overflow: auto;
+  background: #fff;
+}
+.tl-grid {
+  --hr-w: 64px;
+  --lane-h: 64px;
+  --crew-w: 200px;
+  display: grid;
+  grid-template-columns: var(--crew-w) calc(var(--hr-w) * 24);
+  min-width: calc(var(--crew-w) + var(--hr-w) * 24);
+}
+.tl-corner {
+  position: sticky; top: 0; left: 0;
+  background: #fff;
+  border-bottom: var(--hair); border-right: var(--hair);
+  padding: 8px 12px;
+  font-size: var(--t-eyebrow);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--ink-3); font-weight: 600;
+  z-index: 4;
+  height: 40px;
+  display: flex; align-items: center;
+}
+.tl-hours {
+  position: sticky; top: 0;
+  background: #fff;
+  border-bottom: var(--hair);
+  display: grid;
+  grid-template-columns: repeat(24, var(--hr-w));
+  height: 40px;
+  z-index: 3;
+}
+.tl-hour {
+  border-right: var(--hair);
+  padding: 12px 8px 0;
+  font-size: 11px; color: var(--ink-3); font-weight: 500;
+}
+.tl-hour.hr-shaded { background: var(--surface-2); }
+.tl-hour.hr-now {
+  background: var(--terra-soft);
+  color: var(--terra); font-weight: 600;
+}
+
+/* Crew lane */
+.crew-cell {
+  position: sticky; left: 0;
+  background: #fff;
+  border-right: var(--hair);
+  border-bottom: var(--hair);
+  padding: 8px 12px;
+  display: flex; flex-direction: column; gap: 4px;
+  z-index: 2;
+}
+.crew-name [contenteditable="true"]:hover { background: var(--surface-2); }
+.crew-name [contenteditable="true"]:focus { background: var(--terra-soft); box-shadow: 0 0 0 2px var(--terra); }
+.crew-name { display: flex; align-items: center; gap: 6px;
+  font-weight: 600; font-size: 13px;
+}
+.crew-name .dot { width: 8px; height: 8px; border-radius: 999px; }
+.crew-meta {
+  display: flex; flex-wrap: wrap; gap: 4px;
+  margin-top: 2px;
+}
+.chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 6px;
+  background: var(--surface-2);
+  border-radius: 4px;
+  font-size: 10px; color: var(--ink-2);
+}
+.chip svg { color: var(--ink-3); }
+.chip.warn { background: var(--warn-bg); color: var(--warn); }
+
+.lane {
+  position: relative;
+  border-bottom: var(--hair);
+  display: grid;
+  grid-template-columns: repeat(24, var(--hr-w));
+  height: var(--lane-h);
+}
+.lane-cell {
+  border-right: 0;
+  background: transparent;
+}
+.lane-cell.shaded { background-color: var(--surface-2); }
+
+/* Now line */
+.tl-now {
+  position: absolute; top: 0; bottom: 0;
+  width: 2px; background: var(--terra);
+  z-index: 5;
+  pointer-events: none;
+}
+.tl-now::before {
+  content: ""; position: absolute;
+  top: -4px; left: -3px;
+  width: 8px; height: 8px;
+  background: var(--terra); border-radius: 999px;
+}
+
+/* Job bar */
+.job {
+  position: absolute;
+  top: 6px; bottom: 6px;
+  border-radius: 6px;
+  padding: 6px 8px 6px 10px;
+  display: flex; flex-direction: column; gap: 2px;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+  overflow: hidden;
+  transition: box-shadow .12s, transform .12s;
+}
+.job:hover {
+  box-shadow: 0 4px 12px rgba(17,24,22,0.12);
+  transform: translateY(-1px);
+  z-index: 6;
+}
+.job .jt {
+  font-size: 12px; font-weight: 600;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.job .js {
+  font-size: 11px; color: var(--ink-2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.job.terra { background: var(--terra-soft); border-color: var(--terra); color: var(--terra); }
+.job.terra .js { color: #2a564f; }
+.job.info  { background: var(--info-bg);  border-color: var(--info);  color: var(--info); }
+.job.info .js  { color: #2c5680; }
+.job.plum  { background: var(--plum-bg);  border-color: var(--plum);  color: var(--plum); }
+.job.plum .js  { color: #553560; }
+.job.teal  { background: var(--teal-bg);  border-color: var(--teal);  color: var(--teal); }
+.job.teal .js  { color: #1a5d6c; }
+.job.warn  { background: var(--warn-bg);  border-color: var(--warn);  color: var(--warn); }
+.job.warn .js  { color: #8a6018; }
+.job.gold  { background: var(--gold-soft);border-color: var(--gold);  color: #8B6324; }
+.job.rose  { background: var(--rose-bg);  border-color: var(--rose);  color: var(--rose); }
+.job.bad   { background: var(--bad-bg);   border-color: var(--bad);   color: var(--bad); }
+.job .conf {
+  position: absolute; top: 6px; right: 6px;
+  width: 14px; height: 14px; border-radius: 999px;
+  background: rgba(255,255,255,0.6);
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* Crew drop placeholder */
+.crew-drop {
+  grid-column: 1 / -1;
+  margin: 16px;
+  padding: 28px;
+  border: 1.5px dashed var(--line-2);
+  border-radius: var(--r);
+  background: rgba(255,255,255,0.6);
+  color: var(--ink-3); font-size: 13px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.crew-drop:hover { border-color: var(--terra); color: var(--terra); background: var(--terra-soft); }
+
+/* Footer bar */
+.tl-foot {
+  background: #fff;
+  border-top: var(--hair);
+  padding: 10px 16px;
+  display: flex; align-items: center; gap: 8px;
+}
+.tl-foot .right { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+.dirty-dot {
+  width: 8px; height: 8px; border-radius: 999px;
+  background: var(--warn);
+}
+
+/* Right: jobs panel */
+.jobs {
+  border-left: var(--hair);
+  background: #fff;
+  display: flex; flex-direction: column;
+  min-height: 0;
+}
+.jobs-head { padding: 12px 16px; border-bottom: var(--hair); display: flex; align-items: center; justify-content: space-between; }
+.jobs-subtabs { display: flex; padding: 8px 12px; gap: 4px; border-bottom: var(--hair); }
+.jobs-subtab {
+  padding: 6px 10px; border-radius: 6px;
+  font-size: 12px; font-weight: 500;
+  color: var(--ink-3);
+}
+.jobs-subtab.active { background: var(--surface-2); color: var(--ink); font-weight: 600; }
+
+.jobs-list { padding: 8px 12px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.job-card {
+  border: var(--hair); border-radius: var(--r);
+  padding: 12px;
+  cursor: grab;
+  display: flex; flex-direction: column; gap: 6px;
+  transition: border-color .12s, box-shadow .12s;
+}
+.job-card:hover { border-color: var(--ink-4); box-shadow: 0 1px 3px rgba(17,24,22,.06); }
+.job-card .jc-customer { font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1; }
+.job-card .jc-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }
+.job-card .jc-id { font-size: 11px; color: var(--ink-3); font-family: 'SF Mono', monospace; white-space: nowrap; flex-shrink: 0; }
+.job-card .jc-route { font-size: 12px; color: var(--ink-2); display: flex; align-items: center; gap: 6px; }
+.job-card .jc-route .arr { color: var(--ink-4); }
+.job-card .jc-foot { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--ink-3); }
+.job-card .jc-foot .amt { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* Filter bar above timeline */
+.legend {
+  display: flex; gap: 14px; padding: 8px 16px;
+  font-size: 11px; color: var(--ink-3);
+  background: #fff; border-bottom: var(--hair);
+  align-items: center;
+}
+.legend .lg { display: flex; align-items: center; gap: 6px; }
+.legend .sw { width: 10px; height: 10px; border-radius: 3px; }
+
+/* ════════════════════════════════════════════════
+   RESOURCE CALENDAR tab
+   ════════════════════════════════════════════════ */
+.cal {
+  padding: 20px 24px;
+  display: flex; flex-direction: column; gap: 16px;
+  flex: 1; min-height: 0;
+}
+.cal-toolbar {
+  display: flex; align-items: center; gap: 10px;
+}
+.seg {
+  display: inline-flex; padding: 2px;
+  background: var(--surface-2); border-radius: 8px;
+}
+.seg button {
+  padding: 5px 12px; font-size: 12px; font-weight: 500;
+  color: var(--ink-3); border-radius: 6px;
+}
+.seg button.active { background: #fff; color: var(--ink); font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+
+.cal-grid {
+  flex: 1;
+  background: #fff;
+  border: var(--hair); border-radius: var(--r);
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-height: 0;
+}
+.cal-week-head {
+  display: grid;
+  grid-template-columns: 220px repeat(7, 1fr);
+  border-bottom: var(--hair);
+  background: var(--surface-2);
+}
+.cal-week-head > div {
+  padding: 10px 12px;
+  border-right: var(--hair);
+  font-size: var(--t-eyebrow);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--ink-3); font-weight: 600;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.cal-week-head > div:last-child { border-right: 0; }
+.cal-week-head .day-num {
+  font-size: 18px;
+  color: var(--ink);
+  text-transform: none;
+  letter-spacing: -0.01em;
+  font-weight: 600;
+}
+.cal-week-head .day-num.today { color: var(--terra); }
+.cal-rows { overflow-y: auto; }
+.cal-row {
+  display: grid;
+  grid-template-columns: 220px repeat(7, 1fr);
+  border-bottom: var(--hair);
+  min-height: 84px;
+}
+.cal-row:last-child { border-bottom: 0; }
+.cal-resource {
+  padding: 12px;
+  border-right: var(--hair);
+  background: var(--surface-2);
+  display: flex; align-items: center; gap: 10px;
+  min-width: 0;
+}
+.cal-resource > div:last-child { min-width: 0; flex: 1; }
+.cal-resource > div:last-child > div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cal-day {
+  border-right: var(--hair);
+  padding: 4px;
+  display: flex; flex-direction: column; gap: 4px;
+  position: relative;
+}
+.cal-day:last-child { border-right: 0; }
+.cal-day.weekend { background: var(--surface-2); }
+.cal-job {
+  font-size: 11px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  border-left: 2px solid;
+  background: #fff;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  cursor: pointer;
+}
+.cal-day-off {
+  position: absolute; inset: 0;
+  background: repeating-linear-gradient(45deg, var(--bad-bg) 0 6px, transparent 6px 12px);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--bad); font-size: 11px; font-weight: 600;
+}
+
+/* ════════════════════════════════════════════════
+   Confirmations tabs (Customer / Team)
+   ════════════════════════════════════════════════ */
+.conf-page {
+  padding: 20px 24px;
+  display: flex; flex-direction: column; gap: 14px;
+  flex: 1; min-height: 0;
+}
+.conf-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+.kpi-card {
+  background: #fff; border: var(--hair); border-radius: var(--r);
+  padding: 14px 16px;
+}
+.kpi-card .kl {
+  font-size: var(--t-eyebrow);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--ink-3); font-weight: 600;
+}
+.kpi-card .kv {
+  font-size: var(--t-title);
+  font-weight: 600;
+  margin-top: 6px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+.kpi-card .kf { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
+.kpi-card.warn .kv { color: var(--warn); }
+.kpi-card.ok .kv { color: var(--ok); }
+.kpi-card.bad .kv { color: var(--bad); }
+
+.tableview {
+  background: #fff; border: var(--hair); border-radius: var(--r);
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  flex: 1; min-height: 0;
+}
+.tv-head {
+  padding: 12px 16px;
+  border-bottom: var(--hair);
+  display: flex; align-items: center; gap: 10px;
+}
+.tv-title { font-size: var(--t-eyebrow); text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-3); font-weight: 600; }
+.tv-filters { display: flex; gap: 6px; }
+.fchip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border-radius: 999px;
+  border: var(--hair); background: #fff;
+  font-size: 11px; font-weight: 500; color: var(--ink-2);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.fchip .fcount {
+  padding: 0 6px; height: 16px; line-height: 16px;
+  border-radius: 8px;
+  background: var(--surface-2); color: var(--ink-3);
+  font-size: 10px; font-weight: 700;
+}
+.fchip.active .fcount { background: rgba(255,255,255,0.18); color: #fff; }
+.fchip.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+.fchip:hover:not(.active) { background: var(--surface-2); }
+.tv-search {
+  margin-left: auto;
+  display: flex; align-items: center; gap: 6px;
+  height: 30px; padding: 0 10px;
+  background: var(--surface-2); border: var(--hair); border-radius: 6px;
+  width: 220px;
+}
+.tv-search input { border: 0; background: transparent; outline: none; flex: 1; font-size: 12px; }
+
+.tv-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+[data-bulk-table].select-mode .tv-table tbody tr { cursor: pointer; }
+[data-bulk-table].select-mode .tv-table tbody tr.selected { background: var(--terra-soft); box-shadow: inset 3px 0 0 var(--terra); }
+.tv-table thead th {
+  text-align: left;
+  font-size: var(--t-eyebrow);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--ink-3); font-weight: 600;
+  padding: 10px 16px;
+  background: var(--surface-2);
+  border-bottom: var(--hair);
+  position: sticky; top: 0;
+}
+.tv-table tbody td {
+  padding: 14px 16px;
+  border-bottom: var(--hair);
+  vertical-align: middle;
+}
+.tv-table tbody tr:hover { background: var(--surface-2); }
+.tv-cust { display: flex; align-items: center; gap: 10px; }
+.tv-cust .av { width: 30px; height: 30px; border-radius: 999px; background: var(--ink-4); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; flex-shrink: 0; }
+.tv-cust .nm { font-weight: 500; }
+.tv-cust .sub { font-size: 11px; color: var(--ink-3); }
+.tv-when .when { font-weight: 500; }
+.tv-when .sub  { font-size: 11px; color: var(--ink-3); }
+.tv-actions { display: flex; gap: 6px; justify-content: flex-end; }
+
+.scroll-body { overflow-y: auto; flex: 1; min-height: 0; }
+
+/* ════════════════════════════════════════════════
+   Day Off Requests
+   ════════════════════════════════════════════════ */
+.do-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 14px;
+}
+.do-col {
+  background: #fff; border: var(--hair); border-radius: var(--r);
+  overflow: hidden;
+  display: flex; flex-direction: column;
+}
+.do-col-head {
+  padding: 12px 14px;
+  border-bottom: var(--hair);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.do-col-title {
+  font-size: var(--t-eyebrow);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  font-weight: 600;
+}
+.do-col.pending  .do-col-title { color: var(--warn); }
+.do-col.approved .do-col-title { color: var(--ok); }
+.do-col.denied   .do-col-title { color: var(--bad); }
+.do-col-body { padding: 12px; display: flex; flex-direction: column; gap: 10px; flex: 1; overflow-y: auto; }
+.do-req {
+  border: var(--hair); border-radius: var(--r);
+  padding: 12px;
+}
+.do-req .top { display: flex; align-items: center; gap: 10px; }
+.do-req .av { width: 28px; height: 28px; border-radius: 999px; background: var(--ink-4); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; }
+.do-req .nm { font-weight: 500; }
+.do-req .role { color: var(--ink-3); font-size: 11px; }
+.do-req .dates { margin-top: 8px; font-size: 12px; }
+.do-req .reason { color: var(--ink-3); font-size: 12px; margin-top: 4px; }
+.do-req .actions { margin-top: 10px; display: flex; gap: 6px; }
+
+/* ════════════════════════════════════════════════
+   Truck Rentals
+   ════════════════════════════════════════════════ */
+.tr-page { padding: 20px 24px; display: flex; flex-direction: column; gap: 14px; flex: 1; min-height: 0; }
+.tr-list { display: flex; flex-direction: column; gap: 12px; }
+.tr-card {
+  background: #fff; border: var(--hair); border-radius: var(--r);
+  display: grid;
+  grid-template-columns: 56px 1.5fr 1fr 1fr 1fr auto;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 18px;
+}
+.tr-truck {
+  width: 56px; height: 40px; border-radius: 6px;
+  background: var(--slate-bg); color: var(--slate);
+  display: flex; align-items: center; justify-content: center;
+}
+.tr-name { font-weight: 600; }
+.tr-sub { font-size: 11px; color: var(--ink-3); margin-top: 2px; }
+.tr-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-3); font-weight: 600; }
+.tr-value { font-weight: 500; margin-top: 2px; }
+.tr-actions { display: flex; gap: 6px; }
+
+/* Misc helpers */
+.empty {
+  padding: 60px 24px; text-align: center;
+  color: var(--ink-3);
+}
+.empty-title { font-weight: 600; color: var(--ink); margin-bottom: 6px; }
 </style>
-</head><body>
-<div class="wrap">
-  <div class="page-bar"><div class="page-title">Scheduling</div></div>
 
-  <section class="section">
-    <h3 class="section-title">Day grid</h3>
-    <div id="grid-host"></div>
-  </section>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_aesthetic.css">
+</head>
+<body>
 
-  <section class="section">
-    <h3 class="section-title">Crews</h3>
-    <table class="tbl">
-      <thead><tr><th>#</th><th>Name</th><th>Members</th></tr></thead>
-      <tbody data-bind="crews">
-        <template>
-          <tr><td>{{id|num}}</td><td>{{name}}</td><td>{{members}}</td></tr>
-        </template>
-      </tbody>
-    </table>
-  </section>
+<div class="app" data-screen-label="Scheduling">
 
-  <section class="section">
-    <h3 class="section-title">All jobs</h3>
-    <table class="tbl">
-      <thead><tr><th>#</th><th>Title</th><th>Customer</th><th>Date</th><th>Hours</th><th>Crew</th><th>Status</th></tr></thead>
-      <tbody data-bind="jobs">
-        <template>
-          <tr>
-            <td>{{id|num}}</td>
-            <td>{{title}}</td>
-            <td>{{customer}}</td>
-            <td>{{date|date}}</td>
-            <td>{{startHour|num}}–{{endHour|num}}</td>
-            <td>{{crewId|num}}</td>
-            <td><span class="tag {{status}}">{{status}}</span></td>
-          </tr>
-        </template>
-      </tbody>
-    </table>
-  </section>
+  <!-- Logo --><!-- Top bar --><!-- Left nav --><!-- Page -->
+  <main class="page">
+
+    <!-- Page header -->
+    <header class="page-header">
+      <div class="ph-row1">
+        <div class="ph-title">Scheduling</div>
+        <div class="ph-loc-wrap" style="position:relative;">
+          <button data-scheduling-filter="all" class="ph-loc" id="phLocBtn" aria-haspopup="listbox" aria-expanded="false">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <span class="ph-loc-label" data-bind-text="header.locationLabel">All locations</span>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="ph-loc-menu" id="phLocMenu" role="listbox" hidden
+               style="position:absolute;top:100%;left:0;margin-top:6px;background:#fff;border:1px solid var(--line-2,#e5e7eb);border-radius:10px;box-shadow:0 12px 28px rgba(0,0,0,0.12);min-width:220px;padding:6px;z-index:60;">
+            <div class="ph-loc-item" data-loc-id="all" role="option" tabindex="0"
+                 style="padding:8px 10px;border-radius:6px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span>All locations</span><span class="ph-loc-count" style="font-size:11px;color:var(--ink-3);" data-bind-text="header.allLocationsCount"></span>
+            </div>
+            <div role="separator" style="height:1px;background:var(--line-2,#e5e7eb);margin:4px 0;"></div>
+            <div data-bind="locations">
+              <template>
+                <div class="ph-loc-item" data-loc-id="{{id}}" role="option" tabindex="0"
+                     style="padding:8px 10px;border-radius:6px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                  <span>{{name}}</span><span class="ph-loc-count" style="font-size:11px;color:var(--ink-3);">{{count}}</span>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+        <div class="date-strip">
+          <button title="Previous"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button>
+          <span class="date-cur" role="button" tabindex="0" style="cursor:pointer;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <span data-bind-text="header.date" data-tz-time="header.now" data-tz-format="date">Sat · May 16, 2026</span>
+          </span>
+          <button title="Next"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></button>
+          <button data-comm-action="action:scheduling.view.today" class="date-today">Today</button>
+        </div>
+      </div>
+
+      <nav class="sched-tabs" id="schedTabs">
+        <button class="sched-tab" data-tab="resource-calendar">Resource Calendar</button>
+        <button class="sched-tab active" data-tab="scheduling">Scheduling <span class="count" data-bind-text="metrics.count.0">4</span></button>
+        <button class="sched-tab" data-tab="customer-confirmations">Customer Confirmations <span class="count warn" data-bind-text="metrics.count.1">2</span></button>
+        <button class="sched-tab" data-tab="team-confirmations">Team Confirmations <span class="count warn" data-bind-text="metrics.count.2">1</span></button>
+        <button class="sched-tab" data-tab="day-off">Day Off Requests <span class="count warn" data-bind-text="metrics.count.3">3</span></button>
+        <button class="sched-tab" data-tab="truck-rentals">Truck Rentals</button>
+      </nav>
+    </header>
+
+    <!-- ╔═══════════════ SCHEDULING (Daily) ═══════════════╗ -->
+    <section class="tab-pane active" data-pane="scheduling">
+      <div class="sched-body">
+
+        <!-- Resources column -->
+        <div class="resources">
+          <div class="r-head">
+            <span class="r-title">Resources</span>
+            <button class="btn-sm btn btn-ghost" style="font-size:11px;color:var(--terra);">+ Add</button>
+          </div>
+          <div class="r-search">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input placeholder="Search resources…">
+          </div>
+          <div class="r-list">
+
+            <div class="r-section-title">Leaders <span style="font-weight:500;color:var(--ink-4);" data-bind-text="metrics.section_counts.0">5</span></div>
+            <div data-bind="rLeaders"><template><div class="r-row{{assigned}}"><span class="av lead">{{initials}}</span><div><div class="nm">{{name}}</div><div class="rl">{{role}}</div></div><span class="badge" style="display:{{badgeDisplay}};"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span></div></template></div>
+
+            <div class="r-section-title">Members <span style="font-weight:500;color:var(--ink-4);" data-bind-text="metrics.section_counts.1">7</span></div>
+            <div data-bind="rMembers"><template><div class="r-row{{assigned}}"><span class="av {{avCls}}">{{initials}}</span><div><div class="nm">{{name}}</div><div class="rl">{{role}}</div></div><span class="badge" style="display:{{badgeDisplay}};"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span></div></template></div>
+
+            <div class="r-section-title">Fleet <span style="font-weight:500;color:var(--ink-4);" data-bind-text="metrics.section_counts.2">6</span></div>
+            <div data-bind="rFleet"><template><div class="r-row{{assigned}}"><span class="av veh">{{initials}}</span><div><div class="nm">{{name}}</div><div class="rl">{{sub}}</div></div><span class="cap">{{cap}}</span></div></template></div>
+          </div>
+        </div>
+
+        <!-- Timeline -->
+        <div class="timeline">
+          <div class="tl-bar">
+            <div class="content-tabs">
+              <button class="content-tab active">Deal Opportunities <span class="ct-count" data-bind-text="metrics.ct_count.0">4</span></button>
+              <button class="content-tab">Account Management Meetings <span class="ct-count" style="background:var(--info-bg);color:var(--info);" data-bind-text="metrics.ct_count.1">2</span></button>
+            </div>
+            <div class="right">
+              <button class="btn btn-secondary btn-sm">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                Zoom
+              </button>
+              <button class="btn btn-primary btn-sm">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Book new meeting
+              </button>
+            </div>
+          </div>
+
+          <div class="legend">
+            <span class="lg"><span class="sw" style="background:var(--terra);"></span> Booked &amp; confirmed</span>
+            <span class="lg"><span class="sw" style="background:var(--gold);"></span> Pending confirmation</span>
+            <span class="lg"><span class="sw" style="background:var(--info);"></span> Meeting</span>
+            <span class="lg"><span class="sw" style="background:var(--bad);"></span> Conflict</span>
+            <span class="lg" style="margin-left:auto;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> <span data-bind-text="metrics.legend_now.0" data-tz-time="header.now" data-tz-format="now">Now · 2:18 PM</span></span>
+          </div>
+
+          <div class="tl-scroll">
+            <div class="tl-grid" id="tlGrid">
+
+              <!-- Corner + hour header -->
+              <div class="tl-corner">Teams (EDT)</div>
+              <div class="tl-hours" id="tlHours"></div>
+
+              <!-- ── Team 1 (formerly Truck 1) ── -->
+              <div class="crew-cell" data-team-idx="0">
+                <div class="crew-name"><span class="dot" style="background:var(--terra);"></span><span contenteditable="true" spellcheck="false" style="outline:none;border-radius:3px;padding:1px 4px;" title="Click to rename team" data-bind-text="teams.0.name">Team Alpha</span></div>
+                <div class="crew-meta">
+                  <span class="chip"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/></svg><span data-bind-text="teams.0.chip1">2</span></span>
+                  <span class="chip"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="14" height="11" rx="2"/><path d="M16 10h4l2 3v4h-6z"/></svg><span data-bind-text="teams.0.chip2">1</span></span>
+                  <span class="chip" style="background:var(--terra-soft);color:var(--terra);" data-bind-text="teams.0.chipCap">26 ft</span>
+                </div>
+              </div>
+              <div class="lane" data-lane="0">
+                <!-- 24 cells (alternating shaded for 6am-8pm) -->
+                <div class="job terra" data-location="Toronto" data-starts-at="2026-05-16T11:00:00Z" data-duration="4.5">
+                  <div class="jt" data-bind-text="timeline.lane0.0.title">Alice Johnson · 3BR move</div>
+                  <div class="js" data-bind-text="timeline.lane0.0.sub">Toronto → Hamilton · 4h · $2,768</div>
+                  <span class="conf"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="var(--terra)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                </div>
+                <div class="job warn" data-location="Toronto" data-starts-at="2026-05-16T17:00:00Z" data-duration="3">
+                  <div class="jt" data-bind-text="timeline.lane0.1.title">Survey · J. Lopez</div>
+                  <div class="js" data-bind-text="timeline.lane0.1.sub">North York · 1h estimate</div>
+                </div>
+              </div>
+
+              <!-- ── Team 2 (formerly Van 1) ── -->
+              <div class="crew-cell" data-team-idx="1">
+                <div class="crew-name"><span class="dot" style="background:var(--info);"></span><span contenteditable="true" spellcheck="false" style="outline:none;border-radius:3px;padding:1px 4px;" title="Click to rename team" data-bind-text="teams.1.name">Team Blue</span></div>
+                <div class="crew-meta">
+                  <span class="chip"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/></svg><span data-bind-text="teams.1.chip1">2</span></span>
+                  <span class="chip"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="14" height="11" rx="2"/><path d="M16 10h4l2 3v4h-6z"/></svg><span data-bind-text="teams.1.chip2">1</span></span>
+                  <span class="chip" style="background:var(--info-bg);color:var(--info);" data-bind-text="teams.1.chipCap">14 ft</span>
+                </div>
+              </div>
+              <div class="lane" data-lane="1">
+                <div class="job info" data-location="Mississauga" data-starts-at="2026-05-16T12:00:00Z" data-duration="2.5">
+                  <div class="jt" data-bind-text="timeline.lane1.0.title">Box delivery · Patel</div>
+                  <div class="js" data-bind-text="timeline.lane1.0.sub">Mississauga · 30 boxes</div>
+                  <span class="conf"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="var(--info)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                </div>
+                <div class="job plum" data-location="Etobicoke" data-starts-at="2026-05-16T18:00:00Z" data-duration="2">
+                  <div class="jt" data-bind-text="timeline.lane1.1.title">Packing only · M. Lee</div>
+                  <div class="js" data-bind-text="timeline.lane1.1.sub">Etobicoke · 2 packers</div>
+                </div>
+              </div>
+
+              <!-- ── Team 3 (formerly Truck 2 — unassigned today) ── -->
+              <div class="crew-cell" data-team-idx="2">
+                <div class="crew-name"><span class="dot" style="background:var(--slate);"></span><span contenteditable="true" spellcheck="false" style="outline:none;border-radius:3px;padding:1px 4px;" title="Click to rename team" data-bind-text="teams.2.name">Team Gray</span></div>
+                <div class="crew-meta">
+                  <span class="chip warn" data-bind-text="teams.2.warnChip">No team assigned</span>
+                </div>
+              </div>
+              <div class="lane" data-lane="2">
+                <div class="job gold" data-location="Vancouver" data-starts-at="2026-05-16T14:00:00Z" data-duration="5">
+                  <div class="jt" data-bind-text="timeline.lane2.0.title">Tentative · R. Chen</div>
+                  <div class="js" data-bind-text="timeline.lane2.0.sub">Long distance · Toronto → Ottawa</div>
+                </div>
+              </div>
+
+              <!-- ── Team 4 (formerly Truck 3) ── -->
+              <div class="crew-cell" data-team-idx="3">
+                <div class="crew-name"><span class="dot" style="background:var(--teal);"></span><span contenteditable="true" spellcheck="false" style="outline:none;border-radius:3px;padding:1px 4px;" title="Click to rename team" data-bind-text="teams.3.name">Team Teal</span></div>
+                <div class="crew-meta">
+                  <span class="chip"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/></svg><span data-bind-text="teams.3.chip1">3</span></span>
+                  <span class="chip"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="14" height="11" rx="2"/><path d="M16 10h4l2 3v4h-6z"/></svg><span data-bind-text="teams.3.chip2">1</span></span>
+                  <span class="chip" style="background:var(--teal-bg);color:var(--teal);" data-bind-text="teams.3.chipCap">26 ft</span>
+                </div>
+              </div>
+              <div class="lane" data-lane="3">
+                <div class="job teal" data-location="Toronto" data-starts-at="2026-05-16T13:00:00Z" data-duration="6">
+                  <div class="jt" data-bind-text="timeline.lane3.0.title">Commercial · Northside Co.</div>
+                  <div class="js" data-bind-text="timeline.lane3.0.sub">Downtown · office relocation · 6h</div>
+                  <span class="conf"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                </div>
+              </div>
+
+              <!-- Drop placeholder -->
+              <div class="crew-drop">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Drop a team leader here to create a new lane
+              </div>
+            </div>
+          </div>
+
+          <div class="tl-foot">
+            <button class="btn btn-secondary btn-sm">+ Add temp team</button>
+            <button class="btn btn-secondary btn-sm">+ Add existing team</button>
+            <div class="right">
+              <span class="dirty-dot"></span>
+              <span class="muted" style="font-size:12px;" data-bind-text="metrics.pending_changes.0">2 pending changes</span>
+              <button data-comm-action="action:scheduling.publish" class="btn btn-primary btn-sm">Publish</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Jobs panel -->
+        <aside class="jobs">
+          <div class="jobs-head">
+            <span class="r-title">Deals</span>
+            <button class="btn-sm btn btn-ghost" style="font-size:11px;color:var(--terra);">Filter</button>
+          </div>
+          <div class="jobs-subtabs">
+            <button type="button" class="jobs-subtab active" data-jobs-subtab="unscheduled">Unscheduled <span class="jobs-subtab-count" style="opacity:.7;margin-left:2px;">3</span></button>
+            <button type="button" class="jobs-subtab" data-jobs-subtab="closed">Closed <span class="jobs-subtab-count" style="opacity:.7;margin-left:2px;">12</span></button>
+          </div>
+          <div class="jobs-list" data-jobs-pane="unscheduled" data-bind="unscheduledDeals"><template><div class="job-card" data-record-id="{{id}}" data-location="{{location}}"><div class="jc-top"><div class="jc-customer">{{customer}}</div><span class="jc-id">{{dealId}}</span></div><div class="jc-route">{{route}}</div><div class="jc-foot"><span class="pill {{pillClass}}" style="height:18px;font-size:10px;">{{pillLabel}}</span><span>{{duration}}</span><span class="amt" style="margin-left:auto;">{{amount}}</span></div></div></template></div>
+          <div class="jobs-list" data-jobs-pane="closed" data-bind="closedDeals" style="display:none;"><template><div class="job-card" data-record-id="{{id}}" data-location="{{location}}"><div class="jc-top"><div class="jc-customer">{{customer}}</div><span class="jc-id">{{dealId}}</span></div><div class="jc-route">{{route}}</div><div class="jc-foot"><span class="pill {{pillClass}}" style="height:18px;font-size:10px;">{{pillLabel}}</span><span>{{duration}}</span><span class="amt" style="margin-left:auto;">{{amount}}</span></div></div></template></div>
+        </aside>
+
+      </div>
+    </section>
+
+    <!-- ╔═══════════════ RESOURCE CALENDAR ═══════════════╗ -->
+    <section class="tab-pane" data-pane="resource-calendar">
+      <div class="cal">
+        <div class="cal-toolbar">
+          <div class="seg">
+            <button data-scheduling-view="day">Day</button>
+            <button data-scheduling-view="week" class="active">Week</button>
+            <button data-scheduling-view="month">Month</button>
+          </div>
+          <button data-scheduling-view="teams" class="btn btn-secondary btn-sm">Teams</button>
+          <button data-scheduling-view="vehicles" class="btn btn-secondary btn-sm">Vehicles</button>
+          <span class="muted" style="margin-left:auto;font-size:12px;" data-bind-text="metrics.cal_toolbar_range.0">May 11 – May 17, 2026</span>
+        </div>
+
+        <!-- Monthly resource overview -->
+        <style>
+          .res-mo { background:#fff; border:var(--hair); border-radius:var(--r-card, 12px); padding:16px 18px; margin:0 0 16px; }
+          .res-mo-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+          .res-mo-title { font-size:14px; font-weight:700; }
+          .res-mo-nav { display:flex; align-items:center; gap:8px; }
+          .res-mo-nav button { width:28px; height:28px; border:var(--hair); border-radius:6px; background:#fff; cursor:pointer; }
+          .res-mo-grid { display:grid; grid-template-columns:repeat(7, 1fr); gap:4px; }
+          .res-mo-dow { font-size:10.5px; color:var(--ink-3); font-weight:700; text-transform:uppercase; letter-spacing:0.06em; text-align:center; padding:4px 0 6px; }
+          .res-mo-cell { background:var(--surface-2); border-radius:6px; padding:8px 8px 10px; min-height:80px; display:flex; flex-direction:column; gap:4px; cursor:pointer; transition: box-shadow .12s; }
+          .res-mo-cell:hover { box-shadow:0 2px 6px rgba(15,23,42,0.08); }
+          .res-mo-cell.other { opacity:0.45; }
+          .res-mo-cell.today { background:var(--terra-soft); outline:1px solid var(--terra); }
+          .res-mo-cell.weekend { background:#FDF5EE; }
+          .res-mo-num { font-size:13px; font-weight:700; color:var(--ink); }
+          .res-mo-num.today { color:var(--terra); }
+          .res-mo-jobs { font-size:11.5px; color:var(--ink-2); font-weight:600; }
+          .res-mo-bar { margin-top:auto; height:5px; background:var(--line-2); border-radius:999px; overflow:hidden; }
+          .res-mo-bar > span { display:block; height:100%; background:var(--ok); border-radius:999px; }
+          .res-mo-bar.warn > span { background:var(--warn); }
+          .res-mo-bar.bad > span { background:var(--bad); }
+          .res-mo-pct { font-size:10px; color:var(--ink-3); font-variant-numeric:tabular-nums; }
+          .res-mo-legend { display:flex; gap:14px; font-size:11px; color:var(--ink-3); margin-top:10px; padding-top:10px; border-top:var(--hair); }
+          .res-mo-legend .sw { display:inline-block; width:10px; height:6px; border-radius:999px; margin-right:5px; vertical-align:middle; }
+        </style>
+        <div class="res-mo" data-cal-view="month" style="display:none;">
+          <div class="res-mo-head">
+            <div class="res-mo-title" data-bind-text="metrics.res_mo_title.0">Resource utilisation · May 2026</div>
+            <div class="res-mo-nav">
+              <button>‹</button>
+              <span style="font-weight:700;font-size:13px;min-width:120px;text-align:center;" data-bind-text="metrics.res_mo_title.1">May 2026</span>
+              <button>›</button>
+              <button data-comm-action="action:scheduling.view.today" style="width:auto;padding:0 12px;font-size:12px;">Today</button>
+            </div>
+          </div>
+          <div class="res-mo-grid">
+            <div class="res-mo-dow">Mon</div><div class="res-mo-dow">Tue</div><div class="res-mo-dow">Wed</div><div class="res-mo-dow">Thu</div><div class="res-mo-dow">Fri</div><div class="res-mo-dow">Sat</div><div class="res-mo-dow">Sun</div>
+
+            <!-- Week 1 -->
+            <div class="res-mo-cell other"><div class="res-mo-num" data-bind-text="metrics.res_mo_num.0">27</div></div>
+            <div class="res-mo-cell other"><div class="res-mo-num" data-bind-text="metrics.res_mo_num.1">28</div></div>
+            <div class="res-mo-cell other"><div class="res-mo-num" data-bind-text="metrics.res_mo_num.2">29</div></div>
+            <div class="res-mo-cell other"><div class="res-mo-num" data-bind-text="metrics.res_mo_num.3">30</div></div>
+            <div class="res-mo-cell"><div class="res-mo-num" data-bind-text="metrics.res_mo_num.4">1</div><div class="res-mo-jobs">3/6 jobs</div><div class="res-mo-bar"><span style="width:50%;"></span></div><div class="res-mo-pct" data-bind-text="metrics.res_mo_pct.0">50% capacity</div></div>
+            <div class="res-mo-cell weekend"><div class="res-mo-num" data-bind-text="metrics.res_mo_num.5">2</div><div class="res-mo-jobs">5/6 jobs</div><div class="res-mo-bar warn"><span style="width:83%;"></span></div><div class="res-mo-pct" data-bind-text="metrics.res_mo_pct.1">83% capacity</div></div>
+            <div class="res-mo-cell weekend"><div class="res-mo-num" data-bind-text="metrics.res_mo_num.6">3</div><div class="res-mo-jobs">2/6 jobs</div><div class="res-mo-bar"><span style="width:33%;"></span></div><div class="res-mo-pct" data-bind-text="metrics.res_mo_pct.2">33% capacity</div></div>
+
+            <!-- Week 2 -->
+            <div class="res-mo-cell"><div class="res-mo-num" data-bind-text="metrics.res_mo_num.7">4</div><div class="res-mo-jobs">4/6 jobs</div><div class="res-mo-bar"><span style="width:67%;"></span></div><div class="res-mo-pct" data-bind-text="metrics.res_mo_pct.3">67% capacity</div></div>
+            <div class="res-mo-cell"><div class="res-mo-num" data-bind-text="metrics.res_mo_num.8">5</div><div class="res-mo-jobs">5/6 jobs</div><div class="res-mo-bar warn"><span style="width:83%;"></span></div><div class="res-mo-pct" data-bind-text="metrics.res_mo_pct.4">83% capacity</div></div>
+            <div class="res-mo-cell"><div class="res-mo-num" data-bind-text="metrics.res_mo_num.9">6</div><div class="res-mo-jobs">3/6 jobs</div><div class="res-mo-bar"><span style="width:50%;"></span></div><div class="res-mo-pct" data-bind-text="metrics.res_mo_pct.5">50% capacity</div></div>
+            <div class="res-mo-cell"><div class="res-mo-num" data-bind-text="metrics.res_mo_num.10">7</div><div class="res-mo-jobs">6/6 jobs</div><div class="res-mo-bar bad"><span style="width:100%;"></span></div><div class="res-mo-pct" data-bind-text="metrics.res_mo_pct.6">100% capacity</div></div>
+            <div class="res-mo-cell"><div class="res-mo-num" data-bind-text="metrics.res_mo_num.11">8</div><div class="res-mo-jobs">4/6 jobs</div><div class="res-mo-bar"><span style="width:67%;"></span></div><div class="res-mo-pct" data-bind-text="metrics.res_mo_pct.7">67% capacity</div></div>
+            <div class="res-mo-cell weekend"><div class="res-mo-num" data-bind-text="metrics.res_mo_num.12">9</div><div class="res-mo-jobs">5/6 jobs</div><div class="res-mo-bar warn"><span style="width:83%;"></span></div><div class="res-mo-pct" data-bind-text="metrics.res_mo_pct.8">83% capacity</div></div>
+            <div class="res-mo-cell weekend"><div class="res-mo-num" data-bind-text="metrics.res_mo_num.13">10</div><div class="res-mo-jobs">2/6 jobs</div><div class="res-mo-bar"><span style="width:33%;"></span></div><div class="res-mo-pct" data-bind-text="metrics.res_mo_pct.9">33% capacity</div></div>
+
+            <!-- Week 3 (current week, May 11-17) -->
+            <div class="res-mo-cell"><div class="res-mo-num" data-bind-text="metrics.res_mo_num.14">11</div><div class="res-mo-jobs">3/6 jobs</div><div class="res-mo-bar"><span style="width:50%;"></span></div><div class="res-mo-pct" data-bind-text="metrics.res_mo_pct.10">50% capacity</div></div>
+            <div class="res-mo-cell"><div class="res-mo-num" data-bind-text="metrics.res_mo_num.15">12</div><div class="res-mo-jobs">4/6 jobs</div><div class="res-mo-bar"><span style="width:67%;"></span></div><div class="res-mo-pct" data-bind-text="metrics.res_mo_pct.11">67% capacity</div></div>
+            <div class="res-mo-cell"><div class="res-mo-num" data-bind-text="metrics.res_mo_num.16">13</div><div class="res-mo-jobs">5/6 jobs</div><div class="res-mo-bar warn"><span style="width:83%;"></span></div><div class="res-mo-pct" data-bind-text="metrics.res_mo_pct.12">83% capacity</div></div>
+            <div class="res-mo-cell"><div class="res-mo-num" data-bind-text="metrics.res_mo_num.17">14</div><div class="res-mo-jobs">6/6 jobs</div><div class="res-mo-bar bad"><span style="width:100%;"></span></div><div class="res-mo-pct" data-bind-text="metrics.res_mo_pct.13">100% capacity</div></div>
+            <div class="res-mo-cell"><div class="res-mo-num" data-bind-text="metrics.res_mo_num.18">15</div><div class="res-mo-jobs">4/6 jobs</div><div class="res-mo-bar"><span style="width:67%;"></span></div><div class="res-mo-pct" data-bind-text="metrics.res_mo_pct.14">67% capacity</div></div>
+            <div class="res-mo-cell weekend today"><div class="res-mo-num today" data-bind-text="metrics.res_mo_num.19">16</div><div class="res-mo-jobs">4/6 jobs</div><div class="res-mo-bar"><span style="width:67%;"></span></div><div class="res-mo-pct" data-bind-text="metrics.res_mo_pct.15">67% capacity · today</div></div>
+            <div class="res-mo-cell weekend"><div class="res-mo-num" data-bind-text="metrics.res_mo_num.20">17</div><div class="res-mo-jobs">3/6 jobs</div><div class="res-mo-bar"><span style="width:50%;"></span></div><div class="res-mo-pct" data-bind-text="metrics.res_mo_pct.16">50% capacity</div></div>
+
+            <!-- Week 4 -->
+            <div class="res-mo-cell"><div class="res-mo-num" data-bind-text="metrics.res_mo_num.21">18</div><div class="res-mo-jobs">5/6 jobs</div><div class="res-mo-bar warn"><span style="width:83%;"></span></div><div class="res-mo-pct" data-bind-text="metrics.res_mo_pct.17">83% capacity</div></div>
+            <div class="res-mo-cell"><div class="res-mo-num" data-bind-text="metrics.res_mo_num.22">19</div><div class="res-mo-jobs">6/6 jobs</div><div class="res-mo-bar bad"><span style="width:100%;"></span></div><div class="res-mo-pct" data-bind-text="metrics.res_mo_pct.18">100% capacity</div></div>
+            <div class="res-mo-cell"><div class="res-mo-num" data-bind-text="metrics.res_mo_num.23">20</div><div class="res-mo-jobs">5/6 jobs</div><div class="res-mo-bar warn"><span style="width:83%;"></span></div><div class="res-mo-pct" data-bind-text="metrics.res_mo_pct.19">83% capacity</div></div>
+            <div class="res-mo-cell"><div class="res-mo-num" data-bind-text="metrics.res_mo_num.24">21</div><div class="res-mo-jobs">4/6 jobs</div><div class="res-mo-bar"><span style="width:67%;"></span></div><div class="res-mo-pct" data-bind-text="metrics.res_mo_pct.20">67% capacity</div></div>
+            <div class="res-mo-cell"><div class="res-mo-num" data-bind-text="metrics.res_mo_num.25">22</div><div class="res-mo-jobs">3/6 jobs</div><div class="res-mo-bar"><span style="width:50%;"></span></div><div class="res-mo-pct" data-bind-text="metrics.res_mo_pct.21">50% capacity</div></div>
+            <div class="res-mo-cell weekend"><div class="res-mo-num" data-bind-text="metrics.res_mo_num.26">23</div><div class="res-mo-jobs">5/6 jobs</div><div class="res-mo-bar warn"><span style="width:83%;"></span></div><div class="res-mo-pct" data-bind-text="metrics.res_mo_pct.22">83% capacity</div></div>
+            <div class="res-mo-cell weekend"><div class="res-mo-num" data-bind-text="metrics.res_mo_num.27">24</div><div class="res-mo-jobs">2/6 jobs</div><div class="res-mo-bar"><span style="width:33%;"></span></div><div class="res-mo-pct" data-bind-text="metrics.res_mo_pct.23">33% capacity</div></div>
+
+            <!-- Week 5 -->
+            <div class="res-mo-cell"><div class="res-mo-num" data-bind-text="metrics.res_mo_num.28">25</div><div class="res-mo-jobs">4/6 jobs</div><div class="res-mo-bar"><span style="width:67%;"></span></div><div class="res-mo-pct" data-bind-text="metrics.res_mo_pct.24">67% capacity</div></div>
+            <div class="res-mo-cell"><div class="res-mo-num" data-bind-text="metrics.res_mo_num.29">26</div><div class="res-mo-jobs">5/6 jobs</div><div class="res-mo-bar warn"><span style="width:83%;"></span></div><div class="res-mo-pct" data-bind-text="metrics.res_mo_pct.25">83% capacity</div></div>
+            <div class="res-mo-cell"><div class="res-mo-num" data-bind-text="metrics.res_mo_num.30">27</div><div class="res-mo-jobs">5/6 jobs</div><div class="res-mo-bar warn"><span style="width:83%;"></span></div><div class="res-mo-pct" data-bind-text="metrics.res_mo_pct.26">83% capacity</div></div>
+            <div class="res-mo-cell"><div class="res-mo-num" data-bind-text="metrics.res_mo_num.31">28</div><div class="res-mo-jobs">4/6 jobs</div><div class="res-mo-bar"><span style="width:67%;"></span></div><div class="res-mo-pct" data-bind-text="metrics.res_mo_pct.27">67% capacity</div></div>
+            <div class="res-mo-cell"><div class="res-mo-num" data-bind-text="metrics.res_mo_num.32">29</div><div class="res-mo-jobs">3/6 jobs</div><div class="res-mo-bar"><span style="width:50%;"></span></div><div class="res-mo-pct" data-bind-text="metrics.res_mo_pct.28">50% capacity</div></div>
+            <div class="res-mo-cell weekend"><div class="res-mo-num" data-bind-text="metrics.res_mo_num.33">30</div><div class="res-mo-jobs">4/6 jobs</div><div class="res-mo-bar"><span style="width:67%;"></span></div><div class="res-mo-pct" data-bind-text="metrics.res_mo_pct.29">67% capacity</div></div>
+            <div class="res-mo-cell weekend"><div class="res-mo-num" data-bind-text="metrics.res_mo_num.34">31</div><div class="res-mo-jobs">2/6 jobs</div><div class="res-mo-bar"><span style="width:33%;"></span></div><div class="res-mo-pct" data-bind-text="metrics.res_mo_pct.30">33% capacity</div></div>
+          </div>
+          <div class="res-mo-legend">
+            <span><span class="sw" style="background:var(--ok);"></span>Healthy (≤67%)</span>
+            <span><span class="sw" style="background:var(--warn);"></span>High utilisation (68–95%)</span>
+            <span><span class="sw" style="background:var(--bad);"></span>At capacity (≥96%)</span>
+            <span style="margin-left:auto;">X/Y = jobs scheduled / capacity</span>
+          </div>
+        </div>
+
+        <div class="cal-grid" data-cal-view="week">
+          <div class="cal-week-head">
+            <div>Resource</div>
+            <div>Mon<span class="day-num" data-bind-text="metrics.day_num.0">11</span></div>
+            <div>Tue<span class="day-num" data-bind-text="metrics.day_num.1">12</span></div>
+            <div>Wed<span class="day-num" data-bind-text="metrics.day_num.2">13</span></div>
+            <div>Thu<span class="day-num" data-bind-text="metrics.day_num.3">14</span></div>
+            <div>Fri<span class="day-num" data-bind-text="metrics.day_num.4">15</span></div>
+            <div>Sat<span class="day-num today" data-bind-text="metrics.day_num.5">16</span></div>
+            <div>Sun<span class="day-num" data-bind-text="metrics.day_num.6">17</span></div>
+          </div>
+          <div class="cal-rows" data-bind="calRows"><template><div class="cal-row" data-location="{{location}}" data-kind="{{kind}}"><div class="cal-resource"><span style="width:28px;height:28px;border-radius:{{avRadius}};background:{{avBg}};color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;">{{initials}}</span><div><div style="font-weight:500;">{{name}}</div><div class="muted" style="font-size:11px;">{{role}}</div></div></div><div class="cal-day"><div class="cal-job" style="display:{{d0a_disp}};{{d0a_style}}">{{d0a_lbl}}</div><div class="cal-job" style="display:{{d0b_disp}};{{d0b_style}}">{{d0b_lbl}}</div><div class="cal-day-off" style="display:{{d0off_disp}};">{{d0off_lbl}}</div></div><div class="cal-day"><div class="cal-job" style="display:{{d1a_disp}};{{d1a_style}}">{{d1a_lbl}}</div><div class="cal-job" style="display:{{d1b_disp}};{{d1b_style}}">{{d1b_lbl}}</div><div class="cal-day-off" style="display:{{d1off_disp}};">{{d1off_lbl}}</div></div><div class="cal-day"><div class="cal-job" style="display:{{d2a_disp}};{{d2a_style}}">{{d2a_lbl}}</div><div class="cal-job" style="display:{{d2b_disp}};{{d2b_style}}">{{d2b_lbl}}</div><div class="cal-day-off" style="display:{{d2off_disp}};">{{d2off_lbl}}</div></div><div class="cal-day"><div class="cal-job" style="display:{{d3a_disp}};{{d3a_style}}">{{d3a_lbl}}</div><div class="cal-job" style="display:{{d3b_disp}};{{d3b_style}}">{{d3b_lbl}}</div><div class="cal-day-off" style="display:{{d3off_disp}};">{{d3off_lbl}}</div></div><div class="cal-day"><div class="cal-job" style="display:{{d4a_disp}};{{d4a_style}}">{{d4a_lbl}}</div><div class="cal-job" style="display:{{d4b_disp}};{{d4b_style}}">{{d4b_lbl}}</div><div class="cal-day-off" style="display:{{d4off_disp}};">{{d4off_lbl}}</div></div><div class="cal-day weekend"><div class="cal-job" style="display:{{d5a_disp}};{{d5a_style}}">{{d5a_lbl}}</div><div class="cal-job" style="display:{{d5b_disp}};{{d5b_style}}">{{d5b_lbl}}</div><div class="cal-day-off" style="display:{{d5off_disp}};">{{d5off_lbl}}</div></div><div class="cal-day weekend"><div class="cal-job" style="display:{{d6a_disp}};{{d6a_style}}">{{d6a_lbl}}</div><div class="cal-job" style="display:{{d6b_disp}};{{d6b_style}}">{{d6b_lbl}}</div><div class="cal-day-off" style="display:{{d6off_disp}};">{{d6off_lbl}}</div></div></div></template></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ╔═══════════════ CUSTOMER CONFIRMATIONS ═══════════════╗ -->
+    <section class="tab-pane" data-pane="customer-confirmations">
+      <div class="conf-page">
+        <div class="conf-kpis">
+          <div class="kpi-card ok"><div class="kl">Confirmed</div><div class="kv" data-bind-text="custKpis.confirmed">8</div><div class="kf" data-bind-text="custKpis.confirmedSub">of 12 upcoming</div></div>
+          <div class="kpi-card warn"><div class="kl">Awaiting reply</div><div class="kv" data-bind-text="custKpis.awaiting">2</div><div class="kf" data-bind-text="custKpis.awaitingSub">last nudged 4h ago</div></div>
+          <div class="kpi-card bad"><div class="kl">No response &gt; 24h</div><div class="kv" data-bind-text="custKpis.noResponse">1</div><div class="kf" data-bind-text="custKpis.noResponseSub">Auto-call queued</div></div>
+          <div class="kpi-card"><div class="kl">Total this week</div><div class="kv" data-bind-text="custKpis.total">12</div><div class="kf" data-bind-text="custKpis.totalSub">Jobs &amp; surveys</div></div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin:14px 0 6px;">
+          <button type="button" class="btn btn-secondary" data-bulk-select="customer">📋 Bulk select</button>
+          <button data-comm-action="action:scheduling.bulk.sendAi.customer" data-bulk-scope="customer" class="btn btn-primary" style="display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#6366F1,#7C3AED);">✨ Send All via AI</button>
+        </div>
+
+        <div class="tableview" data-bulk-table="customer">
+          <div class="tv-head">
+            <span class="tv-title">Customer meeting confirmations</span>
+            <div class="tv-filters">
+              <button class="fchip active">All <span class="fcount" data-bind-text="metrics.fcount.0">12</span></button>
+              <button class="fchip">Awaiting <span class="fcount" data-bind-text="metrics.fcount.1">2</span></button>
+              <button class="fchip">Confirmed <span class="fcount" data-bind-text="metrics.fcount.2">8</span></button>
+              <button class="fchip">No response <span class="fcount" data-bind-text="metrics.fcount.3">1</span></button>
+            </div>
+            <div class="tv-search">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input placeholder="Search customer or deal…">
+            </div>
+          </div>
+          <div class="scroll-body">
+            <table class="tv-table">
+              <thead>
+                <tr>
+                  <th style="width:30%;">Customer</th>
+                  <th>Meeting</th>
+                  <th>When</th>
+                  <th>Channel</th>
+                  <th>Status</th>
+                  <th style="text-align:right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody data-bind="customerConfirmations"><template><tr><td><div class="tv-cust"><div class="av" style="background:{{avColor}};">{{initials}}</div><div><div class="nm">{{name}}</div><div class="sub">{{sub}}</div></div></div></td><td>{{meeting}}</td><td><div class="when">{{when}}</div><div class="sub">{{whenSub}}</div></td><td><span class="pill {{channelPill}}"><span class="dot"></span>{{channel}}</span></td><td><span class="pill {{statusPill}}"><span class="dot"></span>{{status}}</span></td><td><div class="tv-actions"><button class="btn btn-secondary btn-sm">{{action}}</button></div></td></tr></template></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ╔═══════════════ TEAM CONFIRMATIONS ═══════════════╗ -->
+    <section class="tab-pane" data-pane="team-confirmations">
+      <div class="conf-page">
+        <div class="conf-kpis">
+          <div class="kpi-card ok"><div class="kl">Confirmed</div><div class="kv" data-bind-text="teamConfirmationsKpis.confirmed">9</div><div class="kf" data-bind-text="teamConfirmationsKpis.confirmedSub">of 11 assignments</div></div>
+          <div class="kpi-card warn"><div class="kl">Awaiting</div><div class="kv" data-bind-text="teamConfirmationsKpis.awaiting">1</div><div class="kf" data-bind-text="teamConfirmationsKpis.awaitingSub">Paul Rai</div></div>
+          <div class="kpi-card bad"><div class="kl">Declined</div><div class="kv" data-bind-text="teamConfirmationsKpis.declined">1</div><div class="kf" data-bind-text="teamConfirmationsKpis.declinedSub">needs replacement</div></div>
+          <div class="kpi-card"><div class="kl">Coverage</div><div class="kv" data-bind-text="teamConfirmationsKpis.coverage">82%</div><div class="kf" data-bind-text="teamConfirmationsKpis.coverageSub">across this week</div></div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin:14px 0 6px;">
+          <button type="button" class="btn btn-secondary" data-bulk-select="team">📋 Bulk select</button>
+          <button data-comm-action="action:scheduling.bulk.sendAi.team" data-bulk-scope="team" class="btn btn-primary" style="display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#6366F1,#7C3AED);">✨ Send All via AI</button>
+        </div>
+
+        <div class="tableview" data-bulk-table="team">
+          <div class="tv-head">
+            <span class="tv-title">Team assignment confirmations</span>
+            <div class="tv-filters">
+              <button class="fchip active">All <span class="fcount" data-bind-text="metrics.fcount.4">11</span></button>
+              <button class="fchip">Awaiting <span class="fcount" data-bind-text="metrics.fcount.5">1</span></button>
+              <button class="fchip">Declined <span class="fcount" data-bind-text="metrics.fcount.6">1</span></button>
+            </div>
+            <div class="tv-search">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input placeholder="Search teammate or shift…">
+            </div>
+          </div>
+          <div class="scroll-body">
+            <table class="tv-table">
+              <thead>
+                <tr>
+                  <th style="width:28%;">Teammate</th>
+                  <th>Shift</th>
+                  <th>Crew</th>
+                  <th>When</th>
+                  <th>Status</th>
+                  <th style="text-align:right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody data-bind="teamConfirmations"><template><tr><td><div class="tv-cust"><div class="av" style="background:{{avColor}};">{{initials}}</div><div><div class="nm">{{name}}</div><div class="sub">{{role}}</div></div></div></td><td>{{shift}}</td><td><span class="pill"><span class="dot" style="background:{{crewColor}};"></span>{{crew}}</span></td><td><div class="when">{{when}}</div></td><td><span class="pill {{statusPill}}"><span class="dot"></span>{{status}}</span></td><td><div class="tv-actions"><button class="btn btn-secondary btn-sm">{{action}}</button></div></td></tr></template></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ╔═══════════════ DAY OFF REQUESTS ═══════════════╗ -->
+    <section class="tab-pane" data-pane="day-off">
+      <div class="conf-page">
+        <div class="conf-kpis">
+          <div class="kpi-card warn"><div class="kl">Pending</div><div class="kv" data-bind-text="dayOffKpis.pending">3</div><div class="kf" data-bind-text="dayOffKpis.pendingSub">awaiting approval</div></div>
+          <div class="kpi-card ok"><div class="kl">Approved</div><div class="kv" data-bind-text="dayOffKpis.approved">5</div><div class="kf" data-bind-text="dayOffKpis.approvedSub">this month</div></div>
+          <div class="kpi-card bad"><div class="kl">Denied</div><div class="kv" data-bind-text="dayOffKpis.denied">1</div><div class="kf" data-bind-text="dayOffKpis.deniedSub">this month</div></div>
+          <div class="kpi-card"><div class="kl">Coverage risk</div><div class="kv" data-bind-text="dayOffKpis.risk">Low</div><div class="kf" data-bind-text="dayOffKpis.riskSub">All shifts covered</div></div>
+        </div>
+
+        <div class="do-grid" style="flex:1;min-height:0;">
+
+          <div class="do-col pending">
+            <div class="do-col-head"><span class="do-col-title" data-bind-text="dayOffPendingTitle">Pending · 3</span><button data-comm-action="action:scheduling.bulk.approve" class="btn btn-secondary btn-sm">Approve all</button></div>
+            <div class="do-col-body" data-bind="dayOffPending"><template><div class="do-req" data-record-id="{{recordId}}"><div class="top"><div class="av" style="background:{{avBg}};">{{initials}}</div><div><div class="nm">{{name}}</div><div class="role">{{role}}</div></div><span class="pill {{statusClass}}" style="margin-left:auto;"><span class="dot"></span>{{statusLabel}}</span></div><div class="dates"><strong>{{dates}}</strong> · {{duration}}</div><div class="reason">{{reason}}</div><div class="actions"><button data-comm-action="action:scheduling.approve" class="btn btn-primary btn-sm">Approve</button><button data-comm-action="action:scheduling.deny" class="btn btn-ghost btn-sm">Deny</button><button data-comm-action="action:scheduling.message" class="btn btn-ghost btn-sm">Message</button></div></div></template></div>
+          </div>
+
+          <div class="do-col approved">
+            <div class="do-col-head"><span class="do-col-title" data-bind-text="dayOffApprovedTitle">Approved · 5</span><button data-comm-action="action:scheduling.open" class="btn btn-ghost btn-sm">View all</button></div>
+            <div class="do-col-body" data-bind="dayOffApproved"><template><div class="do-req" data-record-id="{{recordId}}"><div class="top"><div class="av" style="background:{{avBg}};">{{initials}}</div><div><div class="nm">{{name}}</div><div class="role">{{role}}</div></div><span class="pill {{statusClass}}" style="margin-left:auto;"><span class="dot"></span>{{statusLabel}}</span></div><div class="dates"><strong>{{dates}}</strong> · {{duration}}</div><div class="reason">{{reason}}</div></div></template></div>
+          </div>
+
+          <div class="do-col denied">
+            <div class="do-col-head"><span class="do-col-title" data-bind-text="dayOffDeniedTitle">Denied · 1</span><button data-comm-action="action:scheduling.open" class="btn btn-ghost btn-sm">View all</button></div>
+            <div class="do-col-body" data-bind="dayOffDenied"><template><div class="do-req" data-record-id="{{recordId}}"><div class="top"><div class="av" style="background:{{avBg}};">{{initials}}</div><div><div class="nm">{{name}}</div><div class="role">{{role}}</div></div><span class="pill {{statusClass}}" style="margin-left:auto;"><span class="dot"></span>{{statusLabel}}</span></div><div class="dates"><strong>{{dates}}</strong> · {{duration}}</div><div class="reason">{{reason}}</div></div></template></div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ╔═══════════════ TRUCK RENTALS ═══════════════╗ -->
+    <section class="tab-pane" data-pane="truck-rentals">
+      <div class="tr-page">
+        <div class="conf-kpis">
+          <div class="kpi-card"><div class="kl">Active rentals</div><div class="kv" data-bind-text="truckRentalsKpis.active">2</div><div class="kf" data-bind-text="truckRentalsKpis.activeSub">on the road</div></div>
+          <div class="kpi-card warn"><div class="kl">Returning today</div><div class="kv" data-bind-text="truckRentalsKpis.returning">1</div><div class="kf" data-bind-text="truckRentalsKpis.returningSub">Truck 5 · U-Haul</div></div>
+          <div class="kpi-card"><div class="kl">Cost · MTD</div><div class="kv" data-bind-text="truckRentalsKpis.cost">$3,420</div><div class="kf" data-bind-text="truckRentalsKpis.costSub">vs $4,100 last month</div></div>
+          <div class="kpi-card bad"><div class="kl">Overdue</div><div class="kv" data-bind-text="truckRentalsKpis.overdue">0</div><div class="kf" data-bind-text="truckRentalsKpis.overdueSub">All on schedule</div></div>
+        </div>
+
+        <div class="tableview">
+          <div class="tv-head">
+            <span class="tv-title">Rentals</span>
+            <div class="tv-filters">
+              <button type="button" class="fchip active" data-tr-filter="all">All <span class="fcount" data-bind-text="metrics.fcount.7">4</span></button>
+              <button type="button" class="fchip" data-tr-filter="active">Active <span class="fcount" data-bind-text="metrics.fcount.8">2</span></button>
+              <button type="button" class="fchip" data-tr-filter="returning">Returning <span class="fcount" data-bind-text="metrics.fcount.9">1</span></button>
+              <button type="button" class="fchip" data-tr-filter="upcoming">Upcoming <span class="fcount" data-bind-text="metrics.fcount.10">1</span></button>
+            </div>
+            <button class="btn btn-primary btn-sm" style="margin-left:auto;">+ New rental</button>
+          </div>
+
+          <div class="tr-list" style="padding:14px;" data-bind="truckRentalCards"><template><div class="tr-card"><div class="tr-truck"><svg width="28" height="22" viewBox="0 0 28 22" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="18" height="12" rx="1"/><path d="M19 8h4l4 4v4H19z"/><circle cx="6" cy="18" r="2"/><circle cx="22" cy="18" r="2"/></svg></div><div><div class="tr-name">{{name}}</div><div class="tr-sub">{{sub}}</div></div><div><div class="tr-label">Period</div><div class="tr-value">{{period}}</div></div><div><div class="tr-label">Assigned</div><div class="tr-value">{{assigned}}</div></div><div><div class="tr-label">Cost</div><div class="tr-value">{{cost}} <span class="muted">/ {{days}}</span></div></div><div class="tr-actions"><span class="pill {{pillClass}}"><span class="dot"></span>{{pillLabel}}</span><button class="btn btn-secondary btn-sm">View</button></div></div></template></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
 </div>
+<!-- v12 auto-modal toolbar -->
+<div style="display:flex;gap:8px;flex-wrap:wrap;padding:0 24px 16px;">
+  <button class="s1-btn sec" data-scheduling-open="schAssignModal" type="button">Assign crew</button>
+  <button class="s1-btn sec" data-scheduling-open="schTruckModal" type="button">Add truck rental</button>
+  <button class="s1-btn sec" data-scheduling-open="schBlockOutModal" type="button">Block out crew</button>
+  <button class="s1-btn sec" data-scheduling-open="schSlotEditModal" type="button">Edit timeslot</button>
+</div>
+<div class="s1-overlay gm-overlay" id="schAssignModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Scheduling</div><h4>Assign crew</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Job id</label><input class="s1-input" type="text" name="jobId"></div>
+    <div><label class="s1-mlabel">Crew</label><input class="s1-input" type="text" name="crewId"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Assign</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="schTruckModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Scheduling</div><h4>Add truck rental</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Vendor</label><input class="s1-input" type="text" name="vendor"></div>
+    <div><label class="s1-mlabel">Size</label><input class="s1-input" type="text" name="size"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Add truck</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="schBlockOutModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Scheduling</div><h4>Block out crew</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Crew</label><input class="s1-input" type="text" name="crewId"></div>
+    <div><label class="s1-mlabel">When</label><input class="s1-input" type="date" name="when"></div>
+    <div><label class="s1-mlabel">Reason</label><input class="s1-input" type="text" name="reason"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Block out</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="schSlotEditModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Scheduling</div><h4>Edit timeslot</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Slot</label><input class="s1-input" type="text" name="slotId"></div>
+    <div><label class="s1-mlabel">Start</label><input class="s1-input" type="datetime-local" name="start"></div>
+    <div><label class="s1-mlabel">End</label><input class="s1-input" type="datetime-local" name="end"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Save</button></div>
+</div></div>
 <script src="../../core/event-bus.js"></script>
 <script src="../../core/state-store.js"></script>
 <script src="../../core/schema.js"></script>
@@ -59,5 +1409,86 @@
 <script src="../../core/communication.api.js"></script>
 <script src="../../core/communication.js"></script>
 <script src="../../core/render.js"></script>
+<script src="../../core/standard-page.js"></script>
+<script src="../../core/google-places.js"></script>
 <script src="./module.js"></script>
-</body></html>
+<script>
+  // Build hour header (12am..11pm)
+  (function() {
+    var hours = document.getElementById('tlHours');
+    if (!hours) return;
+    var nowH = 14; // 2pm for the demo
+    for (var i = 0; i < 24; i++) {
+      var h = document.createElement('div');
+      h.className = 'tl-hour';
+      if (i >= 6 && i < 20) h.classList.add('hr-shaded');
+      if (i === nowH) h.classList.add('hr-now');
+      var label = i === 0 ? '12am' : (i < 12 ? (i + 'am') : (i === 12 ? '12pm' : (i - 12) + 'pm'));
+      h.textContent = label;
+      hours.appendChild(h);
+    }
+    // Build lane backgrounds
+    document.querySelectorAll('.lane').forEach(function(lane) {
+      for (var i = 0; i < 24; i++) {
+        var cell = document.createElement('div');
+        cell.className = 'lane-cell';
+        if (i >= 6 && i < 20) cell.classList.add('shaded');
+        lane.appendChild(cell);
+      }
+      // Now line
+      var now = document.createElement('div');
+      now.className = 'tl-now';
+      now.style.left = 'calc(var(--hr-w) * ' + (nowH + 18/60) + ')';
+      lane.appendChild(now);
+    });
+  })();
+
+  // Tab switching
+  (function() {
+    var tabs = document.querySelectorAll('#schedTabs .sched-tab');
+    var panes = document.querySelectorAll('.tab-pane');
+    tabs.forEach(function(t) {
+      t.addEventListener('click', function() {
+        var target = t.dataset.tab;
+        tabs.forEach(function(x) { x.classList.toggle('active', x === t); });
+        panes.forEach(function(p) { p.classList.toggle('active', p.dataset.pane === target); });
+      });
+    });
+  })();
+
+  // Sub-tab visual toggles (filter chips, content tabs, etc.)
+  document.querySelectorAll('.content-tabs, .jobs-subtabs, .tv-filters, .seg').forEach(function(group) {
+    var items = group.querySelectorAll('.content-tab, .jobs-subtab, .fchip, button');
+    items.forEach(function(b) {
+      b.addEventListener('click', function() {
+        items.forEach(function(x) { x.classList.toggle('active', x === b); });
+      });
+    });
+  });
+
+  // Resource panel: add a per-row toggle + click handler
+  document.querySelectorAll('.r-list .r-row').forEach(function(row) {
+    if (row.querySelector('.toggle')) return;
+    var t = document.createElement('span');
+    t.className = 'toggle on';
+    t.title = 'Toggle availability for today';
+    t.addEventListener('click', function(ev) {
+      ev.stopPropagation();
+      t.classList.toggle('on');
+      row.classList.toggle('disabled', !t.classList.contains('on'));
+    });
+    row.appendChild(t);
+  });
+
+  // Right panel job-card → Job Detail
+  document.querySelectorAll('.jobs-list .job-card').forEach(function(c) {
+    c.style.cursor = 'pointer';
+    c.addEventListener('click', function() { window.location.href = 'Job Detail.html'; });
+  });
+  document.querySelectorAll('.tv-table tbody tr').forEach(function(r) {
+    r.style.cursor = 'pointer';
+    r.addEventListener('click', function() { window.location.href = 'Job Detail.html'; });
+  });
+</script>
+</body>
+</html>

@@ -4,9 +4,10 @@
   "source": "Dashboard.html",
   "fixture": "dashboard",
   "reads": [
-    "jobs","tasks","reports","auth/me",
-    "dashboard/kpis","dashboard/chart","dashboard/performers",
-    "dashboard/attention","dashboard/realtime"
+    "jobs",
+    "tasks",
+    "reports",
+    "auth/me"
   ],
   "writes": [],
   "icon": "dashboard"

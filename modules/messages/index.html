@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Messages — Redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_system.css">
+<style>
+.msg-wrap { display:grid; grid-template-columns: 340px 1fr 360px; height: calc(100vh - 56px); }
+.msg-col { background:#fff; border-right:var(--hair); display:flex; flex-direction:column; min-width:0; }
+.msg-col:last-child { border-right:0; }
+.msg-head { padding:16px 18px; border-bottom:var(--hair); }
+.msg-h1 { font-size:18px; font-weight:700; margin:0 0 10px; }
+.msg-tabs { display:flex; gap:0; border-bottom:var(--hair); }
+.msg-tab { padding:10px 12px; font-size:12px; font-weight:600; color:var(--ink-3); cursor:pointer; background:transparent; border:0; border-bottom:2px solid transparent; }
+.msg-tab.active { color:var(--terra); border-bottom-color:var(--terra); }
+.msg-filters { display:flex; gap:8px; padding:12px 14px; flex-wrap:wrap; background:var(--surface-2); border-bottom:var(--hair); }
+.msg-filters select, .msg-filters input { padding:6px 10px; border:var(--hair); border-radius:5px; font-size:12px; }
+
+.msg-list { flex:1; overflow-y:auto; }
+.msg-item { display:flex; gap:10px; padding:14px 16px; border-bottom:var(--hair); cursor:pointer; }
+.msg-item:hover { background:var(--surface-2); }
+.msg-item.active { background:var(--terra-soft); border-left:3px solid var(--terra); padding-left:13px; }
+.msg-item.unread { font-weight:600; }
+.msg-av { width:34px; height:34px; border-radius:999px; background:var(--terra); color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; flex-shrink:0; }
+.msg-body { flex:1; min-width:0; }
+.msg-top { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:2px; }
+.msg-name { font-size:13px; color:var(--ink); }
+.msg-time { font-size:11px; color:var(--ink-3); }
+.msg-subj { font-size:12.5px; color:var(--ink-2); margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.msg-snip { font-size:12px; color:var(--ink-3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.msg-tags { display:flex; gap:4px; margin-top:6px; }
+.tag { display:inline-flex; align-items:center; gap:3px; padding:1px 7px; border-radius:10px; font-size:10px; font-weight:600; }
+.tag.email { background:#DBEAFE; color:#1E40AF; }
+.tag.sms { background:#FEF3C7; color:#92400E; }
+.tag.call { background:#D1FAE5; color:#065F46; }
+.tag.opened { background:#E5E7EB; color:#374151; }
+.tag.reply { background:#FEE2E2; color:#B91C1C; }
+.dot-unread { width:8px; height:8px; border-radius:999px; background:var(--terra); flex-shrink:0; margin-top:6px; }
+
+.thread { flex:1; overflow-y:auto; padding:20px 24px; }
+.thread-head { display:flex; justify-content:space-between; align-items:flex-start; gap:14px; padding-bottom:14px; border-bottom:var(--hair); margin-bottom:18px; }
+.thread-subj { font-size:18px; font-weight:700; margin:0 0 6px; }
+.thread-meta { font-size:12px; color:var(--ink-3); }
+.bubble { padding:14px 16px; border-radius:10px; margin-bottom:14px; max-width:680px; }
+.bubble.in { background:var(--surface-2); }
+.bubble.out { background:var(--terra-soft); margin-left:auto; }
+.bubble-from { font-size:12px; font-weight:600; margin-bottom:4px; }
+.bubble-time { font-size:11px; color:var(--ink-3); margin-top:6px; }
+.composer { padding:14px 18px; border-top:var(--hair); display:flex; gap:8px; align-items:flex-end; background:#fff; }
+.composer textarea { flex:1; min-height:44px; max-height:140px; padding:10px 12px; border:var(--hair); border-radius:6px; resize:vertical; font-size:13px; outline:none; font-family:inherit; }
+
+.info-head { padding:18px; font-weight:700; font-size:14px; border-bottom:var(--hair); }
+.info-section { padding:14px 18px; border-bottom:var(--hair); }
+.info-label { font-size:11px; color:var(--ink-3); text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:4px; }
+.info-val { font-size:13px; color:var(--ink); }
+.info-actions { padding:14px 18px; display:grid; gap:8px; }
+.info-actions button { padding:9px; background:#fff; border:var(--hair); border-radius:6px; font-size:12.5px; font-weight:500; cursor:pointer; text-align:left; display:flex; align-items:center; gap:8px; }
+.info-actions button.primary { background:var(--terra); color:#fff; border:0; }
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_aesthetic.css">
+</head>
+<body>
+<div class="app" data-screen-label="Messages"><main class="page" style="padding:0;">
+    <div class="msg-wrap">
+      <div class="msg-col">
+        <div class="msg-head">
+          <h1 class="msg-h1" data-bind-text="summary">Messages</h1>
+          <div class="msg-tabs">
+            <button data-messages-filter="all" class="msg-tab active">All</button>
+            <button data-messages-filter="unread" class="msg-tab">Unread</button>
+            <button data-messages-filter="email" class="msg-tab">Email</button>
+            <button data-messages-filter="sms" class="msg-tab">SMS</button>
+            <button data-messages-filter="calls" class="msg-tab">Calls</button>
+          </div>
+        </div>
+        <div class="msg-filters">
+          <select data-bind-options="optionsOptions"><option value="All channels">All channels</option></select>
+          <select data-bind-options="optionsOptions2"><option value="All agents">All agents</option></select>
+          <select data-bind-options="optionsOptions3"><option value="All statuses">All statuses</option></select>
+        </div>
+
+        <div class="msg-list" data-bind="rows"><template><div class="msg-item {{cls}}"><div class="msg-av" style="background:{{avBg}};">{{avInitials}}</div><div class="msg-body"><div class="msg-top"><span class="msg-name">{{name}}</span><span class="msg-time">{{time}}</span></div><div class="msg-subj">{{subject}}</div><div class="msg-snip">{{snippet}}</div><div class="msg-tags"><span class="tag {{channelClass}}">{{channel}}</span><span class="tag {{statusClass}}">{{status}}</span></div></div></div></template></div>
+      </div>
+
+      <div class="msg-col" style="background:var(--surface-2);">
+        <div class="thread-head" style="background:#fff;padding:18px 24px;border-bottom:var(--hair);margin:0;">
+          <div>
+            <h2 class="thread-subj" data-bind-text="thread.subject">Re: Your moving quote</h2>
+            <div class="thread-meta" data-bind-text="thread.meta">Johanna Kuyvenhoven &lt;jkuyvenhoven94@gmail.com&gt; · Assigned to John Sales · Opened May 21, 1:02 PM</div>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <button data-comm-action="action:messages.thread.resolve" class="info-actions button" style="padding:7px 12px;border:var(--hair);border-radius:6px;font-size:12px;background:#fff;">Mark resolved</button>
+            <button data-comm-action="action:messages.snooze" class="info-actions button" style="padding:7px 12px;border:var(--hair);border-radius:6px;font-size:12px;background:#fff;">Snooze</button>
+            <button data-comm-action="action:messages.assign" class="info-actions button" style="padding:7px 12px;border:var(--hair);border-radius:6px;font-size:12px;background:#fff;">Assign…</button>
+          </div>
+        </div>
+
+        <div class="thread" data-bind="bubbles"><template><div class="bubble {{dir}}"><div class="bubble-from">{{from}}</div>{{body}}<div class="bubble-time">{{time}}</div></div></template></div>
+        </div>
+
+        <div class="composer">
+          <textarea placeholder="Type a reply… (Press Enter to send · Shift+Enter for new line)"></textarea>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <button data-comm-action="action:messages.reply.send" class="info-actions button" style="padding:8px 14px;background:var(--terra);color:#fff;border:0;border-radius:6px;font-size:12.5px;font-weight:600;">Send Email</button>
+            <button class="info-actions button" style="padding:8px 14px;background:#fff;border:var(--hair);border-radius:6px;font-size:12.5px;font-weight:500;">Insert Template</button>
+          </div>
+        </div>
+      </div>
+
+      <aside class="msg-col">
+        <div class="info-head">Customer</div>
+        <div class="info-section">
+          <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;"><div class="msg-av" style="background:#1E40AF;width:44px;height:44px;font-size:14px;" data-bind-text="customer.avInitials">JK</div><div><div style="font-weight:700;font-size:14px;" data-bind-text="customer.name">Johanna Kuyvenhoven</div><div style="font-size:12px;color:var(--ink-3);" data-bind-text="customer.status">Lead · Tentative</div></div></div>
+          <a href="Job Detail.html" style="display:inline-block;padding:8px 14px;background:var(--terra);color:#fff;border-radius:6px;font-size:12.5px;font-weight:600;">View Job</a>
+        </div>
+        <div class="info-section">
+          <div class="info-label">Email</div><div class="info-val" data-bind-text="customer.email">jkuyvenhoven94@gmail.com</div>
+          <div class="info-label">Phone</div><div class="info-val" data-bind-text="customer.phone">5879204170</div>
+          <div class="info-label">Branch</div><div class="info-val" data-bind-text="customer.branch">Vancouver Lead</div>
+          <div class="info-label">Source</div><div class="info-val" data-bind-text="customer.source">Referral</div>
+        </div>
+        <div class="info-section">
+          <div class="info-label">Open quote</div>
+          <div class="info-val" data-bind-text="quote.line">QT-2026-0588 · C$1,840.00 · Sent</div>
+          <button data-comm-action="action:messages.quote.open" class="info-actions button" style="margin-top:8px;padding:7px 12px;border:var(--hair);border-radius:6px;font-size:12px;background:#fff;width:100%;">Open Quote</button>
+        </div>
+        <div class="info-actions">
+          <button data-comm-action="action:messages.task.create" class="primary">+ Create Task</button>
+          <button data-comm-action="action:messages.callBack">📞 Call back</button>
+          <button>📧 New email</button>
+          <button>💬 New SMS</button>
+          <button data-comm-action="action:messages.followUp.schedule">📅 Schedule follow-up</button>
+          <button>📎 Attach file…</button>
+        </div>
+      </aside>
+    </div>
+  </main>
+</div><div class="s1-overlay gm-overlay" id="newThreadModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Messages</div><h4>New thread</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Subject</label><input class="s1-input" type="text" name="subject"></div>
+    <div><label class="s1-mlabel">To</label><select class="s1-select" name="toContactId" data-bind-options="contacts"><option value="">Choose…</option></select></div>
+    <div><label class="s1-mlabel">Channel</label><select class="s1-select" name="channel" data-bind-options="channels"><option value="">Choose…</option></select></div>
+    <div class="full"><label class="s1-mlabel">Message</label><textarea class="s1-textarea" name="body"></textarea></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Send</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="forwardThreadModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Messages</div><h4>Forward</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Thread id</label><input class="s1-input" type="text" name="threadId"></div>
+    <div><label class="s1-mlabel">To</label><select class="s1-select" name="toContactId" data-bind-options="contacts"><option value="">Choose…</option></select></div>
+    <div class="full"><label class="s1-mlabel">Note</label><textarea class="s1-textarea" name="note"></textarea></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Forward</button></div>
+</div></div>
+<div class="s1-overlay gm-overlay" id="archiveThreadModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
+  <div class="s1-mhead"><div><div class="s1-mkicker">Messages</div><h4>Archive thread</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mgrid">
+    <div><label class="s1-mlabel">Thread id</label><input class="s1-input" type="text" name="threadId"></div>
+    <div><label class="s1-mlabel">Reason</label><input class="s1-input" type="text" name="reason"></div>
+  </div>
+  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Archive</button></div>
+</div></div>
+<script src="../../core/event-bus.js"></script>
+<script src="../../core/state-store.js"></script>
+<script src="../../core/schema.js"></script>
+<script src="../../core/fixtures.js"></script>
+<script src="../../core/communication.mock.js"></script>
+<script src="../../core/communication.api.js"></script>
+<script src="../../core/communication.js"></script>
+<script src="../../core/render.js"></script>
+<script src="../../core/standard-page.js"></script>
+<script src="../../core/google-places.js"></script>
+<script src="./module.js"></script>
+</body>
+</html>
