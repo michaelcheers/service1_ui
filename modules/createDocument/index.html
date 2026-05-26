@@ -95,19 +95,19 @@
               <label class="cd-label">Recipients (signing order)</label>
               <div style="display:flex;flex-direction:column;gap:8px;">
                 <div style="display:grid;grid-template-columns:24px 1fr 1fr 1fr 100px auto;gap:8px;align-items:center;">
-                  <span style="font-weight:700;color:var(--ink-3);">1.</span>
-                  <input class="cd-input" type="text" placeholder="Name" value="Alice Johnson">
-                  <input class="cd-input" type="email" placeholder="Email" value="alice.johnson@gmail.com">
+                  <span style="font-weight:700;color:var(--ink-3);" data-bind-text="recipients.0.ordinal">1.</span>
+                  <input class="cd-input" type="text" placeholder="Name" data-bind-value="recipients.0.name">
+                  <input class="cd-input" type="email" placeholder="Email" data-bind-value="recipients.0.email">
                   <select class="cd-select" data-bind-options="optionsOptions2"></select>
-                  <input class="cd-input" type="text" placeholder="Order" value="1" style="text-align:center;">
+                  <input class="cd-input" type="text" placeholder="Order" data-bind-value="recipients.0.order" style="text-align:center;">
                   <button data-comm-action="action:createDocument.recipient.remove" type="button" style="padding:8px 10px;color:#B91C1C;background:transparent;border:0;font-size:13px;cursor:pointer;">Remove</button>
                 </div>
                 <div style="display:grid;grid-template-columns:24px 1fr 1fr 1fr 100px auto;gap:8px;align-items:center;">
-                  <span style="font-weight:700;color:var(--ink-3);">2.</span>
-                  <input class="cd-input" type="text" placeholder="Name" value="Admin User">
-                  <input class="cd-input" type="email" placeholder="Email" value="admin@businesscard.com">
+                  <span style="font-weight:700;color:var(--ink-3);" data-bind-text="recipients.1.ordinal">2.</span>
+                  <input class="cd-input" type="text" placeholder="Name" data-bind-value="recipients.1.name">
+                  <input class="cd-input" type="email" placeholder="Email" data-bind-value="recipients.1.email">
                   <select class="cd-select" data-bind-options="optionsOptions3"></select>
-                  <input class="cd-input" type="text" placeholder="Order" value="2" style="text-align:center;">
+                  <input class="cd-input" type="text" placeholder="Order" data-bind-value="recipients.1.order" style="text-align:center;">
                   <button data-comm-action="action:createDocument.recipient.remove" type="button" style="padding:8px 10px;color:#B91C1C;background:transparent;border:0;font-size:13px;cursor:pointer;">Remove</button>
                 </div>
               </div>

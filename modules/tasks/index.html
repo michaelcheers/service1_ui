@@ -281,12 +281,14 @@ function getTasks() {
       ['completed', 'Done']
     ];
     const out = [];
-    let idCounter = 1;
     for (const [key, status] of buckets) {
       if (Array.isArray(fx[key])) {
         for (const t of fx[key]) {
+          // Skip tasks without a real DB id — drag-update would target the
+          // wrong row otherwise. Server must emit `id` on every bucket item.
+          if (t.id == null) continue;
           out.push({
-            id:       t.id != null ? t.id : idCounter++,
+            id:       t.id,
             title:    t.name || t.title || '',
             project:  t.deal || t.tag || '',
             priority: t.priority || '',

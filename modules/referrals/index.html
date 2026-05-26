@@ -82,7 +82,7 @@
         <h2 class="ref-section-title" data-bind-text="headings.1">Recent Referral Leads</h2>
         <table class="ref-table">
           <thead><tr><th>Referrer</th><th>Customer</th><th>Service</th><th>Est. Value</th><th>Status</th><th>Commission</th><th>Date</th></tr></thead>
-          <tbody data-bind="rows"><template><tr><td><b>{{c0_name}}</b><div class="cell-light" style="font-size:11px;color:var(--ink-3);display:none"></div></td><td>{{c1_text}}</td><td>{{c2_text}}</td><td>{{c3_text}}</td><td><span class="pill-status booked">Active</span></td><td><button class="row-action">Pay</button></td></tr></template></tbody>
+          <tbody data-bind="rows"><template><tr><td><b>{{c0_name}}</b><div class="cell-light" style="font-size:11px;color:var(--ink-3);display:none"></div></td><td>{{c1_text}}</td><td>{{c2_text}}</td><td>{{c3_text}}</td><td><span class="{{c4_cls}}">{{c4_text}}</span></td><td><button class="row-action">{{c5_text}}</button></td></tr></template></tbody>
         </table>
       </div>
 
@@ -90,7 +90,7 @@
         <h2 class="ref-section-title" data-bind-text="headings.2">All Referrers</h2>
         <table class="ref-table">
           <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Company</th><th>Commission</th><th>Total Referred</th><th>Actions</th></tr></thead>
-          <tbody data-bind="payouts"><template><tr><td>{{c0_text}}</td><td>{{c1_text}}</td><td>{{c2_text}}</td><td>{{c3_text}}</td><td><span class="pill-status booked">Paid</span></td></tr></template></tbody>
+          <tbody data-bind="payouts"><template><tr><td>{{c0_text}}</td><td>{{c1_text}}</td><td>{{c2_text}}</td><td>{{c3_text}}</td><td><span class="{{c4_cls}}">{{c4_text}}</span></td></tr></template></tbody>
         </table>
       </div>
 
@@ -98,7 +98,7 @@
         <h2 class="ref-section-title" data-bind-text="headings.3">All Referral Leads</h2>
         <table class="ref-table">
           <thead><tr><th>Date</th><th>Referrer</th><th>Customer</th><th>Service</th><th>Est. Value</th><th>Status</th><th>Commission</th></tr></thead>
-          <tbody data-bind="archive"><template><tr><td><b>{{c0_name}}</b><div class="cell-light" style="font-size:11px;color:var(--ink-3);display:none"></div></td><td>{{c1_text}}</td><td>{{c2_text}}</td><td>{{c3_text}}</td><td><span class="pill-status archived">Archived</span></td><td><button class="row-action">Restore</button></td></tr></template></tbody>
+          <tbody data-bind="archive"><template><tr><td><b>{{c0_name}}</b><div class="cell-light" style="font-size:11px;color:var(--ink-3);display:none"></div></td><td>{{c1_text}}</td><td>{{c2_text}}</td><td>{{c3_text}}</td><td><span class="{{c4_cls}}">{{c4_text}}</span></td><td><button class="row-action">{{c5_text}}</button></td></tr></template></tbody>
         </table>
       </div>
     </div>

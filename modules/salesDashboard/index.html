@@ -163,11 +163,11 @@
           <section class="section" style="margin:0;">
             <div class="section-head"><div class="section-title">My Pipeline</div><span class="muted" style="font-size:12px;" data-bind-text="pipelineSummary">23 deals · $61.2k</span></div>
             <div class="funnel">
-              <div class="fn-row"><div class="fn-bar"><div class="fn-fill" style="width:35%;background:var(--ink-3);">New leads</div></div><div class="fn-count" data-bind-text="metrics.fn_count.0">8</div></div>
-              <div class="fn-row"><div class="fn-bar"><div class="fn-fill" style="width:26%;background:var(--info);">Discovery</div></div><div class="fn-count" data-bind-text="metrics.fn_count.1">6</div></div>
-              <div class="fn-row"><div class="fn-bar"><div class="fn-fill" style="width:22%;background:var(--plum);">Plan sent</div></div><div class="fn-count" data-bind-text="metrics.fn_count.2">5</div></div>
-              <div class="fn-row"><div class="fn-bar"><div class="fn-fill" style="width:13%;background:var(--warn);">Negotiation</div></div><div class="fn-count" data-bind-text="metrics.fn_count.3">3</div></div>
-              <div class="fn-row"><div class="fn-bar"><div class="fn-fill" style="width:4%;background:var(--ok);">Booked</div></div><div class="fn-count" data-bind-text="metrics.fn_count.4">1</div></div>
+              <div class="fn-row"><div class="fn-bar"><div class="fn-fill" data-bind-attr="style:funnel.0.barStyle" data-bind-text="funnel.0.label">New leads</div></div><div class="fn-count" data-bind-text="metrics.fn_count.0">8</div></div>
+              <div class="fn-row"><div class="fn-bar"><div class="fn-fill" data-bind-attr="style:funnel.1.barStyle" data-bind-text="funnel.1.label">Discovery</div></div><div class="fn-count" data-bind-text="metrics.fn_count.1">6</div></div>
+              <div class="fn-row"><div class="fn-bar"><div class="fn-fill" data-bind-attr="style:funnel.2.barStyle" data-bind-text="funnel.2.label">Plan sent</div></div><div class="fn-count" data-bind-text="metrics.fn_count.2">5</div></div>
+              <div class="fn-row"><div class="fn-bar"><div class="fn-fill" data-bind-attr="style:funnel.3.barStyle" data-bind-text="funnel.3.label">Negotiation</div></div><div class="fn-count" data-bind-text="metrics.fn_count.3">3</div></div>
+              <div class="fn-row"><div class="fn-bar"><div class="fn-fill" data-bind-attr="style:funnel.4.barStyle" data-bind-text="funnel.4.label">Booked</div></div><div class="fn-count" data-bind-text="metrics.fn_count.4">1</div></div>
             </div>
           </section>
 
@@ -209,7 +209,7 @@
       <div class="sd-pane" data-pane="pipeline">
         <section class="section" style="margin:0;">
           <div class="section-head">
-            <div class="section-title">Pipeline · 23 opportunities · $61,200</div>
+            <div class="section-title" data-bind-text="pipelineTitle">Pipeline</div>
             <div style="display:flex;gap:8px;">
               <button data-comm-action="action:salesDashboard.filter" class="btn btn-secondary">Filter</button>
               <button data-comm-action="action:salesDashboard.group-stage" class="btn btn-secondary">Group: Stage</button>
@@ -217,15 +217,15 @@
             </div>
           </div>
           <div class="kanban"><div class="kc">
-              <div class="kc-head"><div class="kc-name" style="color:var(--ink-3);">New leads</div><div class="kc-meta">8 · $21.4k</div></div><div data-bind="kanban0" style="display:contents"><template><div class="kc-card {{cls}}"><div class="kc-nm">{{name}}</div><div class="kc-sub">{{sub}}</div><div class="kc-val">{{value}}</div></div></template></div></div>
+              <div class="kc-head"><div class="kc-name" style="color:var(--ink-3);">New leads</div><div class="kc-meta" data-bind-text="kanbanMeta.0">0 · $0</div></div><div data-bind="kanban0" style="display:contents"><template><div class="kc-card"><div class="kc-nm">{{customer}}</div><div class="kc-sub">{{sub}}</div><div class="kc-val">{{amount}}</div></div></template></div></div>
             <div class="kc">
-              <div class="kc-head"><div class="kc-name" style="color:var(--info);">Discovery</div><div class="kc-meta">6 · $18.2k</div></div><div data-bind="kanban1" style="display:contents"><template><div class="kc-card {{cls}}"><div class="kc-nm">{{name}}</div><div class="kc-sub">{{sub}}</div><div class="kc-val">{{value}}</div></div></template></div></div>
+              <div class="kc-head"><div class="kc-name" style="color:var(--info);">Discovery</div><div class="kc-meta" data-bind-text="kanbanMeta.1">0 · $0</div></div><div data-bind="kanban1" style="display:contents"><template><div class="kc-card"><div class="kc-nm">{{customer}}</div><div class="kc-sub">{{sub}}</div><div class="kc-val">{{amount}}</div></div></template></div></div>
             <div class="kc">
-              <div class="kc-head"><div class="kc-name" style="color:var(--plum);">Plan sent</div><div class="kc-meta">5 · $14.6k</div></div><div data-bind="kanban2" style="display:contents"><template><div class="kc-card {{cls}}"><div class="kc-nm">{{name}}</div><div class="kc-sub">{{sub}}</div><div class="kc-val">{{value}}</div></div></template></div></div>
+              <div class="kc-head"><div class="kc-name" style="color:var(--plum);">Plan sent</div><div class="kc-meta" data-bind-text="kanbanMeta.2">0 · $0</div></div><div data-bind="kanban2" style="display:contents"><template><div class="kc-card"><div class="kc-nm">{{customer}}</div><div class="kc-sub">{{sub}}</div><div class="kc-val">{{amount}}</div></div></template></div></div>
             <div class="kc">
-              <div class="kc-head"><div class="kc-name" style="color:var(--warn);">Negotiation</div><div class="kc-meta">3 · $5.8k</div></div><div data-bind="kanban3" style="display:contents"><template><div class="kc-card {{cls}}"><div class="kc-nm">{{name}}</div><div class="kc-sub">{{sub}}</div><div class="kc-val">{{value}}</div></div></template></div></div>
+              <div class="kc-head"><div class="kc-name" style="color:var(--warn);">Negotiation</div><div class="kc-meta" data-bind-text="kanbanMeta.3">0 · $0</div></div><div data-bind="kanban3" style="display:contents"><template><div class="kc-card"><div class="kc-nm">{{customer}}</div><div class="kc-sub">{{sub}}</div><div class="kc-val">{{amount}}</div></div></template></div></div>
             <div class="kc">
-              <div class="kc-head"><div class="kc-name" style="color:var(--ok);">Booked</div><div class="kc-meta">1 · $1.2k</div></div><div data-bind="kanban4" style="display:contents"><template><div class="kc-card {{cls}}"><div class="kc-nm">{{name}}</div><div class="kc-sub">{{sub}}</div><div class="kc-val">{{value}}</div></div></template></div></div>
+              <div class="kc-head"><div class="kc-name" style="color:var(--ok);">Booked</div><div class="kc-meta" data-bind-text="kanbanMeta.4">0 · $0</div></div><div data-bind="kanban4" style="display:contents"><template><div class="kc-card"><div class="kc-nm">{{customer}}</div><div class="kc-sub">{{sub}}</div><div class="kc-val">{{amount}}</div></div></template></div></div>
           </div>
         </section>
       </div>

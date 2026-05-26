@@ -61,10 +61,10 @@
 
       <!-- 4 KPIs match original -->
       <div class="stat-group" style="margin-bottom:20px;">
-        <div class="stat-col"><div class="stat-eyebrow" data-bind-text="kpis.0.label">Total alerts (30d)</div><div class="stat-number" style="color:var(--bad);" data-bind-text="kpis.0.value">42</div><div class="stat-delta" data-bind-text="kpis.0.delta">8 red / 34 amber</div></div>
-        <div class="stat-col"><div class="stat-eyebrow" data-bind-text="kpis.1.label">HOS violations</div><div class="stat-number" style="color:var(--warn);" data-bind-text="kpis.1.value">3</div><div class="stat-delta" data-bind-text="kpis.1.delta">2 unresolved</div></div>
-        <div class="stat-col"><div class="stat-eyebrow" data-bind-text="kpis.2.label">Open incidents</div><div class="stat-number" style="color:var(--bad);" data-bind-text="kpis.2.value">3</div><div class="stat-delta" data-bind-text="kpis.2.delta">12 total incidents</div></div>
-        <div class="stat-col"><div class="stat-eyebrow" data-bind-text="kpis.3.label">Fleet compliance</div><div class="stat-number" style="color:var(--ok);" data-bind-text="kpis.3.value">94<span class="small">%</span></div><div class="stat-delta" data-bind-text="metrics.stat_delta.0">21 certs / 18 docs / 14 maint.</div></div>
+        <div class="stat-col"><div class="stat-eyebrow" data-bind-text="kpis.0.label">Total alerts (30d)</div><div class="stat-number" data-bind-attr="style:kpis.0.valueStyle" data-bind-text="kpis.0.value">42</div><div class="stat-delta" data-bind-text="kpis.0.delta">8 red / 34 amber</div></div>
+        <div class="stat-col"><div class="stat-eyebrow" data-bind-text="kpis.1.label">HOS violations</div><div class="stat-number" data-bind-attr="style:kpis.1.valueStyle" data-bind-text="kpis.1.value">3</div><div class="stat-delta" data-bind-text="kpis.1.delta">2 unresolved</div></div>
+        <div class="stat-col"><div class="stat-eyebrow" data-bind-text="kpis.2.label">Open incidents</div><div class="stat-number" data-bind-attr="style:kpis.2.valueStyle" data-bind-text="kpis.2.value">3</div><div class="stat-delta" data-bind-text="kpis.2.delta">12 total incidents</div></div>
+        <div class="stat-col"><div class="stat-eyebrow" data-bind-text="kpis.3.label">Fleet compliance</div><div class="stat-number" data-bind-attr="style:kpis.3.valueStyle" data-bind-text="kpis.3.value">94%</div><div class="stat-delta" data-bind-text="metrics.stat_delta.0">21 certs / 18 docs / 14 maint.</div></div>
       </div>
 
       <!-- 12 tabs match original -->
@@ -89,7 +89,7 @@
           <div class="sf-card-h"><div class="sf-card-t">Recent Critical Alerts</div><a class="section-link" href="#" onclick="event.preventDefault();showTab('alerts');">View all →</a></div>
           <table class="tbl">
             <thead><tr><th>Type</th><th>Driver</th><th>Vehicle</th><th class="num">Time</th><th>Severity</th><th></th></tr></thead>
-            <tbody data-bind="rows"><template><tr><td>{{c0_text}}</td><td>{{c1_text}}</td><td>{{c2_text}}</td><td>{{c3_text}}</td><td><span class="alert-sev red">RED</span></td><td><button class="btn btn-ghost">Review</button></td></tr></template></tbody>
+            <tbody data-bind="rows"><template><tr><td>{{c0_text}}</td><td>{{c1_text}}</td><td>{{c2_text}}</td><td>{{c3_text}}</td><td><span class="alert-sev {{c3_cls}}">{{c3_label}}</span></td><td><button class="btn btn-ghost">Review</button></td></tr></template></tbody>
           </table>
         </div>
 
@@ -114,7 +114,7 @@
           </div>
           <table class="tbl">
             <thead><tr><th>Type</th><th>Driver</th><th>Vehicle</th><th class="num">When</th><th>Location</th><th>Severity</th><th>Status</th><th></th></tr></thead>
-            <tbody data-bind="rows3"><template><tr><td>{{c0_text}}</td><td>{{c1_text}}</td><td>{{c2_text}}</td><td>{{c3_text}}</td><td>{{c4_text}}</td><td><span class="alert-sev red">RED</span></td><td><span class="pill warn">Open</span></td><td><button class="btn btn-ghost">View clip</button></td></tr></template></tbody>
+            <tbody data-bind="rows3"><template><tr><td>{{c0_text}}</td><td>{{c1_text}}</td><td>{{c2_text}}</td><td>{{c3_text}}</td><td>{{c4_text}}</td><td><span class="alert-sev {{c5_cls}}">{{c5_label}}</span></td><td><span class="pill {{c6_cls}}">{{c6_label}}</span></td><td><button class="btn btn-ghost">View clip</button></td></tr></template></tbody>
           </table>
         </div>
       </section>
@@ -139,7 +139,7 @@
           <div class="sf-card-h"><div class="sf-card-t">Hours of Service · current cycle</div><button data-comm-action="action:safetyDashboard.export-eld-log" class="btn btn-secondary">Export ELD log</button></div>
           <table class="tbl">
             <thead><tr><th>Driver</th><th>Status</th><th class="num">Drive time today</th><th class="num">On duty</th><th class="num">Cycle (7-day)</th><th>Compliance</th></tr></thead>
-            <tbody data-bind="rows5"><template><tr><td><b>{{c0_name}}</b><div class="cell-light" style="font-size:11px;color:var(--ink-3);display:none"></div></td><td><span class="pill">On duty</span></td><td>{{c2_text}}</td><td>{{c3_text}}</td><td>{{c4_text}}</td><td><span style="display:inline-block;width:8px;height:8px;border-radius:999px;background:{{c5_dotBg}};margin-right:6px;"></span>{{c5_text}}</td></tr></template></tbody>
+            <tbody data-bind="rows5"><template><tr><td><b>{{c0_name}}</b><div class="cell-light" style="font-size:11px;color:var(--ink-3);display:none"></div></td><td><span class="pill {{c1_cls}}">{{c1_label}}</span></td><td>{{c2_text}}</td><td>{{c3_text}}</td><td>{{c4_text}}</td><td><span style="display:inline-block;width:8px;height:8px;border-radius:999px;background:{{c5_dotBg}};margin-right:6px;"></span>{{c5_text}}</td></tr></template></tbody>
           </table>
         </div>
       </section>
@@ -150,7 +150,7 @@
           <div class="sf-card-h"><div class="sf-card-t">Incidents · last 12 months</div><button data-comm-action="action:safetyDashboard.report-incident" class="btn btn-primary">+ Report incident</button></div>
           <table class="tbl">
             <thead><tr><th>Incident #</th><th class="num">Date</th><th>Description</th><th>Severity</th><th>Crew</th><th>Status</th></tr></thead>
-            <tbody data-bind="rows6"><template><tr><td>{{c0_text}}</td><td>{{c1_text}}</td><td>{{c2_text}}</td><td><span class="alert-sev red">HIGH</span></td><td>{{c4_text}}</td><td><span class="pill warn">Open · day 4</span></td></tr></template></tbody>
+            <tbody data-bind="rows6"><template><tr><td>{{c0_text}}</td><td>{{c1_text}}</td><td>{{c2_text}}</td><td><span class="alert-sev {{c3_cls}}">{{c3_label}}</span></td><td>{{c4_text}}</td><td><span class="pill {{c5_cls}}">{{c5_label}}</span></td></tr></template></tbody>
           </table>
         </div>
       </section>
@@ -161,7 +161,7 @@
           <div class="sf-card-h"><div class="sf-card-t">Roadside &amp; DOT inspections</div><button data-comm-action="action:safetyDashboard.filter" class="btn btn-secondary">Filter</button></div>
           <table class="tbl">
             <thead><tr><th>Inspection #</th><th class="num">Date</th><th>Vehicle</th><th>Driver</th><th>Inspector</th><th>Result</th><th>Violations</th></tr></thead>
-            <tbody data-bind="rows7"><template><tr><td>{{c0_text}}</td><td>{{c1_text}}</td><td>{{c2_text}}</td><td>{{c3_text}}</td><td>{{c4_text}}</td><td><span class="pill warn">Yellow sticker</span></td><td>{{c6_text}}</td></tr></template></tbody>
+            <tbody data-bind="rows7"><template><tr><td>{{c0_text}}</td><td>{{c1_text}}</td><td>{{c2_text}}</td><td>{{c3_text}}</td><td>{{c4_text}}</td><td><span class="pill {{c5_cls}}">{{c5_label}}</span></td><td>{{c6_text}}</td></tr></template></tbody>
           </table>
         </div>
       </section>
@@ -172,7 +172,7 @@
           <div class="sf-card-h"><div class="sf-card-t">Vehicle compliance</div><button data-comm-action="action:safetyDashboard.upload-doc" class="btn btn-primary">+ Upload doc</button></div>
           <table class="tbl">
             <thead><tr><th>Vehicle</th><th>Plate</th><th>Annual inspection</th><th>Insurance</th><th>Reg. expiry</th><th>Maintenance</th></tr></thead>
-            <tbody data-bind="rows8"><template><tr><td><b>{{c0_name}}</b> · {{c0_extra}}</td><td>{{c1_text}}</td><td><span class="pill ok">Current · Jun 14</span></td><td><span class="pill ok">Current</span></td><td>{{c4_text}}</td><td><span class="pill ok">On schedule</span></td></tr></template></tbody>
+            <tbody data-bind="rows8"><template><tr><td><b>{{c0_name}}</b> · {{c0_extra}}</td><td>{{c1_text}}</td><td><span class="pill {{c2_cls}}">{{c2_label}}</span></td><td><span class="pill {{c3_cls}}">{{c3_label}}</span></td><td>{{c4_text}}</td><td><span class="pill {{c5_cls}}">{{c5_label}}</span></td></tr></template></tbody>
           </table>
         </div>
       </section>
@@ -194,7 +194,7 @@
           <div class="sf-card-h"><div class="sf-card-t">Coaching voice messages</div><button data-comm-action="action:safetyDashboard.new-message" class="btn btn-primary">+ New message</button></div>
           <table class="tbl">
             <thead><tr><th>From</th><th>To</th><th>Subject</th><th class="num">Duration</th><th class="num">Sent</th><th>Status</th></tr></thead>
-            <tbody data-bind="rows10"><template><tr><td>{{c0_text}}</td><td>{{c1_text}}</td><td>{{c2_text}}</td><td>{{c3_text}}</td><td>{{c4_text}}</td><td><span class="pill warn">Unread</span></td></tr></template></tbody>
+            <tbody data-bind="rows10"><template><tr><td>{{c0_text}}</td><td>{{c1_text}}</td><td>{{c2_text}}</td><td>{{c3_text}}</td><td>{{c4_text}}</td><td><span class="pill {{c5_cls}}">{{c5_label}}</span></td></tr></template></tbody>
           </table>
         </div>
       </section>

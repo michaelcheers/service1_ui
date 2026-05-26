@@ -222,16 +222,16 @@ const INLINE_DOCS = ([
 
 const BADGE_LBL = { process:'In process', completed:'Completed', draft:'Draft', cancelled:'Cancelled', needs:'Needs your signature', internal:'Internal', template:'Template', fieldsigned:'Field signed' };
 
-// Read fresh on every render so host state-pushes land. The live backend ships
-// an entirely different shape (`files` array with `name`/`category`/`owner`)
-// so when the backend `docs` array is present we just trust it; otherwise we
-// fall back to the inline default. Field-level normalization is intentionally
-// minimal here because the backend POCO doesn't expose the `tabs`/`status`
-// shape this view filters on — see TODO above.
+// Read fresh on every render so host state-pushes land. Backend BuildS1State
+// emits a `docs[]` array matching this reader's exact field names
+// (id, ext, title, to, date, status, statusLabel, statusClass, tabs). When
+// the backend is offline (no fixtures available and not on prod) fall back
+// to the bundled INLINE_DOCS so devs see something.
 function getDocs() {
   const IS_PROD = /(^|\.)service1\.app$/i.test(location.hostname);
-  const raw = (window.S1 && window.S1.fixtures && window.S1.fixtures["documents"] && Array.isArray(window.S1.fixtures["documents"].docs) && window.S1.fixtures["documents"].docs.length)
-    ? window.S1.fixtures["documents"].docs
+  const state = (window.S1 && window.S1.fixtures && window.S1.fixtures["documents"]) || null;
+  const raw = (state && Array.isArray(state.docs) && state.docs.length)
+    ? state.docs
     : (IS_PROD ? [] : INLINE_DOCS);
   return raw.map(d => {
     // Ensure `tabs` is always an array so .includes() works even if the
@@ -240,7 +240,12 @@ function getDocs() {
     if (!Array.isArray(tabs)) {
       tabs = d.status ? ['all', d.status] : ['all'];
     }
-    return Object.assign({}, d, { tabs });
+    // Status label/class come from server. Fall back to local lookup only
+    // when binding-gap demo data is used.
+    const statusLabel = d.statusLabel || BADGE_LBL[d.status] || d.status || '';
+    const statusClass = d.statusClass || ('di-badge ' + (d.status || ''));
+    const extClass    = d.extClass    || ('di-ext ' + (d.ext || ''));
+    return Object.assign({}, d, { tabs, statusLabel, statusClass, extClass });
   });
 }
 
@@ -259,13 +264,13 @@ function render(tab) {
   }
   list.innerHTML = shown.map(d => `
     <div class="di-row" data-id="${d.id}">
-      <div class="di-ext ${d.ext}">${d.ext.toUpperCase()}</div>
+      <div class="${d.extClass}">${(d.ext||'').toUpperCase()}</div>
       <div>
         <div class="di-title">${d.title}</div>
         <div class="di-sub">To: ${d.to}</div>
       </div>
       <div class="di-meta">${d.date}</div>
-      <div><span class="di-badge ${d.status}">${BADGE_LBL[d.status]}</span></div>
+      <div><span class="${d.statusClass}">${d.statusLabel}</span></div>
       <div class="di-meta" style="font-size:11.5px;color:var(--ink-3);">#${d.id}</div>
       <div class="di-view-wrap">
         <button class="di-view-btn" onclick="event.stopPropagation();toggleDd(this);">View <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="6 9 12 15 18 9"/></svg></button>
@@ -310,11 +315,11 @@ document.getElementById('diList').addEventListener('click', e => {
     <div style="background:#fff;border-radius:12px;max-width:640px;width:100%;max-height:84vh;overflow:auto;box-shadow:0 24px 60px -16px rgba(15,23,42,.4);">
       <div style="padding:22px 26px 16px;border-bottom:var(--hair);display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
         <div style="display:flex;gap:14px;align-items:flex-start;">
-          <div class="di-ext ${d.ext}" style="width:42px;height:48px;font-size:11px;">${d.ext.toUpperCase()}</div>
+          <div class="${d.extClass}" style="width:42px;height:48px;font-size:11px;">${(d.ext||'').toUpperCase()}</div>
           <div>
             <div style="font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;">Document · #${d.id}</div>
             <h2 style="margin:6px 0 8px;font-size:20px;font-weight:700;letter-spacing:-0.01em;">${d.title}</h2>
-            <span class="di-badge ${d.status}">${BADGE_LBL[d.status]}</span>
+            <span class="${d.statusClass}">${d.statusLabel}</span>
           </div>
         </div>
         <button class="x" style="border:0;background:transparent;font-size:24px;color:var(--ink-3);cursor:pointer;line-height:1;">×</button>

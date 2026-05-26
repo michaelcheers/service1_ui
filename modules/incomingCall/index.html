@@ -43,17 +43,17 @@
 <div class="app" data-screen-label="Incoming Call"><main class="page" style="padding:0;">
     <div class="ic-stage">
       <div class="ic-card">
-        <div class="ic-status"><span class="pulse"></span>Incoming Call</div>
-        <div class="ic-av">JK</div>
-        <h1 class="ic-name" data-bind-text="summary"><span data-bind-text="caller.name">Johanna Kuyvenhoven</span></h1>
-        <p class="ic-num">+1 (587) 920-4170</p>
-        <p class="ic-line">Ringing on <b>+1 (416) 555-0119</b> · Vancouver Lead</p>
+        <div class="ic-status"><span class="pulse"></span><span data-bind-text="summary">Incoming Call</span></div>
+        <div class="ic-av" data-bind-text="caller.initials">JK</div>
+        <h1 class="ic-name"><span data-bind-text="caller.name">Johanna Kuyvenhoven</span></h1>
+        <p class="ic-num" data-bind-text="caller.number">+1 (587) 920-4170</p>
+        <p class="ic-line" data-bind-text="caller.lineLabel">Ringing on +1 (416) 555-0119 · Vancouver Lead</p>
 
         <div class="ic-meta">
-          <div class="ic-meta-item"><div class="l">Status</div><div class="v">Lead · Tentative</div></div>
-          <div class="ic-meta-item"><div class="l">Last contact</div><div class="v">SMS · Yesterday</div></div>
-          <div class="ic-meta-item"><div class="l">Open quote</div><div class="v">QT-2026-0588 · C$1,840</div></div>
-          <div class="ic-meta-item"><div class="l">Assigned to</div><div class="v">John Sales</div></div>
+          <div class="ic-meta-item"><div class="l">Status</div><div class="v" data-bind-text="caller.status">Lead · Tentative</div></div>
+          <div class="ic-meta-item"><div class="l">Last contact</div><div class="v" data-bind-text="caller.lastContact">SMS · Yesterday</div></div>
+          <div class="ic-meta-item"><div class="l">Open quote</div><div class="v" data-bind-text="quote.display">QT-2026-0588 · C$1,840</div></div>
+          <div class="ic-meta-item"><div class="l">Assigned to</div><div class="v" data-bind-text="caller.assignedTo">John Sales</div></div>
         </div>
 
         <div class="ic-actions">
@@ -71,10 +71,7 @@
 
         <div class="ic-history">
           <div class="ic-history-title">Recent contact history</div>
-          <div class="ic-history-row"><span>📧 Email · Re: Your moving quote</span><span style="color:var(--ink-3);">2 hours ago</span></div>
-          <div class="ic-history-row"><span>📞 Inbound call · 4m 21s</span><span style="color:var(--ink-3);">Yesterday</span></div>
-          <div class="ic-history-row"><span>💬 SMS · "Sounds good"</span><span style="color:var(--ink-3);">2 days ago</span></div>
-          <div class="ic-history-row"><span>📧 Email · Quote sent</span><span style="color:var(--ink-3);">3 days ago</span></div>
+          <div data-bind="recentHistory"><template><div class="ic-history-row"><span>{{icon}} {{text}}</span><span style="color:var(--ink-3);">{{when}}</span></div></template></div>
         </div>
       </div>
     </div>
