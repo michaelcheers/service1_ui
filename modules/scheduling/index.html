@@ -871,9 +871,9 @@ a { color: inherit; text-decoration: none; }
         <div class="ph-title">Scheduling</div>
         <div class="ph-loc-wrap" style="position:relative;">
           <button data-scheduling-filter="all" class="ph-loc" id="phLocBtn" aria-haspopup="listbox" aria-expanded="false">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <span class="ph-loc-pin"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
             <span class="ph-loc-label" data-bind-text="header.locationLabel">All locations</span>
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            <span class="ph-loc-caret"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
           </button>
           <div class="ph-loc-menu" id="phLocMenu" role="listbox" hidden
                style="position:absolute;top:100%;left:0;margin-top:6px;background:#fff;border:1px solid var(--line-2,#e5e7eb);border-radius:10px;box-shadow:0 12px 28px rgba(0,0,0,0.12);min-width:220px;padding:6px;z-index:60;">
@@ -895,7 +895,7 @@ a { color: inherit; text-decoration: none; }
         <div class="date-strip">
           <button title="Previous"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button>
           <span class="date-cur" role="button" tabindex="0" style="cursor:pointer;">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <span class="date-cur-ico"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
             <span data-bind-text="header.date" data-tz-time="header.now" data-tz-format="date">Sat · May 16, 2026</span>
           </span>
           <button title="Next"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></button>
@@ -905,10 +905,10 @@ a { color: inherit; text-decoration: none; }
 
       <nav class="sched-tabs" id="schedTabs">
         <button class="sched-tab" data-tab="resource-calendar">Resource Calendar</button>
-        <button class="sched-tab active" data-tab="scheduling">Scheduling <span class="count" data-bind-text="metrics.count.0">4</span></button>
-        <button class="sched-tab" data-tab="customer-confirmations">Customer Confirmations <span class="count warn" data-bind-text="metrics.count.1">2</span></button>
-        <button class="sched-tab" data-tab="team-confirmations">Team Confirmations <span class="count warn" data-bind-text="metrics.count.2">1</span></button>
-        <button class="sched-tab" data-tab="day-off">Day Off Requests <span class="count warn" data-bind-text="metrics.count.3">3</span></button>
+        <button class="sched-tab active" data-tab="scheduling">Scheduling <span data-bind-attr="class:metrics.countCls.0" data-bind-text="metrics.count.0">4</span></button>
+        <button class="sched-tab" data-tab="customer-confirmations">Customer Confirmations <span data-bind-attr="class:metrics.countCls.1" data-bind-text="metrics.count.1">2</span></button>
+        <button class="sched-tab" data-tab="team-confirmations">Team Confirmations <span data-bind-attr="class:metrics.countCls.2" data-bind-text="metrics.count.2">1</span></button>
+        <button class="sched-tab" data-tab="day-off">Day Off Requests <span data-bind-attr="class:metrics.countCls.3" data-bind-text="metrics.count.3">3</span></button>
         <button class="sched-tab" data-tab="truck-rentals">Truck Rentals</button>
       </nav>
     </header>
@@ -964,7 +964,7 @@ a { color: inherit; text-decoration: none; }
             <span class="lg"><span class="sw" style="background:var(--gold);"></span> Pending confirmation</span>
             <span class="lg"><span class="sw" style="background:var(--info);"></span> Meeting</span>
             <span class="lg"><span class="sw" style="background:var(--bad);"></span> Conflict</span>
-            <span class="lg" style="margin-left:auto;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> <span data-bind-text="metrics.legend_now.0" data-tz-time="header.now" data-tz-format="now">Now · 2:18 PM</span></span>
+            <span class="lg" style="margin-left:auto;"><span class="lg-ico"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span> <span data-bind-text="metrics.legend_now.0" data-tz-time="header.now" data-tz-format="now">Now · 2:18 PM</span></span>
           </div>
 
           <div class="tl-scroll">
@@ -978,8 +978,8 @@ a { color: inherit; text-decoration: none; }
               <div class="crew-cell" data-team-idx="0">
                 <div class="crew-name"><span class="dot" style="background:var(--terra);"></span><span contenteditable="true" spellcheck="false" style="outline:none;border-radius:3px;padding:1px 4px;" title="Click to rename team" data-bind-text="teams.0.name">Team Alpha</span></div>
                 <div class="crew-meta">
-                  <span class="chip"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/></svg><span data-bind-text="teams.0.chip1">2</span></span>
-                  <span class="chip"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="14" height="11" rx="2"/><path d="M16 10h4l2 3v4h-6z"/></svg><span data-bind-text="teams.0.chip2">1</span></span>
+                  <span class="chip"><span class="chip-ico"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/></svg></span><span data-bind-text="teams.0.chip1">2</span></span>
+                  <span class="chip"><span class="chip-ico"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="14" height="11" rx="2"/><path d="M16 10h4l2 3v4h-6z"/></svg></span><span data-bind-text="teams.0.chip2">1</span></span>
                   <span class="chip" style="background:var(--terra-soft);color:var(--terra);" data-bind-text="teams.0.chipCap">26 ft</span>
                 </div>
               </div>
@@ -1000,8 +1000,8 @@ a { color: inherit; text-decoration: none; }
               <div class="crew-cell" data-team-idx="1">
                 <div class="crew-name"><span class="dot" style="background:var(--info);"></span><span contenteditable="true" spellcheck="false" style="outline:none;border-radius:3px;padding:1px 4px;" title="Click to rename team" data-bind-text="teams.1.name">Team Blue</span></div>
                 <div class="crew-meta">
-                  <span class="chip"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/></svg><span data-bind-text="teams.1.chip1">2</span></span>
-                  <span class="chip"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="14" height="11" rx="2"/><path d="M16 10h4l2 3v4h-6z"/></svg><span data-bind-text="teams.1.chip2">1</span></span>
+                  <span class="chip"><span class="chip-ico"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/></svg></span><span data-bind-text="teams.1.chip1">2</span></span>
+                  <span class="chip"><span class="chip-ico"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="14" height="11" rx="2"/><path d="M16 10h4l2 3v4h-6z"/></svg></span><span data-bind-text="teams.1.chip2">1</span></span>
                   <span class="chip" style="background:var(--info-bg);color:var(--info);" data-bind-text="teams.1.chipCap">14 ft</span>
                 </div>
               </div>
@@ -1035,8 +1035,8 @@ a { color: inherit; text-decoration: none; }
               <div class="crew-cell" data-team-idx="3">
                 <div class="crew-name"><span class="dot" style="background:var(--teal);"></span><span contenteditable="true" spellcheck="false" style="outline:none;border-radius:3px;padding:1px 4px;" title="Click to rename team" data-bind-text="teams.3.name">Team Teal</span></div>
                 <div class="crew-meta">
-                  <span class="chip"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/></svg><span data-bind-text="teams.3.chip1">3</span></span>
-                  <span class="chip"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="14" height="11" rx="2"/><path d="M16 10h4l2 3v4h-6z"/></svg><span data-bind-text="teams.3.chip2">1</span></span>
+                  <span class="chip"><span class="chip-ico"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/></svg></span><span data-bind-text="teams.3.chip1">3</span></span>
+                  <span class="chip"><span class="chip-ico"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="14" height="11" rx="2"/><path d="M16 10h4l2 3v4h-6z"/></svg></span><span data-bind-text="teams.3.chip2">1</span></span>
                   <span class="chip" style="background:var(--teal-bg);color:var(--teal);" data-bind-text="teams.3.chipCap">26 ft</span>
                 </div>
               </div>

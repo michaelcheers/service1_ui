@@ -180,13 +180,13 @@
 
         <table class="pnl-table">
           <thead><tr><th>Item</th><th class="r">Current period</th><th class="r">Compare</th><th class="r">Change</th></tr></thead>
-          <tbody data-bind="rows"><template><tr><td>{{c0_text}}</td><td>{{c1_text}}</td><td>{{c2_text}}</td><td><span class="pnl-change up">+18.2%</span></td></tr></template></tbody>
+          <tbody data-bind="rows"><template><tr><td>{{c0_text}}</td><td>{{c1_text}}</td><td>{{c2_text}}</td><td><span class="{{c3_cls}}">{{c3_text}}</span></td></tr></template></tbody>
         </table>
 
         <div class="margin-footer">
-          <div class="margin-chip"><span class="l">Gross margin</span><span class="v" style="color:var(--ok);">75.4%</span></div>
-          <div class="margin-chip"><span class="l">Operating margin</span><span class="v" style="color:var(--ok);">57.7%</span></div>
-          <div class="margin-chip"><span class="l">Net margin</span><span class="v" style="color:var(--ok);">58.5%</span></div>
+          <div class="margin-chip"><span class="l">Gross margin</span><span class="v" data-bind-attr="style:margins.grossStyle" data-bind-text="margins.gross">—</span></div>
+          <div class="margin-chip"><span class="l">Operating margin</span><span class="v" data-bind-attr="style:margins.opStyle" data-bind-text="margins.op">—</span></div>
+          <div class="margin-chip"><span class="l">Net margin</span><span class="v" data-bind-attr="style:margins.netStyle" data-bind-text="margins.net">—</span></div>
           <div class="margin-chip add" onclick="document.getElementById('addMetricModal').classList.add('open')">+ Add metric</div>
         </div>
       </section>
@@ -217,7 +217,7 @@
           </div>
           <table class="tbl">
             <thead><tr><th>Status</th><th>Period</th><th class="num">Staff</th><th class="num">Earnings</th><th class="num">Bonuses</th><th class="num">Deductions</th><th class="num">Net Revenue</th><th></th></tr></thead>
-            <tbody data-bind="rows3"><template><tr class="payroll-period-row" onclick="openPayrollPeriod(this)" data-period="Pay Period May 11 – May 24, 2026">
+            <tbody data-bind="rows3"><template><tr class="payroll-period-row" onclick="openPayrollPeriod(this)" data-period="{{c0_period}}">
                 <td><span class="pill" style="background:{{c0_bg}};color:{{c0_fg}};">{{c0_label}}</span></td>
                 <td><b>{{c1_name}}</b></td>
                 <td class="num">{{c2_text}}</td>
@@ -256,16 +256,14 @@
             <thead><tr>
               <th>Name</th><th class="num">Moves</th><th class="num">Earnings</th><th class="num">Tips</th><th class="num">Commission</th><th class="num">Bonuses</th><th class="num">Deductions</th><th class="num">Total Due</th><th class="num" style="width:160px;">Paid</th><th class="num">Balance</th>
             </tr></thead>
-            <tbody data-bind="rows5"><template><tr><td><span class="payroll-caret">▸</span><b>Balaji Sukumar</b><span class="payroll-hrs">8 hrs</span></td><td>{{c1_text}}</td><td>{{c2_text}}</td><td>{{c3_text}}</td><td>{{c4_text}}</td><td>{{c5_text}}</td><td>{{c6_text}}</td><td><b>{{c7_name}}</b><div class="cell-light" style="font-size:11px;color:var(--ink-3);display:none"></div></td><td><div class="payroll-paid"><input type="number" placeholder="0.00" value="{{c8_amount}}"><button class="btn btn-secondary btn-sm">Save</button></div></td><td>{{c9_text}}</td></tr></template></tbody>
+            <tbody data-bind="rows5"><template><tr><td><span class="payroll-caret">▸</span><b>{{c0_name}}</b><span class="payroll-hrs">{{c0_text}}</span></td><td>{{c1_text}}</td><td>{{c2_text}}</td><td>{{c3_text}}</td><td>{{c4_text}}</td><td>{{c5_text}}</td><td>{{c6_text}}</td><td><b>{{c7_name}}</b><div class="cell-light" style="font-size:11px;color:var(--ink-3);display:none"></div></td><td><div class="payroll-paid"><input type="number" placeholder="0.00" value="{{c8_amount}}"><button class="btn btn-secondary btn-sm">Save</button></div></td><td>{{c9_text}}</td></tr></template></tbody>
           </table>
 
           <div style="margin-top:32px;">
             <div class="acct-header"><div class="acct-title-row"><span class="acct-title" style="font-size:18px;">Department Summary</span></div></div>
             <table class="tbl">
               <thead><tr><th>Department</th><th class="num">Staff</th><th class="num">Earnings</th><th class="num">Total Due</th><th class="num">Paid</th><th class="num">Balance</th></tr></thead>
-              <tbody>
-                <tr><td>Unassigned</td><td class="num">5</td><td class="num">C$1,621.00</td><td class="num">C$1,621.00</td><td class="num" style="color:var(--ok);">C$0.00</td><td class="num" style="color:var(--bad);">C$1,621.00</td></tr>
-              </tbody>
+              <tbody data-bind="rows10"><template><tr><td>{{c0_text}}</td><td class="num">{{c1_text}}</td><td class="num">{{c2_text}}</td><td class="num">{{c3_text}}</td><td class="num" style="color:var(--ok);">{{c4_text}}</td><td class="num" style="color:var(--bad);">{{c5_text}}</td></tr></template></tbody>
             </table>
           </div>
         </div>
@@ -298,9 +296,9 @@
         <div id="pettyEmpty" style="display:none;padding:60px 20px;text-align:center;color:var(--ink-3);background:#fff;border:var(--hair);border-radius:8px;margin-top:8px;">No transactions found. <a href="#" onclick="event.preventDefault();document.getElementById('recordTransactionModal').classList.add('open');" style="color:var(--terra);font-weight:600;">Record one →</a></div>
 
         <div class="petty-summary">
-          <div class="petty-summary-cell"><div class="l">Cash Balance</div><div class="v">C$385.60</div></div>
-          <div class="petty-summary-cell"><div class="l">Cash In</div><div class="v" style="color:var(--ok);">+C$200.00</div></div>
-          <div class="petty-summary-cell"><div class="l">Cash Out</div><div class="v" style="color:var(--bad);">−C$106.00</div></div>
+          <div class="petty-summary-cell"><div class="l">Cash Balance</div><div class="v" data-bind-text="pettyCash.balance">C$0.00</div></div>
+          <div class="petty-summary-cell"><div class="l">Cash In</div><div class="v" style="color:var(--ok);" data-bind-text="pettyCash.cashIn">C$0.00</div></div>
+          <div class="petty-summary-cell"><div class="l">Cash Out</div><div class="v" style="color:var(--bad);" data-bind-text="pettyCash.cashOut">C$0.00</div></div>
         </div>
       </section>
 

@@ -1369,8 +1369,8 @@ select.gp2-input {
           <div class="h-eyebrow">
             <span data-bind-text="header.dealLabel">Deal · 17826-1</span>
             <span class="sep">·</span>
-            <span class="pill"><span class="dot"></span><span data-bind-text="header.statusPill">Scheduled</span></span>
-            <span class="pill warn"><span class="dot"></span><span data-bind-text="header.claimPill">Unclaimed</span></span>
+            <span class="pill" data-bind-attr="class:header.statusPillClass"><span class="dot"></span><span data-bind-text="header.statusPill">Scheduled</span></span>
+            <span class="pill warn" data-bind-attr="class:header.claimPillClass"><span class="dot"></span><span data-bind-text="header.claimPill">Unclaimed</span></span>
           </div>
           <h1 class="h-name"><span data-bind-text="deal.customer">Alice Johnson</span><button class="edit" title="Edit customer">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -1811,22 +1811,22 @@ select.gp2-input {
               <div class="kpi-card">
                 <div class="kpi-label" data-bind-text="kpis.0.label">Revenue</div>
                 <div class="kpi-value"><span data-bind-text="deal.totalShort">$2,768</span><span class="kpi-cents" data-bind-text="metrics.kpi_cents.0">.50</span></div>
-                <div class="kpi-foot ok" data-bind-text="metrics.kpi_foot.0">Finalized</div>
+                <div class="kpi-foot ok" data-bind-attr="class:metrics.kpi_foot_class.0" data-bind-text="metrics.kpi_foot.0">Finalized</div>
               </div>
               <div class="kpi-card">
                 <div class="kpi-label" data-bind-text="kpis.1.label">Cost</div>
                 <div class="kpi-value"><span data-bind-text="financials2.costValue">$640</span><span class="kpi-cents" data-bind-text="metrics.kpi_cents.1">.00</span></div>
-                <div class="kpi-foot" data-bind-text="metrics.kpi_foot.1">Materials + fuel</div>
+                <div class="kpi-foot" data-bind-attr="class:metrics.kpi_foot_class.1" data-bind-text="metrics.kpi_foot.1">Materials + fuel</div>
               </div>
               <div class="kpi-card">
                 <div class="kpi-label" data-bind-text="kpis.2.label">Wages</div>
                 <div class="kpi-value"><span data-bind-text="financials2.wagesValue">$420</span><span class="kpi-cents" data-bind-text="metrics.kpi_cents.2">.00</span></div>
-                <div class="kpi-foot" data-bind-text="metrics.kpi_foot.2">2 employees · 10h</div>
+                <div class="kpi-foot" data-bind-attr="class:metrics.kpi_foot_class.2" data-bind-text="metrics.kpi_foot.2">2 employees · 10h</div>
               </div>
               <div class="kpi-card kpi-emph">
                 <div class="kpi-label" data-bind-text="kpis.3.label">Margin</div>
                 <div class="kpi-value"><span data-bind-text="financials2.marginValue">$1,708</span><span class="kpi-cents" data-bind-text="metrics.kpi_cents.3">.50</span></div>
-                <div class="kpi-foot ok" data-bind-text="metrics.kpi_foot.3">61.7% margin</div>
+                <div class="kpi-foot ok" data-bind-attr="class:metrics.kpi_foot_class.3" data-bind-text="metrics.kpi_foot.3">61.7% margin</div>
               </div>
             </div>
           </section>
@@ -1953,7 +1953,7 @@ select.gp2-input {
               <div style="flex:1;min-width:0;">
                 <div style="display:flex;align-items:center;gap:10px;">
                   <h2 style="margin:0;font-size:20px;font-weight:600;" data-bind-text="headings.1"><span data-bind-text="deal.customer">Alice Johnson</span></h2>
-                  <span class="pill ok"><span class="dot"></span><span data-bind-text="customer.statusPill">Active customer</span></span>
+                  <span class="pill ok" data-bind-attr="class:customer.statusPillClass"><span class="dot"></span><span data-bind-text="customer.statusPill">Active customer</span></span>
                 </div>
                 <div class="muted" style="margin-top:4px;font-size:12px;" data-bind-text="customer.sinceLine">Customer since Jan 4, 2026 · Referred by Tim Walsh</div>
                 <div style="display:flex;gap:6px;margin-top:10px;">
@@ -2023,7 +2023,7 @@ select.gp2-input {
                   <div style="font-weight:500;" data-bind-text="route.summary">Local move · Toronto → Hamilton</div>
                   <div class="deal-sub muted"><span data-bind-text="deal.sub">Created Jan 4 · Jan 12, 2026</span></div>
                 </div>
-                <span class="pill"><span class="dot"></span>Scheduled</span>
+                <span class="pill" data-bind-attr="class:header.statusPillClass"><span class="dot"></span><span data-bind-text="header.statusPill">Scheduled</span></span>
                 <div class="deal-amt"><span data-bind-text="deal.totalPays">$2,768.50</span></div>
                 <span class="deal-arr">→</span>
               </a>

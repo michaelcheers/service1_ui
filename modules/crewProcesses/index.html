@@ -23,6 +23,8 @@
 .cpw-pill.active { background:var(--ok-soft); color:var(--ok); }
 .cpw-pill.default { background:var(--terra-soft); color:var(--terra); }
 .cpw-pill.inactive { background:var(--surface-2); color:var(--ink-3); }
+.cpw-pill.cpw-pill-hidden { display:none; }
+.cpw-card.cpw-card-hidden { display:none; }
 
 .cpw-steps { display:flex; flex-direction:column; gap:8px; padding-top:14px; border-top:var(--hair); margin-top:14px; }
 .cpw-step { display:grid; grid-template-columns:24px 1fr auto; gap:10px; align-items:center; font-size:12.5px; }
@@ -64,105 +66,109 @@
         </div>
       </div>
 
-      <!-- List of process templates -->
+      <!-- List of process templates. Four indexed slots
+           (processes.0…processes.3). Server pads to 4 with hidden cards so
+           empty slots collapse. Status / default / required class strings
+           are emitted as full classes by the server so the HTML doesn't
+           encode direction or severity. -->
       <div id="cpwList">
-        <div class="cpw-card">
+
+        <div data-bind-attr="class:processes.0.cardClass">
           <div class="cpw-card-head">
             <div>
-              <div class="cpw-card-title">Standard Job Process</div>
-              <div class="cpw-card-desc">Default end-to-end process for a typical residential local move</div>
-              <div class="cpw-card-meta"><span><b>9</b> steps</span><span><b>~35 min</b> avg</span><span>Used <b>248</b> times this month</span></div>
+              <div class="cpw-card-title"><span data-bind-text="processes.0.title"></span></div>
+              <div class="cpw-card-desc"><span data-bind-text="processes.0.subtitle"></span></div>
+              <div class="cpw-card-meta"><span data-bind-text="processes.0.meta"></span></div>
             </div>
             <div style="display:flex;align-items:flex-start;gap:6px;flex-shrink:0;">
-              <span class="cpw-pill active">Active</span>
-              <span class="cpw-pill default">Default</span>
+              <span data-bind-attr="class:processes.0.statusClass" data-bind-text="processes.0.statusText"></span>
+              <span data-bind-attr="class:processes.0.badgeClass" data-bind-text="processes.0.badgeText"></span>
             </div>
           </div>
-          <div class="cpw-steps">
-            <div class="cpw-step"><span class="cpw-step-num">1</span><div><b>Sign contracts</b> · confirm scope with customer</div><span class="cpw-step-req">Required</span></div>
-            <div class="cpw-step"><span class="cpw-step-num">2</span><div><b>Do walkthrough</b> · photograph rooms &amp; items</div><span class="cpw-step-req">Required</span></div>
-            <div class="cpw-step"><span class="cpw-step-num">3</span><div><b>Pad &amp; wrap furniture</b></div><span class="cpw-step-req">Required</span></div>
-            <div class="cpw-step"><span class="cpw-step-num">4</span><div><b>Load truck</b> · count items into manifest</div><span class="cpw-step-req">Required</span></div>
-            <div class="cpw-step"><span class="cpw-step-num">5</span><div><b>Drive to destination</b></div><span class="cpw-step-opt">Auto</span></div>
-            <div class="cpw-step"><span class="cpw-step-num">6</span><div><b>Destination walkthrough</b></div><span class="cpw-step-req">Required</span></div>
-            <div class="cpw-step"><span class="cpw-step-num">7</span><div><b>Unload &amp; place</b></div><span class="cpw-step-req">Required</span></div>
-            <div class="cpw-step"><span class="cpw-step-num">8</span><div><b>Damage report</b> · if applicable</div><span class="cpw-step-opt">Optional</span></div>
-            <div class="cpw-step"><span class="cpw-step-num">9</span><div><b>Customer signoff &amp; photos</b></div><span class="cpw-step-req">Required</span></div>
+          <div class="cpw-steps" data-bind="processes.0.steps">
+            <template>
+              <div class="cpw-step"><span class="cpw-step-num">{{num}}</span><div><b>{{label}}</b>{{detail}}</div><span class="{{reqClass}}">{{reqText}}</span></div>
+            </template>
           </div>
           <div class="cpw-actions" style="margin-top:14px;justify-content:flex-end;">
-            <button data-comm-action="action:crewProcesses.duplicate">Duplicate</button>
-            <button>Edit</button>
-            <button data-comm-action="action:crewProcesses.delete" class="danger">Delete</button>
+            <button data-bind-attr="data-comm-action:processes.0.secondaryActionResource"><span data-bind-text="processes.0.secondaryAction"></span></button>
+            <button><span data-bind-text="processes.0.primaryAction"></span></button>
+            <button data-comm-action="action:crewProcesses.delete" data-bind-attr="data-record-id:processes.0.id" class="danger">Delete</button>
           </div>
         </div>
 
-        <div class="cpw-card">
+        <div data-bind-attr="class:processes.1.cardClass">
           <div class="cpw-card-head">
             <div>
-              <div class="cpw-card-title">Commercial inventory move</div>
-              <div class="cpw-card-desc">For office, retail and warehouse jobs — adds inventory labels &amp; sign-off</div>
-              <div class="cpw-card-meta"><span><b>12</b> steps</span><span><b>~55 min</b> avg</span><span>Used <b>22</b> times this month</span></div>
+              <div class="cpw-card-title"><span data-bind-text="processes.1.title"></span></div>
+              <div class="cpw-card-desc"><span data-bind-text="processes.1.subtitle"></span></div>
+              <div class="cpw-card-meta"><span data-bind-text="processes.1.meta"></span></div>
             </div>
             <div style="display:flex;align-items:flex-start;gap:6px;flex-shrink:0;">
-              <span class="cpw-pill active">Active</span>
+              <span data-bind-attr="class:processes.1.statusClass" data-bind-text="processes.1.statusText"></span>
+              <span data-bind-attr="class:processes.1.badgeClass" data-bind-text="processes.1.badgeText"></span>
             </div>
           </div>
-          <div class="cpw-steps">
-            <div class="cpw-step"><span class="cpw-step-num">1</span><div><b>Pre-arrival call</b></div><span class="cpw-step-req">Required</span></div>
-            <div class="cpw-step"><span class="cpw-step-num">2</span><div><b>On-site inventory verification</b></div><span class="cpw-step-req">Required</span></div>
-            <div class="cpw-step"><span class="cpw-step-num">3</span><div><b>Server rack labeling</b></div><span class="cpw-step-req">Required</span></div>
-            <div class="cpw-step"><span class="cpw-step-num">4</span><div><b>Photo: each labeled item</b></div><span class="cpw-step-req">Required</span></div>
-            <div class="cpw-step"><span class="cpw-step-num">5</span><div><b>Pad &amp; wrap</b></div><span class="cpw-step-req">Required</span></div>
-            <div class="cpw-step"><span class="cpw-step-num">6</span><div>+ 7 more steps</div><span class="cpw-step-opt">…</span></div>
+          <div class="cpw-steps" data-bind="processes.1.steps">
+            <template>
+              <div class="cpw-step"><span class="cpw-step-num">{{num}}</span><div><b>{{label}}</b>{{detail}}</div><span class="{{reqClass}}">{{reqText}}</span></div>
+            </template>
           </div>
           <div class="cpw-actions" style="margin-top:14px;justify-content:flex-end;">
-            <button data-comm-action="action:crewProcesses.duplicate">Duplicate</button>
-            <button>Edit</button>
-            <button data-comm-action="action:crewProcesses.delete" class="danger">Delete</button>
+            <button data-bind-attr="data-comm-action:processes.1.secondaryActionResource"><span data-bind-text="processes.1.secondaryAction"></span></button>
+            <button><span data-bind-text="processes.1.primaryAction"></span></button>
+            <button data-comm-action="action:crewProcesses.delete" data-bind-attr="data-record-id:processes.1.id" class="danger">Delete</button>
           </div>
         </div>
 
-        <div class="cpw-card">
+        <div data-bind-attr="class:processes.2.cardClass">
           <div class="cpw-card-head">
             <div>
-              <div class="cpw-card-title">Box delivery only</div>
-              <div class="cpw-card-desc">Short process for box deliveries to customer addresses</div>
-              <div class="cpw-card-meta"><span><b>4</b> steps</span><span><b>~12 min</b> avg</span><span>Used <b>38</b> times this month</span></div>
+              <div class="cpw-card-title"><span data-bind-text="processes.2.title"></span></div>
+              <div class="cpw-card-desc"><span data-bind-text="processes.2.subtitle"></span></div>
+              <div class="cpw-card-meta"><span data-bind-text="processes.2.meta"></span></div>
             </div>
             <div style="display:flex;align-items:flex-start;gap:6px;flex-shrink:0;">
-              <span class="cpw-pill active">Active</span>
+              <span data-bind-attr="class:processes.2.statusClass" data-bind-text="processes.2.statusText"></span>
+              <span data-bind-attr="class:processes.2.badgeClass" data-bind-text="processes.2.badgeText"></span>
             </div>
           </div>
-          <div class="cpw-steps">
-            <div class="cpw-step"><span class="cpw-step-num">1</span><div><b>Customer call</b> · confirm address &amp; receiver</div><span class="cpw-step-req">Required</span></div>
-            <div class="cpw-step"><span class="cpw-step-num">2</span><div><b>Photo: box count loaded</b></div><span class="cpw-step-req">Required</span></div>
-            <div class="cpw-step"><span class="cpw-step-num">3</span><div><b>Customer signoff at delivery</b></div><span class="cpw-step-req">Required</span></div>
-            <div class="cpw-step"><span class="cpw-step-num">4</span><div><b>Photo: dropoff complete</b></div><span class="cpw-step-req">Required</span></div>
+          <div class="cpw-steps" data-bind="processes.2.steps">
+            <template>
+              <div class="cpw-step"><span class="cpw-step-num">{{num}}</span><div><b>{{label}}</b>{{detail}}</div><span class="{{reqClass}}">{{reqText}}</span></div>
+            </template>
           </div>
           <div class="cpw-actions" style="margin-top:14px;justify-content:flex-end;">
-            <button data-comm-action="action:crewProcesses.duplicate">Duplicate</button>
-            <button>Edit</button>
-            <button data-comm-action="action:crewProcesses.delete" class="danger">Delete</button>
+            <button data-bind-attr="data-comm-action:processes.2.secondaryActionResource"><span data-bind-text="processes.2.secondaryAction"></span></button>
+            <button><span data-bind-text="processes.2.primaryAction"></span></button>
+            <button data-comm-action="action:crewProcesses.delete" data-bind-attr="data-record-id:processes.2.id" class="danger">Delete</button>
           </div>
         </div>
 
-        <div class="cpw-card">
+        <div data-bind-attr="class:processes.3.cardClass">
           <div class="cpw-card-head">
             <div>
-              <div class="cpw-card-title">Long distance · multi-day</div>
-              <div class="cpw-card-desc">Inactive — replaced by Standard Job Process v3.2</div>
-              <div class="cpw-card-meta"><span><b>14</b> steps</span><span>Last used Mar 22, 2026</span></div>
+              <div class="cpw-card-title"><span data-bind-text="processes.3.title"></span></div>
+              <div class="cpw-card-desc"><span data-bind-text="processes.3.subtitle"></span></div>
+              <div class="cpw-card-meta"><span data-bind-text="processes.3.meta"></span></div>
             </div>
             <div style="display:flex;align-items:flex-start;gap:6px;flex-shrink:0;">
-              <span class="cpw-pill inactive">Inactive</span>
+              <span data-bind-attr="class:processes.3.statusClass" data-bind-text="processes.3.statusText"></span>
+              <span data-bind-attr="class:processes.3.badgeClass" data-bind-text="processes.3.badgeText"></span>
             </div>
           </div>
-          <div class="cpw-actions" style="justify-content:flex-end;">
-            <button data-comm-action="action:crewProcesses.restore">Restore</button>
-            <button>View</button>
-            <button data-comm-action="action:crewProcesses.delete" class="danger">Delete</button>
+          <div class="cpw-steps" data-bind="processes.3.steps">
+            <template>
+              <div class="cpw-step"><span class="cpw-step-num">{{num}}</span><div><b>{{label}}</b>{{detail}}</div><span class="{{reqClass}}">{{reqText}}</span></div>
+            </template>
+          </div>
+          <div class="cpw-actions" style="margin-top:14px;justify-content:flex-end;">
+            <button data-bind-attr="data-comm-action:processes.3.secondaryActionResource"><span data-bind-text="processes.3.secondaryAction"></span></button>
+            <button><span data-bind-text="processes.3.primaryAction"></span></button>
+            <button data-comm-action="action:crewProcesses.delete" data-bind-attr="data-record-id:processes.3.id" class="danger">Delete</button>
           </div>
         </div>
+
       </div>
 
     </div>
