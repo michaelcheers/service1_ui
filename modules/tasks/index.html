@@ -43,7 +43,10 @@
   padding: 2px 8px; border-radius: 999px;
   font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--ink-3);
 }
-.kanban-col-body { flex: 1; padding: 4px 10px 10px; display: flex; flex-direction: column; gap: 6px; }
+.kanban-col-body { flex: 1; padding: 4px 10px 10px; display: flex; flex-direction: column; gap: 6px; min-height: 60px; }
+.kanban-col-body.drag-over { background: var(--terra-soft); outline: 2px dashed var(--terra); outline-offset: -4px; border-radius: 6px; }
+.task-card[draggable="true"] { cursor: grab; }
+.task-card.dragging { opacity: 0.4; cursor: grabbing; }
 
 .task-card {
   background: #fff; border: var(--hair); border-radius: 6px;
@@ -304,7 +307,7 @@ function getTasks() {
 }
 
 function cardHTML(t) {
-  return `<div class="task-card" data-id="${t.id}">
+  return `<div class="task-card" data-id="${t.id}" draggable="true">
     <div class="task-card-title">${t.title}</div>
     <div class="task-card-meta">
       <span class="task-pill pri-${t.priority}">${t.priority}</span>
@@ -396,6 +399,66 @@ document.getElementById('boardView').addEventListener('click', e => {
 document.getElementById('listView').addEventListener('click', e => {
   const tr = e.target.closest('tr[data-id]'); if (tr) openTask(getTasks().find(x => x.id === +tr.dataset.id));
 });
+
+// Drag-and-drop between kanban columns.
+// Card drag carries the task id; column drop fires action:tasks.update-status
+// to persist the new status, then re-renders from the host's pushed state.
+(function () {
+  const board = document.getElementById('boardView');
+  let draggingId = null;
+  board.addEventListener('dragstart', e => {
+    const c = e.target.closest('.task-card[data-id]');
+    if (!c) return;
+    draggingId = +c.dataset.id;
+    e.dataTransfer.effectAllowed = 'move';
+    try { e.dataTransfer.setData('text/plain', String(draggingId)); } catch {}
+    c.classList.add('dragging');
+  });
+  board.addEventListener('dragend', e => {
+    const c = e.target.closest('.task-card[data-id]');
+    if (c) c.classList.remove('dragging');
+    board.querySelectorAll('.kanban-col-body.drag-over').forEach(el => el.classList.remove('drag-over'));
+    draggingId = null;
+  });
+  board.addEventListener('dragover', e => {
+    const col = e.target.closest('.kanban-col-body[data-col]');
+    if (!col) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (!col.classList.contains('drag-over')) {
+      board.querySelectorAll('.kanban-col-body.drag-over').forEach(el => el.classList.remove('drag-over'));
+      col.classList.add('drag-over');
+    }
+  });
+  board.addEventListener('dragleave', e => {
+    const col = e.target.closest('.kanban-col-body[data-col]');
+    if (col && !col.contains(e.relatedTarget)) col.classList.remove('drag-over');
+  });
+  board.addEventListener('drop', async e => {
+    const col = e.target.closest('.kanban-col-body[data-col]');
+    if (!col) return;
+    e.preventDefault();
+    col.classList.remove('drag-over');
+    const id = draggingId || (e.dataTransfer && +e.dataTransfer.getData('text/plain'));
+    const newStatus = col.dataset.col;
+    if (!id || !newStatus) return;
+    const tasks = getTasks();
+    const t = tasks.find(x => x.id === id);
+    if (!t || t.status === newStatus) return;
+    // Optimistic local update so the card moves immediately; host will re-push
+    // authoritative state after the RPC resolves.
+    t.status = newStatus;
+    render();
+    try {
+      await window.S1.comm.action('tasks.update-status', { id: id, status: newStatus });
+    } catch (err) {
+      console.warn('[tasks] drag persist failed:', err);
+      // Revert by re-rendering from the un-mutated source on next state push;
+      // if no push arrives (offline / RPC dead), the optimistic move stays
+      // visible until the user refreshes.
+    }
+  });
+})();
 
 // Re-render when the host pushes fresh state.
 if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
