@@ -4,8 +4,9 @@ window.comm = comm;
 window.__module_manifest = { name: "storage", title: "Storage", reads: ["documents"], writes: ["documents"] };
 
 async function load() {
-  const data = (window.S1.fixtures || {})["storage"] || {};
   for (const r of window.__module_manifest.reads) { try { await comm.get(r); } catch {} }
+  const data = (window.S1.fixtures || {})["storage"] || {};
+
   window.S1.render.bind(document, data);
   document.dispatchEvent(new CustomEvent('s1ui:ready', { detail: { module: 'storage' } }));
 }

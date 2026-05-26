@@ -4,8 +4,9 @@ window.comm = comm;
 window.__module_manifest = { name: "preOfficeTemplates", title: "Pre-Office Templates", reads: ["preoffice/templates"], writes: ["preoffice/templates"] };
 
 async function load() {
-  const data = (window.S1.fixtures || {})["preOfficeTemplates"] || {};
   for (const r of window.__module_manifest.reads) { try { await comm.get(r); } catch {} }
+  const data = (window.S1.fixtures || {})["preOfficeTemplates"] || {};
+
   window.S1.render.bind(document, data);
   document.dispatchEvent(new CustomEvent('s1ui:ready', { detail: { module: 'preOfficeTemplates' } }));
 }

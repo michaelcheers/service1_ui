@@ -4,8 +4,9 @@ window.comm = comm;
 window.__module_manifest = { name: "finance", title: "Finance", reads: ["finance/invoices","finance/payments"], writes: ["finance/invoices"] };
 
 async function load() {
-  const data = (window.S1.fixtures || {})["finance"] || {};
   for (const r of window.__module_manifest.reads) { try { await comm.get(r); } catch {} }
+  const data = (window.S1.fixtures || {})["finance"] || {};
+
   window.S1.render.bind(document, data);
   document.dispatchEvent(new CustomEvent('s1ui:ready', { detail: { module: 'finance' } }));
 }

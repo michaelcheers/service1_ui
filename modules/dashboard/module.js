@@ -9,8 +9,9 @@ window.__module_manifest = {
 };
 
 async function load() {
-  const data = (window.S1.fixtures || {})["dashboard"] || {};
   for (const r of window.__module_manifest.reads) { try { await comm.get(r); } catch {} }
+  const data = (window.S1.fixtures || {})["dashboard"] || {};
+
   window.S1.render.bind(document, data);
   document.dispatchEvent(new CustomEvent('s1ui:ready', { detail: { module: 'dashboard' } }));
 }

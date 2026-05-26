@@ -47,6 +47,28 @@
   }
 
   const mode = detectMode();
+
+  // Hard guarantee: on prod (*.service1.app) the demo fixture bundle must never
+  // render to a real user. fixtures.js populates window.S1.fixtures with demo
+  // content as a design preview; module.js does
+  //   const data = (window.S1.fixtures || {})[name] || {};
+  //   render.bind(document, data);
+  // — if the host's state push for ANY reason fails to arrive before the
+  // initial render (race, postMessage drop, BuildS1State throw, refresh after
+  // logout, etc.), the iframe would render demo data. On prod we wipe fixtures
+  // to empty objects per module so the worst case is "—" / empty bindings,
+  // never "Johanna Kuyvenhoven · $128,400". Off-prod (lab/localhost/file://)
+  // the bundle stays intact so the design preview still works.
+  try {
+    if (typeof window !== 'undefined'
+        && /(^|\.)service1\.app$/i.test(location.hostname)
+        && window.S1 && window.S1.fixtures) {
+      for (const k of Object.keys(window.S1.fixtures)) {
+        window.S1.fixtures[k] = {};
+      }
+    }
+  } catch {}
+
   const comm = mode === 'api' ? new window.S1.ApiComm() : new window.S1.MockComm();
   comm.mode = mode;
 

@@ -4,8 +4,9 @@ window.comm = comm;
 window.__module_manifest = { name: "salesFollowUps", title: "Sales follow-ups", reads: ["salesFollowUps"], writes: ["salesFollowUps"] };
 
 async function load() {
-  const data = (window.S1.fixtures || {})["salesFollowUps"] || {};
   for (const r of window.__module_manifest.reads) { try { await comm.get(r); } catch {} }
+  const data = (window.S1.fixtures || {})["salesFollowUps"] || {};
+
   window.S1.render.bind(document, data);
   document.dispatchEvent(new CustomEvent('s1ui:ready', { detail: { module: 'salesFollowUps' } }));
 }

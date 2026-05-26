@@ -4,8 +4,9 @@ window.comm = comm;
 window.__module_manifest = { name: "safetyDashboard", title: "Safety Dashboard", reads: ["safety/incidents","safety/training"], writes: ["safety/incidents"] };
 
 async function load() {
-  const data = (window.S1.fixtures || {})["safetyDashboard"] || {};
   for (const r of window.__module_manifest.reads) { try { await comm.get(r); } catch {} }
+  const data = (window.S1.fixtures || {})["safetyDashboard"] || {};
+
   window.S1.render.bind(document, data);
   document.dispatchEvent(new CustomEvent('s1ui:ready', { detail: { module: 'safetyDashboard' } }));
 }

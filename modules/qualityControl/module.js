@@ -4,8 +4,9 @@ window.comm = comm;
 window.__module_manifest = { name: "qualityControl", title: "Quality Control", reads: ["quality/incidents","quality/inspections"], writes: ["quality/incidents"] };
 
 async function load() {
-  const data = (window.S1.fixtures || {})["qualityControl"] || {};
   for (const r of window.__module_manifest.reads) { try { await comm.get(r); } catch {} }
+  const data = (window.S1.fixtures || {})["qualityControl"] || {};
+
   window.S1.render.bind(document, data);
   document.dispatchEvent(new CustomEvent('s1ui:ready', { detail: { module: 'qualityControl' } }));
 }
