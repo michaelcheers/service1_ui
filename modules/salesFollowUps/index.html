@@ -72,10 +72,10 @@
       </div>
 
       <nav class="sales-subnav">
-        <a href="SalesDashboard.html">Dashboard</a>
-        <a href="SalesNewLeads.html">New Leads</a>
-        <a href="SalesMyLeads.html">My Opportunities</a>
-        <a class="active" href="SalesFollowUps.html">Follow-Ups</a>
+        <a href="#" data-nav="/Sales/Dashboard">Dashboard</a>
+        <a href="#" data-nav="/Sales/NewLeads">New Leads</a>
+        <a href="#" data-nav="/Sales/MyLeads">My Opportunities</a>
+        <a class="active" href="#" data-nav="/Sales/FollowUps">Follow-Ups</a>
       </nav>
 
       <div class="stat-group" style="margin-bottom:24px;">
@@ -392,6 +392,14 @@ if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
     render(active ? active.dataset.filter : 'all');
   });
 }
+
+// Subnav: navigate the host, not the iframe.
+document.querySelectorAll('.sales-subnav a[data-nav]').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    window.parent.postMessage({ type: 's1ui:navigate', href: a.dataset.nav }, '*');
+  });
+});
 
 // pager click handled in module.js via server-side pagination wiring.
 </script>

@@ -18,73 +18,51 @@ const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
 const flash = window.S1.flash || ((t) => { const e = document.createElement('div'); e.textContent = t; e.style.cssText = 'position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#0A2540;color:#fff;padding:10px 16px;border-radius:6px;font-size:13px;z-index:9999;'; document.body.appendChild(e); setTimeout(() => e.remove(), 2200); });
 const safe = window.S1.safe || (async (l, fn) => { try { return await fn(); } catch (e) { flash(l + ' failed: ' + (e.message || e)); throw e; } });
 
-// Sub-tabs: All / My / Due today / Overdue / Completed
-$$('.subtabs .subtab').forEach((b, i) => {
-  b.addEventListener('click', async () => {
-    $$('.subtabs .subtab').forEach(x => x.classList.toggle('active', x === b));
-    const tab = ['all', 'mine', 'due-today', 'overdue', 'completed'][i] || 'all';
-    /* UI-only: visual toggle handled in-page; no server save */
-  });
-});
-
-// Assignee range-picker — visual only.
-
-// Filters button — use the filter chips below; no popup.
-
-// "+ New task" — v12 modal
-$$('.page-actions .btn-primary').filter(b => /new task/i.test(b.textContent)).forEach(b => {
-  b.addEventListener('click', (ev) => {
-    ev.preventDefault();
-    window.S1.modal.open('#newTaskModal');
-  });
-});
+// New Task — server-contract payload transform.
 window.S1.modal.bindForm('#newTaskModal', 'tasks.new', {
   label: 'Create task',
   successMsg: 'Task created',
   validate: (p) => p.title ? null : 'Title is required',
   transform: (p) => {
-    if (p.tags && typeof p.tags === 'string') p.tags = p.tags.split(',').map(s => s.trim()).filter(Boolean);
-    if (p.assigneeUserId === '') p.assigneeUserId = null;
-    if (p.projectId === '') p.projectId = null;
-    if (p.dueDate === '') p.dueDate = null;
+    // Tags come from the hidden JSON input populated by the chip widget.
+    try { p.tags = JSON.parse(p.tags || '[]'); } catch { p.tags = []; }
+    if (!Array.isArray(p.tags)) p.tags = [];
+    // Combine date + time into ISO timestamp.
+    if (p.dueDate) {
+      const t = p.dueTime && /^\d{2}:\d{2}/.test(p.dueTime) ? p.dueTime : '00:00';
+      p.dueDate = p.dueDate + 'T' + t + ':00';
+    } else { p.dueDate = null; }
+    delete p.dueTime;
+    // Numeric coercion + clear empties.
+    p.assigneeUserId = p.assigneeUserId === '' ? null : Number(p.assigneeUserId) || null;
+    p.projectId      = p.projectId      === '' ? null : Number(p.projectId)      || null;
+    p.linkedId       = p.linkedId       === '' ? null : Number(p.linkedId)       || null;
+    if (!p.linkedKind) { p.linkedKind = null; p.linkedId = null; }
+    if (!p.recurrenceRule) p.recurrenceRule = null;
     return p;
   },
   onSuccess: () => load()
 });
-window.S1.modal.bindForm('#snoozeTaskModal', 'tasks.snooze', { label: 'Snooze', onSuccess: () => load() });
-window.S1.modal.bindForm('#reassignTaskModal', 'tasks.reassign', { label: 'Reassign', onSuccess: () => load() });
 
-// Category filter chips
-$$('.fchips .fchip').forEach((c, i) => {
-  c.addEventListener('click', async () => {
-    $$('.fchips .fchip').forEach(x => x.classList.toggle('active', x === c));
-    const cats = ['all', 'sales', 'ops', 'service'];
-    /* UI-only: visual toggle handled in-page; no server save */
-  });
+// + Project — name + color.
+window.S1.modal.bindForm('#newProjectModal', 'tasks.new-project', {
+  label: 'Create project',
+  successMsg: 'Project created',
+  validate: (p) => p.name ? null : 'Name is required',
+  onSuccess: () => load()
 });
 
-// Row click → toggle complete (checkbox-like behavior)
-document.addEventListener('click', async (ev) => {
-  const row = ev.target.closest('tbody[data-bind] tr');
-  if (!row) return;
-  const id = row.getAttribute('data-record-id');
-  if (!id) return;
-  // Distinguish: if user clicked the "name" cell, open. If the checkbox / circle, complete.
-  if (ev.target.closest('input[type="checkbox"], .task-check, .task-circle')) {
-    await safe('Complete', async () => {
-      await comm.action('tasks.complete', { id, status: 'Done' });
-      row.style.opacity = '0.5';
-      flash('Completed');
-    });
-  } else {
-    await safe('Open task', async () => {
-      const r = await comm.action('tasks.open', { id });
-      if (r && r.navigateTo) window.location.href = r.navigateTo;
-    });
-  }
+// AI Generate — prompt only.
+window.S1.modal.bindForm('#aiGenerateModal', 'tasks.ai.generate', {
+  label: 'AI generate',
+  successMsg: 'AI generating tasks…',
+  validate: (p) => p.prompt && p.prompt.trim().length > 3 ? null : 'Describe what you want to plan',
+  onSuccess: () => load()
 });
 
-// AI fab
+// Snooze modal — already declared in index.html.
+window.S1.modal.bindForm('#snoozeTaskModal', 'tasks.snooze', { label: 'Snooze', successMsg: 'Snoozed', onSuccess: () => load() });
+window.S1.modal.bindForm('#reassignTaskModal', 'tasks.reassign', { label: 'Reassign', successMsg: 'Reassigned', onSuccess: () => load() });
 
 // Install document-level click handlers ([data-comm-action] dispatcher,
 // tab/panel switcher, etc.) provided by core/standard-page.js.

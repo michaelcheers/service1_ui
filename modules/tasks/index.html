@@ -129,9 +129,9 @@
           </div>
         </div>
         <div style="display:flex;gap:8px;">
-          <button data-comm-action="action:tasks.ai.generate" class="btn btn-secondary"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" style="margin-right:4px;vertical-align:-2px;"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>AI Generate</button>
-          <button class="btn btn-secondary">+ Project</button>
-          <button class="btn btn-primary" onclick="document.getElementById('newTaskModal').classList.add('open')">+ New Task</button>
+          <button id="btnAiGenerate" class="btn btn-secondary"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" style="margin-right:4px;vertical-align:-2px;"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>AI Generate</button>
+          <button id="btnNewProject" class="btn btn-secondary">+ Project</button>
+          <button id="btnNewTask" class="btn btn-primary">+ New Task</button>
         </div>
       </div>
 
@@ -179,7 +179,7 @@
   <div class="tm-modal">
     <div class="tm-head">
       <div class="tm-title">New Task</div>
-      <button data-modal-close class="tm-close">✕</button>
+      <button data-modal-close class="tm-close" type="button">✕</button>
     </div>
     <div class="tm-body">
       <div class="tm-grid">
@@ -187,28 +187,69 @@
         <div class="tm-field full"><label class="tm-label">Description</label><textarea name="description" class="tm-textarea" placeholder="Add more detail — context, blockers, acceptance criteria…"></textarea></div>
         <div class="tm-field"><label class="tm-label">Status</label><select name="status" class="tm-select" data-bind-options="statusOptions"></select></div>
         <div class="tm-field"><label class="tm-label">Priority</label><select name="priority" class="tm-select" data-bind-options="priorityOptions"></select></div>
-        <div class="tm-field"><label class="tm-label">Assignee</label><select name="assignee" class="tm-select" data-bind-options="assigneeOptions"><option value="Unassigned">Unassigned</option></select></div>
-        <div class="tm-field"><label class="tm-label">Project</label><select name="project" class="tm-select" data-bind-options="projectOptions"><option value="— No project —">— No project —</option></select></div>
+        <div class="tm-field"><label class="tm-label">Assignee</label><select name="assigneeUserId" class="tm-select" data-bind-options="assigneeOptions"><option value="">Unassigned</option></select></div>
+        <div class="tm-field"><label class="tm-label">Project</label><select name="projectId" class="tm-select" data-bind-options="projectOptions"><option value="">— None —</option></select></div>
         <div class="tm-field"><label class="tm-label">Due date</label><input name="dueDate" class="tm-input" type="date"></div>
         <div class="tm-field"><label class="tm-label">Due time</label><input name="dueTime" class="tm-input" type="time"></div>
-        <div class="tm-field"><label class="tm-label">Linked to</label><select name="linkedTo" class="tm-select" data-bind-options="linkedToOptions"><option value="— None —">— None —</option></select></div>
-        <div class="tm-field"><label class="tm-label">Recurrence</label><select name="recurrence" class="tm-select" data-bind-options="recurrenceOptions"><option value="None">None</option></select></div>
-        <div class="tm-field full">
-          <label class="tm-label">Tags</label>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;padding:6px 8px;border:var(--hair);border-radius:6px;">
-            <span class="tm-chip">urgent</span><span class="tm-chip">customer</span>
-            <input name="tags" style="border:0;outline:0;flex:1;padding:4px;font-size:12.5px;" placeholder="Add tag…">
-          </div>
+        <div class="tm-field"><label class="tm-label">Linked to</label><select name="linkedKind" id="linkedKind" class="tm-select" data-bind-options="linkedToOptions"><option value="">— None —</option></select></div>
+        <div class="tm-field"><label class="tm-label">Recurrence</label><select name="recurrenceRule" class="tm-select" data-bind-options="recurrenceOptions"><option value="">None</option></select></div>
+        <div class="tm-field full" id="linkedPickerField" style="display:none;">
+          <label class="tm-label">Pick <span id="linkedKindLabel">item</span></label>
+          <input id="linkedSearch" class="tm-input" type="text" placeholder="Type to search…" autocomplete="off">
+          <input type="hidden" name="linkedId" id="linkedIdHidden" value="">
+          <div id="linkedPicked" style="display:none;margin-top:4px;"></div>
+          <div id="linkedResults" style="margin-top:4px;border:var(--hair);border-radius:6px;background:#fff;max-height:180px;overflow:auto;display:none;"></div>
         </div>
         <div class="tm-field full">
-          <label class="tm-checkbox-row"><input name="tags" type="checkbox" style="accent-color:var(--terra);">Notify assignee on save</label>
-          <label class="tm-checkbox-row"><input name="notifyAssigneeOnSave" type="checkbox" style="accent-color:var(--terra);">Add to my calendar</label>
+          <label class="tm-label">Tags</label>
+          <div id="tagsBox" style="display:flex;gap:6px;flex-wrap:wrap;padding:6px 8px;border:var(--hair);border-radius:6px;align-items:center;">
+            <input id="tagInput" style="border:0;outline:0;flex:1;padding:4px;font-size:12.5px;min-width:120px;" placeholder="Type a tag and press Enter…">
+          </div>
+          <input type="hidden" name="tags" id="tagsHidden" value="[]">
+        </div>
+        <div class="tm-field full">
+          <label class="tm-checkbox-row"><input name="notifyAssigneeOnSave" type="checkbox" style="accent-color:var(--terra);">Notify assignee on save</label>
         </div>
       </div>
     </div>
     <div class="tm-actions">
-      <button data-modal-close class="btn btn-secondary">Cancel</button>
-      <button data-modal-save class="btn btn-primary">Create Task</button>
+      <button data-modal-close class="btn btn-secondary" type="button">Cancel</button>
+      <button data-modal-save class="btn btn-primary" type="button">Create Task</button>
+    </div>
+  </div>
+</div>
+
+<!-- New Project Modal -->
+<div class="tm-overlay" id="newProjectModal">
+  <div class="tm-modal" style="width:480px;">
+    <div class="tm-head">
+      <div class="tm-title">New Project</div>
+      <button data-modal-close class="tm-close" type="button">✕</button>
+    </div>
+    <div class="tm-body">
+      <div class="tm-field"><label class="tm-label">Name <span class="req">*</span></label><input name="name" class="tm-input" type="text" placeholder="e.g. Operations Q3"></div>
+      <div class="tm-field"><label class="tm-label">Color</label><input name="color" class="tm-input" type="color" value="#2563EB"></div>
+    </div>
+    <div class="tm-actions">
+      <button data-modal-close class="btn btn-secondary" type="button">Cancel</button>
+      <button data-modal-save class="btn btn-primary" type="button">Create Project</button>
+    </div>
+  </div>
+</div>
+
+<!-- AI Generate Modal -->
+<div class="tm-overlay" id="aiGenerateModal">
+  <div class="tm-modal" style="width:560px;">
+    <div class="tm-head">
+      <div class="tm-title">AI Generate Tasks</div>
+      <button data-modal-close class="tm-close" type="button">✕</button>
+    </div>
+    <div class="tm-body">
+      <div class="tm-field full"><label class="tm-label">What do you want to plan?</label><textarea name="prompt" class="tm-textarea" placeholder="Describe a project or initiative — Claude will generate a task breakdown."></textarea></div>
+    </div>
+    <div class="tm-actions">
+      <button data-modal-close class="btn btn-secondary" type="button">Cancel</button>
+      <button data-modal-save class="btn btn-primary" type="button">Generate</button>
     </div>
   </div>
 </div>
@@ -261,8 +302,9 @@ const STATUS_LABEL  = { ToDo:'To Do', InProgress:'In Progress', Review:'Review',
 // present we synthesize one from those buckets.
 function getTasks() {
   const fx = (window.S1 && window.S1.fixtures && window.S1.fixtures["tasks"]) || null;
-  if (fx && Array.isArray(fx.tasks) && fx.tasks.length) {
-    return fx.tasks.map(t => Object.assign({}, t, {
+  const flat = fx && (Array.isArray(fx.tasks) ? fx.tasks : (Array.isArray(fx.Tasks) ? fx.Tasks : null));
+  if (flat && flat.length) {
+    return flat.map(t => Object.assign({}, t, {
       title:    t.title    || t.name      || '',
       project:  t.project  || t.tag       || t.deal || '',
       priority: t.priority || '',
@@ -270,7 +312,13 @@ function getTasks() {
       av:       t.av       || t.avInitials|| '',
       avc:      t.avc      || t.avBg      || 'var(--ink-3)',
       due:      t.due      || '',
-      status:   t.status   || 'ToDo'
+      status:   t.status   || 'ToDo',
+      tags:     Array.isArray(t.tags) ? t.tags : [],
+      latestNote: t.latestNote || '',
+      snoozedUntil: t.snoozedUntil || null,
+      linkedKind: t.linkedKind || '',
+      linkedId:   t.linkedId || null,
+      linkedLabel: t.linkedLabel || ''
     }));
   }
   if (fx) {
@@ -436,9 +484,17 @@ function openTask(t) {
   statusSpan.appendChild(el('span', { className: 'dot', cssText: 'background:' + STATUS_COLORS[t.status] + ';' }));
   statusSpan.appendChild(document.createTextNode(STATUS_LABEL[t.status]));
   pills.appendChild(statusSpan);
+  if (t.snoozedUntil) {
+    const sn = el('span', { className: 'task-pill', cssText: 'background:#EFF6FF;color:#1D4ED8;', text: '💤 until ' + t.snoozedUntil });
+    pills.appendChild(sn);
+  }
+  if (Array.isArray(t.tags)) {
+    t.tags.forEach(tag => pills.appendChild(el('span', { className: 'task-pill proj', text: '#' + tag })));
+  }
   headLeft.appendChild(pills);
   head.appendChild(headLeft);
-  head.appendChild(el('button', { className: 'x', cssText: 'border:0;background:transparent;font-size:24px;color:var(--ink-3);cursor:pointer;line-height:1;', text: '×' }));
+  const closeBtn = el('button', { cssText: 'border:0;background:transparent;font-size:24px;color:var(--ink-3);cursor:pointer;line-height:1;', text: '×' });
+  head.appendChild(closeBtn);
   modal.appendChild(head);
 
   const grid = el('div', { cssText: 'display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px;' });
@@ -452,22 +508,83 @@ function openTask(t) {
   grid.appendChild(cell2);
   modal.appendChild(grid);
 
+  if (t.linkedLabel) {
+    const linkRow = el('div', { cssText: 'margin-bottom:10px;font-size:12px;color:var(--ink-2);' });
+    linkRow.appendChild(document.createTextNode('Linked to: '));
+    linkRow.appendChild(el('b', { text: t.linkedLabel }));
+    modal.appendChild(linkRow);
+  }
+
+  modal.appendChild(el('div', { cssText: 'font-size:11px;color:var(--ink-3);margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em;font-weight:600;', text: 'Notes' }));
   const ta = document.createElement('textarea');
   ta.setAttribute('placeholder', 'Add a note…');
-  ta.style.cssText = 'width:100%;min-height:80px;padding:10px;border:var(--hair);border-radius:8px;font-size:13px;outline:none;resize:vertical;font-family:inherit;';
+  ta.value = t.latestNote || '';
+  ta.style.cssText = 'width:100%;min-height:80px;padding:10px;border:var(--hair);border-radius:8px;font-size:13px;outline:none;resize:vertical;font-family:inherit;box-sizing:border-box;';
   modal.appendChild(ta);
+  const savedLabel = el('div', { cssText: 'font-size:11px;color:var(--ink-3);margin-top:4px;text-align:right;min-height:14px;' });
+  modal.appendChild(savedLabel);
+
+  // Debounced autosave
+  let saveTimer = null;
+  ta.addEventListener('input', () => {
+    if (saveTimer) clearTimeout(saveTimer);
+    savedLabel.textContent = 'Saving…';
+    savedLabel.style.color = 'var(--ink-3)';
+    saveTimer = setTimeout(async () => {
+      const body = ta.value.trim();
+      if (!body) { savedLabel.textContent = ''; return; }
+      try {
+        await window.S1.comm.action('tasks.add-note', { taskId: t.id, body });
+        const now = new Date();
+        const hh = String(now.getHours()).padStart(2,'0');
+        const mm = String(now.getMinutes()).padStart(2,'0');
+        savedLabel.textContent = '✓ Saved · ' + hh + ':' + mm;
+        savedLabel.style.color = '#16a34a';
+      } catch (e) {
+        savedLabel.textContent = 'Save failed';
+        savedLabel.style.color = 'var(--bad)';
+      }
+    }, 600);
+  });
 
   const actions = el('div', { cssText: 'display:flex;justify-content:flex-end;gap:8px;margin-top:14px;' });
-  actions.appendChild(el('button', { className: 'btn btn-secondary x', text: 'Cancel' }));
-  actions.appendChild(el('button', { className: 'btn btn-secondary', attrs: { 'data-comm-action': 'action:tasks.snooze' }, text: 'Snooze' }));
-  actions.appendChild(el('button', { className: 'btn btn-primary', attrs: { 'data-comm-action': 'action:tasks.complete' }, text: 'Mark complete' }));
+  const cancelBtn = el('button', { className: 'btn btn-secondary', text: 'Cancel' });
+  const snoozeBtn = el('button', { className: 'btn btn-secondary', text: 'Snooze' });
+  const completeBtn = el('button', { className: 'btn btn-primary', text: 'Mark complete' });
+  actions.appendChild(cancelBtn);
+  actions.appendChild(snoozeBtn);
+  actions.appendChild(completeBtn);
   modal.appendChild(actions);
 
   m.appendChild(modal);
   document.body.appendChild(m);
   const close = () => m.remove();
   m.addEventListener('click', e2 => { if (e2.target === m) close(); });
-  m.querySelectorAll('.x').forEach(b => b.addEventListener('click', close));
+  closeBtn.addEventListener('click', close);
+  cancelBtn.addEventListener('click', close);
+  snoozeBtn.addEventListener('click', () => {
+    close();
+    const snModal = document.getElementById('snoozeTaskModal');
+    if (!snModal) return;
+    const idInp = snModal.querySelector('input[name="id"]');
+    const untilInp = snModal.querySelector('input[name="until"]');
+    if (idInp) idInp.value = t.id;
+    if (untilInp) {
+      const tomorrow = new Date(Date.now() + 86400000);
+      untilInp.value = tomorrow.toISOString().slice(0, 10);
+    }
+    window.S1.modal.open('#snoozeTaskModal');
+  });
+  completeBtn.addEventListener('click', async () => {
+    try {
+      await window.S1.comm.action('tasks.complete', { id: t.id, status: 'Done' });
+      window.S1.flash && window.S1.flash('Completed');
+      close();
+      try { await window.S1.comm.get('tasks'); } catch {}
+    } catch (e) {
+      window.S1.flash && window.S1.flash('Complete failed: ' + (e.message || e));
+    }
+  });
 }
 document.getElementById('boardView').addEventListener('click', e => {
   const c = e.target.closest('.task-card[data-id]'); if (c) openTask(getTasks().find(x => x.id === +c.dataset.id));
@@ -540,6 +657,146 @@ document.getElementById('listView').addEventListener('click', e => {
 if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
   window.S1.bus.on('state:replaced', render);
 }
+
+// ──────────────── Header buttons → open modals via S1.modal ────────────────
+function openModal(sel) {
+  if (window.S1 && window.S1.modal && window.S1.modal.open) return window.S1.modal.open(sel);
+  const elx = document.querySelector(sel);
+  if (elx) elx.classList.add('open');
+}
+document.getElementById('btnNewTask').addEventListener('click', () => { resetNewTaskModal(); openModal('#newTaskModal'); });
+document.getElementById('btnNewProject').addEventListener('click', () => openModal('#newProjectModal'));
+document.getElementById('btnAiGenerate').addEventListener('click', () => openModal('#aiGenerateModal'));
+
+// ──────────────── Tag chip widget ────────────────
+const tagsState = [];
+function renderTags() {
+  const box = document.getElementById('tagsBox');
+  const input = document.getElementById('tagInput');
+  // Remove existing chips, keep the input
+  Array.from(box.querySelectorAll('.tm-tag-chip')).forEach(c => c.remove());
+  tagsState.forEach(name => {
+    const chip = el('span', { className: 'tm-chip tm-tag-chip', cssText: 'display:inline-flex;align-items:center;gap:4px;' });
+    chip.appendChild(document.createTextNode(name));
+    const x = el('span', { cssText: 'cursor:pointer;color:#6b7280;font-weight:700;margin-left:2px;', text: '✕' });
+    x.addEventListener('click', () => {
+      const i = tagsState.indexOf(name);
+      if (i >= 0) tagsState.splice(i, 1);
+      renderTags();
+    });
+    chip.appendChild(x);
+    box.insertBefore(chip, input);
+  });
+  document.getElementById('tagsHidden').value = JSON.stringify(tagsState);
+}
+document.getElementById('tagInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    const v = e.target.value.trim().slice(0, 32);
+    if (v && !tagsState.some(x => x.toLowerCase() === v.toLowerCase())) {
+      tagsState.push(v);
+      renderTags();
+    }
+    e.target.value = '';
+  } else if (e.key === 'Backspace' && !e.target.value && tagsState.length) {
+    tagsState.pop();
+    renderTags();
+  }
+});
+
+function resetNewTaskModal() {
+  const m = document.getElementById('newTaskModal');
+  if (!m) return;
+  m.querySelectorAll('input[type="text"], input[type="date"], input[type="time"], textarea').forEach(i => { i.value = ''; });
+  m.querySelectorAll('input[type="checkbox"]').forEach(i => { i.checked = false; });
+  tagsState.length = 0;
+  renderTags();
+  document.getElementById('linkedKind').value = '';
+  document.getElementById('linkedIdHidden').value = '';
+  document.getElementById('linkedPickerField').style.display = 'none';
+  document.getElementById('linkedPicked').style.display = 'none';
+  document.getElementById('linkedPicked').replaceChildren();
+  document.getElementById('linkedResults').style.display = 'none';
+  document.getElementById('linkedResults').replaceChildren();
+}
+
+// ──────────────── Linked-entity picker ────────────────
+const linkedKindSel = document.getElementById('linkedKind');
+const linkedSearchInp = document.getElementById('linkedSearch');
+const linkedPickerField = document.getElementById('linkedPickerField');
+const linkedKindLabel = document.getElementById('linkedKindLabel');
+const linkedIdHidden = document.getElementById('linkedIdHidden');
+const linkedResults = document.getElementById('linkedResults');
+const linkedPicked = document.getElementById('linkedPicked');
+
+linkedKindSel.addEventListener('change', () => {
+  const k = linkedKindSel.value;
+  linkedIdHidden.value = '';
+  linkedPicked.style.display = 'none';
+  linkedPicked.replaceChildren();
+  linkedResults.style.display = 'none';
+  linkedResults.replaceChildren();
+  if (!k) {
+    linkedPickerField.style.display = 'none';
+    return;
+  }
+  linkedPickerField.style.display = '';
+  linkedKindLabel.textContent = k;
+  linkedSearchInp.value = '';
+  linkedSearchInp.focus();
+});
+
+let linkedSearchTimer = null;
+linkedSearchInp.addEventListener('input', () => {
+  if (linkedSearchTimer) clearTimeout(linkedSearchTimer);
+  const q = linkedSearchInp.value.trim();
+  if (!q) { linkedResults.style.display = 'none'; linkedResults.replaceChildren(); return; }
+  linkedSearchTimer = setTimeout(async () => {
+    try {
+      const r = await window.S1.comm.action('tasks.search-linked', { kind: linkedKindSel.value, q });
+      linkedResults.replaceChildren();
+      const rows = (r && r.results) || [];
+      if (!rows.length) {
+        const empty = el('div', { cssText: 'padding:8px 10px;color:var(--ink-3);font-size:12px;', text: 'No results.' });
+        linkedResults.appendChild(empty);
+      } else {
+        rows.forEach(row => {
+          const item = el('div', { cssText: 'padding:8px 10px;border-bottom:1px solid #f1f5f9;font-size:12px;cursor:pointer;' });
+          const main = el('b', { text: row.label || '' });
+          item.appendChild(main);
+          if (row.sub) {
+            item.appendChild(document.createTextNode(' · '));
+            item.appendChild(document.createTextNode(row.sub));
+          }
+          item.addEventListener('mouseenter', () => item.style.background = '#f9fafb');
+          item.addEventListener('mouseleave', () => item.style.background = '');
+          item.addEventListener('click', () => {
+            linkedIdHidden.value = row.id;
+            const chip = el('span', { className: 'tm-chip', cssText: 'display:inline-flex;align-items:center;gap:4px;' });
+            chip.appendChild(document.createTextNode((row.label || '') + (row.sub ? ' · ' + row.sub : '')));
+            const x = el('span', { cssText: 'cursor:pointer;color:#6b7280;font-weight:700;', text: '✕' });
+            x.addEventListener('click', () => {
+              linkedIdHidden.value = '';
+              linkedPicked.replaceChildren();
+              linkedPicked.style.display = 'none';
+              linkedSearchInp.style.display = '';
+            });
+            chip.appendChild(x);
+            linkedPicked.replaceChildren(chip);
+            linkedPicked.style.display = '';
+            linkedSearchInp.style.display = 'none';
+            linkedResults.style.display = 'none';
+            linkedResults.replaceChildren();
+          });
+          linkedResults.appendChild(item);
+        });
+      }
+      linkedResults.style.display = '';
+    } catch (e) {
+      console.warn('[tasks] search-linked failed:', e);
+    }
+  }, 200);
+});
 </script>
 
 <div class="s1-overlay" id="snoozeTaskModal" role="dialog" aria-modal="true"><div class="s1-modal"><div class="s1-mhead"><div><h4>Snooze task</h4></div><button class="s1-x" data-modal-close type="button">×</button></div><div class="s1-mgrid"><div class="full"><label class="s1-mlabel">Task id</label><input class="s1-input" type="text" name="id"></div><div class="full"><label class="s1-mlabel">Snooze until</label><input class="s1-input" type="date" name="until"></div><div class="full"><label class="s1-mlabel">Note (optional)</label><textarea class="s1-textarea" name="note"></textarea></div></div><div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Snooze</button></div></div></div>

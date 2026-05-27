@@ -58,16 +58,16 @@
           <span class="muted" data-bind-text="subtitle">593 total · 8 hot · 4 grabbed today</span>
         </div>
         <div class="page-actions">
-          <button data-comm-action="action:salesNewLeads.import" class="btn btn-secondary">Import CSV</button>
-          <a href="CreateCustomer.html" class="btn btn-primary" style="text-decoration:none;display:inline-flex;align-items:center;">+ New lead</a>
+          <button id="nlImportBtn" class="btn btn-secondary">Import CSV</button>
+          <button id="nlNewLead" class="btn btn-primary" style="display:inline-flex;align-items:center;">+ New lead</button>
         </div>
       </div>
 
       <nav class="sales-subnav">
-        <a href="SalesDashboard.html">Dashboard</a>
-        <a class="active" href="SalesNewLeads.html">New Leads</a>
-        <a href="SalesMyLeads.html">My Opportunities</a>
-        <a href="SalesFollowUps.html">Follow-Ups</a>
+        <a href="#" data-nav="/Sales/Dashboard">Dashboard</a>
+        <a class="active" href="#" data-nav="/Sales/NewLeads">New Leads</a>
+        <a href="#" data-nav="/Sales/MyLeads">My Opportunities</a>
+        <a href="#" data-nav="/Sales/FollowUps">Follow-Ups</a>
       </nav>
 
       <div class="stat-group" style="margin-bottom:24px;">
@@ -84,7 +84,7 @@
           <button class="fchip" data-filter="warm">Warm <span class="fc-count" data-bind-text="metrics.fc_count.3">173</span></button>
         </div>
         <div class="grow"></div>
-        <select class="field-select" style="width:160px;" data-bind-options="optionsOptions"><option value="All sources">All sources</option></select>
+        <select class="field-select" id="nlSourceSel" style="width:160px;" data-bind-options="sources"><option value="">All sources</option></select>
         <input class="search-input" placeholder="Search name, phone…" id="nlSearch">
       </div>
 
@@ -113,13 +113,22 @@
   <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Decline</button></div>
 </div></div>
 <div class="s1-overlay gm-overlay" id="bulkImportLeadsModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
-  <div class="s1-mhead"><div><div class="s1-mkicker">New leads</div><h4>Bulk import</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
-  <div class="s1-mgrid">
-    <div><label class="s1-mlabel">Source</label><select class="s1-select" name="source" data-bind-options="sources"><option value="">Choose…</option></select></div>
-    <div><label class="s1-mlabel">Count</label><input class="s1-input" type="text" name="count"></div>
-    <div class="full"><label class="s1-mlabel">Notes</label><textarea class="s1-textarea" name="notes"></textarea></div>
+  <div class="s1-mhead"><div><div class="s1-mkicker">New leads</div><h4>Import leads from CSV</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div id="nlImportStep1" style="padding:14px 0;">
+    <div style="font-size:13px;color:var(--ink-3);margin-bottom:12px;">Pick a CSV file to import. The first row should be column headers.</div>
+    <input id="nlCsvFileInput" type="file" accept=".csv,text/csv" style="display:none;">
+    <button id="nlCsvPickBtn" type="button" class="s1-btn pri">Choose CSV file…</button>
+    <div id="nlCsvStatus" style="margin-top:10px;font-size:12px;color:var(--ink-3);"></div>
   </div>
-  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Import</button></div>
+  <div id="nlImportStep2" style="display:none;">
+    <div id="nlImportSummary" style="font-size:12px;color:var(--ink-3);margin:6px 0 10px;"></div>
+    <table class="tbl" id="nlMappingTbl"><thead><tr><th>CSV column</th><th>Maps to</th><th>Sample value</th></tr></thead><tbody></tbody></table>
+    <div style="font-size:11px;color:var(--ink-3);margin-top:8px;">Columns mapped to <em>Notes</em> are concatenated as <code>"{header}: {value}"</code> per row.</div>
+  </div>
+  <div class="s1-mfoot">
+    <button class="s1-btn sec" data-modal-close type="button">Cancel</button>
+    <button class="s1-btn pri" id="nlImportConfirm" type="button" style="display:none;">Import</button>
+  </div>
 </div></div>
 <script src="../../core/event-bus.js"></script>
 <script src="../../core/state-store.js"></script>
@@ -218,7 +227,7 @@ function renderLeads(filter, q) {
     card.appendChild(det);
 
     const actions = makeEl('div', { className: 'nl-actions' });
-    actions.appendChild(makeEl('button', { className: 'btn-grab', text: 'Grab Lead', attrs: { 'data-comm-action': 'action:salesNewLeads.grab-lead', 'data-action': 'grab' } }));
+    actions.appendChild(makeEl('button', { className: 'btn-grab', text: 'Grab Lead', attrs: { 'data-action': 'grab' } }));
     actions.appendChild(makeEl('button', { className: 'btn-more', text: '⋯', attrs: { 'data-action': 'more' } }));
     card.appendChild(actions);
 
@@ -235,23 +244,33 @@ document.querySelectorAll('#nlChips .fchip').forEach(c => c.addEventListener('cl
   activeFilter = c.dataset.filter;
   refresh();
 }));
-document.getElementById('nlSearch').addEventListener('input', e => { activeQuery = e.target.value.trim().toLowerCase(); refresh(); });
+let searchTimer = null;
+document.getElementById('nlSearch').addEventListener('input', e => {
+  activeQuery = e.target.value.trim().toLowerCase();
+  refresh();
+  if (searchTimer) clearTimeout(searchTimer);
+  const q = e.target.value;
+  searchTimer = setTimeout(async () => {
+    try { await window.S1.comm.save('salesNewLeads.search', { q }); }
+    catch {}
+  }, 250);
+});
 
-// Click a card → open detail modal; click Grab → toast
-document.getElementById('nlGrid').addEventListener('click', e => {
-  const btnGrab = e.target.closest('[data-action="grab"]');
-  if (btnGrab) {
-    e.stopPropagation();
-    const card = btnGrab.closest('.nl-card');
-    btnGrab.textContent = '✓ Grabbed';
-    btnGrab.style.background = 'var(--ok)';
-    setTimeout(() => card.style.opacity = '.5', 240);
-    return;
-  }
-  const card = e.target.closest('.nl-card');
-  if (!card) return;
-  const l = getLeads().find(x => x.id === +card.dataset.id);
-  if (!l) return;
+// Subnav: navigate the host, not the iframe.
+document.querySelectorAll('.sales-subnav a[data-nav]').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    window.parent.postMessage({ type: 's1ui:navigate', href: a.dataset.nav }, '*');
+  });
+});
+
+// "+ New lead" → host navigate to /Customers/Create
+const nlNewLeadBtn = document.getElementById('nlNewLead');
+if (nlNewLeadBtn) nlNewLeadBtn.addEventListener('click', () => {
+  window.parent.postMessage({ type: 's1ui:navigate', href: '/Customers/Create' }, '*');
+});
+
+function openLeadDetail(l) {
   const m = document.createElement('div');
   m.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:center;justify-content:center;z-index:1000;padding:24px;';
 
@@ -282,15 +301,107 @@ document.getElementById('nlGrid').addEventListener('click', e => {
 
   const foot = makeEl('div', { style: 'display:flex;justify-content:flex-end;gap:8px;' });
   foot.appendChild(makeEl('button', { className: 'btn btn-secondary x', text: 'Close' }));
-  foot.appendChild(makeEl('button', { className: 'btn btn-secondary', text: 'Call now', attrs: { 'data-comm-action': 'action:salesNewLeads.call-now' } }));
-  foot.appendChild(makeEl('button', { className: 'btn btn-primary', text: 'Grab lead', attrs: { 'data-comm-action': 'action:salesNewLeads.grab-lead' } }));
+  const callBtn = makeEl('button', { className: 'btn btn-secondary', text: 'Call now' });
+  callBtn.addEventListener('click', async () => {
+    try { await window.S1.comm.action('salesNewLeads.call-now', { leadId: l.id }); } catch {}
+    if (l.phone) window.parent.postMessage({ type: 's1ui:navigate', href: 'tel:' + l.phone.replace(/[^0-9+]/g,'') }, '*');
+  });
+  foot.appendChild(callBtn);
+  const grabModalBtn = makeEl('button', { className: 'btn btn-primary', text: 'Grab lead' });
+  grabModalBtn.addEventListener('click', async () => {
+    try {
+      await window.S1.comm.action('salesNewLeads.claim', { leadId: l.id });
+      if (window.S1.flash) window.S1.flash('Lead grabbed');
+      close();
+      if (window.salesNewLeadsReload) window.salesNewLeadsReload();
+    } catch (err) { if (window.S1.flash) window.S1.flash('Grab failed: ' + (err && err.message ? err.message : err)); }
+  });
+  foot.appendChild(grabModalBtn);
   panel.appendChild(foot);
 
   m.appendChild(panel);
   document.body.appendChild(m);
-  const close = () => m.remove();
+  function close() { m.remove(); }
   m.addEventListener('click', e2 => { if (e2.target === m) close(); });
   m.querySelectorAll('.x').forEach(b => b.addEventListener('click', close));
+}
+
+function openMoreMenu(anchorBtn, l) {
+  // Close any open menus
+  document.querySelectorAll('.nl-more-menu').forEach(n => n.remove());
+  const menu = makeEl('div', { className: 'nl-more-menu', style: 'position:absolute;background:#fff;border:var(--hair);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.08);padding:4px 0;width:180px;z-index:900;' });
+  const rect = anchorBtn.getBoundingClientRect();
+  menu.style.left = (rect.left + window.scrollX) + 'px';
+  menu.style.top  = (rect.bottom + window.scrollY + 4) + 'px';
+  const mkItem = (text, color, fn) => {
+    const it = makeEl('div', { text, style: 'padding:8px 12px;font-size:13px;cursor:pointer;' + (color ? 'color:' + color + ';' : '') });
+    it.addEventListener('mouseenter', () => it.style.background = '#f5f7f9');
+    it.addEventListener('mouseleave', () => it.style.background = '');
+    it.addEventListener('click', (e) => { e.stopPropagation(); close(); fn(); });
+    return it;
+  };
+  menu.appendChild(mkItem('View details', '', () => openLeadDetail(l)));
+  menu.appendChild(mkItem('Call now', '', async () => {
+    try { await window.S1.comm.action('salesNewLeads.call-now', { leadId: l.id }); } catch {}
+    if (l.phone) window.parent.postMessage({ type: 's1ui:navigate', href: 'tel:' + l.phone.replace(/[^0-9+]/g,'') }, '*');
+  }));
+  menu.appendChild(mkItem('Decline lead', '#991b1b', async () => {
+    try {
+      await window.S1.comm.action('salesNewLeads.decline', { leadId: l.id, selectedIds: [String(l.id)], newStatus: 'Inactive' });
+      if (window.S1.flash) window.S1.flash('Lead declined');
+      if (window.salesNewLeadsReload) window.salesNewLeadsReload();
+    } catch (err) { if (window.S1.flash) window.S1.flash('Decline failed: ' + (err && err.message ? err.message : err)); }
+  }));
+  document.body.appendChild(menu);
+  function close() {
+    menu.remove();
+    document.removeEventListener('click', onDocClick, true);
+    document.removeEventListener('keydown', onKey, true);
+  }
+  function onDocClick(e) { if (!menu.contains(e.target)) close(); }
+  function onKey(e) { if (e.key === 'Escape') close(); }
+  setTimeout(() => {
+    document.addEventListener('click', onDocClick, true);
+    document.addEventListener('keydown', onKey, true);
+  }, 0);
+}
+
+// Click handlers: grab, more, card detail
+document.getElementById('nlGrid').addEventListener('click', async e => {
+  const btnGrab = e.target.closest('[data-action="grab"]');
+  if (btnGrab) {
+    e.stopPropagation();
+    const card = btnGrab.closest('.nl-card');
+    const id = card ? +card.dataset.id : 0;
+    if (!id) return;
+    btnGrab.disabled = true;
+    btnGrab.textContent = 'Grabbing…';
+    try {
+      await window.S1.comm.action('salesNewLeads.claim', { leadId: id });
+      btnGrab.textContent = '✓ Grabbed';
+      btnGrab.style.background = 'var(--ok)';
+      if (card) setTimeout(() => card.style.opacity = '.5', 240);
+      if (window.S1.flash) window.S1.flash('Lead grabbed');
+      if (window.salesNewLeadsReload) setTimeout(() => window.salesNewLeadsReload(), 400);
+    } catch (err) {
+      btnGrab.disabled = false;
+      btnGrab.textContent = 'Grab Lead';
+      if (window.S1.flash) window.S1.flash('Grab failed: ' + (err && err.message ? err.message : err));
+    }
+    return;
+  }
+  const btnMore = e.target.closest('[data-action="more"]');
+  if (btnMore) {
+    e.stopPropagation();
+    const card = btnMore.closest('.nl-card');
+    const l = card ? getLeads().find(x => x.id === +card.dataset.id) : null;
+    if (l) openMoreMenu(btnMore, l);
+    return;
+  }
+  const card = e.target.closest('.nl-card');
+  if (!card) return;
+  const l = getLeads().find(x => x.id === +card.dataset.id);
+  if (l) openLeadDetail(l);
 });
 
 // pager click handled in module.js via server-side pagination wiring.

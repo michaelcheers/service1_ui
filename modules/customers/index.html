@@ -12,8 +12,11 @@
 .cust-wrap { padding: 24px 28px 56px; }
 .cust-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
 .cust-header h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; margin: 0; }
-.cust-filters { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr auto auto auto; gap: 10px; align-items: end; background: #fff; border: var(--hair); border-radius: 8px; padding: 14px 16px; margin-bottom: 12px; }
-.cust-filter-group { display: flex; flex-direction: column; gap: 4px; }
+.cust-filters { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; background: #fff; border: var(--hair); border-radius: 8px; padding: 14px 16px; margin-bottom: 12px; }
+.cust-filter-group { display: flex; flex-direction: column; gap: 4px; flex: 1 1 140px; min-width: 140px; }
+.cust-filters .cust-btn-filter, .cust-filters .cust-btn-clear, .cust-filters .cust-btn-export { flex: 0 0 auto; }
+.cust-tags-cell { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 900px) { .cust-filter-group { flex-basis: 100%; } }
 .cust-filter-label { font-size: 11px; font-weight: 600; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.05em; }
 .cust-filter-input, .cust-filter-select {
   height: 34px; padding: 0 10px; border: var(--hair); border-radius: 6px; font-size: 12.5px; background: #fff; color: var(--ink); font-family: inherit; outline: none;
@@ -59,7 +62,7 @@
     <div class="cust-wrap">
       <div class="cust-header">
         <h1 data-bind-text="summary">Customers</h1>
-        <a href="CreateCustomer.html" style="padding:9px 16px;background:var(--terra);color:#fff;border-radius:7px;font-size:13px;font-weight:600;text-decoration:none;">+ New Customer</a>
+        <button type="button" data-cust-nav="customers.new" style="padding:9px 16px;background:var(--terra);color:#fff;border:0;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;">+ New Customer</button>
       </div>
 
       <div class="cust-filters">
@@ -71,18 +74,19 @@
         <div class="cust-filter-group"><span class="cust-filter-label">To Date</span><input class="cust-filter-input" type="date" data-cust-filter="to"></div>
         <div class="cust-filter-group"><span class="cust-filter-label">Tag</span><select class="cust-filter-select" data-bind-options="optionsOptions4" data-cust-filter="tag"><option value="">All Tags</option></select></div>
         <button type="button" class="cust-btn-filter" id="custApplyFilters">Filter</button>
-        <button class="cust-btn-clear">Clear</button>
-        <button data-comm-action="action:customers.export" class="cust-btn-export">Export CSV</button>
+        <button type="button" id="custClearFilters" class="cust-btn-clear">Clear</button>
+        <button type="button" id="custExportAll" class="cust-btn-export">Export CSV</button>
       </div>
 
       <div class="cust-bulk-bar">
         <button type="button" data-cust-bulk="delete" class="cust-bulk-btn danger">Delete Selected</button>
-        <select id="custBulkUpdateField" class="cust-bulk-input" data-bind-options="optionsOptions5"></select>
+        <select id="custBulkUpdateField" class="cust-bulk-input" data-bind-options="optionsOptions5"><option value="">Change Field…</option></select>
+        <select id="custBulkUpdateValue" class="cust-bulk-input"><option value="">New value…</option></select>
         <button type="button" data-cust-bulk="update" class="cust-bulk-btn primary">Update</button>
         <button type="button" data-cust-bulk="export" class="cust-bulk-btn">Export Selected</button>
-        <input id="custBulkAddTag" class="cust-bulk-input" placeholder="Add Tag…">
+        <select id="custBulkAddTag" class="cust-bulk-input" data-bind-options="optionsOptions4"><option value="">Add Tag…</option></select>
         <button type="button" data-cust-bulk="tag.add" class="cust-bulk-btn primary">Add</button>
-        <input id="custBulkRemoveTag" class="cust-bulk-input" placeholder="Remove Tag…">
+        <select id="custBulkRemoveTag" class="cust-bulk-input" data-bind-options="optionsOptions4"><option value="">Remove Tag…</option></select>
         <button type="button" data-cust-bulk="tag.remove" class="cust-bulk-btn danger">Remove</button>
       </div>
 
@@ -95,7 +99,7 @@
               <th>Status</th><th>Source</th><th>Branch</th><th>Tags</th><th>Revenue</th><th>Actions</th>
             </tr>
           </thead>
-          <tbody data-bind="rows"><template><tr data-record-id="{{id}}"><td><input type="checkbox" class="cust-row-check" data-id="{{id}}"></td><td><b>{{name}}</b><div class="cell-light" data-bind-show-if="subMeta" style="font-size:11px;color:var(--ink-3);">{{subMeta}}</div></td><td>{{company}}</td><td>{{email}}</td><td>{{phone}}</td><td><span class="{{statusCls}}">{{statusLabel}}</span></td><td>{{source}}</td><td><span class="{{branchCls}}">{{branchLabel}}</span></td><td>{{tags}}</td><td>{{revenue}}</td><td><span class="row-action">View</span><span class="row-action">Edit</span><span class="row-action delete">Delete</span></td></tr></template></tbody>
+          <tbody data-bind="rows"><template><tr data-record-id="{{id}}"><td><input type="checkbox" class="cust-row-check" data-id="{{id}}"></td><td><b>{{name}}</b><div class="cell-light" data-bind-show-if="subMeta" style="font-size:11px;color:var(--ink-3);">{{subMeta}}</div></td><td>{{company}}</td><td>{{email}}</td><td>{{phone}}</td><td><span class="{{statusCls}}">{{statusLabel}}</span></td><td>{{source}}</td><td><span class="{{branchCls}}">{{branchLabel}}</span></td><td class="cust-tags-cell" title="{{tags}}">{{tags}}</td><td>{{revenue}}</td><td><span class="row-action" data-cust-row="view" data-id="{{id}}">View</span><span class="row-action" data-cust-row="edit" data-id="{{id}}">Edit</span><span class="row-action delete" data-cust-row="delete" data-id="{{id}}">Delete</span></td></tr></template></tbody>
         </table>
         <div style="padding:14px 18px;display:flex;justify-content:space-between;align-items:center;border-top:var(--hair);font-size:12px;color:var(--ink-3);">
           <span>Showing <span data-bind-text="pagination.shown">14</span> of <span data-bind-text="pagination.total">1,710</span> customers</span>

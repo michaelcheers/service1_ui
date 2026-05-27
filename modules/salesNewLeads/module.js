@@ -113,4 +113,191 @@ document.addEventListener('change', (ev) => { if (ev.target.closest('.field-sele
 $$('[data-salesNewLeads-open]').forEach(b => b.addEventListener('click', (e) => { e.preventDefault(); window.S1.modal.open('#' + b.getAttribute('data-salesNewLeads-open')); }));
   window.S1.modal.bindForm('#claimLeadModal', 'salesNewLeads.claim', { label: 'Claim', onSuccess: ()=>load() });
   window.S1.modal.bindForm('#declineLeadModal', 'salesNewLeads.decline', { label: 'Decline', onSuccess: ()=>load() });
-  window.S1.modal.bindForm('#bulkImportLeadsModal', 'salesNewLeads.import', { label: 'Import', onSuccess: ()=>load() });
+
+// Expose reload for inline handlers.
+window.salesNewLeadsReload = load;
+
+// --- CSV Import controller -------------------------------------------------
+function parseCsv(text) {
+  // Handles quoted fields with commas / embedded quotes / CRLF.
+  const rows = [];
+  let cur = [];
+  let field = '';
+  let inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (text[i+1] === '"') { field += '"'; i++; }
+        else { inQuotes = false; }
+      } else {
+        field += c;
+      }
+    } else {
+      if (c === '"') { inQuotes = true; }
+      else if (c === ',') { cur.push(field); field = ''; }
+      else if (c === '\r') { /* skip */ }
+      else if (c === '\n') { cur.push(field); rows.push(cur); cur = []; field = ''; }
+      else { field += c; }
+    }
+  }
+  if (field.length > 0 || cur.length > 0) { cur.push(field); rows.push(cur); }
+  // Drop trailing empty rows
+  while (rows.length && rows[rows.length-1].every(v => v === '')) rows.pop();
+  if (rows.length === 0) return { headers: [], rows: [] };
+  const headers = rows[0].map(h => (h || '').trim());
+  const dataRows = rows.slice(1).map(r => {
+    const obj = {};
+    headers.forEach((h, idx) => { obj[h] = (r[idx] != null ? String(r[idx]) : ''); });
+    return obj;
+  });
+  return { headers, rows: dataRows };
+}
+
+const IMPORT_TARGETS = ['First Name', 'Last Name', 'Name', 'Email', 'Company Name', 'Phone', 'Notes'];
+
+function buildMappingTable(parsed) {
+  const tbody = document.querySelector('#nlMappingTbl tbody');
+  while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+  const sample = parsed.rows[0] || {};
+  parsed.headers.forEach(h => {
+    const tr = document.createElement('tr');
+    const tdH = document.createElement('td'); tdH.textContent = h; tr.appendChild(tdH);
+    const tdS = document.createElement('td');
+    const sel = document.createElement('select');
+    sel.className = 's1-select';
+    sel.setAttribute('data-csv-col', h);
+    const optSkip = document.createElement('option');
+    optSkip.value = ''; optSkip.textContent = '— (skip)';
+    sel.appendChild(optSkip);
+    IMPORT_TARGETS.forEach(t => {
+      const o = document.createElement('option');
+      o.value = t; o.textContent = t;
+      sel.appendChild(o);
+    });
+    // Guess default
+    const lh = h.toLowerCase();
+    let guess = 'Notes';
+    if (lh.includes('first')) guess = 'First Name';
+    else if (lh.includes('last') || lh === 'surname') guess = 'Last Name';
+    else if (lh === 'name' || lh === 'full name' || lh === 'fullname') guess = 'Name';
+    else if (lh.includes('email')) guess = 'Email';
+    else if (lh.includes('phone') || lh.includes('mobile') || lh.includes('tel')) guess = 'Phone';
+    else if (lh.includes('company') || lh.includes('organization') || lh.includes('organisation')) guess = 'Company Name';
+    sel.value = guess;
+    tdS.appendChild(sel);
+    tr.appendChild(tdS);
+    const tdV = document.createElement('td');
+    tdV.textContent = sample[h] || '';
+    tr.appendChild(tdV);
+    tbody.appendChild(tr);
+  });
+}
+
+async function applyAiSuggestion(parsed) {
+  try {
+    const r = await comm.action('salesNewLeads.suggestMapping', {
+      headers: parsed.headers,
+      sampleRows: parsed.rows.slice(0, 5)
+    });
+    const mapping = r && r.mapping;
+    if (mapping && typeof mapping === 'object') {
+      document.querySelectorAll('#nlMappingTbl select[data-csv-col]').forEach(sel => {
+        const col = sel.getAttribute('data-csv-col');
+        if (mapping[col] && IMPORT_TARGETS.indexOf(mapping[col]) >= 0) sel.value = mapping[col];
+      });
+    }
+  } catch {}
+}
+
+let importParsed = null;
+
+function openImportModal() {
+  // Reset state
+  importParsed = null;
+  const step1 = document.getElementById('nlImportStep1');
+  const step2 = document.getElementById('nlImportStep2');
+  const confirm = document.getElementById('nlImportConfirm');
+  const status = document.getElementById('nlCsvStatus');
+  if (step1) step1.style.display = '';
+  if (step2) step2.style.display = 'none';
+  if (confirm) { confirm.style.display = 'none'; confirm.textContent = 'Import'; }
+  if (status) status.textContent = '';
+  const fileInput = document.getElementById('nlCsvFileInput');
+  if (fileInput) fileInput.value = '';
+  window.S1.modal.open('#bulkImportLeadsModal');
+}
+
+document.addEventListener('click', (ev) => {
+  const t = ev.target;
+  if (!t) return;
+  if (t.id === 'nlImportBtn') { ev.preventDefault(); openImportModal(); return; }
+  if (t.id === 'nlCsvPickBtn') { ev.preventDefault(); const fi = document.getElementById('nlCsvFileInput'); if (fi) fi.click(); return; }
+});
+
+document.addEventListener('change', (ev) => {
+  if (ev.target && ev.target.id === 'nlCsvFileInput') {
+    const f = ev.target.files && ev.target.files[0];
+    if (!f) return;
+    const status = document.getElementById('nlCsvStatus');
+    if (status) status.textContent = 'Reading ' + f.name + '…';
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        const text = String(reader.result || '');
+        const parsed = parseCsv(text);
+        if (parsed.headers.length === 0 || parsed.rows.length === 0) {
+          if (status) status.textContent = 'No rows detected in CSV.';
+          return;
+        }
+        importParsed = parsed;
+        document.getElementById('nlImportSummary').textContent =
+          'File: ' + f.name + ' · ' + parsed.rows.length + ' rows detected · ' + parsed.headers.length + ' columns';
+        buildMappingTable(parsed);
+        document.getElementById('nlImportStep1').style.display = 'none';
+        document.getElementById('nlImportStep2').style.display = '';
+        const confirm = document.getElementById('nlImportConfirm');
+        if (confirm) { confirm.style.display = ''; confirm.textContent = 'Import ' + parsed.rows.length + ' leads'; }
+        applyAiSuggestion(parsed);
+      } catch (e) {
+        if (status) status.textContent = 'Parse failed: ' + (e.message || e);
+      }
+    };
+    reader.onerror = () => { if (status) status.textContent = 'Could not read file.'; };
+    reader.readAsText(f);
+  }
+  // Sources select → save filter then refresh.
+  if (ev.target && ev.target.id === 'nlSourceSel') {
+    const v = ev.target.value || '';
+    comm.save('salesNewLeads.filter', { source: v, filter: v }).catch(() => {});
+  }
+});
+
+document.addEventListener('click', async (ev) => {
+  if (!ev.target || ev.target.id !== 'nlImportConfirm') return;
+  if (!importParsed) return;
+  ev.preventDefault();
+  const fieldMapping = {};
+  document.querySelectorAll('#nlMappingTbl select[data-csv-col]').forEach(sel => {
+    const col = sel.getAttribute('data-csv-col');
+    const v = sel.value || '';
+    if (v) fieldMapping[col] = v;
+  });
+  const btn = ev.target;
+  btn.disabled = true;
+  btn.textContent = 'Importing…';
+  try {
+    const r = await comm.action('salesNewLeads.import', { fieldMapping, records: importParsed.rows });
+    const imp = (r && r.imported) || 0;
+    const skip = (r && r.skipped) || 0;
+    const errs = (r && Array.isArray(r.errors)) ? r.errors.length : 0;
+    flash('Imported ' + imp + ', skipped ' + skip + ', ' + errs + ' errors');
+    window.S1.modal.close('#bulkImportLeadsModal');
+    load();
+  } catch (e) {
+    flash('Import failed: ' + (e.message || e));
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Import';
+  }
+});

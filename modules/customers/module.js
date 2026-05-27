@@ -18,53 +18,14 @@ const flash = window.S1.flash;
 
 window.S1.wireStandardPage('customers');
 
-// Client-side filter for the Customers table. Each filter input carries
-// data-cust-filter="search|status|source|location|from|to|tag"; on every
-// change we walk the tbody rows and hide non-matches.
+// Filter values are collected once and shipped to the server via
+// `save:customers.page`. No client-side row hiding — the server runs the
+// full filtered query against the whole customer list, then the host
+// re-pushes state so counts, rows and the pager all reflect reality.
 function getFilterValues() {
   const v = {};
   $$('[data-cust-filter]').forEach(el => { v[el.getAttribute('data-cust-filter')] = (el.value || '').trim(); });
   return v;
-}
-function rowMatchesFilters(row, f) {
-  const cells = row.querySelectorAll('td');
-  // Column order in the template: [checkbox, name, company, email, phone, status, source, branch, tags, revenue, actions]
-  const txt = (el) => (el && el.textContent ? el.textContent.trim() : '');
-  const nameCell    = cells[1];
-  const company     = txt(cells[2]);
-  const email       = txt(cells[3]);
-  const status      = txt(cells[5]);
-  const source      = txt(cells[6]);
-  const branch      = txt(cells[7]);
-  const tags        = txt(cells[8]);
-  const name        = txt(nameCell && nameCell.querySelector('b'));
-  if (f.search) {
-    const q = f.search.toLowerCase();
-    if (![name, email, company].some(x => x.toLowerCase().includes(q))) return false;
-  }
-  if (f.status   && status   !== f.status)   return false;
-  if (f.source   && source   !== f.source)   return false;
-  if (f.location && branch   !== f.location) return false;
-  if (f.tag      && !tags.toLowerCase().includes(f.tag.toLowerCase())) return false;
-  // From/To dates: no per-row date column rendered; skip until row exposes one.
-  return true;
-}
-function applyCustomerFilters() {
-  const f = getFilterValues();
-  $$('tbody[data-bind="rows"] tr').forEach(tr => {
-    tr.style.display = rowMatchesFilters(tr, f) ? '' : 'none';
-  });
-}
-document.addEventListener('click', (ev) => {
-  if (!ev.target.closest('#custApplyFilters')) return;
-  ev.preventDefault();
-  applyCustomerFilters();
-});
-document.addEventListener('input',  (ev) => { if (ev.target.closest('[data-cust-filter]')) applyCustomerFilters(); });
-document.addEventListener('change', (ev) => { if (ev.target.closest('[data-cust-filter]')) applyCustomerFilters(); });
-document.addEventListener('s1ui:ready', applyCustomerFilters);
-if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
-  window.S1.bus.on('state:replaced', applyCustomerFilters);
 }
 
 // Post-bind: if the fixture didn't supply per-row ids, the template
@@ -79,6 +40,7 @@ function backfillCustomerIds() {
     tr.setAttribute('data-record-id', real);
     const cb = tr.querySelector('.cust-row-check');
     if (cb) cb.setAttribute('data-id', real);
+    tr.querySelectorAll('[data-cust-row]').forEach(el => el.setAttribute('data-id', real));
   });
 }
 document.addEventListener('s1ui:ready', backfillCustomerIds);
@@ -111,27 +73,112 @@ document.addEventListener('click', async (ev) => {
       load();
     } else if (kind === 'update') {
       const field = val('#custBulkUpdateField');
-      if (!field) { flash('Pick a field to update first'); return; }
-      await comm.action('customers.bulk.update', { ids, field });
+      const newValue = val('#custBulkUpdateValue');
+      if (!field)    { flash('Pick a field to update first'); return; }
+      if (!newValue) { flash('Pick a value first'); return; }
+      await comm.action('customers.bulk.update', { ids, field, newValue });
       load();
     } else if (kind === 'tag.add') {
-      const tag = val('#custBulkAddTag');
-      if (!tag) { flash('Enter a tag to add first'); return; }
-      await comm.action('customers.bulk.tag.add', { ids, tag });
+      const tagId = val('#custBulkAddTag');
+      if (!tagId) { flash('Pick a tag to add first'); return; }
+      await comm.action('customers.bulk.tag.add', { ids, tagDefinitionId: +tagId });
       load();
     } else if (kind === 'tag.remove') {
-      const tag = val('#custBulkRemoveTag');
-      if (!tag) { flash('Enter a tag to remove first'); return; }
-      await comm.action('customers.bulk.tag.remove', { ids, tag });
+      const tagId = val('#custBulkRemoveTag');
+      if (!tagId) { flash('Pick a tag to remove first'); return; }
+      await comm.action('customers.bulk.tag.remove', { ids, tagDefinitionId: +tagId });
       load();
     }
   } catch (e) { flash((kind || 'Bulk') + ' failed: ' + (e.message || e)); }
 });
 
+// Bulk-update "value" select swaps options based on the picked field.
+function populateBulkUpdateValue() {
+  const fieldSel = document.getElementById('custBulkUpdateField');
+  const valueSel = document.getElementById('custBulkUpdateValue');
+  if (!fieldSel || !valueSel) return;
+  const data = (window.S1.fixtures || {}).customers || {};
+  const field = (fieldSel.value || '').trim();
+  let opts = [];
+  if (field === 'Status')         opts = data.optionsOptions  || [];
+  else if (field === 'Source')    opts = data.optionsOptions2 || [];
+  else if (field === 'LocationId')opts = data.optionsOptions3 || [];
+  while (valueSel.firstChild) valueSel.removeChild(valueSel.firstChild);
+  const placeholder = document.createElement('option');
+  placeholder.value = '';
+  placeholder.textContent = 'New value…';
+  valueSel.appendChild(placeholder);
+  for (const o of opts) {
+    const opt = document.createElement('option');
+    opt.value = (o.value != null ? String(o.value) : '');
+    opt.textContent = (o.label != null ? String(o.label) : String(o.value || ''));
+    valueSel.appendChild(opt);
+  }
+}
+document.addEventListener('change', (ev) => {
+  if (ev.target && ev.target.id === 'custBulkUpdateField') populateBulkUpdateValue();
+});
+document.addEventListener('s1ui:ready', populateBulkUpdateValue);
+if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
+  window.S1.bus.on('state:replaced', populateBulkUpdateValue);
+}
+
 // Header "select all" toggles every visible row checkbox.
 document.addEventListener('change', (ev) => {
   if (!ev.target || ev.target.id !== 'custSelectAll') return;
   $$('.cust-row-check').forEach(cb => { cb.checked = ev.target.checked; });
+});
+
+// Row-action delegation: View / Edit navigate the top window via the host
+// bridge; Delete confirms then issues the RPC.
+document.addEventListener('click', async (ev) => {
+  const el = ev.target.closest('[data-cust-row]'); if (!el) return;
+  ev.preventDefault();
+  const id  = el.getAttribute('data-id');
+  const act = el.getAttribute('data-cust-row');
+  if (!id) return;
+  if (act === 'view') {
+    window.parent.postMessage({ type: 's1ui:navigate', href: '/Customers/Details?id=' + encodeURIComponent(id) }, '*');
+  } else if (act === 'edit') {
+    window.parent.postMessage({ type: 's1ui:navigate', href: '/Customers/Edit?id=' + encodeURIComponent(id) }, '*');
+  } else if (act === 'delete') {
+    if (!window.confirm('Delete this customer?')) return;
+    try {
+      await comm.action('customers.delete', { id: +id });
+      load();
+    } catch (e) { flash('Delete failed: ' + (e.message || e)); }
+  }
+});
+
+// "+ New Customer" header button — server returns navigateTo, host navigates top.
+document.addEventListener('click', async (ev) => {
+  const el = ev.target.closest('[data-cust-nav="customers.new"]'); if (!el) return;
+  ev.preventDefault();
+  try {
+    const r = await comm.action('customers.new');
+    if (r && r.navigateTo) window.parent.postMessage({ type: 's1ui:navigate', href: r.navigateTo }, '*');
+  } catch (e) { flash('New Customer failed: ' + (e.message || e)); }
+});
+
+// Header Export CSV — server returns downloadUrl; browser GETs it for download.
+document.addEventListener('click', async (ev) => {
+  const el = ev.target.closest('#custExportAll'); if (!el) return;
+  ev.preventDefault();
+  try {
+    const r = await comm.action('customers.export.all', { filters: getFilterValues() });
+    if (r && r.downloadUrl) window.location.href = r.downloadUrl;
+  } catch (e) { flash('Export failed: ' + (e.message || e)); }
+});
+
+// Clear button resets every filter input then re-runs the query at page 1.
+document.addEventListener('click', (ev) => {
+  const el = ev.target.closest('#custClearFilters'); if (!el) return;
+  ev.preventDefault();
+  $$('[data-cust-filter]').forEach(elx => {
+    if (elx.tagName === 'SELECT') elx.selectedIndex = 0;
+    else elx.value = '';
+  });
+  goToPage(1);
 });
 
 // --- Server-side pagination wiring -----------------------------------------
@@ -158,6 +205,8 @@ function renderPager() {
   const p = data.pagination || {};
   const current = +p.currentPage || 1;
   const total   = Math.max(1, +p.totalPages || 1);
+  while (host.firstChild) host.removeChild(host.firstChild);
+  if (total <= 1) { host.style.display = 'none'; return; }
   const items   = buildPageList(current, total);
   const nodes = [];
   const mkBtn = (cls, text, attrs) => {
@@ -172,16 +221,21 @@ function renderPager() {
     }
     return b;
   };
-  nodes.push(mkBtn('cust-bulk-btn', 'Previous', { 'data-page': 'prev', disabled: current <= 1 }));
+  // Skip Previous on page 1.
+  if (current > 1) {
+    nodes.push(mkBtn('cust-bulk-btn', 'Previous', { 'data-page': 'prev' }));
+  }
   for (const it of items) {
     if (it === '…') { nodes.push(mkBtn('cust-bulk-btn', '…', { disabled: true })); continue; }
     const cls = 'cust-bulk-btn' + (it === current ? ' primary' : '');
     nodes.push(mkBtn(cls, String(it), { 'data-page': String(it) }));
   }
-  nodes.push(mkBtn('cust-bulk-btn', 'Next', { 'data-page': 'next', disabled: current >= total }));
+  // Skip Next on last page.
+  if (current < total) {
+    nodes.push(mkBtn('cust-bulk-btn', 'Next', { 'data-page': 'next' }));
+  }
   host.style.display = 'flex';
   host.style.gap = '6px';
-  while (host.firstChild) host.removeChild(host.firstChild);
   nodes.forEach(n => host.appendChild(n));
 }
 async function goToPage(page) {
@@ -189,13 +243,12 @@ async function goToPage(page) {
   const p = data.pagination || {};
   const current  = +p.currentPage || 1;
   const total    = Math.max(1, +p.totalPages || 1);
-  const pageSize = +p.pageSize || 14;
+  const pageSize = +p.pageSize || 25;
   let next;
   if (page === 'prev')      next = Math.max(1, current - 1);
   else if (page === 'next') next = Math.min(total, current + 1);
-  else                      next = Math.max(1, Math.min(total, +page || 1));
-  if (next === current && page !== 'prev' && page !== 'next') { renderPager(); return; }
-  const filters = (typeof getFilterValues === 'function') ? getFilterValues() : {};
+  else                      next = Math.max(1, +page || 1);
+  const filters = getFilterValues();
   try {
     const r = await comm.save('customers.page', { page: next, pageSize, filters });
     if (r && r.navigateTo) { window.location.href = r.navigateTo; return; }
@@ -212,13 +265,10 @@ document.addEventListener('s1ui:ready', renderPager);
 if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
   window.S1.bus.on('state:replaced', renderPager);
 }
-// Filter change resets to page 1.
-function _custFilterResetPage(ev) {
-  if (!ev.target.closest('[data-cust-filter]')) return;
-  goToPage(1);
-}
-document.addEventListener('change', _custFilterResetPage);
-document.addEventListener('click', (ev) => { if (ev.target.closest('#custApplyFilters')) goToPage(1); });
+// Apply filters click → page 1 with full filter map.
+document.addEventListener('click', (ev) => { if (ev.target.closest('#custApplyFilters')) { ev.preventDefault(); goToPage(1); } });
+// Changing any filter input re-runs server-side at page 1.
+document.addEventListener('change', (ev) => { if (ev.target.closest('[data-cust-filter]')) goToPage(1); });
 
 // v12 modal triggers + bindings.
 $$('[data-customers-open]').forEach(b => b.addEventListener('click', (e) => { e.preventDefault(); window.S1.modal.open('#' + b.getAttribute('data-customers-open')); }));

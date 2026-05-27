@@ -128,10 +128,10 @@
 
       <!-- Sales sub-nav (4 pages) -->
       <nav class="sales-subnav">
-        <a class="active" href="SalesDashboard.html">Dashboard</a>
-        <a href="SalesNewLeads.html">New Leads</a>
-        <a href="SalesMyLeads.html">My Opportunities</a>
-        <a href="SalesFollowUps.html">Follow-Ups</a>
+        <a class="active" href="#" data-nav="/Sales/Dashboard">Dashboard</a>
+        <a href="#" data-nav="/Sales/NewLeads">New Leads</a>
+        <a href="#" data-nav="/Sales/MyLeads">My Opportunities</a>
+        <a href="#" data-nav="/Sales/FollowUps">Follow-Ups</a>
       </nav>
 
       <!-- 1-tab — Overview only -->
@@ -173,7 +173,7 @@
 
           <!-- My Upcoming -->
           <section class="section sd-upcoming-card" style="margin:0;">
-            <div class="section-head"><div class="section-title">Upcoming moves</div><a class="section-link" href="SalesMyLeads.html">All →</a></div>
+            <div class="section-head"><div class="section-title">Upcoming moves</div><a class="section-link" href="#" data-nav="/Sales/MyLeads">All →</a></div>
             <div class="up-list" data-bind="upcoming"><template><a class="up-row" href="#"><div><div class="up-name">{{name}}</div><div class="up-date">{{date}}</div></div><div class="up-amt" data-bind-text="metrics.amt.0">{{amount}}</div></a></template></div>
           </section>
         </div>
@@ -196,7 +196,7 @@
           <section class="section" style="margin:0;">
             <div class="section-head"><div class="section-title">Quick actions</div></div>
             <div class="qa-list">
-              <a href="CreateCustomer.html" class="qa-btn primary" style="text-decoration:none;text-align:left;">+ Create lead</a>
+              <button id="sdCreateLead" class="qa-btn primary" style="text-align:left;">+ Create lead</button>
               <button data-comm-action="action:salesDashboard.make-a-call" class="qa-btn secondary">Make a call</button>
               <button data-comm-action="action:salesDashboard.send-estimate" class="qa-btn secondary">Send estimate</button>
               <button data-comm-action="action:salesDashboard.schedule-move" class="qa-btn secondary">Schedule move</button>
@@ -325,6 +325,19 @@
     panes.forEach(p => p.classList.toggle('active', p.dataset.pane === name));
     window.scrollTo({ top: 0 });
   }));
+
+  // Subnav + section links: navigate the host, not the iframe.
+  document.querySelectorAll('a[data-nav]').forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      window.parent.postMessage({ type: 's1ui:navigate', href: a.dataset.nav }, '*');
+    });
+  });
+
+  const cl = document.getElementById('sdCreateLead');
+  if (cl) cl.addEventListener('click', () => {
+    window.parent.postMessage({ type: 's1ui:navigate', href: '/Customers/Create' }, '*');
+  });
 })();
 </script>
 </body>
