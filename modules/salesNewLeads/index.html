@@ -255,7 +255,7 @@ document.getElementById('nlGrid').addEventListener('click', e => {
   const m = document.createElement('div');
   m.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:center;justify-content:center;z-index:1000;padding:24px;';
 
-  const card = makeEl('div', { style: 'background:#fff;border-radius:12px;max-width:540px;width:100%;padding:24px 26px;box-shadow:0 24px 60px -16px rgba(15,23,42,.4);' });
+  const panel = makeEl('div', { style: 'background:#fff;border-radius:12px;max-width:540px;width:100%;padding:24px 26px;box-shadow:0 24px 60px -16px rgba(15,23,42,.4);' });
 
   const header = makeEl('div', { style: 'display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;' });
   const hLeft = document.createElement('div');
@@ -264,7 +264,7 @@ document.getElementById('nlGrid').addEventListener('click', e => {
   hLeft.appendChild(makeEl('div', { style: 'margin-top:4px;color:var(--ink-3);font-variant-numeric:tabular-nums;', text: l.phone }));
   header.appendChild(hLeft);
   header.appendChild(makeEl('button', { className: 'x', style: 'border:0;background:transparent;font-size:24px;color:var(--ink-3);cursor:pointer;line-height:1;', text: '×' }));
-  card.appendChild(header);
+  panel.appendChild(header);
 
   const grid = makeEl('div', { style: 'display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:18px;' });
   const mkInfo = (label, value, extra) => {
@@ -278,15 +278,15 @@ document.getElementById('nlGrid').addEventListener('click', e => {
   grid.appendChild(mkInfo('From → To', l.from + ' → ' + l.to, 'grid-column:span 2;'));
   grid.appendChild(mkInfo('Type', l.type));
   grid.appendChild(mkInfo('Source', l.source));
-  card.appendChild(grid);
+  panel.appendChild(grid);
 
   const foot = makeEl('div', { style: 'display:flex;justify-content:flex-end;gap:8px;' });
   foot.appendChild(makeEl('button', { className: 'btn btn-secondary x', text: 'Close' }));
   foot.appendChild(makeEl('button', { className: 'btn btn-secondary', text: 'Call now', attrs: { 'data-comm-action': 'action:salesNewLeads.call-now' } }));
   foot.appendChild(makeEl('button', { className: 'btn btn-primary', text: 'Grab lead', attrs: { 'data-comm-action': 'action:salesNewLeads.grab-lead' } }));
-  card.appendChild(foot);
+  panel.appendChild(foot);
 
-  m.appendChild(card);
+  m.appendChild(panel);
   document.body.appendChild(m);
   const close = () => m.remove();
   m.addEventListener('click', e2 => { if (e2.target === m) close(); });
