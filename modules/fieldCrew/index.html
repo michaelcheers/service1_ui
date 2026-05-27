@@ -381,89 +381,158 @@ function getDvirs()     { return _fcArr('dvirs',     INLINE_DVIRS); }
 function getSpeeding()  { return _fcArr('speeding',  INLINE_SPEEDING); }
 function getCrew()      { return _fcArr('crew',      INLINE_CREW); }
 
-// ── render functions
+// ── render helpers
+function _el(tag, opts) {
+  const el = document.createElement(tag);
+  if (!opts) return el;
+  if (opts.className) el.className = opts.className;
+  if (opts.cssText) el.style.cssText = opts.cssText;
+  if (opts.text != null) el.textContent = opts.text;
+  if (opts.attrs) for (const k in opts.attrs) el.setAttribute(k, opts.attrs[k]);
+  return el;
+}
+function _td(opts, children) {
+  const td = _el('td', opts);
+  if (children) for (const c of children) if (c != null) td.appendChild(c);
+  return td;
+}
+function _span(className, text, cssText) {
+  return _el('span', { className, text, cssText });
+}
+function _cap(s) { return s[0].toUpperCase() + s.slice(1); }
+
 function renderReports() {
-  document.getElementById('fcReports').innerHTML = getReports().map(r => `
-    <tr style="cursor:pointer;">
-      <td><span class="fc-type ${r.cls}">${r.type.toUpperCase()}</span></td>
-      <td>${r.emp}</td>
-      <td>${r.veh}</td>
-      <td>${r.job}</td>
-      <td class="num cell-light">${r.date}</td>
-      <td><span class="fc-status ${r.status}">${r.status[0].toUpperCase()+r.status.slice(1)}</span></td>
-      <td><button class="fc-action" onclick="document.getElementById('resolveModal').classList.add('show');event.stopPropagation();">Resolve</button></td>
-    </tr>`).join('');
+  const host = document.getElementById('fcReports');
+  host.replaceChildren();
+  for (const r of getReports()) {
+    const tr = _el('tr', { cssText: 'cursor:pointer;' });
+    tr.appendChild(_td(null, [_span('fc-type ' + r.cls, r.type.toUpperCase())]));
+    tr.appendChild(_el('td', { text: r.emp }));
+    tr.appendChild(_el('td', { text: r.veh }));
+    tr.appendChild(_el('td', { text: r.job }));
+    tr.appendChild(_el('td', { className: 'num cell-light', text: r.date }));
+    tr.appendChild(_td(null, [_span('fc-status ' + r.status, _cap(r.status))]));
+    const btn = _el('button', { className: 'fc-action', text: 'Resolve' });
+    btn.addEventListener('click', (event) => {
+      document.getElementById('resolveModal').classList.add('show');
+      event.stopPropagation();
+    });
+    tr.appendChild(_td(null, [btn]));
+    host.appendChild(tr);
+  }
 }
 function renderPhotos() {
-  document.getElementById('fcPhotos').innerHTML = getPhotos().map(p => `
-    <div style="background:#fff;border:var(--hair);border-radius:8px;overflow:hidden;cursor:pointer;">
-      <div style="aspect-ratio:4/3;background:linear-gradient(135deg,var(--cream),var(--surface-2));position:relative;">
-        <span style="position:absolute;top:8px;right:8px;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;${p.ai==='pass'?'background:#D1FAE5;color:#065F46;':'background:#FEE2E2;color:#991B1B;'}">${p.tag}</span>
-      </div>
-      <div style="padding:10px 12px;">
-        <div style="font-size:12.5px;font-weight:600;">${p.title}</div>
-        <div style="font-size:11px;color:var(--ink-3);margin-top:2px;">${p.who}</div>
-      </div>
-    </div>`).join('');
+  const host = document.getElementById('fcPhotos');
+  host.replaceChildren();
+  for (const p of getPhotos()) {
+    const card = _el('div', { cssText: 'background:#fff;border:var(--hair);border-radius:8px;overflow:hidden;cursor:pointer;' });
+    const top = _el('div', { cssText: 'aspect-ratio:4/3;background:linear-gradient(135deg,var(--cream),var(--surface-2));position:relative;' });
+    const tagCss = 'position:absolute;top:8px;right:8px;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;' +
+      (p.ai === 'pass' ? 'background:#D1FAE5;color:#065F46;' : 'background:#FEE2E2;color:#991B1B;');
+    top.appendChild(_el('span', { cssText: tagCss, text: p.tag }));
+    card.appendChild(top);
+    const body = _el('div', { cssText: 'padding:10px 12px;' });
+    body.appendChild(_el('div', { cssText: 'font-size:12.5px;font-weight:600;', text: p.title }));
+    body.appendChild(_el('div', { cssText: 'font-size:11px;color:var(--ink-3);margin-top:2px;', text: p.who }));
+    card.appendChild(body);
+    host.appendChild(card);
+  }
 }
 function renderContracts() {
-  document.getElementById('fcContracts').innerHTML = getContracts().map(c => `
-    <tr style="cursor:pointer;">
-      <td><b>${c.cust}</b></td>
-      <td class="cell-light">#${c.job}</td>
-      <td>${c.crew}</td>
-      <td class="num cell-light">${c.created}</td>
-      <td class="num cell-light">${c.signed}</td>
-      <td><span class="fc-status ${c.stCls}">${c.status[0].toUpperCase()+c.status.slice(1)}</span></td>
-      <td><button class="fc-action">View</button></td>
-    </tr>`).join('');
+  const host = document.getElementById('fcContracts');
+  host.replaceChildren();
+  for (const c of getContracts()) {
+    const tr = _el('tr', { cssText: 'cursor:pointer;' });
+    const td0 = _el('td');
+    const b = _el('b', { text: c.cust });
+    td0.appendChild(b);
+    tr.appendChild(td0);
+    tr.appendChild(_el('td', { className: 'cell-light', text: '#' + c.job }));
+    tr.appendChild(_el('td', { text: c.crew }));
+    tr.appendChild(_el('td', { className: 'num cell-light', text: c.created }));
+    tr.appendChild(_el('td', { className: 'num cell-light', text: c.signed }));
+    tr.appendChild(_td(null, [_span('fc-status ' + c.stCls, _cap(c.status))]));
+    tr.appendChild(_td(null, [_el('button', { className: 'fc-action', text: 'View' })]));
+    host.appendChild(tr);
+  }
 }
 function renderLogbooks() {
-  document.getElementById('fcLogbooks').innerHTML = getLogbooks().map(l => `
-    <tr>
-      <td><b>${l.driver}</b></td>
-      <td class="num cell-light">${l.date}</td>
-      <td>${l.veh}</td>
-      <td class="num">${l.onDuty}</td>
-      <td class="num">${l.driving}</td>
-      <td class="num">${l.offDuty}</td>
-      <td><span style="display:inline-block;width:8px;height:8px;border-radius:999px;background:${l.comp==='green'?'#16a34a':l.comp==='yellow'?'#f59e0b':'#DC2626'};margin-right:6px;vertical-align:1px;"></span>${l.comp==='green'?'Compliant':l.comp==='yellow'?'Warning':'Violation'}</td>
-    </tr>`).join('');
+  const host = document.getElementById('fcLogbooks');
+  host.replaceChildren();
+  for (const l of getLogbooks()) {
+    const tr = _el('tr');
+    const td0 = _el('td');
+    td0.appendChild(_el('b', { text: l.driver }));
+    tr.appendChild(td0);
+    tr.appendChild(_el('td', { className: 'num cell-light', text: l.date }));
+    tr.appendChild(_el('td', { text: l.veh }));
+    tr.appendChild(_el('td', { className: 'num', text: l.onDuty }));
+    tr.appendChild(_el('td', { className: 'num', text: l.driving }));
+    tr.appendChild(_el('td', { className: 'num', text: l.offDuty }));
+    const dotColor = l.comp === 'green' ? '#16a34a' : l.comp === 'yellow' ? '#f59e0b' : '#DC2626';
+    const compText = l.comp === 'green' ? 'Compliant' : l.comp === 'yellow' ? 'Warning' : 'Violation';
+    const tdC = _el('td');
+    tdC.appendChild(_el('span', { cssText: 'display:inline-block;width:8px;height:8px;border-radius:999px;background:' + dotColor + ';margin-right:6px;vertical-align:1px;' }));
+    tdC.appendChild(document.createTextNode(compText));
+    tr.appendChild(tdC);
+    host.appendChild(tr);
+  }
 }
 function renderDvirs() {
-  document.getElementById('fcDvirs').innerHTML = getDvirs().map(d => `
-    <tr>
-      <td><b>${d.veh}</b></td>
-      <td>${d.driver}</td>
-      <td class="num cell-light">${d.date}</td>
-      <td>${d.defects}</td>
-      <td><span class="fc-status ${d.status}">${d.status[0].toUpperCase()+d.status.slice(1)}</span></td>
-      <td><button class="fc-action">View</button></td>
-    </tr>`).join('');
+  const host = document.getElementById('fcDvirs');
+  host.replaceChildren();
+  for (const d of getDvirs()) {
+    const tr = _el('tr');
+    const td0 = _el('td');
+    td0.appendChild(_el('b', { text: d.veh }));
+    tr.appendChild(td0);
+    tr.appendChild(_el('td', { text: d.driver }));
+    tr.appendChild(_el('td', { className: 'num cell-light', text: d.date }));
+    tr.appendChild(_el('td', { text: d.defects }));
+    tr.appendChild(_td(null, [_span('fc-status ' + d.status, _cap(d.status))]));
+    tr.appendChild(_td(null, [_el('button', { className: 'fc-action', text: 'View' })]));
+    host.appendChild(tr);
+  }
 }
 function renderSpeeding() {
-  document.getElementById('fcSpeeding').innerHTML = getSpeeding().map(s => `
-    <tr>
-      <td><b>${s.driver}</b></td>
-      <td>${s.veh}</td>
-      <td class="num cell-light">${s.date}</td>
-      <td class="num fc-mph over">${s.speed} mph</td>
-      <td class="num cell-light">${s.limit} mph</td>
-      <td class="num fc-mph over">+${s.over}</td>
-      <td>${s.loc}</td>
-    </tr>`).join('');
+  const host = document.getElementById('fcSpeeding');
+  host.replaceChildren();
+  for (const s of getSpeeding()) {
+    const tr = _el('tr');
+    const td0 = _el('td');
+    td0.appendChild(_el('b', { text: s.driver }));
+    tr.appendChild(td0);
+    tr.appendChild(_el('td', { text: s.veh }));
+    tr.appendChild(_el('td', { className: 'num cell-light', text: s.date }));
+    tr.appendChild(_el('td', { className: 'num fc-mph over', text: s.speed + ' mph' }));
+    tr.appendChild(_el('td', { className: 'num cell-light', text: s.limit + ' mph' }));
+    tr.appendChild(_el('td', { className: 'num fc-mph over', text: '+' + s.over }));
+    tr.appendChild(_el('td', { text: s.loc }));
+    host.appendChild(tr);
+  }
 }
 function renderCrew() {
-  document.getElementById('fcCrew').innerHTML = getCrew().map(c => `
-    <tr>
-      <td><div class="who"><span class="who-av" style="background:var(--terra);">${c.name.split(' ').map(s=>s[0]).join('').slice(0,2)}</span><div class="who-nm">${c.name}</div></div></td>
-      <td>${c.role}</td>
-      <td class="cell-light" style="font-size:11.5px;">${c.license}</td>
-      <td class="cell-light" style="font-variant-numeric:tabular-nums;">${c.phone}</td>
-      <td class="num cell-light">${c.hire}</td>
-      <td><span class="fc-status ${c.status==='on duty'?'signed':'open'}" style="${c.status==='on duty'?'background:var(--ok-soft);color:var(--ok);':'background:var(--surface-2);color:var(--ink-3);'}">${c.status[0].toUpperCase()+c.status.slice(1)}</span></td>
-      <td><button class="fc-action">View</button></td>
-    </tr>`).join('');
+  const host = document.getElementById('fcCrew');
+  host.replaceChildren();
+  for (const c of getCrew()) {
+    const tr = _el('tr');
+    const td0 = _el('td');
+    const who = _el('div', { className: 'who' });
+    const initials = c.name.split(' ').map(s => s[0]).join('').slice(0, 2);
+    who.appendChild(_el('span', { className: 'who-av', cssText: 'background:var(--terra);', text: initials }));
+    who.appendChild(_el('div', { className: 'who-nm', text: c.name }));
+    td0.appendChild(who);
+    tr.appendChild(td0);
+    tr.appendChild(_el('td', { text: c.role }));
+    tr.appendChild(_el('td', { className: 'cell-light', cssText: 'font-size:11.5px;', text: c.license }));
+    tr.appendChild(_el('td', { className: 'cell-light', cssText: 'font-variant-numeric:tabular-nums;', text: c.phone }));
+    tr.appendChild(_el('td', { className: 'num cell-light', text: c.hire }));
+    const statusCls = 'fc-status ' + (c.status === 'on duty' ? 'signed' : 'open');
+    const statusCss = c.status === 'on duty' ? 'background:var(--ok-soft);color:var(--ok);' : 'background:var(--surface-2);color:var(--ink-3);';
+    tr.appendChild(_td(null, [_span(statusCls, _cap(c.status), statusCss)]));
+    tr.appendChild(_td(null, [_el('button', { className: 'fc-action', text: 'View' })]));
+    host.appendChild(tr);
+  }
 }
 
 function renderAll() {

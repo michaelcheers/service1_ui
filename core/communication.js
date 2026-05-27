@@ -19,13 +19,24 @@
     if (typeof window !== 'undefined'
         && window.parent === window
         && /(^|\.)service1\.app$/i.test(location.hostname)) {
-      document.documentElement.innerHTML =
-        '<head><meta charset="utf-8"><title>service1_ui</title></head>'
-        + '<body style="font-family:system-ui,sans-serif;color:#788680;'
+      var root = document.documentElement;
+      while (root.firstChild) root.removeChild(root.firstChild);
+      var head = document.createElement('head');
+      var meta = document.createElement('meta');
+      meta.setAttribute('charset', 'utf-8');
+      var title = document.createElement('title');
+      title.textContent = 'service1_ui';
+      head.appendChild(meta);
+      head.appendChild(title);
+      var body = document.createElement('body');
+      body.style.cssText = 'font-family:system-ui,sans-serif;color:#788680;'
         + 'display:flex;align-items:center;justify-content:center;'
-        + 'min-height:100vh;margin:0;background:#EEF0EC;">'
-        + '<p>This page is meant to be embedded by the Service1 host.</p>'
-        + '</body>';
+        + 'min-height:100vh;margin:0;background:#EEF0EC;';
+      var p = document.createElement('p');
+      p.textContent = 'This page is meant to be embedded by the Service1 host.';
+      body.appendChild(p);
+      root.appendChild(head);
+      root.appendChild(body);
       return;
     }
   } catch {}

@@ -249,40 +249,77 @@ function getDocs() {
   });
 }
 
+function svgNS(tag, attrs) {
+  const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  if (attrs) for (const k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+}
+function el(tag, opts, children) {
+  const e = document.createElement(tag);
+  if (opts) {
+    if (opts.className) e.className = opts.className;
+    if (opts.text != null) e.textContent = opts.text;
+    if (opts.style) e.style.cssText = opts.style;
+    if (opts.attrs) for (const k in opts.attrs) e.setAttribute(k, opts.attrs[k]);
+  }
+  if (children) for (const c of children) if (c != null) e.appendChild(c);
+  return e;
+}
+
+function buildEmpty() {
+  const wrap = el('div', { className: 'di-empty' });
+  const svg = svgNS('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '1.5', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' });
+  svg.appendChild(svgNS('path', { d: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z' }));
+  svg.appendChild(svgNS('polyline', { points: '14 2 14 8 20 8' }));
+  wrap.appendChild(svg);
+  wrap.appendChild(el('div', { className: 't', text: 'No documents in this view' }));
+  wrap.appendChild(el('div', { className: 'h', text: 'Documents you create or receive will appear here.' }));
+  wrap.appendChild(el('a', { attrs: { href: '#' }, text: '+ New document' }));
+  return wrap;
+}
+
+function buildRow(d) {
+  const row = el('div', { className: 'di-row', attrs: { 'data-id': String(d.id) } });
+  row.appendChild(el('div', { className: d.extClass, text: (d.ext || '').toUpperCase() }));
+  const mid = el('div');
+  mid.appendChild(el('div', { className: 'di-title', text: d.title }));
+  mid.appendChild(el('div', { className: 'di-sub', text: 'To: ' + d.to }));
+  row.appendChild(mid);
+  row.appendChild(el('div', { className: 'di-meta', text: d.date }));
+  const statusWrap = el('div');
+  statusWrap.appendChild(el('span', { className: d.statusClass, text: d.statusLabel }));
+  row.appendChild(statusWrap);
+  row.appendChild(el('div', { className: 'di-meta', style: 'font-size:11.5px;color:var(--ink-3);', text: '#' + d.id }));
+
+  const viewWrap = el('div', { className: 'di-view-wrap' });
+  const btn = el('button', { className: 'di-view-btn' });
+  btn.appendChild(document.createTextNode('View '));
+  const caret = svgNS('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2.4' });
+  caret.appendChild(svgNS('polyline', { points: '6 9 12 15 18 9' }));
+  btn.appendChild(caret);
+  btn.addEventListener('click', (ev) => { ev.stopPropagation(); toggleDd(btn); });
+  viewWrap.appendChild(btn);
+
+  const dd = el('div', { className: 'di-dropdown', attrs: { 'data-doc-id': String(d.id) } });
+  dd.appendChild(el('a', { attrs: { href: '#' }, text: 'Open' }));
+  dd.appendChild(el('a', { attrs: { 'data-comm-action': 'action:documents.download', href: '#' }, text: 'Download' }));
+  dd.appendChild(el('a', { attrs: { 'data-comm-action': 'action:documents.send-copy', href: '#' }, text: 'Send copy' }));
+  dd.appendChild(el('a', { attrs: { 'data-comm-action': 'action:documents.rename', href: '#' }, text: 'Rename' }));
+  dd.appendChild(el('a', { className: 'danger', attrs: { 'data-comm-action': 'action:documents.delete', href: '#' }, text: 'Delete' }));
+  viewWrap.appendChild(dd);
+  row.appendChild(viewWrap);
+  return row;
+}
+
 function render(tab) {
   const list = document.getElementById('diList');
   const shown = getDocs().filter(d => d.tabs.includes(tab));
+  while (list.firstChild) list.removeChild(list.firstChild);
   if (!shown.length) {
-    list.innerHTML = `
-      <div class="di-empty">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-        <div class="t">No documents in this view</div>
-        <div class="h">Documents you create or receive will appear here.</div>
-        <a href="#">+ New document</a>
-      </div>`;
+    list.appendChild(buildEmpty());
     return;
   }
-  list.innerHTML = shown.map(d => `
-    <div class="di-row" data-id="${d.id}">
-      <div class="${d.extClass}">${(d.ext||'').toUpperCase()}</div>
-      <div>
-        <div class="di-title">${d.title}</div>
-        <div class="di-sub">To: ${d.to}</div>
-      </div>
-      <div class="di-meta">${d.date}</div>
-      <div><span class="${d.statusClass}">${d.statusLabel}</span></div>
-      <div class="di-meta" style="font-size:11.5px;color:var(--ink-3);">#${d.id}</div>
-      <div class="di-view-wrap">
-        <button class="di-view-btn" onclick="event.stopPropagation();toggleDd(this);">View <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="6 9 12 15 18 9"/></svg></button>
-        <div class="di-dropdown" data-doc-id="${d.id}">
-          <a href="#">Open</a>
-          <a data-comm-action="action:documents.download" href="#">Download</a>
-          <a data-comm-action="action:documents.send-copy" href="#">Send copy</a>
-          <a data-comm-action="action:documents.rename" href="#">Rename</a>
-          <a data-comm-action="action:documents.delete" href="#" class="danger">Delete</a>
-        </div>
-      </div>
-    </div>`).join('');
+  for (const d of shown) list.appendChild(buildRow(d));
 }
 
 function toggleDd(btn) {
@@ -311,31 +348,38 @@ document.getElementById('diList').addEventListener('click', e => {
   const d = getDocs().find(x => x.id === +row.dataset.id); if (!d) return;
   const m = document.createElement('div');
   m.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:center;justify-content:center;z-index:1000;padding:24px;';
-  m.innerHTML = `
-    <div style="background:#fff;border-radius:12px;max-width:640px;width:100%;max-height:84vh;overflow:auto;box-shadow:0 24px 60px -16px rgba(15,23,42,.4);">
-      <div style="padding:22px 26px 16px;border-bottom:var(--hair);display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
-        <div style="display:flex;gap:14px;align-items:flex-start;">
-          <div class="${d.extClass}" style="width:42px;height:48px;font-size:11px;">${(d.ext||'').toUpperCase()}</div>
-          <div>
-            <div style="font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;">Document · #${d.id}</div>
-            <h2 style="margin:6px 0 8px;font-size:20px;font-weight:700;letter-spacing:-0.01em;">${d.title}</h2>
-            <span class="${d.statusClass}">${d.statusLabel}</span>
-          </div>
-        </div>
-        <button class="x" style="border:0;background:transparent;font-size:24px;color:var(--ink-3);cursor:pointer;line-height:1;">×</button>
-      </div>
-      <div style="padding:18px 26px;">
-        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:18px;">
-          <div style="padding:10px 14px;border:var(--hair);border-radius:8px;"><div style="font-size:11px;color:var(--ink-3);">To</div><div style="font-weight:600;margin-top:4px;">${d.to}</div></div>
-          <div style="padding:10px 14px;border:var(--hair);border-radius:8px;"><div style="font-size:11px;color:var(--ink-3);">Date</div><div style="font-weight:600;margin-top:4px;">${d.date}</div></div>
-        </div>
-        <div style="display:flex;justify-content:flex-end;gap:8px;">
-          <button class="btn btn-secondary x">Close</button>
-          <button data-comm-action="action:documents.download" class="btn btn-secondary">Download</button>
-          <button class="btn btn-primary">Open document →</button>
-        </div>
-      </div>
-    </div>`;
+  const card = el('div', { style: 'background:#fff;border-radius:12px;max-width:640px;width:100%;max-height:84vh;overflow:auto;box-shadow:0 24px 60px -16px rgba(15,23,42,.4);' });
+  const head = el('div', { style: 'padding:22px 26px 16px;border-bottom:var(--hair);display:flex;justify-content:space-between;align-items:flex-start;gap:12px;' });
+  const headL = el('div', { style: 'display:flex;gap:14px;align-items:flex-start;' });
+  headL.appendChild(el('div', { className: d.extClass, style: 'width:42px;height:48px;font-size:11px;', text: (d.ext || '').toUpperCase() }));
+  const info = el('div');
+  info.appendChild(el('div', { style: 'font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;', text: 'Document · #' + d.id }));
+  info.appendChild(el('h2', { style: 'margin:6px 0 8px;font-size:20px;font-weight:700;letter-spacing:-0.01em;', text: d.title }));
+  info.appendChild(el('span', { className: d.statusClass, text: d.statusLabel }));
+  headL.appendChild(info);
+  head.appendChild(headL);
+  head.appendChild(el('button', { className: 'x', style: 'border:0;background:transparent;font-size:24px;color:var(--ink-3);cursor:pointer;line-height:1;', text: '×' }));
+  card.appendChild(head);
+
+  const body = el('div', { style: 'padding:18px 26px;' });
+  const grid = el('div', { style: 'display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:18px;' });
+  const to = el('div', { style: 'padding:10px 14px;border:var(--hair);border-radius:8px;' });
+  to.appendChild(el('div', { style: 'font-size:11px;color:var(--ink-3);', text: 'To' }));
+  to.appendChild(el('div', { style: 'font-weight:600;margin-top:4px;', text: d.to }));
+  grid.appendChild(to);
+  const dt = el('div', { style: 'padding:10px 14px;border:var(--hair);border-radius:8px;' });
+  dt.appendChild(el('div', { style: 'font-size:11px;color:var(--ink-3);', text: 'Date' }));
+  dt.appendChild(el('div', { style: 'font-weight:600;margin-top:4px;', text: d.date }));
+  grid.appendChild(dt);
+  body.appendChild(grid);
+
+  const actions = el('div', { style: 'display:flex;justify-content:flex-end;gap:8px;' });
+  actions.appendChild(el('button', { className: 'btn btn-secondary x', text: 'Close' }));
+  actions.appendChild(el('button', { className: 'btn btn-secondary', attrs: { 'data-comm-action': 'action:documents.download' }, text: 'Download' }));
+  actions.appendChild(el('button', { className: 'btn btn-primary', text: 'Open document →' }));
+  body.appendChild(actions);
+  card.appendChild(body);
+  m.appendChild(card);
   document.body.appendChild(m);
   const close = () => m.remove();
   m.addEventListener('click', e2 => { if (e2.target === m) close(); });

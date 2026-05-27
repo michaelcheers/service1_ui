@@ -46,15 +46,35 @@ function renderPager() {
   const current = +p.currentPage || 1;
   const total   = Math.max(1, +p.totalPages || 1);
   const items   = buildPageList(current, total);
-  const parts = [];
-  parts.push('<a class="pb' + (current <= 1 ? ' disabled' : '') + '" data-page="prev">←</a>');
+  while (host.firstChild) host.removeChild(host.firstChild);
+  const prev = document.createElement('a');
+  prev.className = 'pb' + (current <= 1 ? ' disabled' : '');
+  prev.setAttribute('data-page', 'prev');
+  prev.textContent = '←';
+  host.appendChild(prev);
   for (const it of items) {
-    if (it === '…') { parts.push('<span class="pb disabled">…</span>'); continue; }
-    parts.push('<a class="pb' + (it === current ? ' active' : '') + '" data-page="' + it + '">' + it + '</a>');
+    if (it === '…') {
+      const span = document.createElement('span');
+      span.className = 'pb disabled';
+      span.textContent = '…';
+      host.appendChild(span);
+      continue;
+    }
+    const a = document.createElement('a');
+    a.className = 'pb' + (it === current ? ' active' : '');
+    a.setAttribute('data-page', String(it));
+    a.textContent = String(it);
+    host.appendChild(a);
   }
-  parts.push('<span style="font-size:12px;color:var(--ink-3);padding:0 6px;">of ' + total + '</span>');
-  parts.push('<a class="pb' + (current >= total ? ' disabled' : '') + '" data-page="next">→</a>');
-  host.innerHTML = parts.join('');
+  const ofSpan = document.createElement('span');
+  ofSpan.style.cssText = 'font-size:12px;color:var(--ink-3);padding:0 6px;';
+  ofSpan.textContent = 'of ' + total;
+  host.appendChild(ofSpan);
+  const next = document.createElement('a');
+  next.className = 'pb' + (current >= total ? ' disabled' : '');
+  next.setAttribute('data-page', 'next');
+  next.textContent = '→';
+  host.appendChild(next);
 }
 async function goToPage(page) {
   const data = (window.S1.fixtures || {}).salesFollowUps || {};

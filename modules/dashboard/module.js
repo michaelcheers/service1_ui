@@ -70,7 +70,7 @@ function renderChart(key) {
   }
   const xWrap = document.querySelector('.chart-x');
   if (xWrap) {
-    xWrap.innerHTML = '';
+    while (xWrap.firstChild) xWrap.removeChild(xWrap.firstChild);
     xWrap.style.gridTemplateColumns = 'repeat(' + r.xLabels.length + ', 1fr)';
     r.xLabels.forEach((lbl, i) => {
       const s = document.createElement('span');

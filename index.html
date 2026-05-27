@@ -44,16 +44,49 @@
 <script src="./modules.index.js"></script>
 <script>
 const list = (window.S1 && window.S1.modulesIndex) || [];
-document.getElementById('grid').innerHTML = list.map(m => `
-  <div class="card">
-    <h3>${m.title}</h3>
-    <div class="desc">${m.reads.length} read(s), ${m.writes.length} write(s)</div>
-    <div class="tags">${[...m.reads, ...m.writes].slice(0,3).map(x => '<span>'+x+'</span>').join(' · ')}</div>
-    <div class="row">
-      <a class="primary" href="./lab.html?module=${m.name}">Open in Lab</a>
-      <a class="secondary" href="./modules/${m.name}/index.html?mode=mock&fixture=${m.fixture}" target="_blank">Standalone ↗</a>
-    </div>
-  </div>`).join('');
+const grid = document.getElementById('grid');
+while (grid.firstChild) grid.removeChild(grid.firstChild);
+list.forEach(m => {
+  const card = document.createElement('div');
+  card.className = 'card';
+
+  const h3 = document.createElement('h3');
+  h3.textContent = m.title;
+  card.appendChild(h3);
+
+  const desc = document.createElement('div');
+  desc.className = 'desc';
+  desc.textContent = m.reads.length + ' read(s), ' + m.writes.length + ' write(s)';
+  card.appendChild(desc);
+
+  const tags = document.createElement('div');
+  tags.className = 'tags';
+  const tagItems = [...m.reads, ...m.writes].slice(0, 3);
+  tagItems.forEach((x, i) => {
+    if (i > 0) tags.appendChild(document.createTextNode(' · '));
+    const sp = document.createElement('span');
+    sp.textContent = x;
+    tags.appendChild(sp);
+  });
+  card.appendChild(tags);
+
+  const row = document.createElement('div');
+  row.className = 'row';
+  const a1 = document.createElement('a');
+  a1.className = 'primary';
+  a1.setAttribute('href', './lab.html?module=' + m.name);
+  a1.textContent = 'Open in Lab';
+  row.appendChild(a1);
+  const a2 = document.createElement('a');
+  a2.className = 'secondary';
+  a2.setAttribute('href', './modules/' + m.name + '/index.html?mode=mock&fixture=' + m.fixture);
+  a2.setAttribute('target', '_blank');
+  a2.textContent = 'Standalone ↗';
+  row.appendChild(a2);
+  card.appendChild(row);
+
+  grid.appendChild(card);
+});
 </script>
 </body>
 </html>

@@ -161,6 +161,18 @@ function getRows() {
   }));
 }
 
+function clearEl(el){ while(el.firstChild) el.removeChild(el.firstChild); }
+function el(tag, opts){
+  const e = document.createElement(tag);
+  if (opts){
+    if (opts.className) e.className = opts.className;
+    if (opts.text != null) e.textContent = opts.text;
+    if (opts.style) e.style.cssText = opts.style;
+    if (opts.attrs) for (const k in opts.attrs) e.setAttribute(k, opts.attrs[k]);
+  }
+  return e;
+}
+
 function render() {
   const st = document.getElementById('pofcStatus').value.toLowerCase();
   const fl = document.getElementById('pofcFlagged').checked;
@@ -170,20 +182,39 @@ function render() {
     return true;
   });
   const tb = document.getElementById('pofcBody');
+  clearEl(tb);
   if (!shown.length) {
-    tb.innerHTML = '<tr><td colspan="7"><div class="pofc-empty">No submissions match your filters.</div></td></tr>';
+    const tr = el('tr');
+    const td = el('td', { attrs:{colspan:'7'} });
+    td.appendChild(el('div', { className:'pofc-empty', text:'No submissions match your filters.' }));
+    tr.appendChild(td);
+    tb.appendChild(tr);
     return;
   }
-  tb.innerHTML = shown.map(r => `
-    <tr style="cursor:pointer;" data-id="${r.id}">
-      <td><div class="who"><span class="who-av" style="background:var(--terra);">${r.who.split(' ').map(s=>s[0]).join('').slice(0,2)}</span><div><div class="who-nm">${r.who}</div><div class="who-sub">${r.role}</div></div></div></td>
-      <td>${r.tpl}</td>
-      <td class="num cell-light">${r.submitted}</td>
-      <td class="num" style="${r.items.split('/')[0]!==r.items.split('/')[1]?'color:var(--warn);font-weight:600;':''}">${r.items}</td>
-      <td class="cell-light">${r.gps}</td>
-      <td><span class="pofc-status ${r.status}">${STATUS_LBL[r.status]}</span></td>
-      <td><button data-comm-action="action:preOfficeSubmissions.review" class="btn btn-ghost" style="font-size:11.5px;">Review</button></td>
-    </tr>`).join('');
+  shown.forEach(r => {
+    const tr = el('tr', { style:'cursor:pointer;', attrs:{'data-id':r.id} });
+    const tdW = el('td');
+    const who = el('div', { className:'who' });
+    who.appendChild(el('span', { className:'who-av', style:'background:var(--terra);', text:r.who.split(' ').map(s=>s[0]).join('').slice(0,2) }));
+    const wDiv = el('div');
+    wDiv.appendChild(el('div', { className:'who-nm', text:r.who }));
+    wDiv.appendChild(el('div', { className:'who-sub', text:r.role }));
+    who.appendChild(wDiv);
+    tdW.appendChild(who);
+    tr.appendChild(tdW);
+    tr.appendChild(el('td', { text:r.tpl }));
+    tr.appendChild(el('td', { className:'num cell-light', text:r.submitted }));
+    const parts = r.items.split('/');
+    tr.appendChild(el('td', { className:'num', style: parts[0]!==parts[1]?'color:var(--warn);font-weight:600;':'', text:r.items }));
+    tr.appendChild(el('td', { className:'cell-light', text:r.gps }));
+    const tdS = el('td');
+    tdS.appendChild(el('span', { className:'pofc-status ' + r.status, text:STATUS_LBL[r.status] }));
+    tr.appendChild(tdS);
+    const tdB = el('td');
+    tdB.appendChild(el('button', { className:'btn btn-ghost', style:'font-size:11.5px;', text:'Review', attrs:{'data-comm-action':'action:preOfficeSubmissions.review'} }));
+    tr.appendChild(tdB);
+    tb.appendChild(tr);
+  });
 }
 
 document.getElementById('pofcApply').addEventListener('click', render);
@@ -196,23 +227,35 @@ document.getElementById('pofcBody').addEventListener('click', e => {
   const r = getRows().find(x => x.id === +tr.dataset.id); if (!r) return;
   const m = document.createElement('div');
   m.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:center;justify-content:center;z-index:1000;padding:24px;';
-  m.innerHTML = `<div style="background:#fff;border-radius:12px;max-width:580px;width:100%;max-height:84vh;overflow:auto;padding:24px 26px;box-shadow:0 24px 60px -16px rgba(15,23,42,.4);">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:16px;">
-      <div><div style="font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;">Checklist submission #${r.id}</div><h2 style="margin:6px 0 8px;font-size:20px;font-weight:700;letter-spacing:-0.01em;">${r.who}</h2><div><span class="pofc-status ${r.status}">${STATUS_LBL[r.status]}</span></div></div>
-      <button class="x" style="border:0;background:transparent;font-size:24px;color:var(--ink-3);cursor:pointer;line-height:1;">×</button>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:18px;">
-      <div style="padding:10px 14px;border:var(--hair);border-radius:8px;"><div style="font-size:11px;color:var(--ink-3);">Template</div><div style="font-weight:600;margin-top:4px;">${r.tpl}</div></div>
-      <div style="padding:10px 14px;border:var(--hair);border-radius:8px;"><div style="font-size:11px;color:var(--ink-3);">Submitted</div><div style="font-weight:600;margin-top:4px;">${r.submitted}</div></div>
-      <div style="padding:10px 14px;border:var(--hair);border-radius:8px;"><div style="font-size:11px;color:var(--ink-3);">Items completed</div><div style="font-weight:600;margin-top:4px;">${r.items}</div></div>
-      <div style="padding:10px 14px;border:var(--hair);border-radius:8px;"><div style="font-size:11px;color:var(--ink-3);">GPS location</div><div style="font-weight:600;margin-top:4px;">${r.gps}</div></div>
-    </div>
-    <div style="display:flex;justify-content:flex-end;gap:8px;">
-      <button class="btn btn-secondary x">Close</button>
-      <button data-comm-action="action:preOfficeSubmissions.flag" class="btn btn-secondary">Flag</button>
-      <button data-comm-action="action:preOfficeSubmissions.markReviewed" class="btn btn-primary">Mark reviewed</button>
-    </div>
-  </div>`;
+  const card = el('div', { style:'background:#fff;border-radius:12px;max-width:580px;width:100%;max-height:84vh;overflow:auto;padding:24px 26px;box-shadow:0 24px 60px -16px rgba(15,23,42,.4);' });
+  const head = el('div', { style:'display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:16px;' });
+  const hLeft = el('div');
+  hLeft.appendChild(el('div', { style:'font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;', text:'Checklist submission #' + r.id }));
+  hLeft.appendChild(el('h2', { style:'margin:6px 0 8px;font-size:20px;font-weight:700;letter-spacing:-0.01em;', text:r.who }));
+  const stWrap = el('div');
+  stWrap.appendChild(el('span', { className:'pofc-status ' + r.status, text:STATUS_LBL[r.status] }));
+  hLeft.appendChild(stWrap);
+  head.appendChild(hLeft);
+  head.appendChild(el('button', { className:'x', style:'border:0;background:transparent;font-size:24px;color:var(--ink-3);cursor:pointer;line-height:1;', text:'×' }));
+  card.appendChild(head);
+  const grid = el('div', { style:'display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:18px;' });
+  function infoBox(label, val){
+    const box = el('div', { style:'padding:10px 14px;border:var(--hair);border-radius:8px;' });
+    box.appendChild(el('div', { style:'font-size:11px;color:var(--ink-3);', text:label }));
+    box.appendChild(el('div', { style:'font-weight:600;margin-top:4px;', text:val }));
+    return box;
+  }
+  grid.appendChild(infoBox('Template', r.tpl));
+  grid.appendChild(infoBox('Submitted', r.submitted));
+  grid.appendChild(infoBox('Items completed', r.items));
+  grid.appendChild(infoBox('GPS location', r.gps));
+  card.appendChild(grid);
+  const actions = el('div', { style:'display:flex;justify-content:flex-end;gap:8px;' });
+  actions.appendChild(el('button', { className:'btn btn-secondary x', text:'Close' }));
+  actions.appendChild(el('button', { className:'btn btn-secondary', text:'Flag', attrs:{'data-comm-action':'action:preOfficeSubmissions.flag'} }));
+  actions.appendChild(el('button', { className:'btn btn-primary', text:'Mark reviewed', attrs:{'data-comm-action':'action:preOfficeSubmissions.markReviewed'} }));
+  card.appendChild(actions);
+  m.appendChild(card);
   document.body.appendChild(m);
   const close = () => m.remove();
   m.addEventListener('click', e2 => { if (e2.target === m) close(); });

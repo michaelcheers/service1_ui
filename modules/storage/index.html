@@ -223,6 +223,18 @@ function getAccounts() {
   }));
 }
 
+function clear(el){ while(el.firstChild) el.removeChild(el.firstChild); }
+function el(tag, opts){
+  const e = document.createElement(tag);
+  if (opts){
+    if (opts.className) e.className = opts.className;
+    if (opts.text != null) e.textContent = opts.text;
+    if (opts.style) e.style.cssText = opts.style;
+    if (opts.attrs) for (const k in opts.attrs) e.setAttribute(k, opts.attrs[k]);
+  }
+  return e;
+}
+
 function render() {
   const f = document.querySelector('#storFilters .stor-filter-btn.active')?.dataset.filter || 'all';
   const q = document.getElementById('storSearch').value.trim().toLowerCase();
@@ -231,16 +243,37 @@ function render() {
     if (q && !a.name.toLowerCase().includes(q)) return false;
     return true;
   });
-  document.getElementById('storBody').innerHTML = shown.map(a => `
-    <tr data-id="${a.id}" style="cursor:pointer;">
-      <td><div class="who"><span class="who-av" style="background:${a.avc};">${a.av}</span><div><div class="who-nm">${a.name}</div></div></div></td>
-      <td>${a.units}</td>
-      <td class="num">${a.monthly}</td>
-      <td class="num" style="${a.balance.startsWith('−')?'color:var(--bad);font-weight:600;':''}">${a.balance}</td>
-      <td class="num cell-light">${a.since}</td>
-      <td><span class="stor-pill ${a.status}">${STATUS_LBL[a.status]}</span></td>
-      <td onclick="event.stopPropagation();"><button class="btn btn-ghost" style="font-size:11.5px;">Edit</button></td>
-    </tr>`).join('') || '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--ink-3);">No accounts match.</td></tr>';
+  const tb = document.getElementById('storBody');
+  clear(tb);
+  if (!shown.length) {
+    const tr = el('tr');
+    tr.appendChild(el('td', { text:'No accounts match.', style:'text-align:center;padding:40px;color:var(--ink-3);', attrs:{colspan:'7'} }));
+    tb.appendChild(tr);
+    return;
+  }
+  shown.forEach(a => {
+    const tr = el('tr', { style:'cursor:pointer;', attrs:{'data-id':a.id} });
+    const tdW = el('td');
+    const who = el('div', { className:'who' });
+    who.appendChild(el('span', { className:'who-av', style:'background:' + a.avc + ';', text:a.av }));
+    const wDiv = el('div');
+    wDiv.appendChild(el('div', { className:'who-nm', text:a.name }));
+    who.appendChild(wDiv);
+    tdW.appendChild(who);
+    tr.appendChild(tdW);
+    tr.appendChild(el('td', { text:a.units }));
+    tr.appendChild(el('td', { className:'num', text:a.monthly }));
+    tr.appendChild(el('td', { className:'num', style: a.balance.startsWith('−')?'color:var(--bad);font-weight:600;':'', text:a.balance }));
+    tr.appendChild(el('td', { className:'num cell-light', text:a.since }));
+    const tdS = el('td');
+    tdS.appendChild(el('span', { className:'stor-pill ' + a.status, text:STATUS_LBL[a.status] }));
+    tr.appendChild(tdS);
+    const tdA = el('td');
+    tdA.addEventListener('click', e => e.stopPropagation());
+    tdA.appendChild(el('button', { className:'btn btn-ghost', style:'font-size:11.5px;', text:'Edit' }));
+    tr.appendChild(tdA);
+    tb.appendChild(tr);
+  });
 }
 
 document.querySelectorAll('#storFilters .stor-filter-btn').forEach(b => b.addEventListener('click', () => {
@@ -256,26 +289,40 @@ document.getElementById('storBody').addEventListener('click', e => {
   const a = getAccounts().find(x => x.id === +tr.dataset.id); if (!a) return;
   const m = document.createElement('div');
   m.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:center;justify-content:center;z-index:1000;padding:24px;';
-  m.innerHTML = `<div style="background:#fff;border-radius:12px;max-width:540px;width:100%;padding:24px 26px;box-shadow:0 24px 60px -16px rgba(15,23,42,.4);">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;gap:14px;">
-      <div style="display:flex;gap:14px;align-items:center;">
-        <div class="who-av" style="background:${a.avc};width:42px;height:42px;font-size:14px;">${a.av}</div>
-        <div><div style="font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;">Storage account #${a.id}</div><h2 style="margin:6px 0 0;font-size:20px;font-weight:700;letter-spacing:-0.01em;">${a.name}</h2></div>
-      </div>
-      <button class="x" style="border:0;background:transparent;font-size:24px;color:var(--ink-3);cursor:pointer;line-height:1;">×</button>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:18px;">
-      <div style="padding:10px 14px;border:var(--hair);border-radius:8px;"><div style="font-size:11px;color:var(--ink-3);">Units</div><div style="font-weight:600;margin-top:4px;">${a.units}</div></div>
-      <div style="padding:10px 14px;border:var(--hair);border-radius:8px;"><div style="font-size:11px;color:var(--ink-3);">Monthly</div><div style="font-weight:600;margin-top:4px;">${a.monthly}</div></div>
-      <div style="padding:10px 14px;border:var(--hair);border-radius:8px;"><div style="font-size:11px;color:var(--ink-3);">Balance</div><div style="font-weight:600;margin-top:4px;${a.balance.startsWith('−')?'color:var(--bad);':''}">${a.balance}</div></div>
-      <div style="padding:10px 14px;border:var(--hair);border-radius:8px;"><div style="font-size:11px;color:var(--ink-3);">Status</div><div style="margin-top:4px;"><span class="stor-pill ${a.status}">${STATUS_LBL[a.status]}</span></div></div>
-    </div>
-    <div style="display:flex;justify-content:flex-end;gap:8px;">
-      <button class="btn btn-secondary x">Close</button>
-      <button data-comm-action="action:storage.send-statement" class="btn btn-secondary">Send statement</button>
-      <button class="btn btn-primary">Edit account</button>
-    </div>
-  </div>`;
+  const card = el('div', { style:'background:#fff;border-radius:12px;max-width:540px;width:100%;padding:24px 26px;box-shadow:0 24px 60px -16px rgba(15,23,42,.4);' });
+  const head = el('div', { style:'display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;gap:14px;' });
+  const hLeft = el('div', { style:'display:flex;gap:14px;align-items:center;' });
+  hLeft.appendChild(el('div', { className:'who-av', style:'background:' + a.avc + ';width:42px;height:42px;font-size:14px;', text:a.av }));
+  const titleWrap = el('div');
+  titleWrap.appendChild(el('div', { style:'font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;', text:'Storage account #' + a.id }));
+  titleWrap.appendChild(el('h2', { style:'margin:6px 0 0;font-size:20px;font-weight:700;letter-spacing:-0.01em;', text:a.name }));
+  hLeft.appendChild(titleWrap);
+  head.appendChild(hLeft);
+  head.appendChild(el('button', { className:'x', style:'border:0;background:transparent;font-size:24px;color:var(--ink-3);cursor:pointer;line-height:1;', text:'×' }));
+  card.appendChild(head);
+  const grid = el('div', { style:'display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:18px;' });
+  function infoBox(label, val, valStyle){
+    const box = el('div', { style:'padding:10px 14px;border:var(--hair);border-radius:8px;' });
+    box.appendChild(el('div', { style:'font-size:11px;color:var(--ink-3);', text:label }));
+    box.appendChild(el('div', { style:'font-weight:600;margin-top:4px;' + (valStyle||''), text:val }));
+    return box;
+  }
+  grid.appendChild(infoBox('Units', a.units));
+  grid.appendChild(infoBox('Monthly', a.monthly));
+  grid.appendChild(infoBox('Balance', a.balance, a.balance.startsWith('−')?'color:var(--bad);':''));
+  const statusBox = el('div', { style:'padding:10px 14px;border:var(--hair);border-radius:8px;' });
+  statusBox.appendChild(el('div', { style:'font-size:11px;color:var(--ink-3);', text:'Status' }));
+  const stWrap = el('div', { style:'margin-top:4px;' });
+  stWrap.appendChild(el('span', { className:'stor-pill ' + a.status, text:STATUS_LBL[a.status] }));
+  statusBox.appendChild(stWrap);
+  grid.appendChild(statusBox);
+  card.appendChild(grid);
+  const actions = el('div', { style:'display:flex;justify-content:flex-end;gap:8px;' });
+  actions.appendChild(el('button', { className:'btn btn-secondary x', text:'Close' }));
+  actions.appendChild(el('button', { className:'btn btn-secondary', text:'Send statement', attrs:{'data-comm-action':'action:storage.send-statement'} }));
+  actions.appendChild(el('button', { className:'btn btn-primary', text:'Edit account' }));
+  card.appendChild(actions);
+  m.appendChild(card);
   document.body.appendChild(m);
   const close = () => m.remove();
   m.addEventListener('click', e2 => { if (e2.target === m) close(); });

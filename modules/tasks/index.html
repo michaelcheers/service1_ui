@@ -308,26 +308,61 @@ function getTasks() {
   return IS_PROD ? [] : INLINE_TASKS;
 }
 
-function cardHTML(t) {
-  return `<div class="task-card" data-id="${t.id}" draggable="true">
-    <div class="task-card-title">${t.title}</div>
-    <div class="task-card-meta">
-      <span class="task-pill pri-${t.priority}">${t.priority}</span>
-      <span class="task-pill proj">${t.project}</span>
-      <span class="task-card-due ${t.overdue?'overdue':''}">${t.due}</span>
-      <span class="task-card-assignee" style="background:${t.avc};" title="${t.assignee}">${t.av}</span>
-    </div>
-  </div>`;
+function el(tag, opts, children) {
+  const e = document.createElement(tag);
+  if (opts) {
+    if (opts.className) e.className = opts.className;
+    if (opts.text != null) e.textContent = opts.text;
+    if (opts.cssText) e.style.cssText = opts.cssText;
+    if (opts.attrs) for (const k in opts.attrs) e.setAttribute(k, opts.attrs[k]);
+    if (opts.title != null) e.title = opts.title;
+  }
+  if (children) for (const c of children) if (c != null) e.appendChild(c);
+  return e;
 }
-function rowHTML(t) {
-  return `<tr data-id="${t.id}">
-    <td><b>${t.title}</b></td>
-    <td><span class="task-pill proj">${t.project}</span></td>
-    <td><div class="who"><span class="who-av" style="background:${t.avc};width:22px;height:22px;font-size:9.5px;">${t.av}</span>${t.assignee}</div></td>
-    <td><span class="task-pill pri-${t.priority}">${t.priority}</span></td>
-    <td class="num cell-light ${t.overdue?'':''}" style="${t.overdue?'color:var(--bad);font-weight:600;':''}">${t.due}</td>
-    <td><span class="task-status"><span class="dot" style="background:${STATUS_COLORS[t.status]};"></span>${STATUS_LABEL[t.status]}</span></td>
-  </tr>`;
+function cardEl(t) {
+  const card = el('div', { className: 'task-card', attrs: { 'data-id': t.id, draggable: 'true' } });
+  card.appendChild(el('div', { className: 'task-card-title', text: t.title }));
+  const meta = el('div', { className: 'task-card-meta' });
+  meta.appendChild(el('span', { className: 'task-pill pri-' + t.priority, text: t.priority }));
+  meta.appendChild(el('span', { className: 'task-pill proj', text: t.project }));
+  meta.appendChild(el('span', { className: 'task-card-due' + (t.overdue ? ' overdue' : ''), text: t.due }));
+  meta.appendChild(el('span', { className: 'task-card-assignee', cssText: 'background:' + t.avc + ';', title: t.assignee, text: t.av }));
+  card.appendChild(meta);
+  return card;
+}
+function rowEl(t) {
+  const tr = el('tr', { attrs: { 'data-id': t.id } });
+  const td1 = el('td');
+  td1.appendChild(el('b', { text: t.title }));
+  tr.appendChild(td1);
+
+  const td2 = el('td');
+  td2.appendChild(el('span', { className: 'task-pill proj', text: t.project }));
+  tr.appendChild(td2);
+
+  const td3 = el('td');
+  const who = el('div', { className: 'who' });
+  who.appendChild(el('span', { className: 'who-av', cssText: 'background:' + t.avc + ';width:22px;height:22px;font-size:9.5px;', text: t.av }));
+  who.appendChild(document.createTextNode(t.assignee));
+  td3.appendChild(who);
+  tr.appendChild(td3);
+
+  const td4 = el('td');
+  td4.appendChild(el('span', { className: 'task-pill pri-' + t.priority, text: t.priority }));
+  tr.appendChild(td4);
+
+  const td5 = el('td', { className: 'num cell-light', cssText: t.overdue ? 'color:var(--bad);font-weight:600;' : '', text: t.due });
+  tr.appendChild(td5);
+
+  const td6 = el('td');
+  const status = el('span', { className: 'task-status' });
+  status.appendChild(el('span', { className: 'dot', cssText: 'background:' + STATUS_COLORS[t.status] + ';' }));
+  status.appendChild(document.createTextNode(STATUS_LABEL[t.status]));
+  td6.appendChild(status);
+  tr.appendChild(td6);
+
+  return tr;
 }
 
 function applyFilters(tasks) {
@@ -348,11 +383,24 @@ function render() {
   ['ToDo','InProgress','Review','Done'].forEach(s => {
     const col = document.querySelector('.kanban-col-body[data-col="' + s + '"]');
     const items = shown.filter(t => t.status === s);
-    col.innerHTML = items.map(cardHTML).join('');
+    col.replaceChildren();
+    for (const t of items) col.appendChild(cardEl(t));
     col.previousElementSibling.querySelector('.kanban-col-count').textContent = items.length;
   });
   // List
-  document.getElementById('listBody').innerHTML = shown.map(rowHTML).join('') || '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--ink-3);">No tasks match.</td></tr>';
+  const listBody = document.getElementById('listBody');
+  listBody.replaceChildren();
+  if (shown.length) {
+    for (const t of shown) listBody.appendChild(rowEl(t));
+  } else {
+    const tr = document.createElement('tr');
+    const td = document.createElement('td');
+    td.setAttribute('colspan', '6');
+    td.style.cssText = 'text-align:center;padding:40px;color:var(--ink-3);';
+    td.textContent = 'No tasks match.';
+    tr.appendChild(td);
+    listBody.appendChild(tr);
+  }
 }
 render();
 
@@ -374,22 +422,48 @@ document.querySelectorAll('#viewToggle .view-toggle-btn').forEach(b => b.addEven
 function openTask(t) {
   const m = document.createElement('div');
   m.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:center;justify-content:center;z-index:1000;padding:24px;';
-  m.innerHTML = `<div style="background:#fff;border-radius:12px;max-width:580px;width:100%;padding:24px 26px;box-shadow:0 24px 60px -16px rgba(15,23,42,.4);">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px;">
-      <div><div style="font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;">Task #${t.id}</div><h2 style="margin:6px 0;font-size:18px;font-weight:700;letter-spacing:-0.01em;">${t.title}</h2><div style="display:flex;gap:6px;flex-wrap:wrap;"><span class="task-pill pri-${t.priority}">${t.priority}</span><span class="task-pill proj">${t.project}</span><span class="task-status"><span class="dot" style="background:${STATUS_COLORS[t.status]};"></span>${STATUS_LABEL[t.status]}</span></div></div>
-      <button class="x" style="border:0;background:transparent;font-size:24px;color:var(--ink-3);cursor:pointer;line-height:1;">×</button>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px;">
-      <div style="padding:10px 14px;border:var(--hair);border-radius:8px;"><div style="font-size:11px;color:var(--ink-3);">Assignee</div><div style="font-weight:600;margin-top:4px;">${t.assignee}</div></div>
-      <div style="padding:10px 14px;border:var(--hair);border-radius:8px;"><div style="font-size:11px;color:var(--ink-3);">Due</div><div style="font-weight:600;margin-top:4px;${t.overdue?'color:var(--bad);':''}">${t.due}</div></div>
-    </div>
-    <textarea placeholder="Add a note…" style="width:100%;min-height:80px;padding:10px;border:var(--hair);border-radius:8px;font-size:13px;outline:none;resize:vertical;font-family:inherit;"></textarea>
-    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px;">
-      <button class="btn btn-secondary x">Cancel</button>
-      <button data-comm-action="action:tasks.snooze" class="btn btn-secondary">Snooze</button>
-      <button data-comm-action="action:tasks.complete" class="btn btn-primary">Mark complete</button>
-    </div>
-  </div>`;
+
+  const modal = el('div', { cssText: 'background:#fff;border-radius:12px;max-width:580px;width:100%;padding:24px 26px;box-shadow:0 24px 60px -16px rgba(15,23,42,.4);' });
+
+  const head = el('div', { cssText: 'display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px;' });
+  const headLeft = el('div');
+  headLeft.appendChild(el('div', { cssText: 'font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;', text: 'Task #' + t.id }));
+  headLeft.appendChild(el('h2', { cssText: 'margin:6px 0;font-size:18px;font-weight:700;letter-spacing:-0.01em;', text: t.title }));
+  const pills = el('div', { cssText: 'display:flex;gap:6px;flex-wrap:wrap;' });
+  pills.appendChild(el('span', { className: 'task-pill pri-' + t.priority, text: t.priority }));
+  pills.appendChild(el('span', { className: 'task-pill proj', text: t.project }));
+  const statusSpan = el('span', { className: 'task-status' });
+  statusSpan.appendChild(el('span', { className: 'dot', cssText: 'background:' + STATUS_COLORS[t.status] + ';' }));
+  statusSpan.appendChild(document.createTextNode(STATUS_LABEL[t.status]));
+  pills.appendChild(statusSpan);
+  headLeft.appendChild(pills);
+  head.appendChild(headLeft);
+  head.appendChild(el('button', { className: 'x', cssText: 'border:0;background:transparent;font-size:24px;color:var(--ink-3);cursor:pointer;line-height:1;', text: '×' }));
+  modal.appendChild(head);
+
+  const grid = el('div', { cssText: 'display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px;' });
+  const cell1 = el('div', { cssText: 'padding:10px 14px;border:var(--hair);border-radius:8px;' });
+  cell1.appendChild(el('div', { cssText: 'font-size:11px;color:var(--ink-3);', text: 'Assignee' }));
+  cell1.appendChild(el('div', { cssText: 'font-weight:600;margin-top:4px;', text: t.assignee }));
+  grid.appendChild(cell1);
+  const cell2 = el('div', { cssText: 'padding:10px 14px;border:var(--hair);border-radius:8px;' });
+  cell2.appendChild(el('div', { cssText: 'font-size:11px;color:var(--ink-3);', text: 'Due' }));
+  cell2.appendChild(el('div', { cssText: 'font-weight:600;margin-top:4px;' + (t.overdue ? 'color:var(--bad);' : ''), text: t.due }));
+  grid.appendChild(cell2);
+  modal.appendChild(grid);
+
+  const ta = document.createElement('textarea');
+  ta.setAttribute('placeholder', 'Add a note…');
+  ta.style.cssText = 'width:100%;min-height:80px;padding:10px;border:var(--hair);border-radius:8px;font-size:13px;outline:none;resize:vertical;font-family:inherit;';
+  modal.appendChild(ta);
+
+  const actions = el('div', { cssText: 'display:flex;justify-content:flex-end;gap:8px;margin-top:14px;' });
+  actions.appendChild(el('button', { className: 'btn btn-secondary x', text: 'Cancel' }));
+  actions.appendChild(el('button', { className: 'btn btn-secondary', attrs: { 'data-comm-action': 'action:tasks.snooze' }, text: 'Snooze' }));
+  actions.appendChild(el('button', { className: 'btn btn-primary', attrs: { 'data-comm-action': 'action:tasks.complete' }, text: 'Mark complete' }));
+  modal.appendChild(actions);
+
+  m.appendChild(modal);
   document.body.appendChild(m);
   const close = () => m.remove();
   m.addEventListener('click', e2 => { if (e2.target === m) close(); });

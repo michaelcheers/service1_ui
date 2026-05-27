@@ -159,17 +159,30 @@ function renderPager() {
   const current = +p.currentPage || 1;
   const total   = Math.max(1, +p.totalPages || 1);
   const items   = buildPageList(current, total);
-  const parts = [];
-  parts.push('<button class="cust-bulk-btn" data-page="prev"' + (current <= 1 ? ' disabled' : '') + '>Previous</button>');
+  const nodes = [];
+  const mkBtn = (cls, text, attrs) => {
+    const b = document.createElement('button');
+    b.className = cls;
+    b.textContent = text;
+    if (attrs) {
+      for (const k in attrs) {
+        if (k === 'disabled') { if (attrs[k]) b.disabled = true; }
+        else b.setAttribute(k, attrs[k]);
+      }
+    }
+    return b;
+  };
+  nodes.push(mkBtn('cust-bulk-btn', 'Previous', { 'data-page': 'prev', disabled: current <= 1 }));
   for (const it of items) {
-    if (it === '…') { parts.push('<button class="cust-bulk-btn" disabled>…</button>'); continue; }
+    if (it === '…') { nodes.push(mkBtn('cust-bulk-btn', '…', { disabled: true })); continue; }
     const cls = 'cust-bulk-btn' + (it === current ? ' primary' : '');
-    parts.push('<button class="' + cls + '" data-page="' + it + '">' + it + '</button>');
+    nodes.push(mkBtn(cls, String(it), { 'data-page': String(it) }));
   }
-  parts.push('<button class="cust-bulk-btn" data-page="next"' + (current >= total ? ' disabled' : '') + '>Next</button>');
+  nodes.push(mkBtn('cust-bulk-btn', 'Next', { 'data-page': 'next', disabled: current >= total }));
   host.style.display = 'flex';
   host.style.gap = '6px';
-  host.innerHTML = parts.join('');
+  while (host.firstChild) host.removeChild(host.firstChild);
+  nodes.forEach(n => host.appendChild(n));
 }
 async function goToPage(page) {
   const data = (window.S1.fixtures || {}).customers || {};

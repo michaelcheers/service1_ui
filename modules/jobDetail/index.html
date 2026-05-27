@@ -2916,7 +2916,13 @@ function jdRenderEmoji(cat, q) {
       if (matched.length) items = matched;
     }
   }
-  grid.innerHTML = items.map(e => `<button onclick="jdInsertEmoji('${e}')">${e}</button>`).join('');
+  while (grid.firstChild) grid.removeChild(grid.firstChild);
+  items.forEach(e => {
+    const btn = document.createElement('button');
+    btn.textContent = e;
+    btn.addEventListener('click', () => jdInsertEmoji(e));
+    grid.appendChild(btn);
+  });
 }
 function jdInsertEmoji(e) {
   const ta = document.querySelector('.composer-body textarea');

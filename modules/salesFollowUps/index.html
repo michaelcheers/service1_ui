@@ -217,6 +217,27 @@ function leadCls(l) {
   return 'new';
 }
 
+function makeEl(tag, opts) {
+  const el = document.createElement(tag);
+  if (opts) {
+    if (opts.className) el.className = opts.className;
+    if (opts.text != null) el.textContent = opts.text;
+    if (opts.style) el.style.cssText = opts.style;
+    if (opts.attrs) for (const k in opts.attrs) el.setAttribute(k, opts.attrs[k]);
+    if (opts.onclick) el.addEventListener('click', opts.onclick);
+  }
+  return el;
+}
+function svgEl(attrs, children) {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  for (const k in attrs) svg.setAttribute(k, attrs[k]);
+  for (const c of children) {
+    const el = document.createElementNS('http://www.w3.org/2000/svg', c.tag);
+    for (const k in c.attrs) el.setAttribute(k, c.attrs[k]);
+    svg.appendChild(el);
+  }
+  return svg;
+}
 function render(filter) {
   const shown = getRows().filter(r => {
     if (filter === 'all') return true;
@@ -226,21 +247,64 @@ function render(filter) {
     if (filter === 'on-ice') return r.lead === 'On Ice';
     return r.status === filter;
   });
-  document.getElementById('fuBody').innerHTML = shown.map(r => `
-    <tr data-id="${r.id}">
-      <td onclick="event.stopPropagation();"><input type="checkbox" class="fu-row-check"></td>
-      <td>
-        <div style="font-weight:600;"><a class="link-job" href="#">${r.customer}</a></div>
-        <div class="cell-light" style="margin-top:2px;font-size:11px;font-variant-numeric:tabular-nums;">#${r.job}</div>
-      </td>
-      <td><a class="link-job" href="#">${r.job}<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a></td>
-      <td class="${r.overdue ? 'fu-date-overdue' : ''}">${r.followUp}${r.overdue ? ' · overdue' : ''}</td>
-      <td>${r.service}</td>
-      <td><span class="st-pill ${r.status}">${STATUS_LBL[r.status]}</span></td>
-      <td><span class="lead-badge ${leadCls(r.lead)}">${r.lead}</span></td>
-      <td class="cell-light">${r.last}</td>
-      <td>${r.owner === 'Unassigned' ? '<span class="cell-light" style="font-style:italic;">Unassigned</span>' : r.owner}</td>
-    </tr>`).join('') || '<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--ink-3);">No follow-ups match.</td></tr>';
+  const tb = document.getElementById('fuBody');
+  while (tb.firstChild) tb.removeChild(tb.firstChild);
+  if (shown.length === 0) {
+    const tr = document.createElement('tr');
+    tr.appendChild(makeEl('td', { text: 'No follow-ups match.', style: 'text-align:center;padding:40px;color:var(--ink-3);', attrs: { colspan: '9' } }));
+    tb.appendChild(tr);
+    wireCheckboxes();
+    return;
+  }
+  for (const r of shown) {
+    const tr = document.createElement('tr');
+    tr.setAttribute('data-id', String(r.id));
+
+    const td1 = makeEl('td', { onclick: (e) => e.stopPropagation() });
+    td1.appendChild(makeEl('input', { className: 'fu-row-check', attrs: { type: 'checkbox' } }));
+    tr.appendChild(td1);
+
+    const td2 = document.createElement('td');
+    const custWrap = makeEl('div', { style: 'font-weight:600;' });
+    custWrap.appendChild(makeEl('a', { className: 'link-job', text: r.customer, attrs: { href: '#' } }));
+    td2.appendChild(custWrap);
+    td2.appendChild(makeEl('div', { className: 'cell-light', style: 'margin-top:2px;font-size:11px;font-variant-numeric:tabular-nums;', text: '#' + r.job }));
+    tr.appendChild(td2);
+
+    const td3 = document.createElement('td');
+    const jobLink = makeEl('a', { className: 'link-job', attrs: { href: '#' } });
+    jobLink.appendChild(document.createTextNode(r.job));
+    jobLink.appendChild(svgEl({ width: '11', height: '11', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2' }, [
+      { tag: 'path', attrs: { d: 'M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6' } },
+      { tag: 'polyline', attrs: { points: '15 3 21 3 21 9' } },
+      { tag: 'line', attrs: { x1: '10', y1: '14', x2: '21', y2: '3' } }
+    ]));
+    td3.appendChild(jobLink);
+    tr.appendChild(td3);
+
+    tr.appendChild(makeEl('td', { className: r.overdue ? 'fu-date-overdue' : '', text: r.followUp + (r.overdue ? ' · overdue' : '') }));
+    tr.appendChild(makeEl('td', { text: r.service }));
+
+    const td6 = document.createElement('td');
+    td6.appendChild(makeEl('span', { className: 'st-pill ' + r.status, text: STATUS_LBL[r.status] }));
+    tr.appendChild(td6);
+
+    const td7 = document.createElement('td');
+    td7.appendChild(makeEl('span', { className: 'lead-badge ' + leadCls(r.lead), text: r.lead }));
+    tr.appendChild(td7);
+
+    tr.appendChild(makeEl('td', { className: 'cell-light', text: r.last }));
+
+    const td9 = document.createElement('td');
+    if (r.owner === 'Unassigned') {
+      td9.appendChild(makeEl('span', { className: 'cell-light', style: 'font-style:italic;', text: 'Unassigned' }));
+    } else {
+      td9.textContent = r.owner;
+    }
+    tr.appendChild(td9);
+
+    tb.appendChild(tr);
+  }
   wireCheckboxes();
 }
 
@@ -270,26 +334,51 @@ document.getElementById('fuBody').addEventListener('click', e => {
   const r = getRows().find(x => x.id === +tr.dataset.id); if (!r) return;
   const m = document.createElement('div');
   m.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:center;justify-content:center;z-index:1000;padding:24px;';
-  m.innerHTML = `<div style="background:#fff;border-radius:12px;max-width:640px;width:100%;max-height:84vh;overflow:auto;box-shadow:0 24px 60px -16px rgba(15,23,42,.4);">
-    <div style="padding:22px 26px 16px;border-bottom:var(--hair);display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
-      <div><div style="font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;">Follow-up · ${r.followUp}${r.overdue ? ' · OVERDUE' : ''}</div><h2 style="margin:6px 0 8px;font-size:20px;font-weight:700;letter-spacing:-0.01em;">${r.customer}</h2><div style="display:flex;gap:6px;flex-wrap:wrap;"><span class="st-pill ${r.status}">${STATUS_LBL[r.status]}</span><span class="lead-badge ${leadCls(r.lead)}">${r.lead}</span></div></div>
-      <button class="x" style="border:0;background:transparent;font-size:24px;color:var(--ink-3);cursor:pointer;line-height:1;">×</button>
-    </div>
-    <div style="padding:18px 26px;">
-      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:18px;">
-        <div style="padding:10px 14px;border:var(--hair);border-radius:8px;"><div style="font-size:11px;color:var(--ink-3);">Job</div><div style="font-weight:600;margin-top:4px;font-variant-numeric:tabular-nums;">${r.job}</div></div>
-        <div style="padding:10px 14px;border:var(--hair);border-radius:8px;"><div style="font-size:11px;color:var(--ink-3);">Service date</div><div style="font-weight:600;margin-top:4px;">${r.service}</div></div>
-        <div style="padding:10px 14px;border:var(--hair);border-radius:8px;"><div style="font-size:11px;color:var(--ink-3);">Last contact</div><div style="font-weight:600;margin-top:4px;">${r.last}</div></div>
-        <div style="padding:10px 14px;border:var(--hair);border-radius:8px;"><div style="font-size:11px;color:var(--ink-3);">Owner</div><div style="font-weight:600;margin-top:4px;">${r.owner}</div></div>
-      </div>
-      <div style="font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:8px;">Notes</div>
-      <textarea placeholder="Add a note about this follow-up…" style="width:100%;min-height:80px;padding:12px;border:var(--hair);border-radius:8px;font-size:13px;outline:none;resize:vertical;font-family:inherit;"></textarea>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;">
-        <div style="display:flex;gap:8px;"><button data-comm-action="action:salesFollowUps.snooze-1d" class="btn btn-secondary">Snooze 1d</button><button data-comm-action="action:salesFollowUps.reassign" class="btn btn-secondary">Reassign…</button></div>
-        <div style="display:flex;gap:8px;"><button class="btn btn-secondary x">Cancel</button><button data-comm-action="action:salesFollowUps.mark-complete" class="btn btn-primary">Mark complete</button></div>
-      </div>
-    </div>
-  </div>`;
+
+  const card = makeEl('div', { style: 'background:#fff;border-radius:12px;max-width:640px;width:100%;max-height:84vh;overflow:auto;box-shadow:0 24px 60px -16px rgba(15,23,42,.4);' });
+
+  const header = makeEl('div', { style: 'padding:22px 26px 16px;border-bottom:var(--hair);display:flex;justify-content:space-between;align-items:flex-start;gap:12px;' });
+  const hLeft = document.createElement('div');
+  hLeft.appendChild(makeEl('div', { style: 'font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;', text: 'Follow-up · ' + r.followUp + (r.overdue ? ' · OVERDUE' : '') }));
+  hLeft.appendChild(makeEl('h2', { style: 'margin:6px 0 8px;font-size:20px;font-weight:700;letter-spacing:-0.01em;', text: r.customer }));
+  const pillRow = makeEl('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;' });
+  pillRow.appendChild(makeEl('span', { className: 'st-pill ' + r.status, text: STATUS_LBL[r.status] }));
+  pillRow.appendChild(makeEl('span', { className: 'lead-badge ' + leadCls(r.lead), text: r.lead }));
+  hLeft.appendChild(pillRow);
+  header.appendChild(hLeft);
+  header.appendChild(makeEl('button', { className: 'x', style: 'border:0;background:transparent;font-size:24px;color:var(--ink-3);cursor:pointer;line-height:1;', text: '×' }));
+  card.appendChild(header);
+
+  const body = makeEl('div', { style: 'padding:18px 26px;' });
+  const grid = makeEl('div', { style: 'display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:18px;' });
+  const mkInfo = (label, value, valStyle) => {
+    const w = makeEl('div', { style: 'padding:10px 14px;border:var(--hair);border-radius:8px;' });
+    w.appendChild(makeEl('div', { style: 'font-size:11px;color:var(--ink-3);', text: label }));
+    w.appendChild(makeEl('div', { style: 'font-weight:600;margin-top:4px;' + (valStyle || ''), text: value }));
+    return w;
+  };
+  grid.appendChild(mkInfo('Job', r.job, 'font-variant-numeric:tabular-nums;'));
+  grid.appendChild(mkInfo('Service date', r.service));
+  grid.appendChild(mkInfo('Last contact', r.last));
+  grid.appendChild(mkInfo('Owner', r.owner));
+  body.appendChild(grid);
+
+  body.appendChild(makeEl('div', { style: 'font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:8px;', text: 'Notes' }));
+  body.appendChild(makeEl('textarea', { style: 'width:100%;min-height:80px;padding:12px;border:var(--hair);border-radius:8px;font-size:13px;outline:none;resize:vertical;font-family:inherit;', attrs: { placeholder: 'Add a note about this follow-up…' } }));
+
+  const footRow = makeEl('div', { style: 'display:flex;justify-content:space-between;align-items:center;margin-top:14px;' });
+  const footLeft = makeEl('div', { style: 'display:flex;gap:8px;' });
+  footLeft.appendChild(makeEl('button', { className: 'btn btn-secondary', text: 'Snooze 1d', attrs: { 'data-comm-action': 'action:salesFollowUps.snooze-1d' } }));
+  footLeft.appendChild(makeEl('button', { className: 'btn btn-secondary', text: 'Reassign…', attrs: { 'data-comm-action': 'action:salesFollowUps.reassign' } }));
+  footRow.appendChild(footLeft);
+  const footRight = makeEl('div', { style: 'display:flex;gap:8px;' });
+  footRight.appendChild(makeEl('button', { className: 'btn btn-secondary x', text: 'Cancel' }));
+  footRight.appendChild(makeEl('button', { className: 'btn btn-primary', text: 'Mark complete', attrs: { 'data-comm-action': 'action:salesFollowUps.mark-complete' } }));
+  footRow.appendChild(footRight);
+  body.appendChild(footRow);
+
+  card.appendChild(body);
+  m.appendChild(card);
   document.body.appendChild(m);
   const close = () => m.remove();
   m.addEventListener('click', e2 => { if (e2.target === m) close(); });

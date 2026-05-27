@@ -170,6 +170,39 @@
     }
   }
 
+  // Walk a cloned <template>.content fragment and substitute {{path}} /
+  // {{path|fmt}} placeholders in text nodes and attribute values, using
+  // real DOM mutations (textContent / setAttribute) instead of any HTML
+  // sink. <template>.content was parsed by the HTML parser at page load,
+  // so it's a live DocumentFragment we can clone safely.
+  var PLACEHOLDER = /\{\{\s*([^}|\s]+)\s*(?:\|\s*([^}\s]+)\s*)?\}\}/g;
+  function applyTemplate(frag, item) {
+    var walker = document.createTreeWalker(frag, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, null);
+    var node = walker.nextNode();
+    while (node) {
+      if (node.nodeType === 3) {
+        var t = node.nodeValue;
+        if (t && t.indexOf('{{') !== -1) {
+          node.nodeValue = t.replace(PLACEHOLDER, function (_, key, fmt) {
+            return format(get(item, key), fmt);
+          });
+        }
+      } else if (node.nodeType === 1) {
+        var attrs = node.attributes;
+        for (var a = 0; a < attrs.length; a++) {
+          var av = attrs[a].value;
+          if (av && av.indexOf('{{') !== -1) {
+            node.setAttribute(attrs[a].name, av.replace(PLACEHOLDER, function (_, key, fmt) {
+              return format(get(item, key), fmt);
+            }));
+          }
+        }
+      }
+      node = walker.nextNode();
+    }
+    return frag;
+  }
+
   function bindLists(root, state) {
     var hosts = root.querySelectorAll('[data-bind]');
     for (var i = 0; i < hosts.length; i++) {
@@ -187,15 +220,13 @@
       var raw = get(state, path);
       if (raw == null) continue;
       var arr = Array.isArray(raw) ? raw : [raw];
-      // Parse via insertAdjacentHTML so the host's own element acts as the
-      // parsing context. A <div> staging container parses in "in body"
-      // mode and silently drops <tr>/<td>/<thead>/<tbody> tags (only their
-      // text survives), which mangled table-bound lists into one run-on
-      // line. Inserting directly into the host (<tbody>, <select>, etc.)
-      // respects the correct parser insertion mode.
+      // Clone the <template>'s parsed content and substitute placeholders
+      // in-place using DOM mutations — no innerHTML / insertAdjacentHTML
+      // sinks, which Trusted Types blocks.
       for (var j = 0; j < arr.length; j++) {
-        var html = substitute(tpl.innerHTML, arr[j]);
-        host.insertAdjacentHTML('beforeend', html);
+        var frag = tpl.content.cloneNode(true);
+        applyTemplate(frag, arr[j]);
+        host.appendChild(frag);
       }
     }
   }

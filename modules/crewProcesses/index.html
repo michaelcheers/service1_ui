@@ -379,7 +379,7 @@ document.addEventListener('click', e => {
     document.getElementById('epDefault').checked = isDefault;
 
     const list = document.getElementById('epStepList');
-    list.innerHTML = '';
+    while (list.firstChild) list.removeChild(list.firstChild);
     steps.forEach((s, i) => {
       const txt = s.querySelector('div b')?.textContent || `Step ${i+1}`;
       const detail = (s.querySelector('div')?.textContent || '').replace(txt, '').replace(/^[·\s]+/, '').trim();
@@ -408,16 +408,48 @@ function buildStepRow(num, name, detail, req) {
   const row = document.createElement('div');
   row.className = 'ep-step-row';
   row.setAttribute('data-row', '');
-  row.innerHTML = `
-    <span class="ep-handle" title="Drag to reorder">⋮⋮</span>
-    <span class="ep-num">${num}</span>
-    <input class="cp-input ep-step-name" name="name" type="text" placeholder="Step name (e.g. Sign contracts)" value="${name.replace(/"/g, '&quot;')}">
-    <input class="cp-input ep-step-detail" name="detail" type="text" placeholder="Optional detail" value="${detail.replace(/"/g, '&quot;')}">
-    <select class="cp-input ep-step-req" name="required" data-bind-options="optionsOptions"></select>
-    <button class="ep-step-del" type="button" title="Remove step">✕</button>
-  `;
-  // Pre-select the required/optional value
-  const sel = row.querySelector('.ep-step-req');
+
+  const handle = document.createElement('span');
+  handle.className = 'ep-handle';
+  handle.setAttribute('title', 'Drag to reorder');
+  handle.textContent = '⋮⋮';
+
+  const numEl = document.createElement('span');
+  numEl.className = 'ep-num';
+  numEl.textContent = String(num);
+
+  const nameInput = document.createElement('input');
+  nameInput.className = 'cp-input ep-step-name';
+  nameInput.setAttribute('name', 'name');
+  nameInput.type = 'text';
+  nameInput.placeholder = 'Step name (e.g. Sign contracts)';
+  nameInput.value = name;
+
+  const detailInput = document.createElement('input');
+  detailInput.className = 'cp-input ep-step-detail';
+  detailInput.setAttribute('name', 'detail');
+  detailInput.type = 'text';
+  detailInput.placeholder = 'Optional detail';
+  detailInput.value = detail;
+
+  const sel = document.createElement('select');
+  sel.className = 'cp-input ep-step-req';
+  sel.setAttribute('name', 'required');
+  sel.setAttribute('data-bind-options', 'optionsOptions');
+
+  const del = document.createElement('button');
+  del.className = 'ep-step-del';
+  del.type = 'button';
+  del.setAttribute('title', 'Remove step');
+  del.textContent = '✕';
+
+  row.appendChild(handle);
+  row.appendChild(numEl);
+  row.appendChild(nameInput);
+  row.appendChild(detailInput);
+  row.appendChild(sel);
+  row.appendChild(del);
+
   // Add the variants if not bound; the select gets options from fixture if available.
   if (!sel.options.length) {
     ['required','optional','auto'].forEach(v => {
@@ -427,7 +459,7 @@ function buildStepRow(num, name, detail, req) {
     });
   }
   sel.value = req || 'required';
-  row.querySelector('.ep-step-del').onclick = () => { row.remove(); renumberSteps(); };
+  del.onclick = () => { row.remove(); renumberSteps(); };
   return row;
 }
 function renumberSteps() {

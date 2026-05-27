@@ -243,17 +243,48 @@ document.querySelectorAll('.cal-cell').forEach(cell => {
     const m = document.createElement('div');
     m.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:center;justify-content:center;z-index:1000;padding:24px;';
     const wd = new Date(2026, 4, +day).toLocaleDateString('en-US', { weekday: 'long' });
-    m.innerHTML = `<div style="background:#fff;border-radius:12px;max-width:520px;width:100%;padding:24px 26px;box-shadow:0 24px 60px -16px rgba(15,23,42,.4);">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
-        <div><div style="font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;">${wd} · May ${day}, 2026</div><h2 style="margin:6px 0 0;font-size:20px;font-weight:700;letter-spacing:-0.01em;">${evts.length} ${evts.length===1?'event':'events'} scheduled</h2></div>
-        <button class="x" style="border:0;background:transparent;font-size:24px;color:var(--ink-3);cursor:pointer;line-height:1;">×</button>
-      </div>
-      ${evts.length ? evts.map(e => `<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border:var(--hair);border-radius:8px;margin-bottom:6px;cursor:pointer;font-size:13px;">${e}</div>`).join('') : '<div style="padding:30px;text-align:center;color:var(--ink-3);font-size:13px;border:1px dashed var(--line);border-radius:8px;">No events scheduled.</div>'}
-      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px;border-top:var(--hair);padding-top:14px;">
-        <button class="btn btn-secondary x">Close</button>
-        <button class="btn btn-primary">+ New meeting</button>
-      </div>
-    </div>`;
+    const card = document.createElement('div');
+    card.style.cssText = 'background:#fff;border-radius:12px;max-width:520px;width:100%;padding:24px 26px;box-shadow:0 24px 60px -16px rgba(15,23,42,.4);';
+    const header = document.createElement('div');
+    header.style.cssText = 'display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;';
+    const headLeft = document.createElement('div');
+    const eyebrow = document.createElement('div');
+    eyebrow.style.cssText = 'font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;';
+    eyebrow.textContent = `${wd} · May ${day}, 2026`;
+    const h2 = document.createElement('h2');
+    h2.style.cssText = 'margin:6px 0 0;font-size:20px;font-weight:700;letter-spacing:-0.01em;';
+    h2.textContent = `${evts.length} ${evts.length===1?'event':'events'} scheduled`;
+    headLeft.appendChild(eyebrow); headLeft.appendChild(h2);
+    const closeX = document.createElement('button');
+    closeX.className = 'x';
+    closeX.style.cssText = 'border:0;background:transparent;font-size:24px;color:var(--ink-3);cursor:pointer;line-height:1;';
+    closeX.textContent = '×';
+    header.appendChild(headLeft); header.appendChild(closeX);
+    card.appendChild(header);
+    if (evts.length) {
+      evts.forEach(e => {
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border:var(--hair);border-radius:8px;margin-bottom:6px;cursor:pointer;font-size:13px;';
+        row.textContent = e;
+        card.appendChild(row);
+      });
+    } else {
+      const empty = document.createElement('div');
+      empty.style.cssText = 'padding:30px;text-align:center;color:var(--ink-3);font-size:13px;border:1px dashed var(--line);border-radius:8px;';
+      empty.textContent = 'No events scheduled.';
+      card.appendChild(empty);
+    }
+    const footer = document.createElement('div');
+    footer.style.cssText = 'display:flex;justify-content:flex-end;gap:8px;margin-top:14px;border-top:var(--hair);padding-top:14px;';
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'btn btn-secondary x';
+    closeBtn.textContent = 'Close';
+    const newBtn = document.createElement('button');
+    newBtn.className = 'btn btn-primary';
+    newBtn.textContent = '+ New meeting';
+    footer.appendChild(closeBtn); footer.appendChild(newBtn);
+    card.appendChild(footer);
+    m.appendChild(card);
     document.body.appendChild(m);
     const close = () => m.remove();
     m.addEventListener('click', e2 => { if (e2.target === m) close(); });

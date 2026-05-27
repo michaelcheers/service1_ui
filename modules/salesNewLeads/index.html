@@ -167,33 +167,63 @@ function getLeads() {
   }));
 }
 
+function makeEl(tag, opts) {
+  const el = document.createElement(tag);
+  if (opts) {
+    if (opts.className) el.className = opts.className;
+    if (opts.text != null) el.textContent = opts.text;
+    if (opts.style) el.style.cssText = opts.style;
+    if (opts.attrs) for (const k in opts.attrs) el.setAttribute(k, opts.attrs[k]);
+  }
+  return el;
+}
 function renderLeads(filter, q) {
   const shown = getLeads().filter(l => {
     if (filter !== 'all' && l.status !== filter) return false;
     if (q && !(l.name.toLowerCase() + ' ' + l.phone).includes(q)) return false;
     return true;
   });
-  document.getElementById('nlGrid').innerHTML = shown.map(l => `
-    <div class="nl-card" data-id="${l.id}">
-      <div class="nl-head">
-        <div class="gap">
-          <div class="nl-name">${l.name}<span class="nl-region ${l.region}">${l.regionLbl}</span></div>
-          <div class="nl-phone">${l.phone}</div>
-        </div>
-        <span class="nl-status ${l.status}">${l.status[0].toUpperCase()+l.status.slice(1)}</span>
-      </div>
-      <div class="nl-details">
-        <div><div class="nl-d-l">Move date</div><div class="nl-d-v">${l.date}</div></div>
-        <div><div class="nl-d-l">Home size</div><div class="nl-d-v">${l.size}</div></div>
-        <div style="grid-column:span 2;"><div class="nl-d-l">From → To</div><div class="nl-d-v">${l.from} → ${l.to}</div></div>
-        <div><div class="nl-d-l">Type</div><div class="nl-d-v">${l.type}</div></div>
-        <div><div class="nl-d-l">Source</div><div class="nl-d-v">${l.source}</div></div>
-      </div>
-      <div class="nl-actions">
-        <button data-comm-action="action:salesNewLeads.grab-lead" class="btn-grab" data-action="grab">Grab Lead</button>
-        <button class="btn-more" data-action="more">⋯</button>
-      </div>
-    </div>`).join('') || '<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--ink-3);font-size:13px;">No leads match.</div>';
+  const host = document.getElementById('nlGrid');
+  while (host.firstChild) host.removeChild(host.firstChild);
+  if (shown.length === 0) {
+    host.appendChild(makeEl('div', { style: 'grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--ink-3);font-size:13px;', text: 'No leads match.' }));
+    return;
+  }
+  for (const l of shown) {
+    const card = makeEl('div', { className: 'nl-card', attrs: { 'data-id': String(l.id) } });
+
+    const head = makeEl('div', { className: 'nl-head' });
+    const gap = makeEl('div', { className: 'gap' });
+    const nameDiv = makeEl('div', { className: 'nl-name' });
+    nameDiv.appendChild(document.createTextNode(l.name));
+    nameDiv.appendChild(makeEl('span', { className: 'nl-region ' + l.region, text: l.regionLbl }));
+    gap.appendChild(nameDiv);
+    gap.appendChild(makeEl('div', { className: 'nl-phone', text: l.phone }));
+    head.appendChild(gap);
+    head.appendChild(makeEl('span', { className: 'nl-status ' + l.status, text: l.status[0].toUpperCase() + l.status.slice(1) }));
+    card.appendChild(head);
+
+    const det = makeEl('div', { className: 'nl-details' });
+    const mkD = (label, value, style) => {
+      const w = style ? makeEl('div', { style }) : document.createElement('div');
+      w.appendChild(makeEl('div', { className: 'nl-d-l', text: label }));
+      w.appendChild(makeEl('div', { className: 'nl-d-v', text: value }));
+      return w;
+    };
+    det.appendChild(mkD('Move date', l.date));
+    det.appendChild(mkD('Home size', l.size));
+    det.appendChild(mkD('From → To', l.from + ' → ' + l.to, 'grid-column:span 2;'));
+    det.appendChild(mkD('Type', l.type));
+    det.appendChild(mkD('Source', l.source));
+    card.appendChild(det);
+
+    const actions = makeEl('div', { className: 'nl-actions' });
+    actions.appendChild(makeEl('button', { className: 'btn-grab', text: 'Grab Lead', attrs: { 'data-comm-action': 'action:salesNewLeads.grab-lead', 'data-action': 'grab' } }));
+    actions.appendChild(makeEl('button', { className: 'btn-more', text: '⋯', attrs: { 'data-action': 'more' } }));
+    card.appendChild(actions);
+
+    host.appendChild(card);
+  }
 }
 
 let activeFilter = 'all', activeQuery = '';
@@ -224,24 +254,39 @@ document.getElementById('nlGrid').addEventListener('click', e => {
   if (!l) return;
   const m = document.createElement('div');
   m.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:center;justify-content:center;z-index:1000;padding:24px;';
-  m.innerHTML = `<div style="background:#fff;border-radius:12px;max-width:540px;width:100%;padding:24px 26px;box-shadow:0 24px 60px -16px rgba(15,23,42,.4);">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;">
-      <div><div style="font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;">New lead · ${l.regionLbl}</div><h2 style="margin:6px 0 0;font-size:22px;font-weight:700;letter-spacing:-0.01em;">${l.name}</h2><div style="margin-top:4px;color:var(--ink-3);font-variant-numeric:tabular-nums;">${l.phone}</div></div>
-      <button class="x" style="border:0;background:transparent;font-size:24px;color:var(--ink-3);cursor:pointer;line-height:1;">×</button>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:18px;">
-      <div style="padding:10px 14px;border:var(--hair);border-radius:8px;"><div style="font-size:11px;color:var(--ink-3);">Move date</div><div style="font-weight:600;margin-top:4px;">${l.date}</div></div>
-      <div style="padding:10px 14px;border:var(--hair);border-radius:8px;"><div style="font-size:11px;color:var(--ink-3);">Home size</div><div style="font-weight:600;margin-top:4px;">${l.size}</div></div>
-      <div style="padding:10px 14px;border:var(--hair);border-radius:8px;grid-column:span 2;"><div style="font-size:11px;color:var(--ink-3);">From → To</div><div style="font-weight:600;margin-top:4px;">${l.from} → ${l.to}</div></div>
-      <div style="padding:10px 14px;border:var(--hair);border-radius:8px;"><div style="font-size:11px;color:var(--ink-3);">Type</div><div style="font-weight:600;margin-top:4px;">${l.type}</div></div>
-      <div style="padding:10px 14px;border:var(--hair);border-radius:8px;"><div style="font-size:11px;color:var(--ink-3);">Source</div><div style="font-weight:600;margin-top:4px;">${l.source}</div></div>
-    </div>
-    <div style="display:flex;justify-content:flex-end;gap:8px;">
-      <button class="btn btn-secondary x">Close</button>
-      <button data-comm-action="action:salesNewLeads.call-now" class="btn btn-secondary">Call now</button>
-      <button data-comm-action="action:salesNewLeads.grab-lead" class="btn btn-primary">Grab lead</button>
-    </div>
-  </div>`;
+
+  const card = makeEl('div', { style: 'background:#fff;border-radius:12px;max-width:540px;width:100%;padding:24px 26px;box-shadow:0 24px 60px -16px rgba(15,23,42,.4);' });
+
+  const header = makeEl('div', { style: 'display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;' });
+  const hLeft = document.createElement('div');
+  hLeft.appendChild(makeEl('div', { style: 'font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;', text: 'New lead · ' + l.regionLbl }));
+  hLeft.appendChild(makeEl('h2', { style: 'margin:6px 0 0;font-size:22px;font-weight:700;letter-spacing:-0.01em;', text: l.name }));
+  hLeft.appendChild(makeEl('div', { style: 'margin-top:4px;color:var(--ink-3);font-variant-numeric:tabular-nums;', text: l.phone }));
+  header.appendChild(hLeft);
+  header.appendChild(makeEl('button', { className: 'x', style: 'border:0;background:transparent;font-size:24px;color:var(--ink-3);cursor:pointer;line-height:1;', text: '×' }));
+  card.appendChild(header);
+
+  const grid = makeEl('div', { style: 'display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:18px;' });
+  const mkInfo = (label, value, extra) => {
+    const w = makeEl('div', { style: 'padding:10px 14px;border:var(--hair);border-radius:8px;' + (extra || '') });
+    w.appendChild(makeEl('div', { style: 'font-size:11px;color:var(--ink-3);', text: label }));
+    w.appendChild(makeEl('div', { style: 'font-weight:600;margin-top:4px;', text: value }));
+    return w;
+  };
+  grid.appendChild(mkInfo('Move date', l.date));
+  grid.appendChild(mkInfo('Home size', l.size));
+  grid.appendChild(mkInfo('From → To', l.from + ' → ' + l.to, 'grid-column:span 2;'));
+  grid.appendChild(mkInfo('Type', l.type));
+  grid.appendChild(mkInfo('Source', l.source));
+  card.appendChild(grid);
+
+  const foot = makeEl('div', { style: 'display:flex;justify-content:flex-end;gap:8px;' });
+  foot.appendChild(makeEl('button', { className: 'btn btn-secondary x', text: 'Close' }));
+  foot.appendChild(makeEl('button', { className: 'btn btn-secondary', text: 'Call now', attrs: { 'data-comm-action': 'action:salesNewLeads.call-now' } }));
+  foot.appendChild(makeEl('button', { className: 'btn btn-primary', text: 'Grab lead', attrs: { 'data-comm-action': 'action:salesNewLeads.grab-lead' } }));
+  card.appendChild(foot);
+
+  m.appendChild(card);
   document.body.appendChild(m);
   const close = () => m.remove();
   m.addEventListener('click', e2 => { if (e2.target === m) close(); });

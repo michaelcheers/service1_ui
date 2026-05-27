@@ -106,18 +106,28 @@ async function loadModules() {
   renderModuleList(modules);
   // also populate fixture select with all
   const sel = $('#fxSelect');
-  sel.innerHTML = modules.map(m => `<option value="${m.fixture}">${m.fixture}.json</option>`).join('');
+  while (sel.firstChild) sel.removeChild(sel.firstChild);
+  modules.forEach(m => {
+    sel.appendChild(new Option(m.fixture + '.json', m.fixture));
+  });
 }
 
 function renderModuleList(list) {
   const root = $('#modList');
-  root.innerHTML = list.map(m => `
-    <div class="mod${current?.name === m.name ? ' active' : ''}" data-name="${m.name}">
-      <span>${m.title}</span>
-      <span class="badge">${m.reads.length}r / ${m.writes.length}w</span>
-    </div>`).join('');
-  root.querySelectorAll('.mod').forEach(el => {
-    el.addEventListener('click', () => openModule(el.dataset.name));
+  while (root.firstChild) root.removeChild(root.firstChild);
+  list.forEach(m => {
+    const div = document.createElement('div');
+    div.className = 'mod' + (current?.name === m.name ? ' active' : '');
+    div.setAttribute('data-name', m.name);
+    const title = document.createElement('span');
+    title.textContent = m.title;
+    div.appendChild(title);
+    const badge = document.createElement('span');
+    badge.className = 'badge';
+    badge.textContent = m.reads.length + 'r / ' + m.writes.length + 'w';
+    div.appendChild(badge);
+    div.addEventListener('click', () => openModule(m.name));
+    root.appendChild(div);
   });
 }
 
@@ -128,8 +138,15 @@ $('#filter').addEventListener('input', (e) => {
 
 const ioPane = $('#ioPane');
 function renderLog(entries) {
-  if (!entries.length) { ioPane.innerHTML = '<div class="empty">No calls yet.</div>'; return; }
-  ioPane.innerHTML = entries.slice(-200).map(e => {
+  while (ioPane.firstChild) ioPane.removeChild(ioPane.firstChild);
+  if (!entries.length) {
+    const empty = document.createElement('div');
+    empty.className = 'empty';
+    empty.textContent = 'No calls yet.';
+    ioPane.appendChild(empty);
+    return;
+  }
+  entries.slice(-200).forEach(e => {
     const ts = new Date(e.t).toLocaleTimeString();
     const tag = e.kind;
     const args = e.kind === 'get'
@@ -140,8 +157,15 @@ function renderLog(entries) {
       : e.kind === 'upload' ? `upload(${JSON.stringify(e.payload)})`
       : `${e.kind}("${e.resource}")`;
     const res = e.result == null ? '' : ` → ${typeof e.result === 'object' ? (Array.isArray(e.result) ? e.result.length+' rows' : JSON.stringify(e.result).slice(0,80)) : String(e.result).slice(0,80)}`;
-    return `<div class="e ${tag}"><span style="color:#697386">${ts}</span> ${args}${res}</div>`;
-  }).join('');
+    const row = document.createElement('div');
+    row.className = 'e ' + tag;
+    const tsSpan = document.createElement('span');
+    tsSpan.style.cssText = 'color:#697386';
+    tsSpan.textContent = ts;
+    row.appendChild(tsSpan);
+    row.appendChild(document.createTextNode(' ' + args + res));
+    ioPane.appendChild(row);
+  });
   ioPane.scrollTop = ioPane.scrollHeight;
 }
 
@@ -167,18 +191,34 @@ window.addEventListener('message', (ev) => {
 
 const opsPane = $('#opsPane');
 function renderOps() {
-  if (!current) { opsPane.innerHTML = ''; return; }
+  while (opsPane.firstChild) opsPane.removeChild(opsPane.firstChild);
+  if (!current) return;
   const declared = new Set([...current.reads.map(r => 'get:' + r), ...current.writes.map(r => 'save:' + r), ...current.writes.map(r => 'delete:' + r)]);
   const observed = new Set(logEntries.map(e => e.kind + ':' + e.resource));
   const allKeys  = [...new Set([...declared, ...observed])].sort();
-  opsPane.innerHTML = `<div class="ops-diff"><table>
-    <tr><th style="text-align:left">op</th><th>declared</th><th>observed</th></tr>
-    ${allKeys.map(k => `<tr>
-      <td>${k}</td>
-      <td class="${declared.has(k) ? 'ok' : 'bad'}">${declared.has(k) ? '✓' : '—'}</td>
-      <td class="${observed.has(k) ? 'ok' : 'bad'}">${observed.has(k) ? '✓' : '—'}</td>
-    </tr>`).join('')}
-  </table></div>`;
+  const wrap = document.createElement('div');
+  wrap.className = 'ops-diff';
+  const table = document.createElement('table');
+  const head = document.createElement('tr');
+  const th1 = document.createElement('th'); th1.style.cssText = 'text-align:left'; th1.textContent = 'op'; head.appendChild(th1);
+  const th2 = document.createElement('th'); th2.textContent = 'declared'; head.appendChild(th2);
+  const th3 = document.createElement('th'); th3.textContent = 'observed'; head.appendChild(th3);
+  table.appendChild(head);
+  allKeys.forEach(k => {
+    const tr = document.createElement('tr');
+    const td1 = document.createElement('td'); td1.textContent = k; tr.appendChild(td1);
+    const td2 = document.createElement('td');
+    td2.className = declared.has(k) ? 'ok' : 'bad';
+    td2.textContent = declared.has(k) ? '✓' : '—';
+    tr.appendChild(td2);
+    const td3 = document.createElement('td');
+    td3.className = observed.has(k) ? 'ok' : 'bad';
+    td3.textContent = observed.has(k) ? '✓' : '—';
+    tr.appendChild(td3);
+    table.appendChild(tr);
+  });
+  wrap.appendChild(table);
+  opsPane.appendChild(wrap);
 }
 
 $$('.tabs-bar button').forEach(b => b.addEventListener('click', () => {

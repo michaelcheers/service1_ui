@@ -229,21 +229,42 @@ document.querySelectorAll('.rep-row').forEach(r => r.addEventListener('click', e
   const cat = r.closest('.rep-card').dataset.cat;
   const m = document.createElement('div');
   m.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:center;justify-content:center;z-index:1000;padding:24px;';
-  m.innerHTML = `<div style="background:#fff;border-radius:12px;max-width:680px;width:100%;max-height:84vh;overflow:auto;padding:24px 26px;box-shadow:0 24px 60px -16px rgba(15,23,42,.4);">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;">
-      <div><div style="font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;">${cat} report</div><h2 style="margin:6px 0 8px;font-size:22px;font-weight:700;letter-spacing:-0.01em;">${name}</h2><div style="font-size:13px;color:var(--ink-2);line-height:1.5;">${desc}</div></div>
-      <button class="x" style="border:0;background:transparent;font-size:24px;color:var(--ink-3);cursor:pointer;line-height:1;">×</button>
-    </div>
-    <div style="background:var(--surface-2);border:1px dashed var(--line);border-radius:8px;padding:60px 20px;text-align:center;color:var(--ink-3);font-size:13px;margin-bottom:18px;">
-      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.4;margin-bottom:10px;"><path d="M3 3v18h18"/><path d="m9 17 3-5 3 4 4-7"/></svg>
-      <div>Choose a date range and run the report</div>
-    </div>
-    <div style="display:flex;justify-content:flex-end;gap:8px;">
-      <button class="btn btn-secondary x">Close</button>
-      <button data-comm-action="action:reports.schedule" class="btn btn-secondary">Schedule</button>
-      <button data-comm-action="action:reports.run-report" class="btn btn-primary">Run report</button>
-    </div>
-  </div>`;
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+  function el(tag, opts){
+    const e = document.createElement(tag);
+    if (opts){
+      if (opts.className) e.className = opts.className;
+      if (opts.text != null) e.textContent = opts.text;
+      if (opts.style) e.style.cssText = opts.style;
+      if (opts.attrs) for (const k in opts.attrs) e.setAttribute(k, opts.attrs[k]);
+    }
+    return e;
+  }
+  const card = el('div', { style:'background:#fff;border-radius:12px;max-width:680px;width:100%;max-height:84vh;overflow:auto;padding:24px 26px;box-shadow:0 24px 60px -16px rgba(15,23,42,.4);' });
+  const head = el('div', { style:'display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;' });
+  const hLeft = el('div');
+  hLeft.appendChild(el('div', { style:'font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;', text: cat + ' report' }));
+  hLeft.appendChild(el('h2', { style:'margin:6px 0 8px;font-size:22px;font-weight:700;letter-spacing:-0.01em;', text:name }));
+  hLeft.appendChild(el('div', { style:'font-size:13px;color:var(--ink-2);line-height:1.5;', text:desc }));
+  head.appendChild(hLeft);
+  head.appendChild(el('button', { className:'x', style:'border:0;background:transparent;font-size:24px;color:var(--ink-3);cursor:pointer;line-height:1;', text:'×' }));
+  card.appendChild(head);
+  const placeholder = el('div', { style:'background:var(--surface-2);border:1px dashed var(--line);border-radius:8px;padding:60px 20px;text-align:center;color:var(--ink-3);font-size:13px;margin-bottom:18px;' });
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('width','48'); svg.setAttribute('height','48'); svg.setAttribute('viewBox','0 0 24 24');
+  svg.setAttribute('fill','none'); svg.setAttribute('stroke','currentColor'); svg.setAttribute('stroke-width','1.5');
+  svg.style.cssText = 'opacity:.4;margin-bottom:10px;';
+  const p1 = document.createElementNS(SVG_NS, 'path'); p1.setAttribute('d','M3 3v18h18'); svg.appendChild(p1);
+  const p2 = document.createElementNS(SVG_NS, 'path'); p2.setAttribute('d','m9 17 3-5 3 4 4-7'); svg.appendChild(p2);
+  placeholder.appendChild(svg);
+  placeholder.appendChild(el('div', { text:'Choose a date range and run the report' }));
+  card.appendChild(placeholder);
+  const actions = el('div', { style:'display:flex;justify-content:flex-end;gap:8px;' });
+  actions.appendChild(el('button', { className:'btn btn-secondary x', text:'Close' }));
+  actions.appendChild(el('button', { className:'btn btn-secondary', text:'Schedule', attrs:{'data-comm-action':'action:reports.schedule'} }));
+  actions.appendChild(el('button', { className:'btn btn-primary', text:'Run report', attrs:{'data-comm-action':'action:reports.run-report'} }));
+  card.appendChild(actions);
+  m.appendChild(card);
   document.body.appendChild(m);
   const close = () => m.remove();
   m.addEventListener('click', e2 => { if (e2.target === m) close(); });

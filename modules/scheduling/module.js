@@ -1114,7 +1114,7 @@ if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
       + 'background:#fff;border:1px solid var(--line-2, #e5e7eb);border-radius:10px;'
       + 'box-shadow:0 10px 28px rgba(0,0,0,0.12);padding:10px 12px;'
       + 'display:flex;align-items:center;gap:10px;z-index:50;min-width:240px;';
-    pop.innerHTML = '';
+    while (pop.firstChild) pop.removeChild(pop.firstChild);
     const minus = document.createElement('button');
     minus.type = 'button'; minus.textContent = '−';
     minus.style.cssText = 'width:22px;height:22px;border:1px solid var(--line-2,#e5e7eb);background:#fff;border-radius:5px;cursor:pointer;font-size:14px;';
