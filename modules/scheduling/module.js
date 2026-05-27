@@ -17,14 +17,84 @@ const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
 const flash = window.S1.flash || ((t) => { const e = document.createElement('div'); e.textContent = t; e.style.cssText = 'position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#0A2540;color:#fff;padding:10px 16px;border-radius:6px;font-size:13px;z-index:9999;'; document.body.appendChild(e); setTimeout(() => e.remove(), 2000); });
 const safe = window.S1.safe || (async (l, fn) => { try { return await fn(); } catch (e) { flash(l + ' failed: ' + (e.message || e)); throw e; } });
 
-// Date display — use the prev/next/today buttons or month-grid cells to navigate.
-// TODO: replace with a real inline date picker.
-$$('.date-cur').forEach(el => {
-  el.addEventListener('click', (ev) => {
+// Date display — clicking the date label opens an inline month-grid picker.
+// Building it from scratch (no innerHTML per security rule 2).
+(function () {
+  const cur = document.querySelector('.date-cur');
+  const pop = document.getElementById('schDatePopover');
+  if (!cur || !pop) return;
+  let popMonth = null; // first-of-month being shown in the picker
+  function build(forMonth) {
+    while (pop.firstChild) pop.removeChild(pop.firstChild);
+    const head = document.createElement('div');
+    head.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;';
+    const prev = document.createElement('button'); prev.type='button'; prev.textContent='‹';
+    prev.style.cssText='background:#f5f7f4;border:0;border-radius:5px;padding:2px 7px;cursor:pointer;';
+    const title = document.createElement('b'); title.style.fontSize='13px';
+    title.textContent = forMonth.toLocaleDateString(undefined,{month:'long',year:'numeric'});
+    const next = document.createElement('button'); next.type='button'; next.textContent='›';
+    next.style.cssText=prev.style.cssText;
+    prev.addEventListener('click',(e)=>{e.preventDefault();const m=new Date(forMonth);m.setMonth(m.getMonth()-1);build(m);});
+    next.addEventListener('click',(e)=>{e.preventDefault();const m=new Date(forMonth);m.setMonth(m.getMonth()+1);build(m);});
+    head.appendChild(prev); head.appendChild(title); head.appendChild(next);
+    pop.appendChild(head);
+    const grid = document.createElement('div');
+    grid.style.cssText='display:grid;grid-template-columns:repeat(7,1fr);gap:2px;font-size:11px;';
+    ['M','T','W','T','F','S','S'].forEach(dn=>{
+      const c=document.createElement('div'); c.style.cssText='text-align:center;color:#999;'; c.textContent=dn; grid.appendChild(c);
+    });
+    const first = new Date(forMonth.getFullYear(), forMonth.getMonth(), 1);
+    const gridStart = new Date(first); gridStart.setDate(first.getDate() - ((first.getDay() + 6) % 7));
+    const today = new Date(); today.setHours(0,0,0,0);
+    const sel = currentDate(); sel.setHours(0,0,0,0);
+    for (let i=0;i<42;i++){
+      const d=new Date(gridStart); d.setDate(gridStart.getDate()+i);
+      const c=document.createElement('div');
+      c.style.cssText='padding:4px;text-align:center;cursor:pointer;border-radius:4px;';
+      if (d.getMonth() !== forMonth.getMonth()) c.style.color='#bbb';
+      if (d.getTime() === today.getTime()) c.style.outline='1px solid #d97757';
+      if (d.getTime() === sel.getTime()){ c.style.background='#e0f2f1'; c.style.color='#004d40'; c.style.fontWeight='700'; }
+      c.textContent=String(d.getDate());
+      c.addEventListener('click', async (ev)=>{
+        ev.preventDefault();
+        setDate(d);
+        pop.hidden = true;
+        await safe('Go to date', async () => {
+          const iso = d.toISOString().slice(0,10);
+          await comm.action('scheduling.view.goto', { date: iso });
+          await reloadFromWeek(iso);
+        });
+      });
+      grid.appendChild(c);
+    }
+    pop.appendChild(grid);
+    const foot = document.createElement('div');
+    foot.style.cssText='display:flex;justify-content:flex-end;margin-top:6px;';
+    const today2=document.createElement('button'); today2.type='button'; today2.textContent='Today';
+    today2.style.cssText='font-size:11px;background:#f5f7f4;border:0;border-radius:5px;padding:3px 10px;cursor:pointer;font-weight:600;';
+    today2.addEventListener('click', async (ev)=>{
+      ev.preventDefault();
+      const t=new Date(); setDate(t); pop.hidden=true;
+      await safe('Today', async ()=>{
+        await comm.action('scheduling.today', {});
+        await reloadFromWeek(t.toISOString().slice(0,10));
+      });
+    });
+    foot.appendChild(today2); pop.appendChild(foot);
+  }
+  cur.addEventListener('click', (ev) => {
     ev.preventDefault();
-    flash('Use the prev/next or month grid to change date');
+    if (!pop.hidden) { pop.hidden = true; return; }
+    popMonth = currentDate(); popMonth.setDate(1);
+    build(popMonth);
+    pop.hidden = false;
   });
-});
+  document.addEventListener('click', (ev) => {
+    if (pop.hidden) return;
+    if (cur.contains(ev.target) || pop.contains(ev.target)) return;
+    pop.hidden = true;
+  });
+})();
 
 // Month-view day cells (.res-mo-cell) — click a date to jump to it. Hooked
 // once on the static cells, but also via delegation in case render rebuilds.
@@ -138,17 +208,46 @@ function shiftByActiveView(delta) {
   else d.setDate(d.getDate() + 7 * delta);
   return d;
 }
+// Apply a server response (from scheduling.prev/next/today/week.get) onto
+// the local fixture and trigger a re-render. Keeps prev/next from leaving
+// the UI in a stale "-" state when the week changes.
+async function reloadFromWeek(iso) {
+  try {
+    const r = await comm.action('scheduling.week.get', { date: iso });
+    if (r && r.ok) applyWeekResponse(r);
+  } catch {}
+}
+function applyWeekResponse(r) {
+  const fx = (window.S1.fixtures || {}).scheduling || {};
+  if (r.header) fx.header = Object.assign({}, fx.header || {}, r.header);
+  if (r.calRows) fx.calRows = r.calRows;
+  if (r.locations) fx.locations = r.locations;
+  if (r.counts && fx.metrics) fx.metrics.count = r.counts;
+  if (r.countCls && fx.metrics) fx.metrics.countCls = r.countCls;
+  window.S1.render.bind(document, fx);
+  renderTimes();
+  recomputeCounts();
+  if (window.__sched_tagSources) window.__sched_tagSources();
+  buildMonthGrid(currentDate());
+  if (window.S1 && window.S1.bus && window.S1.bus.emit) window.S1.bus.emit('state:replaced', fx);
+}
 $$('button[title="Previous"]').forEach(b => b.addEventListener('click', async (ev) => {
   ev.preventDefault();
   const d = shiftByActiveView(-1);
   setDate(d);
-  await safe('Prev', () => comm.action('scheduling.prev', { date: d.toISOString().slice(0,10) }));
+  await safe('Prev', async () => {
+    const r = await comm.action('scheduling.prev', { date: d.toISOString().slice(0,10) });
+    if (r && r.ok) applyWeekResponse(r);
+  });
 }));
 $$('button[title="Next"]').forEach(b => b.addEventListener('click', async (ev) => {
   ev.preventDefault();
   const d = shiftByActiveView(+1);
   setDate(d);
-  await safe('Next', () => comm.action('scheduling.next', { date: d.toISOString().slice(0,10) }));
+  await safe('Next', async () => {
+    const r = await comm.action('scheduling.next', { date: d.toISOString().slice(0,10) });
+    if (r && r.ok) applyWeekResponse(r);
+  });
 }));
 // Month-grid prev/next arrows inside .res-mo-nav (separate buttons).
 $$('.res-mo-nav > button').forEach((b, i) => {
@@ -168,7 +267,10 @@ $$('.date-today, button.btn').filter(b => /^today$/i.test(b.textContent.trim()))
     ev.preventDefault();
     const today = new Date();
     setDate(today);
-    await safe('Today', () => comm.action('scheduling.today', {}));
+    await safe('Today', async () => {
+      const r = await comm.action('scheduling.today', {});
+      if (r && r.ok) applyWeekResponse(r);
+    });
   });
 });
 
@@ -232,11 +334,29 @@ $$('.sched-tab[data-tab]').forEach(b => {
   });
 });
 
-// + Add resource (left rail) → open the assign modal (closest existing modal).
+// + Add resource (left rail) → open the kind picker (Team Leader / Crew /
+// Vehicle / Truck rental). Picking a kind navigates to the create form or
+// (for "rental") opens the truck modal in place.
 $$('.btn-sm.btn-ghost').filter(b => /^\+\s*add$/i.test(b.textContent.trim())).forEach(b => {
   b.addEventListener('click', (ev) => {
     ev.preventDefault();
-    window.S1.modal.open('#schAssignModal');
+    window.S1.modal.open('#schAddResourceModal');
+  });
+});
+document.addEventListener('click', async (ev) => {
+  const btn = ev.target.closest('.sch-kind-btn[data-kind]');
+  if (!btn) return;
+  ev.preventDefault();
+  const kind = btn.getAttribute('data-kind');
+  await safe('Create resource', async () => {
+    const r = await comm.action('scheduling.resource.createPick', { kind });
+    window.S1.modal.close('#schAddResourceModal');
+    if (r && r.openModal) { window.S1.modal.open('#' + r.openModal); return; }
+    if (r && r.navigateTo) { window.location.href = r.navigateTo; return; }
+    // Fallback: no host wiring — point at sensible defaults.
+    const map = { leader: '/Pages/Crew', member: '/Pages/Crew', vehicle: '/Pages/Fleet', rental: null };
+    if (kind === 'rental') { window.S1.modal.open('#schTruckModal'); return; }
+    if (map[kind]) window.location.href = map[kind];
   });
 });
 
@@ -723,8 +843,13 @@ if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
     });
   }
   tagSources();
+  // Expose so the MutationObserver outside this IIFE can retag.
+  window.__sched_tagSources = tagSources;
   // Re-tag whenever the render pipeline rebuilds the DOM.
   document.addEventListener('s1ui:ready', tagSources);
+  if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
+    window.S1.bus.on('state:replaced', tagSources);
+  }
 
   // ── Ghost preview shown while dragging ───────────────────────────────
   let ghost = null;
@@ -1175,9 +1300,166 @@ if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
   const $$ = (s,r)=>Array.from((r||document).querySelectorAll(s));
   $$('[data-scheduling-open]').forEach(b=>b.addEventListener('click',(e)=>{e.preventDefault();window.S1.modal.open('#'+b.getAttribute('data-scheduling-open'));}));
   window.S1.modal.bindForm('#schAssignModal', 'scheduling.crew.assign', { label: 'Assign' });
-  window.S1.modal.bindForm('#schTruckModal', 'scheduling.truck.add', { label: 'Add truck' });
+  // Real rental persistence — distinct from `scheduling.truck.add` which is
+  // an alias to add-vehicle (assigns an existing vehicle to a crew).
+  window.S1.modal.bindForm('#schTruckModal', 'scheduling.truck.add.rental', { label: 'Add truck' });
   window.S1.modal.bindForm('#schBlockOutModal', 'scheduling.crew.blockOut', { label: 'Block out' });
   window.S1.modal.bindForm('#schSlotEditModal', 'scheduling.slot.edit', { label: 'Save' });
+})();
+
+// ────────────────────────────────────────────────────────────────────────
+// Count synchronization — every badge on the page is recomputed from the
+// DOM (or bound list lengths) after each load() and state replace so we
+// never show "33" next to an empty body.
+// ────────────────────────────────────────────────────────────────────────
+function recomputeCounts() {
+  const fx = (window.S1.fixtures || {}).scheduling || {};
+  function setText(sel, n) {
+    const el = document.querySelector(sel);
+    if (el) el.textContent = String(n);
+  }
+  // sched-tab counts
+  const visibleJobs = $$('.lane[data-lane] > .job').filter(j => j.style.display !== 'none').length;
+  const custRows = $$('.tableview[data-bulk-table="customer"] tbody tr, [data-bind="customerConfirmations"] > *:not(template)').length;
+  const teamRows = $$('.tableview[data-bulk-table="team"] tbody tr, [data-bind="teamConfirmations"] > *:not(template)').length;
+  const dayOff   = $$('.do-col.pending .do-req, [data-bind="dayOffPending"] > *:not(template)').length;
+  const tabs = $$('#schedTabs .sched-tab');
+  if (tabs[1]) { const s = tabs[1].querySelector('span'); if (s) s.textContent = String(visibleJobs); }
+  if (tabs[2]) { const s = tabs[2].querySelector('span'); if (s) s.textContent = String(custRows); }
+  if (tabs[3]) { const s = tabs[3].querySelector('span'); if (s) s.textContent = String(teamRows); }
+  if (tabs[4]) { const s = tabs[4].querySelector('span'); if (s) s.textContent = String(dayOff); }
+  // section counts (Leaders / Members / Fleet)
+  const ldrs = (fx.rLeaders || []).length || $$('[data-bind="rLeaders"] > .r-row').length;
+  const mbrs = (fx.rMembers || []).length || $$('[data-bind="rMembers"] > .r-row').length;
+  const fleet= (fx.rFleet   || []).length || $$('[data-bind="rFleet"]   > .r-row').length;
+  const titles = $$('.r-section-title > span');
+  if (titles[0]) titles[0].textContent = String(ldrs);
+  if (titles[1]) titles[1].textContent = String(mbrs);
+  if (titles[2]) titles[2].textContent = String(fleet);
+  // content-tab badges (Deals / AM Meetings) — derive from rendered cards.
+  const dealCount = $$('[data-bind="unscheduledDeals"] .job-card').length;
+  const meetCount = $$('[data-jobs-pane="closed"] .job-card').length;
+  const ct = $$('.content-tab .ct-count');
+  if (ct[0]) ct[0].textContent = String(dealCount);
+  if (ct[1]) ct[1].textContent = String(meetCount);
+  // fchip badges — Customer / Team / Truck. Read from bound data.
+  function fchipCount(list, key, val) {
+    if (!Array.isArray(list)) return 0;
+    if (val == null) return list.length;
+    return list.filter(x => x && (x[key] || '').toLowerCase().indexOf(val) >= 0).length;
+  }
+  const cConf = fx.customerConfirmations || [];
+  const tConf = fx.teamConfirmations || [];
+  const rents = fx.truckRentalCards || fx.truckRentals || [];
+  $$('.tab-pane[data-pane="customer-confirmations"] .fchip').forEach((b,i)=>{
+    const sp = b.querySelector('.fcount'); if (!sp) return;
+    if (i === 0) sp.textContent = String(cConf.length);
+    else if (i === 1) sp.textContent = String(fchipCount(cConf,'status','awaiting'));
+    else if (i === 2) sp.textContent = String(fchipCount(cConf,'status','confirmed'));
+    else if (i === 3) sp.textContent = String(fchipCount(cConf,'status','no'));
+  });
+  $$('.tab-pane[data-pane="team-confirmations"] .fchip').forEach((b,i)=>{
+    const sp = b.querySelector('.fcount'); if (!sp) return;
+    if (i === 0) sp.textContent = String(tConf.length);
+    else if (i === 1) sp.textContent = String(fchipCount(tConf,'status','awaiting'));
+    else if (i === 2) sp.textContent = String(fchipCount(tConf,'status','declined'));
+  });
+  $$('.tab-pane[data-pane="truck-rentals"] .fchip').forEach((b)=>{
+    const sp = b.querySelector('.fcount'); if (!sp) return;
+    const f = b.getAttribute('data-tr-filter');
+    if (f === 'all') sp.textContent = String(rents.length);
+    else sp.textContent = String(fchipCount(rents, 'status', f));
+  });
+  // All-locations count — sum locations[].count.
+  const locs = fx.locations || [];
+  const allCount = locs.reduce((s,l)=> s + (parseInt(l && l.count, 10) || 0), 0) || visibleJobs;
+  const allSpan = document.querySelector('.ph-loc-count');
+  if (allSpan) allSpan.textContent = String(allCount);
+}
+document.addEventListener('s1ui:ready', recomputeCounts);
+if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
+  window.S1.bus.on('state:replaced', recomputeCounts);
+}
+$$('.sched-tab[data-tab]').forEach(b => b.addEventListener('click', () => setTimeout(recomputeCounts, 50)));
+
+// ────────────────────────────────────────────────────────────────────────
+// Month grid — JS-built from scheduling.month.get. Replaces the hardcoded
+// 35-cell sample data.
+// ────────────────────────────────────────────────────────────────────────
+async function buildMonthGrid(d) {
+  const grid = document.getElementById('resMoGrid');
+  if (!grid) return;
+  // Remove any previously inserted dynamic cells (keep .res-mo-dow headers).
+  Array.from(grid.querySelectorAll('.res-mo-cell[data-mo-dynamic="1"]')).forEach(n => n.remove());
+  const base = new Date(d.getFullYear(), d.getMonth(), 1);
+  const ym = base.getFullYear() + '-' + String(base.getMonth()+1).padStart(2,'0');
+  let days = {};
+  let capacity = 0;
+  try {
+    const r = await comm.action('scheduling.month.get', { yearMonth: ym });
+    if (r && r.ok) { days = r.days || {}; capacity = r.capacity || 0; }
+  } catch {}
+  const monthIdx = base.getMonth();
+  const gridStart = new Date(base); gridStart.setDate(base.getDate() - ((base.getDay() + 6) % 7));
+  const today = new Date(); today.setHours(0,0,0,0);
+  for (let i = 0; i < 35; i++) {
+    const day = new Date(gridStart); day.setDate(gridStart.getDate() + i);
+    const cell = document.createElement('div');
+    cell.className = 'res-mo-cell';
+    cell.setAttribute('data-mo-dynamic','1');
+    if (day.getMonth() !== monthIdx) cell.classList.add('other');
+    const dow = day.getDay();
+    if (dow === 0 || dow === 6) cell.classList.add('weekend');
+    if (day.getTime() === today.getTime()) cell.classList.add('today');
+    const num = document.createElement('div');
+    num.className = 'res-mo-num' + (day.getTime() === today.getTime() ? ' today' : '');
+    num.textContent = String(day.getDate());
+    cell.appendChild(num);
+    const key = day.getFullYear() + '-' + String(day.getMonth()+1).padStart(2,'0') + '-' + String(day.getDate()).padStart(2,'0');
+    const info = days[key];
+    if (info && day.getMonth() === monthIdx) {
+      const cap = info.capacity || capacity || 0;
+      const j = document.createElement('div');
+      j.className = 'res-mo-jobs';
+      j.textContent = info.jobs + (cap ? '/' + cap + ' jobs' : ' jobs');
+      cell.appendChild(j);
+      if (cap > 0) {
+        const bar = document.createElement('div'); bar.className = 'res-mo-bar';
+        const pct = Math.min(100, Math.round((info.jobs * 100) / cap));
+        if (pct >= 96) bar.classList.add('bad');
+        else if (pct >= 68) bar.classList.add('warn');
+        const fill = document.createElement('span'); fill.style.width = pct + '%';
+        bar.appendChild(fill);
+        cell.appendChild(bar);
+        const p = document.createElement('div'); p.className='res-mo-pct';
+        p.textContent = pct + '% capacity' + (day.getTime() === today.getTime() ? ' · today' : '');
+        cell.appendChild(p);
+      }
+    }
+    grid.appendChild(cell);
+  }
+}
+document.addEventListener('s1ui:ready', () => buildMonthGrid(currentDate()));
+if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
+  window.S1.bus.on('state:replaced', () => buildMonthGrid(currentDate()));
+}
+
+// MutationObserver — when the render pipeline rebuilds resource rows or
+// job cards, retag them for drag immediately so the user doesn't have to
+// wait for the next s1ui:ready event.
+(function () {
+  function retag() {
+    if (typeof window.__sched_tagSources === 'function') window.__sched_tagSources();
+  }
+  const targets = ['.r-list', '.jobs-list'];
+  targets.forEach(sel => {
+    document.querySelectorAll(sel).forEach(node => {
+      try {
+        const mo = new MutationObserver(retag);
+        mo.observe(node, { childList: true, subtree: true });
+      } catch {}
+    });
+  });
 })();
 
 // Install document-level click handlers ([data-comm-action] dispatcher,

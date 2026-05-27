@@ -3314,6 +3314,9 @@
       nowTime: "2:18 PM",
       now: "2026-05-16T18:18:00Z",          // 2:18 PM Toronto / 11:18 AM Vancouver
       companyTz: "America/Toronto",
+      companyTzAbbr: "EDT",
+      dateIso: "2026-05-16",
+      locationTz: null,
       locationLabel: "All locations",
       allLocationsCount: "13"
     },
