@@ -173,10 +173,17 @@ let currentPageRange = '30d';
 })();
 function renderActiveRange() {
   const fx = (window.S1.fixtures || {}).dashboard || {};
-  const active = document.querySelector('.chart-tools button.active');
-  let key = (fx.chart && fx.chart.defaultRange) || '12m';
-  if (active && active.getAttribute('data-range')) key = active.getAttribute('data-range');
+  // Prefer server's defaultRange (if present), then the locally active tab.
+  let key = fx.chart && fx.chart.defaultRange;
+  if (!key) {
+    const active = document.querySelector('.chart-tools button.active');
+    key = (active && active.getAttribute('data-range')) || '12m';
+  }
   setChartRange(key, { persist: false });
+  // Sync picker label so it reflects the server-driven range.
+  const lbl = document.getElementById('rangePickerLabel');
+  if (lbl && RANGE_LABELS[key]) lbl.textContent = RANGE_LABELS[key];
+  currentPageRange = key;
 }
 // Initial render against seed fixture.
 renderActiveRange();
@@ -188,11 +195,22 @@ if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
 }
 
 
-// "View all →" links and any plain anchor — navigation handler.
-$$('.section-link, .na-row').forEach(a => {
-  a.addEventListener('click', (ev) => {
-    if (a.getAttribute('href') === '#') ev.preventDefault();
-  });
+// Anchors marked data-host-nav route through the host postMessage bridge so
+// the parent (.NET) page navigates instead of the iframe (cross-origin iframe
+// can't reach the host's pages with target=_top from a different origin).
+document.addEventListener('click', (ev) => {
+  const a = ev.target && ev.target.closest && ev.target.closest('a[data-host-nav]');
+  if (!a) return;
+  const href = a.getAttribute('href');
+  if (!href || href === '#') return;
+  ev.preventDefault();
+  try {
+    if (window.parent && window.parent !== window.self) {
+      window.parent.postMessage({ type: 's1ui:navigate', href: href }, '*');
+      return;
+    }
+  } catch {}
+  window.location.assign(href);
 });
 
 // v12 auto-modal toolbar bindings

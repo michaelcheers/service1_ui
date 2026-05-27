@@ -629,7 +629,7 @@ a { color: inherit; text-decoration: none; }
           <section class="section">
             <div class="section-head">
               <div class="section-title">Sales Leaders</div>
-              <a data-comm-action="action:dashboard.open" class="section-link" href="#">View all →</a>
+              <a class="section-link" data-host-nav href="/Reports/BookedBySalesAgent">View all →</a>
             </div>
             <div class="tp-list">
               <div class="tp-row">
@@ -674,10 +674,10 @@ a { color: inherit; text-decoration: none; }
           <section class="section">
             <div class="section-head">
               <div class="section-title">Open Items</div>
-              <a data-comm-action="action:dashboard.open" class="section-link" href="#">View all →</a>
+              <a class="section-link" data-host-nav href="/Dashboard">View all →</a>
             </div>
             <div class="na-list">
-              <a class="na-row" href="DashboardStales.html">
+              <a class="na-row" data-host-nav href="/Reports/StaleOpportunities">
                 <div class="na-l">
                   <div class="na-t" data-bind-text="needsAttention.0.title">Stale opportunities</div>
                   <div class="na-s" data-bind-text="needsAttention.0.subtitle">No contact in 48+ hours</div>
@@ -685,7 +685,7 @@ a { color: inherit; text-decoration: none; }
                 <div class="na-n" data-bind-attr="class:needsAttention.0.levelClass" data-bind-text="needsAttention.0.count">5</div>
                 <div class="na-arr">→</div>
               </a>
-              <a class="na-row" href="#">
+              <a class="na-row" data-host-nav href="/Reports/ServiceTickets">
                 <div class="na-l">
                   <div class="na-t" data-bind-text="needsAttention.1.title">Open service tickets</div>
                   <div class="na-s" data-bind-text="needsAttention.1.subtitle">Awaiting customer reply</div>
@@ -693,7 +693,7 @@ a { color: inherit; text-decoration: none; }
                 <div class="na-n" data-bind-attr="class:needsAttention.1.levelClass" data-bind-text="needsAttention.1.count">2</div>
                 <div class="na-arr">→</div>
               </a>
-              <a class="na-row" href="#">
+              <a class="na-row" data-host-nav href="/Reports/AcceptedNotBooked">
                 <div class="na-l">
                   <div class="na-t" data-bind-text="needsAttention.2.title">Accepted Growth Plans</div>
                   <div class="na-s" data-bind-text="needsAttention.2.subtitle">Not yet booked or paid</div>
@@ -701,7 +701,7 @@ a { color: inherit; text-decoration: none; }
                 <div class="na-n" data-bind-attr="class:needsAttention.2.levelClass" data-bind-text="needsAttention.2.count">3</div>
                 <div class="na-arr">→</div>
               </a>
-              <a class="na-row" href="#">
+              <a class="na-row" data-host-nav href="/Reports/UnassignedLeads">
                 <div class="na-l">
                   <div class="na-t" data-bind-text="needsAttention.3.title">Unassigned new leads</div>
                   <div class="na-s" data-bind-text="needsAttention.3.subtitle">In queue under 1h</div>

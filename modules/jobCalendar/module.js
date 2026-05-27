@@ -116,13 +116,21 @@ function applyCalendarFilters() {
   const showKinds = {};
   $$('[data-jc-show]').forEach(cb => { showKinds[cb.getAttribute('data-jc-show')] = cb.checked; });
   const active = $$('[data-jc-quick]').filter(x => x.checked).map(x => x.getAttribute('data-jc-quick'));
+  const etSel = document.getElementById('etFilter');
+  const etVal = etSel ? etSel.value : 'All';
   $$('.cal-cell').forEach(cell => {
     const evt = cell.querySelector('.cal-evt'); if (!evt) return;
-    // Type check: get the cal-evt's kind from its second class (after "cal-evt").
+    // Type check: prefer server-emitted data-kind-bucket; fall back to scanning evt classes
+    // for one of the bucket names (job/meet/lead/none).
+    const bucket = cell.getAttribute('data-kind-bucket') || '';
     let kindOk = true;
-    for (const cls of evt.classList) {
-      if (cls === 'cal-evt') continue;
-      if (Object.prototype.hasOwnProperty.call(showKinds, cls)) { kindOk = showKinds[cls]; break; }
+    if (bucket && Object.prototype.hasOwnProperty.call(showKinds, bucket)) {
+      kindOk = showKinds[bucket];
+    } else {
+      for (const cls of evt.classList) {
+        if (cls === 'cal-evt') continue;
+        if (Object.prototype.hasOwnProperty.call(showKinds, cls)) { kindOk = showKinds[cls]; break; }
+      }
     }
     let quickOk = true;
     if (active.length) {
@@ -132,11 +140,17 @@ function applyCalendarFilters() {
                 (active.includes('unassigned') && assigned === 'unassigned') ||
                 (active.includes('overdue')    && overdue);
     }
-    evt.style.display = (kindOk && quickOk) ? '' : 'none';
+    let etOk = true;
+    if (etVal && etVal !== 'All') {
+      if (etVal === 'in_person') etOk = evt.classList.contains('in-person');
+      else if (etVal === 'virtual') etOk = evt.classList.contains('virtual');
+      else if (etVal === 'none')    etOk = evt.classList.contains('none');
+    }
+    evt.style.display = (kindOk && quickOk && etOk) ? '' : 'none';
   });
 }
 document.addEventListener('change', (ev) => {
-  if (ev.target && ev.target.matches && (ev.target.matches('[data-jc-show]') || ev.target.matches('[data-jc-quick]'))) {
+  if (ev.target && ev.target.matches && (ev.target.matches('[data-jc-show]') || ev.target.matches('[data-jc-quick]') || ev.target.id === 'etFilter')) {
     applyCalendarFilters();
   }
 });
@@ -153,30 +167,44 @@ document.addEventListener('change', async (ev) => {
 });
 
 // Click a day cell → reveal day panel; click the same cell again → deselect.
-function closeDayPanel() {
+// Uses a delegated document-level listener so it survives data-bind re-renders.
+async function closeDayPanel() {
   const main  = document.querySelector('.jc-main');
   const panel = document.querySelector('.jc-day-panel');
   if (panel) panel.style.display = 'none';
   if (main)  main.classList.remove('has-selected-day');
   $$('.cal-cell.selected').forEach(c => c.classList.remove('selected'));
-  try { comm.save('jobCalendar.selectedDay', { day: null }); } catch {}
+  try {
+    const r = await comm.action('jobCalendar.selectDay', { date: null });
+    if (r && r.state) applyJobCalendarState(r.state);
+  } catch {}
 }
-document.addEventListener('click', (ev) => {
-  const cell = ev.target.closest('.cal-cell'); if (!cell) return;
-  // Ignore clicks on events inside the cell — those are handled below to open the job.
-  if (ev.target.closest('.cal-evt, .cal-pill, .cal-job, [data-record-id]')) return;
-  if (cell.classList.contains('selected')) { closeDayPanel(); return; }
+function openDayPanel() {
   const main  = document.querySelector('.jc-main');
   const panel = document.querySelector('.jc-day-panel');
-  if (!main || !panel) return;
-  main.classList.add('has-selected-day');
-  panel.style.display = '';
+  if (main) main.classList.add('has-selected-day');
+  if (panel) panel.style.display = '';
+}
+document.addEventListener('click', async (ev) => {
+  const cell = ev.target.closest('.cal-cell'); if (!cell) return;
+  if (ev.target.closest('.cal-evt, .cal-pill, .cal-job, [data-record-id]')) return;
+  if (cell.classList.contains('other')) return;
+  if (cell.classList.contains('selected')) { closeDayPanel(); return; }
   $$('.cal-cell.selected').forEach(c => c.classList.remove('selected'));
   cell.classList.add('selected');
-  const num = (cell.querySelector('.cal-num') || {}).textContent || '';
-  const dEl = panel.querySelector('.jc-day-panel-d');
-  if (dEl && num) dEl.textContent = num + ' (selected)';
-  try { comm.save('jobCalendar.selectedDay', { day: num }); } catch {}
+  openDayPanel();
+  const date = cell.getAttribute('data-date') || '';
+  if (!date) return;
+  try {
+    const r = await safe('Select day', () => comm.action('jobCalendar.selectDay', { date }));
+    if (r && r.state) {
+      applyJobCalendarState(r.state);
+      // re-bind clears the .selected class on the freshly-rendered cell — re-mark by date.
+      const fresh = document.querySelector('.cal-cell[data-date="' + date + '"]');
+      if (fresh) fresh.classList.add('selected');
+      openDayPanel();
+    }
+  } catch {}
 });
 // X button on the day panel closes it.
 document.addEventListener('click', (ev) => {
@@ -198,15 +226,122 @@ $$('.jc-month-nav .jc-nav-btn').forEach((b, i) => {
   });
 });
 
-// Company / Personal toggle in the page header.
-$$('.jc-view-toggle a[data-jobCalendar-filter]').forEach(a => {
-  a.addEventListener('click', async (ev) => {
+// Company / Personal toggle in the page header. Delegated so it survives re-renders.
+document.addEventListener('click', async (ev) => {
+  const a = ev.target.closest && ev.target.closest('.jc-view-toggle a[data-jobCalendar-filter]');
+  if (!a) return;
+  ev.preventDefault();
+  const scope = a.getAttribute('data-jobCalendar-filter');
+  $$('.jc-view-toggle a').forEach(x => x.classList.toggle('active', x === a));
+  try {
+    const r = await comm.action('jobCalendar.setScope', { scope });
+    if (r && r.state) applyJobCalendarState(r.state);
+    flash(scope === 'personal' ? 'Personal calendar' : 'Company calendar');
+  } catch (e) { flash('Scope failed: ' + (e.message || e)); }
+});
+
+// Re-apply active state for view toggle after every re-render based on state.scope.
+function reflectScopeActive() {
+  const fx = (window.S1 && window.S1.fixtures && window.S1.fixtures.jobCalendar) || {};
+  const scope = fx.scope === 'personal' ? 'personal' : 'company';
+  $$('.jc-view-toggle a').forEach(x => x.classList.toggle('active', x.getAttribute('data-jobCalendar-filter') === scope));
+}
+document.addEventListener('s1ui:ready', reflectScopeActive);
+if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
+  window.S1.bus.on('state:replaced', () => { reflectScopeActive(); });
+}
+
+// Location dropdown.
+document.addEventListener('click', (ev) => {
+  const btn = ev.target.closest && ev.target.closest('#jcLocBtn');
+  const menu = document.getElementById('jcLocMenu');
+  if (btn && menu) {
     ev.preventDefault();
-    const scope = a.getAttribute('data-jobCalendar-filter');
-    $$('.jc-view-toggle a').forEach(x => x.classList.toggle('active', x === a));
-    try { await comm.save('jobCalendar.scope', { scope }); flash(scope === 'personal' ? 'Personal calendar' : 'Company calendar'); }
-    catch (e) { flash('Scope failed: ' + (e.message || e)); }
+    menu.hidden = !menu.hidden;
+    return;
+  }
+  const item = ev.target.closest && ev.target.closest('.jc-loc-menu-item');
+  if (item) {
+    ev.preventDefault();
+    const id = item.getAttribute('data-loc-id') || 'all';
+    if (menu) menu.hidden = true;
+    safe('Set location', async () => {
+      const r = await comm.action('jobCalendar.setLocation', { locationId: id });
+      if (r && r.state) applyJobCalendarState(r.state);
+    });
+    return;
+  }
+  // Outside-click closes the menu.
+  if (menu && !menu.hidden && !ev.target.closest('.jc-popover-wrap')) menu.hidden = true;
+});
+
+// Month picker.
+function buildMonthPicker(year) {
+  const grid = document.getElementById('jcMonthPickerGrid');
+  const yEl  = document.getElementById('jcMonthYearLabel');
+  if (!grid || !yEl) return;
+  yEl.textContent = String(year);
+  while (grid.firstChild) grid.removeChild(grid.firstChild);
+  const labels = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const cur = currentDisplayedMonth(); // YYYY-MM
+  const curYear = cur ? parseInt(cur.split('-')[0], 10) : year;
+  const curMonth = cur ? parseInt(cur.split('-')[1], 10) : 0;
+  labels.forEach((lbl, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'jc-month-picker-cell' + ((curYear === year && curMonth === i + 1) ? ' active' : '');
+    b.textContent = lbl;
+    b.setAttribute('data-month', String(i + 1));
+    b.setAttribute('data-year', String(year));
+    grid.appendChild(b);
   });
+}
+let monthPickerYear = 0;
+document.addEventListener('click', (ev) => {
+  const btn = ev.target.closest && ev.target.closest('#jcMonthBtn');
+  const picker = document.getElementById('jcMonthPicker');
+  if (btn && picker) {
+    ev.preventDefault();
+    if (picker.hidden) {
+      const cur = currentDisplayedMonth();
+      monthPickerYear = cur ? parseInt(cur.split('-')[0], 10) : new Date().getFullYear();
+      buildMonthPicker(monthPickerYear);
+    }
+    picker.hidden = !picker.hidden;
+    return;
+  }
+  if (ev.target.id === 'jcMonthYearPrev') { ev.preventDefault(); monthPickerYear--; buildMonthPicker(monthPickerYear); return; }
+  if (ev.target.id === 'jcMonthYearNext') { ev.preventDefault(); monthPickerYear++; buildMonthPicker(monthPickerYear); return; }
+  const cell = ev.target.closest && ev.target.closest('.jc-month-picker-cell');
+  if (cell) {
+    ev.preventDefault();
+    const y = cell.getAttribute('data-year');
+    const m = String(cell.getAttribute('data-month')).padStart(2, '0');
+    const iso = y + '-' + m;
+    if (picker) picker.hidden = true;
+    safe('Goto', async () => {
+      const r = await comm.action('jobCalendar.goto', { currentMonth: iso });
+      if (r && r.state) applyJobCalendarState(r.state);
+    });
+    return;
+  }
+  if (picker && !picker.hidden && !ev.target.closest('.jc-popover-wrap')) picker.hidden = true;
+});
+
+// Overflow menu (Book job / Reschedule / Block out / Filter by crew).
+document.addEventListener('click', (ev) => {
+  const btn = ev.target.closest && ev.target.closest('#jcOverflowBtn');
+  const menu = document.getElementById('jcOverflowMenu');
+  if (btn && menu) {
+    ev.preventDefault();
+    menu.hidden = !menu.hidden;
+    return;
+  }
+  if (menu && !menu.hidden && ev.target.closest && ev.target.closest('.jc-overflow-menu-item')) {
+    menu.hidden = true;
+    return;
+  }
+  if (menu && !menu.hidden && !ev.target.closest('.jc-popover-wrap')) menu.hidden = true;
 });
 
 // Click a job pill → open that job

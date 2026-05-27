@@ -28,8 +28,42 @@
 .jc-loc {
   display:inline-flex; align-items:center; gap:6px;
   padding:6px 12px; background:#fff; border:var(--hair); border-radius:8px;
-  font-size:12.5px; font-weight:600; cursor:pointer;
+  font-size:12.5px; font-weight:600; cursor:pointer; font-family:inherit; color:inherit;
 }
+.jc-popover-wrap { position:relative; display:inline-flex; }
+.jc-loc-menu, .jc-overflow-menu {
+  position:absolute; top:36px; left:0; min-width:200px; padding:6px;
+  background:#fff; border:var(--hair); border-radius:8px; z-index:50;
+  box-shadow:0 8px 24px rgba(15,23,42,.08);
+}
+.jc-overflow-menu { right:0; left:auto; min-width:170px; }
+.jc-loc-menu-item, .jc-overflow-menu-item {
+  display:block; width:100%; text-align:left; padding:7px 10px; font-size:12.5px;
+  border-radius:5px; cursor:pointer; background:transparent; border:0; color:var(--ink);
+  font-family:inherit;
+}
+.jc-loc-menu-item:hover, .jc-overflow-menu-item:hover { background:var(--surface-2); }
+.jc-loc-menu-item.selected { background:#f0fdf4; color:#004D40; font-weight:600; }
+.jc-month-picker {
+  position:absolute; top:34px; left:50%; transform:translateX(-50%);
+  background:#fff; border:var(--hair); border-radius:10px; padding:10px; width:230px;
+  z-index:50; box-shadow:0 8px 24px rgba(15,23,42,.08);
+}
+.jc-month-picker-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-weight:600; font-size:13px; }
+.jc-month-picker-head button { background:transparent; border:0; cursor:pointer; font-size:14px; padding:4px 8px; border-radius:4px; }
+.jc-month-picker-head button:hover { background:var(--surface-2); }
+.jc-month-picker-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:4px; }
+.jc-month-picker-cell { padding:7px 0; text-align:center; border-radius:5px; font-size:12px; cursor:pointer; background:transparent; border:0; font-family:inherit; color:var(--ink); }
+.jc-month-picker-cell:hover { background:var(--surface-2); }
+.jc-month-picker-cell.active { background:#004D40; color:#fff; font-weight:600; }
+.jc-overflow {
+  width:30px; height:30px; border-radius:6px; background:#fff; border:var(--hair);
+  font-size:16px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center;
+  color:var(--ink-2);
+}
+.jc-overflow:hover { background:var(--surface-2); }
+button.jc-month-label { background:transparent; border:0; cursor:pointer; padding:4px 8px; border-radius:5px; font-family:inherit; }
+button.jc-month-label:hover { background:var(--surface-2); }
 
 .jc-et-filter { display:inline-flex; align-items:center; gap:8px; font-size:12px; color:var(--ink-3); }
 .jc-et-filter select { height:30px; padding:0 8px; border:var(--hair); border-radius:6px; font-size:12px; font-family:inherit; background:#fff; color:var(--ink); }
@@ -118,7 +152,12 @@
           <a data-jobCalendar-filter="company" class="active" href="#">Company</a>
           <a data-jobCalendar-filter="personal" href="#">Personal</a>
         </div>
-        <span class="jc-loc">All Locations <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></span>
+        <span class="jc-popover-wrap">
+          <button class="jc-loc" type="button" id="jcLocBtn"><span data-bind-text="locationLabel">All Locations</span> <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></button>
+          <div class="jc-loc-menu" id="jcLocMenu" hidden>
+            <div data-bind="locations" style="display:contents;"><template><button type="button" class="jc-loc-menu-item" data-loc-id="{{id}}">{{label}}</button></template></div>
+          </div>
+        </span>
         <div class="jc-et-filter">
           <label>Estimate type:</label>
           <select id="etFilter" data-bind-options="estimateTypeOptions"></select>
@@ -129,9 +168,28 @@
           </span>
         </div>
         <div class="jc-month-nav">
-          <button class="jc-nav-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg></button>
-          <span class="jc-month-label" data-bind-text="monthLabel">May 2026</span>
-          <button class="jc-nav-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg></button>
+          <button class="jc-nav-btn" type="button"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg></button>
+          <span class="jc-popover-wrap">
+            <button class="jc-month-label" type="button" id="jcMonthBtn" data-bind-text="monthLabel">May 2026</button>
+            <div class="jc-month-picker" id="jcMonthPicker" hidden>
+              <div class="jc-month-picker-head">
+                <button type="button" id="jcMonthYearPrev">◀</button>
+                <span id="jcMonthYearLabel">2026</span>
+                <button type="button" id="jcMonthYearNext">▶</button>
+              </div>
+              <div class="jc-month-picker-grid" id="jcMonthPickerGrid"></div>
+            </div>
+          </span>
+          <button class="jc-nav-btn" type="button"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg></button>
+          <span class="jc-popover-wrap">
+            <button class="jc-overflow" type="button" id="jcOverflowBtn" aria-label="More actions">⋯</button>
+            <div class="jc-overflow-menu" id="jcOverflowMenu" hidden>
+              <button class="jc-overflow-menu-item" type="button" data-jobCalendar-open="calBookModal">Book job</button>
+              <button class="jc-overflow-menu-item" type="button" data-jobCalendar-open="calRescheduleModal">Reschedule</button>
+              <button class="jc-overflow-menu-item" type="button" data-jobCalendar-open="calBlockOutModal">Block out</button>
+              <button class="jc-overflow-menu-item" type="button" data-jobCalendar-open="calFilterCrewModal">Filter by crew</button>
+            </div>
+          </span>
         </div>
       </div>
 
@@ -157,7 +215,7 @@
           <div class="cal-dow">Fri</div>
           <div class="cal-dow">Sat</div>
           <div class="cal-dow">Sun</div>
-          <div style="display:contents" data-bind="days"><template><div class="cal-cell {{class}}" data-assigned="{{assignedTo}}" data-overdue="{{overdue}}"><span class="cal-num">{{num}}</span><div class="cal-evt {{kind}}">{{label}}</div></div></template></div>
+          <div style="display:contents" data-bind="days"><template><div class="cal-cell {{class}}" data-date="{{date}}" data-assigned="{{assignedTo}}" data-overdue="{{overdue}}" data-kind-bucket="{{kindBucket}}"><span class="cal-num">{{num}}</span><div class="cal-evt {{kind}}">{{label}}</div></div></template></div>
         </div>
 
         <!-- Right: selected-day list (hidden until a day is clicked) -->
@@ -182,13 +240,7 @@
     </div>
   </main>
 </div>
-<!-- v12 auto-modal toolbar -->
-<div style="display:flex;gap:8px;flex-wrap:wrap;padding:0 24px 16px;">
-  <button class="s1-btn sec" data-jobCalendar-open="calBookModal" type="button">Book job</button>
-  <button data-comm-action="action:jobCalendar.reschedule" class="s1-btn sec" data-jobCalendar-open="calRescheduleModal" type="button">Reschedule</button>
-  <button class="s1-btn sec" data-jobCalendar-open="calBlockOutModal" type="button">Block out</button>
-  <button class="s1-btn sec" data-jobCalendar-open="calFilterCrewModal" type="button">Filter by crew</button>
-</div>
+<!-- v12 auto-modal triggers moved into the header overflow menu (#jcOverflowBtn). The modals themselves remain in the page so they can be opened by id. -->
 <div class="s1-overlay gm-overlay" id="calBookModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
   <div class="s1-mhead"><div><div class="s1-mkicker">Job calendar</div><h4>Book job</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
   <div class="s1-mgrid">
@@ -232,82 +284,5 @@
 <script src="../../core/standard-page.js"></script>
 <script src="../../core/google-places.js"></script>
 <script src="./module.js"></script>
-<script>
-// Day click → popup
-document.querySelectorAll('.cal-cell').forEach(cell => {
-  cell.addEventListener('click', () => {
-    const num = cell.querySelector('.cal-num'); if (!num) return;
-    const day = num.textContent.trim();
-    const evts = Array.from(cell.querySelectorAll('.cal-evt')).map(e => e.textContent.trim());
-    if (cell.classList.contains('other')) return;
-    const m = document.createElement('div');
-    m.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:center;justify-content:center;z-index:1000;padding:24px;';
-    const wd = new Date(2026, 4, +day).toLocaleDateString('en-US', { weekday: 'long' });
-    const card = document.createElement('div');
-    card.style.cssText = 'background:#fff;border-radius:12px;max-width:520px;width:100%;padding:24px 26px;box-shadow:0 24px 60px -16px rgba(15,23,42,.4);';
-    const header = document.createElement('div');
-    header.style.cssText = 'display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;';
-    const headLeft = document.createElement('div');
-    const eyebrow = document.createElement('div');
-    eyebrow.style.cssText = 'font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;';
-    eyebrow.textContent = `${wd} · May ${day}, 2026`;
-    const h2 = document.createElement('h2');
-    h2.style.cssText = 'margin:6px 0 0;font-size:20px;font-weight:700;letter-spacing:-0.01em;';
-    h2.textContent = `${evts.length} ${evts.length===1?'event':'events'} scheduled`;
-    headLeft.appendChild(eyebrow); headLeft.appendChild(h2);
-    const closeX = document.createElement('button');
-    closeX.className = 'x';
-    closeX.style.cssText = 'border:0;background:transparent;font-size:24px;color:var(--ink-3);cursor:pointer;line-height:1;';
-    closeX.textContent = '×';
-    header.appendChild(headLeft); header.appendChild(closeX);
-    card.appendChild(header);
-    if (evts.length) {
-      evts.forEach(e => {
-        const row = document.createElement('div');
-        row.style.cssText = 'display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border:var(--hair);border-radius:8px;margin-bottom:6px;cursor:pointer;font-size:13px;';
-        row.textContent = e;
-        card.appendChild(row);
-      });
-    } else {
-      const empty = document.createElement('div');
-      empty.style.cssText = 'padding:30px;text-align:center;color:var(--ink-3);font-size:13px;border:1px dashed var(--line);border-radius:8px;';
-      empty.textContent = 'No events scheduled.';
-      card.appendChild(empty);
-    }
-    const footer = document.createElement('div');
-    footer.style.cssText = 'display:flex;justify-content:flex-end;gap:8px;margin-top:14px;border-top:var(--hair);padding-top:14px;';
-    const closeBtn = document.createElement('button');
-    closeBtn.className = 'btn btn-secondary x';
-    closeBtn.textContent = 'Close';
-    const newBtn = document.createElement('button');
-    newBtn.className = 'btn btn-primary';
-    newBtn.textContent = '+ New meeting';
-    footer.appendChild(closeBtn); footer.appendChild(newBtn);
-    card.appendChild(footer);
-    m.appendChild(card);
-    document.body.appendChild(m);
-    const close = () => m.remove();
-    m.addEventListener('click', e2 => { if (e2.target === m) close(); });
-    m.querySelectorAll('.x').forEach(b => b.addEventListener('click', close));
-  });
-});
-
-// Estimate type filter
-document.getElementById('etFilter').addEventListener('change', e => {
-  const v = e.target.value;
-  document.querySelectorAll('.cal-evt').forEach(evt => {
-    if (v === 'All') { evt.style.display = ''; return; }
-    if (v === 'in_person') evt.style.display = evt.classList.contains('in-person') ? '' : 'none';
-    else if (v === 'virtual') evt.style.display = evt.classList.contains('virtual') ? '' : 'none';
-    else if (v === 'none') evt.style.display = evt.classList.contains('none') ? '' : 'none';
-  });
-});
-
-// View toggle (Company / Personal)
-document.querySelectorAll('.jc-view-toggle a').forEach(a => a.addEventListener('click', e => {
-  e.preventDefault();
-  document.querySelectorAll('.jc-view-toggle a').forEach(x => x.classList.toggle('active', x === a));
-}));
-</script>
 </body>
 </html>
