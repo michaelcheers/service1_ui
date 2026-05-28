@@ -185,6 +185,8 @@ function getLeads() {
   return raw.map(l => Object.assign({}, l, {
     name:   l.name   || '',
     job:    l.job    || '',
+    jobId:  (l.jobId != null ? l.jobId : null),
+    phone:  l.phone  || '',
     status: l.status || '',
     kind:   l.kind   || '',
     lead:   l.lead   || '',
@@ -195,6 +197,35 @@ function getLeads() {
     av:     l.av     || (l.name ? l.name.split(' ').map(s=>s[0]||'').join('').slice(0,2) : ''),
     avc:    l.avc    || 'var(--ink-3)'
   }));
+}
+
+const LEAD_STATUS_OPTIONS_FALLBACK = [
+  { value: 'Hot', label: 'Hot' },
+  { value: 'New', label: 'New' },
+  { value: 'Follow Up', label: 'Follow Up' },
+  { value: 'On Ice', label: 'On Ice' }
+];
+function leadStatusOptions() {
+  const fx = (window.S1 && window.S1.fixtures && window.S1.fixtures["salesMyLeads"]) || null;
+  const o = fx && Array.isArray(fx.optionsOptions2) ? fx.optionsOptions2 : null;
+  if (o && o.length) return o.map(x => ({ value: x.value || x.Value || x.label || x.Label || '', label: x.label || x.Label || x.value || x.Value || '' }));
+  return LEAD_STATUS_OPTIONS_FALLBACK;
+}
+function navigateToJob(jobId) {
+  if (jobId == null || jobId === '') return;
+  window.parent.postMessage({ type: 's1ui:navigate', href: '/JobDetail/' + jobId }, '*');
+}
+function dialNumber(phone) {
+  const num = String(phone || '').trim();
+  if (!num) return;
+  window.parent.postMessage({ type: 's1ui:dial', number: num, autoDial: true }, '*');
+}
+async function updateLeadStatus(jobId, leadStatus) {
+  try {
+    await window.S1.comm.action('salesMyLeads.updateLeadStatus', { jobId: jobId, leadStatus: leadStatus });
+  } catch (e) {
+    console.warn('[salesMyLeads] updateLeadStatus failed', e);
+  }
 }
 function leadCls(l) {
   if (l === 'Hot') return 'hot';
@@ -268,7 +299,23 @@ function renderTable() {
     tr.appendChild(makeEl('td', { className: 'cell-light', text: l.kind }));
 
     const td5 = makeEl('td', { onclick: (e) => e.stopPropagation() });
-    td5.appendChild(makeEl('select', { className: 'lead-sel ' + leadCls(l.lead), attrs: { 'data-bind-options': 'optionsOptions2' } }));
+    const sel = makeEl('select', { className: 'lead-sel ' + leadCls(l.lead) });
+    const opts = leadStatusOptions();
+    for (const o of opts) {
+      const opt = document.createElement('option');
+      opt.value = o.value;
+      opt.textContent = o.label;
+      if (o.value === l.lead) opt.selected = true;
+      sel.appendChild(opt);
+    }
+    sel.addEventListener('change', async (e) => {
+      e.stopPropagation();
+      const newVal = sel.value;
+      sel.className = 'lead-sel ' + leadCls(newVal);
+      if (l.jobId == null) return;
+      await updateLeadStatus(l.jobId, newVal);
+    });
+    td5.appendChild(sel);
     tr.appendChild(td5);
 
     tr.appendChild(makeEl('td', { text: l.type }));
@@ -280,18 +327,35 @@ function renderTable() {
 
     const td10 = makeEl('td', { onclick: (e) => e.stopPropagation() });
     const actions = makeEl('div', { style: 'display:flex;gap:4px;justify-content:flex-end;' });
-    const callBtn = makeEl('button', { className: 'icon-btn', style: 'width:28px;height:28px;', attrs: { title: 'Call' } });
+    const hasPhone = !!(l.phone && String(l.phone).trim());
+    const hasJob = (l.jobId != null);
+    const callBtn = makeEl('button', {
+      className: 'icon-btn',
+      style: 'width:28px;height:28px;' + (hasPhone ? '' : 'opacity:.4;pointer-events:none;'),
+      attrs: { title: hasPhone ? ('Call ' + l.phone) : 'No phone on file' },
+      onclick: (e) => { e.stopPropagation(); dialNumber(l.phone); }
+    });
     callBtn.appendChild(svgEl({ width: '13', height: '13', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2' }, [
       { tag: 'path', attrs: { d: 'M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z' } }
     ]));
     actions.appendChild(callBtn);
-    const emailBtn = makeEl('button', { className: 'icon-btn', style: 'width:28px;height:28px;', attrs: { title: 'Email' } });
+    const emailBtn = makeEl('button', {
+      className: 'icon-btn',
+      style: 'width:28px;height:28px;' + (hasJob ? '' : 'opacity:.4;pointer-events:none;'),
+      attrs: { title: 'Email' },
+      onclick: (e) => { e.stopPropagation(); navigateToJob(l.jobId); }
+    });
     emailBtn.appendChild(svgEl({ width: '13', height: '13', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2' }, [
       { tag: 'rect', attrs: { x: '2', y: '4', width: '20', height: '16', rx: '2' } },
       { tag: 'polyline', attrs: { points: '22 6 12 13 2 6' } }
     ]));
     actions.appendChild(emailBtn);
-    const notesBtn = makeEl('button', { className: 'icon-btn', style: 'width:28px;height:28px;', attrs: { title: 'Notes' } });
+    const notesBtn = makeEl('button', {
+      className: 'icon-btn',
+      style: 'width:28px;height:28px;' + (hasJob ? '' : 'opacity:.4;pointer-events:none;'),
+      attrs: { title: 'Notes' },
+      onclick: (e) => { e.stopPropagation(); navigateToJob(l.jobId); }
+    });
     notesBtn.appendChild(svgEl({ width: '13', height: '13', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2' }, [
       { tag: 'path', attrs: { d: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z' } }
     ]));
@@ -337,9 +401,27 @@ function renderGrid() {
     card.appendChild(det);
 
     const actions = makeEl('div', { className: 'actions' });
-    actions.appendChild(makeEl('button', { text: '📞 Call', attrs: { 'data-comm-action': 'action:salesMyLeads.call' } }));
-    actions.appendChild(makeEl('button', { text: '✉ Email', attrs: { 'data-comm-action': 'action:salesMyLeads.email' } }));
-    actions.appendChild(makeEl('button', { text: '📝 Notes', attrs: { 'data-comm-action': 'action:salesMyLeads.notes' } }));
+    const hasPhoneG = !!(l.phone && String(l.phone).trim());
+    const hasJobG = (l.jobId != null);
+    const gCall = makeEl('button', {
+      text: '📞 Call',
+      style: hasPhoneG ? '' : 'opacity:.4;pointer-events:none;',
+      attrs: { title: hasPhoneG ? ('Call ' + l.phone) : 'No phone on file' },
+      onclick: (e) => { e.stopPropagation(); dialNumber(l.phone); }
+    });
+    const gEmail = makeEl('button', {
+      text: '✉ Email',
+      style: hasJobG ? '' : 'opacity:.4;pointer-events:none;',
+      onclick: (e) => { e.stopPropagation(); navigateToJob(l.jobId); }
+    });
+    const gNotes = makeEl('button', {
+      text: '📝 Notes',
+      style: hasJobG ? '' : 'opacity:.4;pointer-events:none;',
+      onclick: (e) => { e.stopPropagation(); navigateToJob(l.jobId); }
+    });
+    actions.appendChild(gCall);
+    actions.appendChild(gEmail);
+    actions.appendChild(gNotes);
     card.appendChild(actions);
 
     g.appendChild(card);
@@ -404,7 +486,12 @@ function openOpp(l) {
   const foot = makeEl('div', { style: 'display:flex;justify-content:flex-end;gap:8px;' });
   foot.appendChild(makeEl('button', { className: 'btn btn-secondary x', text: 'Close' }));
   foot.appendChild(makeEl('button', { className: 'btn btn-secondary', text: 'Add note', attrs: { 'data-comm-action': 'action:salesMyLeads.add-note' } }));
-  foot.appendChild(makeEl('button', { className: 'btn btn-primary', text: 'Open job →' }));
+  foot.appendChild(makeEl('button', {
+    className: 'btn btn-primary',
+    text: 'Open job →',
+    style: (l.jobId != null) ? '' : 'opacity:.4;pointer-events:none;',
+    onclick: () => navigateToJob(l.jobId)
+  }));
   body.appendChild(foot);
 
   card.appendChild(body);
@@ -416,11 +503,19 @@ function openOpp(l) {
 }
 document.getElementById('mlBody').addEventListener('click', e => {
   const tr = e.target.closest('tr[data-id]'); if (!tr) return;
-  openOpp(getLeads().find(x => x.id === +tr.dataset.id));
+  if (e.target.closest('button, select, input, a')) return;
+  const lead = getLeads().find(x => x.id === +tr.dataset.id);
+  if (!lead) return;
+  if (lead.jobId != null) navigateToJob(lead.jobId);
+  else openOpp(lead);
 });
 document.getElementById('mlGrid').addEventListener('click', e => {
   const c = e.target.closest('.ml-card[data-id]'); if (!c) return;
-  openOpp(getLeads().find(x => x.id === +c.dataset.id));
+  if (e.target.closest('button, select, input, a')) return;
+  const lead = getLeads().find(x => x.id === +c.dataset.id);
+  if (!lead) return;
+  if (lead.jobId != null) navigateToJob(lead.jobId);
+  else openOpp(lead);
 });
 
 // Re-render when the host pushes fresh state.
