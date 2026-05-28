@@ -52,10 +52,12 @@ document.addEventListener('click', (ev) => {
   row.style.cssText = 'display:grid;grid-template-columns:32px 1fr auto;gap:8px;align-items:center;';
   const num = document.createElement('span');
   num.style.cssText = 'font-weight:700;color:var(--ink-3);';
-  num.textContent = (host.querySelectorAll(':scope > div').length + 1) + '.';
+  const stopIndex = host.querySelectorAll(':scope > div').length + 1;
+  num.textContent = stopIndex + '.';
   const input = document.createElement('input');
   input.className = 'cc-input';
   input.type = 'text';
+  input.name = 'Stop' + stopIndex;
   input.placeholder = 'Stop address';
   input.setAttribute('data-places-autocomplete', '');
   const rm = document.createElement('button');

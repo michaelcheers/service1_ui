@@ -57,39 +57,39 @@
         <div class="cc-card">
           <div class="cc-section-title">Basic Information</div>
           <div class="cc-grid">
-            <div class="cc-field"><label class="cc-label">First Name <span class="req">*</span></label><input class="cc-input" type="text" required></div>
-            <div class="cc-field"><label class="cc-label">Last Name</label><input class="cc-input" type="text"></div>
-            <div class="cc-field full"><label class="cc-label">Company Name</label><input class="cc-input" type="text"></div>
+            <div class="cc-field"><label class="cc-label">First Name <span class="req">*</span></label><input class="cc-input" type="text" name="FirstName" required></div>
+            <div class="cc-field"><label class="cc-label">Last Name</label><input class="cc-input" type="text" name="LastName"></div>
+            <div class="cc-field full"><label class="cc-label">Company Name</label><input class="cc-input" type="text" name="CompanyName"></div>
           </div>
         </div>
 
         <div class="cc-card">
           <div class="cc-section-title">Contact Information</div>
           <div class="cc-grid">
-            <div class="cc-field"><label class="cc-label">Email</label><input class="cc-input" type="email"></div>
-            <div class="cc-field"><label class="cc-label">Phone Number</label><input class="cc-input" type="tel"></div>
+            <div class="cc-field"><label class="cc-label">Email</label><input class="cc-input" type="email" name="Email"></div>
+            <div class="cc-field"><label class="cc-label">Phone Number</label><input class="cc-input" type="tel" name="PhoneNumber"></div>
           </div>
         </div>
 
         <div class="cc-card">
           <div class="cc-section-title">Location Details</div>
           <div class="cc-grid full">
-            <div class="cc-field"><label class="cc-label">Service location</label><input class="cc-input" type="text" placeholder="Enter service location" data-places-autocomplete></div>
-            <div class="cc-field"><label class="cc-label">Delivery location</label><input class="cc-input" type="text" placeholder="Enter delivery location" data-places-autocomplete></div>
+            <div class="cc-field"><label class="cc-label">Service location</label><input class="cc-input" type="text" name="Address" placeholder="Enter service location" data-places-autocomplete></div>
+            <div class="cc-field"><label class="cc-label">Delivery location</label><input class="cc-input" type="text" name="DeliveryAddress" placeholder="Enter delivery location" data-places-autocomplete></div>
             <div class="cc-field"><label class="cc-label">Additional Stops <span style="color:var(--ink-3);font-weight:400;">(Optional)</span></label><div id="cc-stops" style="display:flex;flex-direction:column;gap:8px;"></div><button type="button" class="cc-stop-btn" data-cc-add-stop>+ Add Stop</button></div>
-            <div class="cc-field"><label class="cc-label">Job size</label><select class="cc-select" data-bind-options="jobSizeOptions"><option value="-- Select Size --">-- Select Size --</option></select></div>
+            <div class="cc-field"><label class="cc-label">Job size</label><select class="cc-select" name="JobSize" data-bind-options="jobSizeOptions"><option value="-- Select Size --">-- Select Size --</option></select></div>
           </div>
         </div>
 
         <div class="cc-card">
           <div class="cc-section-title">Additional Details</div>
           <div class="cc-grid">
-            <div class="cc-field"><label class="cc-label">Status <span class="req">*</span></label><select class="cc-select" data-bind-options="optionsOptions" required></select></div>
-            <div class="cc-field"><label class="cc-label">Source</label><select class="cc-select" data-bind-options="sourceOptions"><option value="-- Select Source --">-- Select Source --</option></select></div>
-            <div class="cc-field"><label class="cc-label">Type</label><select class="cc-select" data-bind-options="typeOptions"><option value="-- Select Type --">-- Select Type --</option></select></div>
-            <div class="cc-field"><label class="cc-label">Square Footage</label><input class="cc-input" type="number" placeholder="e.g. 1500"></div>
-            <div class="cc-field full"><label class="cc-label">Location / Branch</label><select class="cc-select" data-bind-options="locationBranchOptions"></select><div class="cc-help">Email From, branding, and Estimate Portal will use this branch's identity.</div></div>
-            <div class="cc-field full"><label class="cc-label">Notes</label><textarea class="cc-textarea"></textarea></div>
+            <div class="cc-field"><label class="cc-label">Status <span class="req">*</span></label><select class="cc-select" name="Status" data-bind-options="optionsOptions" required></select></div>
+            <div class="cc-field"><label class="cc-label">Source</label><select class="cc-select" name="Source" data-bind-options="sourceOptions"><option value="-- Select Source --">-- Select Source --</option></select></div>
+            <div class="cc-field"><label class="cc-label">Type</label><select class="cc-select" name="CustomerTypeId" data-bind-options="typeOptions"><option value="-- Select Type --">-- Select Type --</option></select></div>
+            <div class="cc-field"><label class="cc-label">Square Footage</label><input class="cc-input" type="number" name="SquareFootage" placeholder="e.g. 1500"></div>
+            <div class="cc-field full"><label class="cc-label">Location / Branch</label><select class="cc-select" name="LocationId" data-bind-options="locationBranchOptions"></select><div class="cc-help">Email From, branding, and Estimate Portal will use this branch's identity.</div></div>
+            <div class="cc-field full"><label class="cc-label">Notes</label><textarea class="cc-textarea" name="Notes"></textarea></div>
           </div>
         </div>
 

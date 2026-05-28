@@ -668,7 +668,7 @@ document.addEventListener('click', (ev) => {
     ['#addStopModal',           'job.stop.add'],
     ['#addWagesModal',          'job.wages.add'],
     ['#addChargeModal',         'job.charge.add'],
-    ['#jdAddContactModal',      'job.contact.add'],
+    ['#jdAddContactModal',      'jobDetail.add-contact'],
     ['#jdVideoModal',           'job.video.request'],
     ['#jdMarkLostModal',        'job.markLost'],
     ['#jdAddDiscountModal',     'job.discount.add'],
