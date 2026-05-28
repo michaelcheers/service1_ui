@@ -2426,13 +2426,13 @@ select.gp2-input {
                 </div>
                 <div class="muted" style="margin-top:4px;font-size:12px;" data-bind-text="customer.sinceLine">Customer since Jan 4, 2026 · Referred by Tim Walsh</div>
                 <div style="display:flex;gap:6px;margin-top:10px;" class="tag-row">
-                  <span data-bind="customer.tags"><template><span class="tag">{{name}}</span></template></span>
+                  <span data-bind="customer.tags"><template><span class="tag">{{.}}</span></template></span>
                   <button type="button" class="tag" data-jd-open="addTagModal" data-jd-action="open-add-tag" style="cursor:pointer;background:transparent;border:1px dashed var(--line);">+ Add tag</button>
                 </div>
               </div>
               <div class="cust-stats">
-                <div><div class="cust-stat-v" data-bind-text="customer.lifetimeValue" data-fmt="usd">$0</div><div class="cust-stat-l">Lifetime value</div></div>
-                <div><div class="cust-stat-v" data-bind-text="customer.dealsCount" data-fmt="num">0</div><div class="cust-stat-l">Deals</div></div>
+                <div><div class="cust-stat-v" data-bind-text="customer.lifetimeValue">$0</div><div class="cust-stat-l">Lifetime value</div></div>
+                <div><div class="cust-stat-v" data-bind-text="customer.dealCount" data-fmt="num">0</div><div class="cust-stat-l">Deals</div></div>
                 <div><div class="cust-stat-v" data-bind-text="customer.touchpoints" data-fmt="num">0</div><div class="cust-stat-l">Touchpoints</div></div>
               </div>
             </div>
@@ -2653,7 +2653,7 @@ select.gp2-input {
                 </div>
               </template>
             </div>
-            <div class="pay-empty" data-bind-text="paymentsEmpty" style="font-size:12px;color:var(--ink-3);font-style:italic;padding:6px 0;">No payments yet.</div>
+            <div class="pay-empty" style="font-size:12px;color:var(--ink-3);font-style:italic;padding:6px 0;">No payments yet.</div>
             <div class="row" style="border-bottom:0;padding-top:14px;">
               <span class="l">Cards on file</span>
               <a data-comm-action="action:jobDetail.send-link-to-customer" href="#" style="color:var(--terra);font-weight:500;font-size:12px;">+ Send link to customer</a>

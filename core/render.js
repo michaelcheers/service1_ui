@@ -9,6 +9,9 @@
 (function () {
   function get(obj, path) {
     if (obj == null || !path) return undefined;
+    // "." resolves to the object itself — used in array repeats over
+    // primitive items, e.g. {{.}} inside <template> for a string array.
+    if (path === '.') return obj;
     var parts = String(path).split('.');
     var cur = obj;
     for (var i = 0; i < parts.length; i++) {
