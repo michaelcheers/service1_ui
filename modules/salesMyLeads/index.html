@@ -215,6 +215,16 @@ function navigateToJob(jobId) {
   if (jobId == null || jobId === '') return;
   window.parent.postMessage({ type: 's1ui:navigate', href: '/JobDetail/' + jobId }, '*');
 }
+function navigateToLead(lead) {
+  if (!lead) return;
+  if (lead.jobId != null && lead.jobId !== '') {
+    window.parent.postMessage({ type: 's1ui:navigate', href: '/JobDetail/' + lead.jobId }, '*');
+    return;
+  }
+  if (lead.id != null && lead.id !== '') {
+    window.parent.postMessage({ type: 's1ui:navigate', href: '/Customers/Details?id=' + encodeURIComponent(lead.id) }, '*');
+  }
+}
 function dialNumber(phone) {
   const num = String(phone || '').trim();
   if (!num) return;
@@ -341,9 +351,9 @@ function renderTable() {
     actions.appendChild(callBtn);
     const emailBtn = makeEl('button', {
       className: 'icon-btn',
-      style: 'width:28px;height:28px;' + (hasJob ? '' : 'opacity:.4;pointer-events:none;'),
+      style: 'width:28px;height:28px;',
       attrs: { title: 'Email' },
-      onclick: (e) => { e.stopPropagation(); navigateToJob(l.jobId); }
+      onclick: (e) => { e.stopPropagation(); navigateToLead(l); }
     });
     emailBtn.appendChild(svgEl({ width: '13', height: '13', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2' }, [
       { tag: 'rect', attrs: { x: '2', y: '4', width: '20', height: '16', rx: '2' } },
@@ -352,9 +362,9 @@ function renderTable() {
     actions.appendChild(emailBtn);
     const notesBtn = makeEl('button', {
       className: 'icon-btn',
-      style: 'width:28px;height:28px;' + (hasJob ? '' : 'opacity:.4;pointer-events:none;'),
+      style: 'width:28px;height:28px;',
       attrs: { title: 'Notes' },
-      onclick: (e) => { e.stopPropagation(); navigateToJob(l.jobId); }
+      onclick: (e) => { e.stopPropagation(); navigateToLead(l); }
     });
     notesBtn.appendChild(svgEl({ width: '13', height: '13', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2' }, [
       { tag: 'path', attrs: { d: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z' } }
@@ -411,13 +421,11 @@ function renderGrid() {
     });
     const gEmail = makeEl('button', {
       text: '✉ Email',
-      style: hasJobG ? '' : 'opacity:.4;pointer-events:none;',
-      onclick: (e) => { e.stopPropagation(); navigateToJob(l.jobId); }
+      onclick: (e) => { e.stopPropagation(); navigateToLead(l); }
     });
     const gNotes = makeEl('button', {
       text: '📝 Notes',
-      style: hasJobG ? '' : 'opacity:.4;pointer-events:none;',
-      onclick: (e) => { e.stopPropagation(); navigateToJob(l.jobId); }
+      onclick: (e) => { e.stopPropagation(); navigateToLead(l); }
     });
     actions.appendChild(gCall);
     actions.appendChild(gEmail);
@@ -504,18 +512,16 @@ function openOpp(l) {
 document.getElementById('mlBody').addEventListener('click', e => {
   const tr = e.target.closest('tr[data-id]'); if (!tr) return;
   if (e.target.closest('button, select, input, a')) return;
-  const lead = getLeads().find(x => x.id === +tr.dataset.id);
+  const lead = getLeads().find(x => String(x.id) === tr.dataset.id);
   if (!lead) return;
-  if (lead.jobId != null) navigateToJob(lead.jobId);
-  else openOpp(lead);
+  navigateToLead(lead);
 });
 document.getElementById('mlGrid').addEventListener('click', e => {
   const c = e.target.closest('.ml-card[data-id]'); if (!c) return;
   if (e.target.closest('button, select, input, a')) return;
-  const lead = getLeads().find(x => x.id === +c.dataset.id);
+  const lead = getLeads().find(x => String(x.id) === c.dataset.id);
   if (!lead) return;
-  if (lead.jobId != null) navigateToJob(lead.jobId);
-  else openOpp(lead);
+  navigateToLead(lead);
 });
 
 // Re-render when the host pushes fresh state.
