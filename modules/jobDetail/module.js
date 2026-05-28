@@ -424,7 +424,8 @@ $$('button').filter(b => /claim lead/i.test(b.textContent.trim())).forEach(b => 
 })();
 
 // ── 15) Book this lead ──────────────────────────────────────────────────
-$$('button.btn-primary').filter(b => /book this lead/i.test(b.textContent.trim())).forEach(b => {
+$$('button').filter(b => /book this lead/i.test(b.textContent.trim())).forEach(b => {
+  if (b.__s1Wired) return;
   // Strip data-comm-action so the document-level dispatcher in
   // standard-page.js doesn't double-fire alongside this explicit handler.
   b.removeAttribute('data-comm-action');
@@ -525,12 +526,12 @@ function addCharge(ev) {
   window.S1.modal.open('#addChargeModal');
 }
 $$('button').filter(b => /^\+\s*add charge$/i.test(b.textContent.trim())).forEach(b => {
-  b.setAttribute('data-comm-action', 'action:jobDetail.add-charge:');
+  b.removeAttribute('data-comm-action');
   b.__s1Wired = true;
   b.addEventListener('click', addCharge);
 });
 $$('button').filter(b => /^\+\s*add line$/i.test(b.textContent.trim())).forEach(b => {
-  b.setAttribute('data-comm-action', 'action:jobDetail.add-line:');
+  b.removeAttribute('data-comm-action');
   b.__s1Wired = true;
   b.addEventListener('click', addCharge);
 });
@@ -669,22 +670,65 @@ document.addEventListener('click', (ev) => {
       window.S1.modal.open('#' + b.getAttribute('data-jd-open'));
     });
   });
+  const jobId = () => ((window.S1.fixtures || {}).jobDetail && window.S1.fixtures.jobDetail.deal && window.S1.fixtures.jobDetail.deal.id) || '';
   const bindings = [
-    ['#finalizeModal',          'job.finalize'],
-    ['#addStopModal',           'job.stop.add'],
-    ['#addWagesModal',          'job.wages.add'],
-    ['#addChargeModal',         'job.charge.add'],
-    ['#jdAddContactModal',      'jobDetail.add-contact'],
-    ['#jdVideoModal',           'job.video.request'],
-    ['#jdMarkLostModal',        'job.markLost'],
-    ['#jdAddDiscountModal',     'job.discount.add'],
-    ['#jdNteModal',             'job.nte.set'],
-    ['#jdJobDetailsModal',      'job.details.update'],
-    ['#jdContactDetailsModal',  'job.contact.update'],
-    ['#jdInventoryModal',       'job.inventory.upsert']
+    ['#finalizeModal',          'job.finalize',           {}],
+    ['#addStopModal',           'job.stop.add', {
+      transform: function (p) {
+        if (!p.stopType) p.stopType = 'Pickup';
+        p.sequence = Number(p.sequence) || 1;
+        p.squareFootage = p.squareFootage ? Number(p.squareFootage) : null;
+        p.stairs = Number(p.stairs) || 0;
+        return p;
+      },
+      validate: function (p) {
+        if (!p.address) return 'Address is required';
+        return null;
+      },
+      successMsg: 'Stop added'
+    }],
+    ['#addWagesModal',          'job.wages.add',          {}],
+    ['#addChargeModal',         'job.charge.add', {
+      transform: function (p) {
+        return {
+          jobId:        jobId(),
+          preset:       p.preset || '',
+          categoryId:   p.category || p.categoryId || '',
+          chargeType:   p.chargeType || '',
+          label:        p.description || p.label || '',
+          qty:          Number(p.quantity || p.qty || 1),
+          unitPrice:    Number(p.rate || p.unitPrice || 0),
+          crewCount:    Number(p.crewCount || 0),
+          vehicleCount: Number(p.vehicleCount || 0),
+          taxable:      !!p.taxable,
+          memo:         p.notes || p.memo || ''
+        };
+      },
+      validate: function (p) {
+        if (!p.label) return 'Description is required';
+        if (!(p.unitPrice > 0)) return 'Rate must be greater than 0';
+        return null;
+      },
+      successMsg: 'Charge added'
+    }],
+    ['#jdAddContactModal',      'jobDetail.add-contact',  {}],
+    ['#jdVideoModal',           'job.video.request',      {}],
+    ['#jdMarkLostModal',        'job.markLost',           {}],
+    ['#jdAddDiscountModal',     'job.discount.add',       {}],
+    ['#jdNteModal',             'job.nte.set',            {}],
+    ['#jdJobDetailsModal',      'job.details.update',     {}],
+    ['#jdContactDetailsModal',  'job.contact.update',     {}],
+    ['#jdInventoryModal',       'job.inventory.upsert',   {}]
   ];
-  bindings.forEach(([sel, rpc]) => {
-    window.S1.modal.bindForm(sel, rpc, { label: rpc, onSuccess: () => { try { (window.S1.fixtures||{}).jobDetail && window.S1.render.bind(document, window.S1.fixtures.jobDetail); } catch {} } });
+  bindings.forEach(([sel, rpc, extra]) => {
+    const matches = document.querySelectorAll(sel);
+    if (matches.length === 0) { try { console.warn('[jobDetail] no match for binding selector', sel); } catch(_){} return; }
+    if (matches.length > 1)  { try { console.warn('[jobDetail] duplicate-id collision for', sel, '— count=', matches.length); } catch(_){} }
+    const opts = Object.assign({
+      label: rpc,
+      onSuccess: () => { try { (window.S1.fixtures||{}).jobDetail && window.S1.render.bind(document, window.S1.fixtures.jobDetail); } catch {} }
+    }, extra || {});
+    window.S1.modal.bindForm(sel, rpc, opts);
   });
 })();
 

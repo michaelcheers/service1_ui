@@ -273,6 +273,7 @@
     }).then(function (j) {
       var addr = (j && j.formattedAddress) || (j && j.displayName && j.displayName.text) || fallback;
       state.el.__placesDetails = j || null;
+      state.el.__placesParts = parseComponents(j && j.addressComponents);
       finalizeSelection(state, addr);
     }).catch(function (e) {
       try { console.error('[places] details failed:', e); } catch (_) {}
@@ -286,8 +287,43 @@
       state.el.dispatchEvent(new Event('input', { bubbles: true }));
       state.el.dispatchEvent(new Event('change', { bubbles: true }));
     } catch (e) { /* old browsers — Event ctor may not exist */ }
+    try { populateSiblings(state.el, state.el.__placesParts); } catch (_) {}
     renderPredictions(state, []);
     state.token = newSessionToken();
+  }
+
+  function parseComponents(comps) {
+    var out = { streetNumber:'', route:'', city:'', provinceState:'', postalZip:'', country:'', unitSuite:'' };
+    if (!Array.isArray(comps)) return out;
+    comps.forEach(function (c) {
+      var t = c.types || [];
+      var L = c.longText  || c.long_name  || '';
+      var S = c.shortText || c.short_name || '';
+      if      (t.indexOf('subpremise') >= 0)                    out.unitSuite     = L;
+      else if (t.indexOf('street_number') >= 0)                 out.streetNumber  = L;
+      else if (t.indexOf('route') >= 0)                         out.route         = L;
+      else if (t.indexOf('locality') >= 0)                      out.city          = L;
+      else if (t.indexOf('postal_town') >= 0 && !out.city)      out.city          = L;
+      else if (t.indexOf('administrative_area_level_1') >= 0)   out.provinceState = S || L;
+      else if (t.indexOf('postal_code') >= 0)                   out.postalZip     = L;
+      else if (t.indexOf('country') >= 0)                       out.country       = S || L;
+    });
+    return out;
+  }
+
+  function populateSiblings(el, parts) {
+    if (!parts) return;
+    var scope = (el.closest && el.closest('.jd-overlay, .s1-overlay, form')) || document;
+    ['city', 'provinceState', 'postalZip', 'country', 'unitSuite'].forEach(function (k) {
+      var tgt = scope.querySelector('input[name="' + k + '"], select[name="' + k + '"]');
+      if (tgt && !tgt.value) {
+        tgt.value = parts[k] || '';
+        try {
+          tgt.dispatchEvent(new Event('input',  { bubbles: true }));
+          tgt.dispatchEvent(new Event('change', { bubbles: true }));
+        } catch (_) {}
+      }
+    });
   }
 
   function attachAll() {

@@ -324,13 +324,31 @@
     }
   }
 
+  function bindEmpty(root, state) {
+    var ifNodes = root.querySelectorAll('[data-empty-if]');
+    for (var i = 0; i < ifNodes.length; i++) {
+      var el = ifNodes[i];
+      var v = get(state, el.getAttribute('data-empty-if'));
+      var blank = (v == null || String(v).trim() === '');
+      el.style.display = blank ? 'none' : '';
+    }
+    var unlessNodes = root.querySelectorAll('[data-empty-unless]');
+    for (var j = 0; j < unlessNodes.length; j++) {
+      var ue = unlessNodes[j];
+      var uv = get(state, ue.getAttribute('data-empty-unless'));
+      var ublank = (uv == null || String(uv).trim() === '');
+      ue.style.display = ublank ? '' : 'none';
+    }
+  }
+
   function bind(root, state) {
     bindText(root, state);
     bindLists(root, state);
     bindText(root, state); // re-bind for nodes injected from templates
+    bindOptions(root, state);  // options must exist before values are assigned (Bug 1400/#3)
     bindValues(root, state);
     bindAttrs(root, state);
-    bindOptions(root, state);
+    bindEmpty(root, state);
     bindHtml(root, state);
     bindHtml(root, state); // re-bind for nodes injected by bindLists
   }

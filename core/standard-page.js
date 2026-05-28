@@ -322,6 +322,21 @@
       }
       out[key] = arr;
     }
+    // Places autocomplete fallback: any input inside the modal carrying
+    // __placesParts contributes structured-address keys for slots the form
+    // didn't render (or that the user left empty).
+    try {
+      var partsKeys = ['city', 'provinceState', 'postalZip', 'country', 'unitSuite'];
+      var withParts = el.querySelectorAll('input[data-places-autocomplete]');
+      for (var p = 0; p < withParts.length; p++) {
+        var parts = withParts[p].__placesParts;
+        if (!parts) continue;
+        for (var k = 0; k < partsKeys.length; k++) {
+          var key = partsKeys[k];
+          if (parts[key] && !out[key]) out[key] = parts[key];
+        }
+      }
+    } catch (_) {}
     return out;
   }
   function modalBindForm(sel, rpcKey, opts) {
@@ -329,8 +344,10 @@
     var el = typeof sel === 'string' ? document.querySelector(sel) : sel;
     if (!el || el.__s1FormBound) return;
     el.__s1FormBound = true;
-    var saveBtn = el.querySelector('[data-modal-save], .btn-primary, .tm-primary, .fm-primary, .jd-primary, .tk-primary');
-    if (!saveBtn) return;
+    var saveBtn =
+      el.querySelector('[data-modal-save]') ||
+      el.querySelector('.jd-modal-actions .btn-primary, .s1-mfoot .s1-btn.pri, .tm-actions .tm-primary, .fm-actions .fm-primary, .jd-modal-foot .jd-primary, .tk-actions .tk-primary');
+    if (!saveBtn) { try { console.warn('[modalBindForm] no save button found for', sel || el); } catch (_) {} return; }
     saveBtn.addEventListener('click', async function (ev) {
       ev.preventDefault();
       var payload = modalCollect(el);

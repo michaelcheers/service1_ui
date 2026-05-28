@@ -667,6 +667,8 @@ iframe.cmx-editor-frame { width: 100%; min-height: 160px; border: 0; display: bl
   font-weight: 600; color: var(--ink-3);
   z-index: 1;
 }
+.tl-sections .tl-day-items:empty { display: none; }
+.tl-sections .tl-day:has(+ .tl-day-items:empty) { display: none; }
 .tl-item {
   display: grid;
   grid-template-columns: 32px 1fr auto;
@@ -2114,7 +2116,7 @@ select.gp2-input {
           <section class="card" style="margin-top:16px;">
             <div class="s-head">
               <div class="s-title">Locations &amp; route</div>
-              <button class="s-action" onclick="document.getElementById('addStopModal').classList.add('open')">+ Add stop</button>
+              <button class="s-action" type="button" data-jd-open="addStopModal">+ Add stop</button>
             </div>
 
             <div class="gp2-stop">
@@ -2178,7 +2180,7 @@ select.gp2-input {
           <section class="card" style="margin-top:16px;">
             <div class="s-head">
               <div class="s-title">Charges</div>
-              <button class="btn btn-secondary btn-sm" onclick="document.getElementById('addChargeModal').classList.add('open')">+ Add charge</button>
+              <button class="btn btn-secondary btn-sm" type="button" data-jd-open="addChargeModal">+ Add charge</button>
             </div>
 
             <div class="gp2-charges-empty">
@@ -2272,8 +2274,8 @@ select.gp2-input {
             <div class="s-head">
               <div class="s-title">Job financials</div>
               <div style="display:flex;gap:8px;">
-                <button class="btn btn-secondary btn-sm" onclick="document.getElementById('addWagesModal').classList.add('open')">+ Add Wages</button>
-                <button class="btn btn-primary btn-sm" onclick="document.getElementById('finalizeModal').classList.add('open')">✓ Finalize Job</button>
+                <button class="btn btn-secondary btn-sm" type="button" data-jd-open="addWagesModal">+ Add Wages</button>
+                <button class="btn btn-primary btn-sm" type="button" data-jd-open="finalizeModal">✓ Finalize Job</button>
               </div>
             </div>
             <div class="kpi-strip">
@@ -2501,10 +2503,11 @@ select.gp2-input {
           <section class="card" style="margin-top:16px;">
             <div class="s-head"><div class="s-title">Internal notes</div><a data-jd-open="addNoteModal" class="s-action" href="#">+ Note</a></div>
             <div class="s-body">
-              <div class="cust-note">
+              <div class="cust-note" data-empty-if="customer.internalNote">
                 <div class="cust-note-meta" data-bind-text="timeline.noteAuthor">John Sales · Jan 4, 11:02 AM</div>
                 <div data-bind-text="customer.internalNote">Referred by Tim Walsh (job #16204). 3-bedroom downtown apartment, no elevator on origin side. Sensitive about timing — needs to be out by 11 AM for landlord walkthrough.</div>
               </div>
+              <div class="cust-note-empty muted" data-empty-unless="customer.internalNote" style="background:var(--surface-2);border:1px dashed var(--line);color:var(--ink-3);font-size:12px;padding:8px 10px;border-radius:6px;">+ Add an internal note</div>
             </div>
           </section>
         </div><!-- /Customer pane -->
@@ -2521,7 +2524,7 @@ select.gp2-input {
 
         <!-- Job actions -->
         <section class="card actions-card">
-          <button data-comm-action="action:jobDetail.book-this-lead" class="btn btn-primary">
+          <button type="button" class="btn btn-primary">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
             Book this lead
           </button>
@@ -2680,7 +2683,7 @@ select.gp2-input {
         <section class="card">
           <div class="s-head">
             <div class="s-title">Locations</div>
-            <a class="s-action" href="#" onclick="event.preventDefault();document.getElementById('addStopModal').classList.add('open');">+ Add stop</a>
+            <a class="s-action" href="#" data-jd-open="addStopModal">+ Add stop</a>
           </div>
           <div class="s-body loc">
             <div class="loc-row">
@@ -3099,10 +3102,7 @@ select.gp2-input {
 .jd-pick input { accent-color: var(--terra); }
 </style>
 
-
-
-
-<!-- v12: JobDetail action toolbar -->
+<!-- JobDetail action toolbar — opens the legacy modals (duplicate v12 modals were removed). -->
 <div style="display:flex;gap:8px;flex-wrap:wrap;padding:0 24px 16px;">
   <button class="s1-btn pri" data-jd-open="finalizeModal" type="button">Finalize</button>
   <button class="s1-btn sec" data-jd-open="addStopModal" type="button">+ Stop</button>
@@ -3117,57 +3117,7 @@ select.gp2-input {
   <button class="s1-btn sec" data-jd-open="jdVideoModal" type="button">Video</button>
   <button class="s1-btn dan" data-jd-open="jdMarkLostModal" type="button">Mark lost</button>
 </div>
-<div class="s1-overlay jd-overlay" id="finalizeModal" role="dialog"><div class="s1-modal lg">
-  <div class="s1-mhead"><div><div class="s1-mkicker">Deal</div><h4>Finalize job</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
-  <div class="s1-mgrid"><input type="hidden" name="jobId">
-    <div><label class="s1-mlabel">Status</label><select class="s1-select" name="statusOverride" data-bind-options="statusOptions"><option value="">Ready to invoice</option></select></div>
-    <div><label class="s1-mlabel">Completed at</label><input class="s1-input" type="datetime-local" name="completedAt"></div>
-    <div><label class="s1-mlabel">Payment received</label><input class="s1-input" type="number" step="0.01" name="paymentReceived"></div>
-    <div><label class="s1-mlabel">Balance due</label><input class="s1-input" type="number" step="0.01" name="balanceDue"></div>
-    <div><label class="s1-mlabel">Tax override</label><input class="s1-input" name="taxOverride" placeholder="optional"></div>
-    <div><label><input type="checkbox" name="sendInvoice"> Send invoice now</label></div>
-    <div class="full"><label class="s1-mlabel">Invoice notes</label><textarea class="s1-textarea" name="invoiceNotes"></textarea></div>
-  </div>
-  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Finalize &amp; create invoice</button></div>
-</div></div>
-<div class="s1-overlay jd-overlay" id="addStopModal" role="dialog"><div class="s1-modal">
-  <div class="s1-mhead"><div><div class="s1-mkicker">Deal</div><h4>Add stop</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
-  <div class="s1-mgrid"><input type="hidden" name="jobId">
-    <div><label class="s1-mlabel">Stop type</label><select class="s1-select" name="stopType" data-bind-options="stopKinds"><option value="pickup">Pickup</option><option value="delivery">Delivery</option><option value="other">Other</option></select></div>
-    <div><label class="s1-mlabel">Sequence</label><input class="s1-input" type="number" name="sequence" value="1"></div>
-    <div class="full"><label class="s1-mlabel">Address</label><input class="s1-input" name="address" data-places-autocomplete></div>
-    <div><label class="s1-mlabel">Floor / unit</label><input class="s1-input" name="floor"></div>
-    <div><label class="s1-mlabel">ETA</label><input class="s1-input" type="time" name="eta"></div>
-    <div class="full"><label class="s1-mlabel">Notes</label><textarea class="s1-textarea" name="notes"></textarea></div>
-  </div>
-  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Add stop</button></div>
-</div></div>
-<div class="s1-overlay jd-overlay" id="addWagesModal" role="dialog"><div class="s1-modal lg">
-  <div class="s1-mhead"><div><div class="s1-mkicker">Deal</div><h4>Add wages</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
-  <div class="s1-mgrid"><input type="hidden" name="jobId">
-    <div><label class="s1-mlabel">Crew member</label><select class="s1-select" name="userId" data-bind-options="crew"><option value="">Choose…</option></select></div>
-    <div><label class="s1-mlabel">Role</label><select class="s1-select" name="role" data-bind-options="contactRoles"><option value="mover">Mover</option></select></div>
-    <div><label class="s1-mlabel">Hours</label><input class="s1-input" type="number" step="0.25" name="hours"></div>
-    <div><label class="s1-mlabel">Hourly rate</label><input class="s1-input" type="number" step="0.01" name="hourlyRate"></div>
-    <div><label class="s1-mlabel">Tips</label><input class="s1-input" type="number" step="0.01" name="tipsAmount"></div>
-    <div><label class="s1-mlabel">Bonus</label><input class="s1-input" type="number" step="0.01" name="bonusAmount"></div>
-    <div class="full"><label class="s1-mlabel">Pay on</label><input class="s1-input" type="date" name="payOn"></div>
-  </div>
-  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Add wages</button></div>
-</div></div>
-<div class="s1-overlay jd-overlay" id="addChargeModal" role="dialog"><div class="s1-modal">
-  <div class="s1-mhead"><div><div class="s1-mkicker">Deal</div><h4>Add charge</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
-  <div class="s1-mgrid"><input type="hidden" name="jobId">
-    <div><label class="s1-mlabel">Category</label><select class="s1-select" name="categoryId" data-bind-options="chargeCategories"><option value="">Choose…</option></select></div>
-    <div><label class="s1-mlabel">Tax</label><select class="s1-select" name="taxRateId" data-bind-options="taxRates"><option value="0">No tax</option></select></div>
-    <div class="full"><label class="s1-mlabel">Label</label><input class="s1-input" name="label"></div>
-    <div><label class="s1-mlabel">Qty</label><input class="s1-input" type="number" step="0.01" name="qty" value="1"></div>
-    <div><label class="s1-mlabel">Unit price</label><input class="s1-input" type="number" step="0.01" name="unitPrice"></div>
-    <div class="full"><label><input type="checkbox" name="taxable"> Taxable</label></div>
-    <div class="full"><label class="s1-mlabel">Memo</label><textarea class="s1-textarea" name="memo"></textarea></div>
-  </div>
-  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Add charge</button></div>
-</div></div>
+
 <div class="s1-overlay jd-overlay" id="jdAddContactModal" role="dialog"><div class="s1-modal">
   <div class="s1-mhead"><div><div class="s1-mkicker">Deal</div><h4>Add contact</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
   <div class="s1-mgrid">
@@ -3178,80 +3128,6 @@ select.gp2-input {
     <div class="full"><label><input type="checkbox" name="primary"> Primary contact</label></div>
   </div>
   <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Add contact</button></div>
-</div></div>
-<div class="s1-overlay jd-overlay" id="jdVideoModal" role="dialog"><div class="s1-modal">
-  <div class="s1-mhead"><div><div class="s1-mkicker">Deal</div><h4>Request video survey</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
-  <div class="s1-mgrid"><input type="hidden" name="jobId">
-    <div class="full"><label class="s1-mlabel">Slot</label><select class="s1-select" name="slot" data-bind-options="videoSlots"><option value="">Choose…</option></select></div>
-    <div class="full"><label class="s1-mlabel">Notes</label><textarea class="s1-textarea" name="notes"></textarea></div>
-  </div>
-  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Send invite</button></div>
-</div></div>
-<div class="s1-overlay jd-overlay" id="jdMarkLostModal" role="dialog"><div class="s1-modal">
-  <div class="s1-mhead"><div><div class="s1-mkicker">Deal</div><h4>Mark lost</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
-  <div class="s1-mgrid"><input type="hidden" name="jobId">
-    <div class="full"><label class="s1-mlabel">Reason</label><select class="s1-select" name="reasonId" data-bind-options="lostReasons"><option value="">Choose…</option></select></div>
-    <div class="full"><label class="s1-mlabel">Notes</label><textarea class="s1-textarea" name="notes"></textarea></div>
-  </div>
-  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn dan" data-modal-save type="button">Mark lost</button></div>
-</div></div>
-<div class="s1-overlay jd-overlay" id="jdAddDiscountModal" role="dialog"><div class="s1-modal">
-  <div class="s1-mhead"><div><div class="s1-mkicker">Deal</div><h4>Add discount</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
-  <div class="s1-mgrid"><input type="hidden" name="jobId">
-    <div><label class="s1-mlabel">Type</label><select class="s1-select" name="type" data-bind-options="discountTypes"><option value="fixed">Fixed amount</option><option value="percent">Percentage</option></select></div>
-    <div><label class="s1-mlabel">Amount / %</label><input class="s1-input" type="number" step="0.01" name="amount"></div>
-    <div class="full"><label class="s1-mlabel">Reason</label><input class="s1-input" name="reason"></div>
-  </div>
-  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Apply</button></div>
-</div></div>
-<div class="s1-overlay jd-overlay" id="jdNteModal" role="dialog"><div class="s1-modal">
-  <div class="s1-mhead"><div><div class="s1-mkicker">Deal</div><h4>Not-to-exceed cap</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
-  <div class="s1-mgrid"><input type="hidden" name="jobId">
-    <div><label class="s1-mlabel">Cap amount</label><input class="s1-input" type="number" step="0.01" name="capAmount"></div>
-    <div><label class="s1-mlabel">Basis</label><select class="s1-select" name="basis" data-bind-options="basisOptions"></select></div>
-    <div class="full"><label><input type="checkbox" name="includeTax"> Include tax in cap</label></div>
-  </div>
-  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Save NTE</button></div>
-</div></div>
-<div class="s1-overlay jd-overlay" id="jdJobDetailsModal" role="dialog"><div class="s1-modal lg">
-  <div class="s1-mhead"><div><div class="s1-mkicker">Deal</div><h4>Job details</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
-  <div class="s1-mgrid"><input type="hidden" name="jobId">
-    <div><label class="s1-mlabel">Job type</label><select class="s1-select" name="type" data-bind-options="jobTypes"><option value="">Choose…</option></select></div>
-    <div><label class="s1-mlabel">Crew size</label><input class="s1-input" type="number" name="crewSize" value="3"></div>
-    <div><label class="s1-mlabel">Truck size</label><select class="s1-select" name="truckSize" data-bind-options="truckSizes"><option value="">Choose…</option></select></div>
-    <div><label class="s1-mlabel">Distance (mi)</label><input class="s1-input" type="number" step="0.1" name="distance"></div>
-    <div><label class="s1-mlabel">Est. start</label><input class="s1-input" type="datetime-local" name="estStartAt"></div>
-    <div><label class="s1-mlabel">Est. end</label><input class="s1-input" type="datetime-local" name="estEndAt"></div>
-    <div class="full"><label class="s1-mlabel">Notes</label><textarea class="s1-textarea" name="notes"></textarea></div>
-  </div>
-  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Save</button></div>
-</div></div>
-<div class="s1-overlay jd-overlay" id="jdContactDetailsModal" role="dialog"><div class="s1-modal">
-  <div class="s1-mhead"><div><div class="s1-mkicker">Deal</div><h4>Contact details</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
-  <div class="s1-mgrid"><input type="hidden" name="jobId"><input type="hidden" name="contactId">
-    <div class="full"><label class="s1-mlabel">Name</label><input class="s1-input" name="name"></div>
-    <div><label class="s1-mlabel">Phone</label><input class="s1-input" type="tel" name="phone"></div>
-    <div><label class="s1-mlabel">Email</label><input class="s1-input" type="email" name="email"></div>
-    <div class="full"><label class="s1-mlabel">Preferred contact</label><select class="s1-select" name="preferredContact" data-bind-options="preferredContactOptions2"></select></div>
-  </div>
-  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Save</button></div>
-</div></div>
-<div class="s1-overlay jd-overlay" id="jdInventoryModal" role="dialog"><div class="s1-modal lg">
-  <div class="s1-mhead"><div><div class="s1-mkicker">Deal</div><h4>Inventory</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
-  <div class="s1-mgrid"><input type="hidden" name="jobId">
-    <div class="full">
-      <label class="s1-mlabel">Items</label>
-      <div data-row-group="items">
-        <div data-row style="display:grid;grid-template-columns:1fr 70px 70px 1fr;gap:6px;margin-bottom:6px;">
-          <input class="s1-input" name="name" placeholder="Item">
-          <input class="s1-input" type="number" name="qty" placeholder="Qty" value="1">
-          <input class="s1-input" type="number" name="cuft" placeholder="cu ft">
-          <select class="s1-select" name="category" data-bind-options="inventoryCategories"><option value="">Category</option></select>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Save inventory</button></div>
 </div></div>
 <script src="../../core/event-bus.js"></script>
 <script src="../../core/_log.js"></script>
