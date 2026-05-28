@@ -17,6 +17,7 @@
 // time this is selected we're guaranteed to have a parent window.
 (function () {
   const bus = window.S1.bus;
+  const log = (window.S1 && window.S1.log) || null;
 
   const RPC_TIMEOUT_MS = 30000;
   // Host origin pin. Set by the embedding host via a meta tag when the
@@ -31,7 +32,7 @@
   const HOST_ORIGIN = hostOrigin();
 
   let rpcSeq = 0;
-  const pending = new Map();  // id -> { resolve, reject, timer }
+  const pending = new Map();  // id -> { resolve, reject, timer, t0, method, resource }
   const subscribers = new Map();  // resource -> Set<cb>
 
   function newId() { rpcSeq = (rpcSeq + 1) | 0; return 'r' + rpcSeq + '_' + Date.now().toString(36); }
@@ -39,11 +40,14 @@
   function rpc(method, resource, payload) {
     return new Promise(function (resolve, reject) {
       const id = newId();
+      const t0 = Date.now();
       const timer = setTimeout(function () {
         pending.delete(id);
+        if (log) log.tmo(id, method, resource, RPC_TIMEOUT_MS);
         reject(new Error('s1ui:rpc timeout: ' + method + ' ' + resource));
       }, RPC_TIMEOUT_MS);
-      pending.set(id, { resolve: resolve, reject: reject, timer: timer });
+      pending.set(id, { resolve: resolve, reject: reject, timer: timer, t0: t0, method: method, resource: resource });
+      if (log) log.req(id, method, resource, payload);
       try {
         window.parent.postMessage(
           { type: 's1ui:rpc', id: id, method: method, resource: resource, payload: payload },
@@ -52,6 +56,7 @@
       } catch (e) {
         clearTimeout(timer);
         pending.delete(id);
+        if (log) log.err(id, method, resource, Date.now() - t0, e);
         reject(e);
       }
     });
@@ -68,12 +73,19 @@
       if (!p) return;
       clearTimeout(p.timer);
       pending.delete(d.id);
-      if (d.ok) p.resolve(d.data);
-      else      p.reject(new Error(d.error || 's1ui:rpc failed'));
+      const ms = Date.now() - p.t0;
+      if (d.ok) {
+        if (log) log.res(d.id, p.method, p.resource, ms, d.data);
+        p.resolve(d.data);
+      } else {
+        if (log) log.err(d.id, p.method, p.resource, ms, d.error || 's1ui:rpc failed');
+        p.reject(new Error(d.error || 's1ui:rpc failed'));
+      }
       return;
     }
 
     if (d.type === 's1ui:event') {
+      if (log) log.evt(d.resource, d.event);
       const set = subscribers.get(d.resource);
       if (set) set.forEach(function (cb) { try { cb(d.event); } catch {} });
       bus.emit('resource:' + d.resource, d.event || { kind: 'event' });
@@ -139,6 +151,7 @@
       let set = subscribers.get(resource);
       if (!set) { set = new Set(); subscribers.set(resource, set); }
       set.add(cb);
+      if (log) log.req('-', 'subscribe', resource, null);
       // Tell the host so it can push events for this resource.
       try { window.parent.postMessage({ type: 's1ui:subscribe', resource: resource }, HOST_ORIGIN); } catch {}
       this._record('subscribe', resource, null, '(subscribed)');
@@ -146,6 +159,7 @@
         set.delete(cb);
         if (!set.size) {
           subscribers.delete(resource);
+          if (log) log.req('-', 'unsubscribe', resource, null);
           try { window.parent.postMessage({ type: 's1ui:unsubscribe', resource: resource }, HOST_ORIGIN); } catch {}
         }
       };

@@ -5,6 +5,7 @@
 (function () {
   const bus = window.S1.bus;
   const store = window.S1.store;
+  const log = (window.S1 && window.S1.log) || null;
 
   const LS_KEY = 's1ui_state';
 
@@ -18,14 +19,21 @@
     return true;
   }
 
+  let mockSeq = 0;
+  function mockId() { mockSeq = (mockSeq + 1) | 0; return 'm' + mockSeq + '_' + Date.now().toString(36); }
+
   class MockComm {
     constructor() {
       this._log = [];
-      this._loadFromStorage();
+      const hadStored = this._loadFromStorage();
+      if (hadStored && log) log.state('(localStorage)', store.snapshot());
       // hydrate from ?fixture=name if present
       const qs = new URLSearchParams(location.search);
       const fx = qs.get('fixture');
-      if (fx) this.loadFixture(fx);
+      if (fx) {
+        this.loadFixture(fx);
+        if (log) log.state(fx, store.snapshot());
+      }
       // Lab "open standalone" passes the user's edited state via the URL
       // hash (#state=<uri-encoded JSON>); apply it after the fixture so it
       // wins over the fixture defaults. Modules render straight out of
@@ -41,6 +49,7 @@
               window.S1.fixtures[fx] = json;
             }
             bus.emit('state:replaced', json);
+            if (log) log.state(fx || '(hash)', json);
           }
         } catch {}
       }
@@ -49,8 +58,9 @@
     _loadFromStorage() {
       try {
         const raw = localStorage.getItem(LS_KEY);
-        if (raw) store.replaceAll(JSON.parse(raw));
+        if (raw) { store.replaceAll(JSON.parse(raw)); return true; }
       } catch {}
+      return false;
     }
 
     _persist() {
@@ -68,6 +78,8 @@
     }
 
     async get(resource, params) {
+      const id = mockId(), t0 = Date.now();
+      if (log) log.req(id, 'get', resource, params || null);
       const raw = store.get(resource);
       let out;
       if (Array.isArray(raw)) {
@@ -77,20 +89,23 @@
       }
       out = clone(out);
       this._record('get', resource, params, out);
+      if (log) log.res(id, 'get', resource, Date.now() - t0, out);
       return out;
     }
 
     async save(resource, payload) {
+      const id = mockId(), t0 = Date.now();
+      if (log) log.req(id, 'save', resource, payload);
       const cur = store.get(resource);
       let result;
       if (Array.isArray(cur)) {
-        const id = payload.id ?? (Math.max(0, ...cur.map(r => +r.id || 0)) + 1);
-        const idx = cur.findIndex(r => r.id == id);
+        const newId = payload.id ?? (Math.max(0, ...cur.map(r => +r.id || 0)) + 1);
+        const idx = cur.findIndex(r => r.id == newId);
         const next = [...cur];
-        const rec = { ...payload, id };
+        const rec = { ...payload, id: newId };
         if (idx >= 0) next[idx] = { ...next[idx], ...rec }; else next.push(rec);
         store.set(resource, next);
-        result = { id, ok: true };
+        result = { id: newId, ok: true };
       } else {
         store.set(resource, { ...(cur || {}), ...payload });
         result = { ok: true };
@@ -98,10 +113,13 @@
       this._persist();
       bus.emit('resource:' + resource, { kind: 'save', payload });
       this._record('save', resource, payload, result);
+      if (log) log.res(id, 'save', resource, Date.now() - t0, result);
       return result;
     }
 
     async delete(resource, id) {
+      const reqId = mockId(), t0 = Date.now();
+      if (log) log.req(reqId, 'delete', resource, { id });
       const cur = store.get(resource);
       if (Array.isArray(cur)) {
         store.set(resource, cur.filter(r => r.id != id));
@@ -112,33 +130,53 @@
       bus.emit('resource:' + resource, { kind: 'delete', id });
       const result = { ok: true };
       this._record('delete', resource, { id }, result);
+      if (log) log.res(reqId, 'delete', resource, Date.now() - t0, result);
       return result;
     }
 
     subscribe(resource, cb) {
+      const id = mockId(), t0 = Date.now();
+      if (log) log.req(id, 'subscribe', resource, null);
       const off = bus.on('resource:' + resource, cb);
       this._record('subscribe', resource, null, '(subscribed)');
-      return off;
+      if (log) log.res(id, 'subscribe', resource, Date.now() - t0, '(subscribed)');
+      return function unsubscribe() {
+        const uid = mockId();
+        if (log) log.req(uid, 'unsubscribe', resource, null);
+        off();
+        if (log) log.res(uid, 'unsubscribe', resource, 0, '(unsubscribed)');
+      };
     }
 
     async action(name, payload) {
+      const id = mockId(), t0 = Date.now();
+      if (log) log.req(id, 'action', name, payload);
       const result = { ok: true, name, echo: payload };
       this._record('action', name, payload, result);
       bus.emit('action:' + name, payload);
+      if (log) log.res(id, 'action', name, Date.now() - t0, result);
       return result;
     }
 
     async upload(file, meta) {
+      const id = mockId(), t0 = Date.now();
+      const reqPayload = { name: file?.name, size: file?.size, meta };
+      if (log) log.req(id, 'upload', 'file', reqPayload);
       const url = file && URL && URL.createObjectURL ? URL.createObjectURL(file) : 'blob:mock';
       const result = { url, name: file?.name, size: file?.size, meta };
-      this._record('upload', 'file', { name: file?.name, size: file?.size, meta }, result);
+      this._record('upload', 'file', reqPayload, result);
+      if (log) log.res(id, 'upload', 'file', Date.now() - t0, result);
       return result;
     }
 
     async currentUser() {
+      const id = mockId(), t0 = Date.now();
+      if (log) log.req(id, 'get', 'auth/me', null);
       const u = store.get('auth/me') || { id: 1, name: 'Mock User', role: 'admin' };
       this._record('get', 'auth/me', null, u);
-      return clone(u);
+      const out = clone(u);
+      if (log) log.res(id, 'get', 'auth/me', Date.now() - t0, out);
+      return out;
     }
 
     // --- lab-only helpers ---
@@ -179,6 +217,7 @@
 // any mode — the host might want to override state for an API page too.
 (function () {
   if (typeof window === 'undefined' || window.parent === window) return;
+  const log = (window.S1 && window.S1.log) || null;
   const qs = new URLSearchParams(location.search);
   const defaultFixture = qs.get('fixture');
 
@@ -201,6 +240,7 @@
   window.addEventListener('message', (ev) => {
     const d = ev.data;
     if (!d || typeof d !== 'object' || d.type !== 's1ui:state') return;
+    if (log) log.state(d.fixture || defaultFixture, d.state);
     apply(d.fixture || defaultFixture, d.state);
   });
 
@@ -208,5 +248,6 @@
   // this — posting before the listener attaches drops the message on the
   // floor. Posted to '*' for now; the host's `event.source` already
   // identifies the iframe, and we don't need to authenticate the host.
+  if (log) log.info('handshake \u2192 s1ui:ready', { fixture: defaultFixture });
   try { window.parent.postMessage({ type: 's1ui:ready', fixture: defaultFixture }, '*'); } catch {}
 })();

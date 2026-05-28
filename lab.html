@@ -13,6 +13,8 @@
   <header class="topbar">
     <div class="brand">service1_ui<span class="lab-pill">LAB</span></div>
     <span class="grow"></span>
+    <span style="font-size:11px; opacity:.7;" title="Every RPC and the initial JSON state load is logged to the browser console. Silence with localStorage.s1ui_log='0'.">DevTools console: all RPCs logged</span>
+    <span class="grow"></span>
     <span style="font-size:11px; opacity:.7;">mode</span>
     <div class="mode" id="modeToggle">
       <button data-mode="mock" class="active">Mock</button>
@@ -69,6 +71,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="./core/event-bus.js"></script>
+<script src="./core/_log.js"></script>
 <script src="./modules.index.js"></script>
 <script src="./core/fixtures.js"></script>
 <script>

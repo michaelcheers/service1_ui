@@ -6,8 +6,8 @@
 //   3. localStorage.s1ui_mode
 //   4. default = "mock"
 //
-// Load order (classic scripts, no bundler): event-bus, state-store, schema,
-// fixtures, communication.mock, communication.api, THEN this file.
+// Load order (classic scripts, no bundler): event-bus, _log, state-store,
+// schema, fixtures, communication.mock, communication.api, THEN this file.
 (function () {
   // Embedded-only on prod. ui.service1.app is GitHub Pages — pure static
   // hosting, no API, no auth, no data. Standalone access would render
@@ -79,6 +79,13 @@
       }
     }
   } catch {}
+
+  if (window.S1 && window.S1.log) {
+    var hostOriginMeta = document.querySelector('meta[name="s1ui-host-origin"]');
+    window.S1.log.info('mode=' + mode, {
+      hostOrigin: (hostOriginMeta && hostOriginMeta.getAttribute('content')) || null
+    });
+  }
 
   const comm = mode === 'api' ? new window.S1.ApiComm() : new window.S1.MockComm();
   comm.mode = mode;

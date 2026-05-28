@@ -203,31 +203,62 @@
     return frag;
   }
 
+  function renderOneHost(host, scope) {
+    var path = host.getAttribute('data-bind');
+    var tpl  = host.querySelector(':scope > template');
+    if (!tpl) return;
+    var kids = host.childNodes;
+    for (var k = kids.length - 1; k >= 0; k--) {
+      var n = kids[k];
+      if (n.nodeType === 1 && n.tagName === 'TEMPLATE') continue;
+      host.removeChild(n);
+    }
+    var raw = get(scope, path);
+    if (raw == null) return;
+    var arr = Array.isArray(raw) ? raw : [raw];
+    for (var j = 0; j < arr.length; j++) {
+      var frag = tpl.content.cloneNode(true);
+      applyTemplate(frag, arr[j]);
+      // Recurse: any nested data-bind hosts in this clone bind against
+      // the current item (so daySections[i].items resolves correctly).
+      var nested = frag.querySelectorAll ? frag.querySelectorAll('[data-bind]') : [];
+      var nestedHosts = [];
+      for (var ni = 0; ni < nested.length; ni++) {
+        var nh = nested[ni];
+        // Only top-level nested hosts — children of nested hosts get handled
+        // by their own ancestor pass.
+        var p = nh.parentNode;
+        var isTop = true;
+        while (p && p !== frag) {
+          if (p.nodeType === 1 && p.hasAttribute && p.hasAttribute('data-bind')) { isTop = false; break; }
+          p = p.parentNode;
+        }
+        if (isTop) nestedHosts.push(nh);
+      }
+      host.appendChild(frag);
+      for (var nh2 = 0; nh2 < nestedHosts.length; nh2++) {
+        renderOneHost(nestedHosts[nh2], arr[j]);
+      }
+    }
+  }
+
   function bindLists(root, state) {
+    // Only process top-level [data-bind] hosts at the root scope. Nested
+    // hosts are processed recursively by renderOneHost against their
+    // enclosing item.
     var hosts = root.querySelectorAll('[data-bind]');
     for (var i = 0; i < hosts.length; i++) {
       var host = hosts[i];
-      var path = host.getAttribute('data-bind');
-      var tpl  = host.querySelector(':scope > template');
-      if (!tpl) continue;
-      // Clear non-template children
-      var kids = host.childNodes;
-      for (var k = kids.length - 1; k >= 0; k--) {
-        var n = kids[k];
-        if (n.nodeType === 1 && n.tagName === 'TEMPLATE') continue;
-        host.removeChild(n);
+      // Skip if this host is inside another [data-bind] host (it'll be
+      // handled when its ancestor renders).
+      var anc = host.parentNode;
+      var nestedInside = false;
+      while (anc && anc !== root) {
+        if (anc.nodeType === 1 && anc.hasAttribute && anc.hasAttribute('data-bind')) { nestedInside = true; break; }
+        anc = anc.parentNode;
       }
-      var raw = get(state, path);
-      if (raw == null) continue;
-      var arr = Array.isArray(raw) ? raw : [raw];
-      // Clone the <template>'s parsed content and substitute placeholders
-      // in-place using DOM mutations — no innerHTML / insertAdjacentHTML
-      // sinks, which Trusted Types blocks.
-      for (var j = 0; j < arr.length; j++) {
-        var frag = tpl.content.cloneNode(true);
-        applyTemplate(frag, arr[j]);
-        host.appendChild(frag);
-      }
+      if (nestedInside) continue;
+      renderOneHost(host, state);
     }
   }
 

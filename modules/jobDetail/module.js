@@ -26,6 +26,12 @@ async function load() {
   const data = (window.S1.fixtures || {})["jobDetail"] || {};
 
   window.S1.render.bind(document, data);
+
+  // Seed the email composer's "To" field from customer.email when empty.
+  const toInput = document.querySelector('input[data-bind-value="composer.email.to"]');
+  const leadEmail = (data.customer && data.customer.email) || '';
+  if (toInput && !toInput.value && leadEmail) toInput.value = leadEmail;
+
   document.dispatchEvent(new CustomEvent('s1ui:ready', { detail: { module: 'jobDetail' } }));
 }
 load().catch(e => console.warn('[jobDetail] init error', e));

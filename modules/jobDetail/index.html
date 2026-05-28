@@ -829,6 +829,7 @@ iframe.cmx-editor-frame { width: 100%; min-height: 160px; border: 0; display: bl
 .pay-top { display: flex; gap: 6px; align-items: center; font-size: 12px; font-weight: 500; }
 .pay-sub { font-size: 11px; color: var(--ink-3); margin-top: 2px; }
 .pay-amt { font-variant-numeric: tabular-nums; font-weight: 600; }
+.pay-list:has(.pay-item) ~ .pay-empty { display: none; }
 
 /* Location chip stack */
 .loc { display: flex; flex-direction: column; gap: 8px; }
@@ -2054,104 +2055,26 @@ select.gp2-input {
           </div>
 
           <div class="tl">
-            <div class="tl-day" data-bind-text="timeline.daySections.0.label">Today · Jan 8, 2026</div>
-
-            <div class="tl-item">
-              <div class="tl-icon call">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-              </div>
-              <div class="tl-body">
-                <div class="tl-top">
-                  <span class="tl-kind">Outbound call</span>
-                  <span class="tl-arrow">→</span>
-                  <span class="tl-by" data-bind-text="timeline.callOutboundBy">John Sales called Alice</span>
-                  <span class="pill ok"><span class="dot"></span>Connected</span>
+            <div class="tl-sections" data-bind="timeline.daySections">
+              <template>
+                <div class="tl-day">{{label}}</div>
+                <div class="tl-day-items" data-bind="items">
+                  <template>
+                    <div class="tl-item tl-{{kind}}">
+                      <div class="tl-icon {{kind}}"></div>
+                      <div class="tl-body">
+                        <div class="tl-top">
+                          <span class="tl-kind">{{kindLabel}}</span>
+                          <span class="tl-arrow">{{arrow}}</span>
+                          <span class="tl-by">{{by}}</span>
+                        </div>
+                        <div class="tl-text">{{body}}</div>
+                      </div>
+                      <div class="tl-time">{{time}}</div>
+                    </div>
+                  </template>
                 </div>
-                <div class="tl-text" data-bind-text="timeline.callText">Confirmed Jan 12 7:00 AM window. Customer asked about packing add-on — sent her the box delivery FAQ. Will follow up Wednesday.</div>
-                <div class="tl-meta">
-                  <span class="m">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    <span data-bind-text="timeline.callDuration">4m 12s</span>
-                  </span>
-                  <span class="m">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                    Recording
-                  </span>
-                  <span class="m">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                    Transcript
-                  </span>
-                </div>
-              </div>
-              <div class="tl-time" data-bind-text="timeline.callTime">9:43 AM</div>
-            </div>
-
-            <div class="tl-item">
-              <div class="tl-icon sms">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-              </div>
-              <div class="tl-body">
-                <div class="tl-top">
-                  <span class="tl-kind">SMS</span>
-                  <span class="tl-arrow">←</span>
-                  <span class="tl-by" data-bind-text="timeline.smsInboundBy">Alice → John Sales</span>
-                </div>
-                <div class="tl-bubble" data-bind-text="timeline.smsInText">Sounds good. Tim said you guys were great with his move last fall — looking forward to it. One quick Q: do you bring wardrobe boxes or do I need to grab my own?</div>
-              </div>
-              <div class="tl-time" data-bind-text="timeline.smsInTime">9:38 AM</div>
-            </div>
-
-            <div class="tl-item">
-              <div class="tl-icon sms">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-              </div>
-              <div class="tl-body">
-                <div class="tl-top">
-                  <span class="tl-kind">SMS</span>
-                  <span class="tl-arrow">→</span>
-                  <span class="tl-by" data-bind-text="timeline.smsOutboundBy">John Sales → Alice</span>
-                  <span class="pill ok"><span class="dot"></span>Delivered</span>
-                </div>
-                <div class="tl-bubble out" data-bind-text="timeline.smsOutText">Hi Alice — just confirming your move for Jan 12 at 7 AM. Two movers, one truck. We'll text 30 min before arrival. Reply Y to confirm 👍</div>
-              </div>
-              <div class="tl-time" data-bind-text="timeline.smsOutTime">9:35 AM</div>
-            </div>
-
-            <div class="tl-day" data-bind-text="timeline.daySections.1.label">Wed · Jan 7, 2026</div>
-
-            <div class="tl-item">
-              <div class="tl-icon mail">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-              </div>
-              <div class="tl-body">
-                <div class="tl-top">
-                  <span class="tl-kind">Email sent</span>
-                  <span class="tl-arrow">→</span>
-                  <span class="tl-by">Discovery call confirmation</span>
-                  <span class="pill ok"><span class="dot"></span>Opened 2×</span>
-                </div>
-                <div class="tl-text"><strong>Subject:</strong> <span data-bind-text="timeline.emailSubject">Your move with Service1 — Jan 12 7:00 AM</span><br><span class="muted" data-bind-text="timeline.emailPreview">Hi Alice, looking forward to helping with your move. Attached is your growth plan and a checklist of everything to have ready the morning of…</span></div>
-                <div class="tl-meta">
-                  <span class="m" data-bind-text="timeline.emailAttach1">📎 Growth Plan #17826-1.pdf</span>
-                  <span class="m" data-bind-text="timeline.emailAttach2">📎 Move-day checklist.pdf</span>
-                </div>
-              </div>
-              <div class="tl-time" data-bind-text="timeline.emailTime">2:20 PM</div>
-            </div>
-
-            <div class="tl-item">
-              <div class="tl-icon note">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-              </div>
-              <div class="tl-body">
-                <div class="tl-top">
-                  <span class="tl-kind">Note</span>
-                  <span class="tl-by" data-bind-text="timeline.noteBy">John Sales</span>
-                  <span class="pill" style="background:transparent;border-color:var(--line);color:var(--ink-3);">Internal</span>
-                </div>
-                <div class="tl-text" data-bind-text="customer.internalNote">Referred by Tim Walsh (job #16204). 3-bedroom downtown apartment, no elevator on origin side. Sensitive about timing — needs to be out by 11 AM for landlord walkthrough.</div>
-              </div>
-              <div class="tl-time" data-bind-text="timeline.noteTime">11:02 AM</div>
+              </template>
             </div>
 
             <div class="tl-system">
@@ -2171,19 +2094,19 @@ select.gp2-input {
           <section class="card gp2-params">
             <label class="gp2-field">
               <span class="gp2-label">Size</span>
-              <select class="gp2-input" data-bind-options="optionsOptions2"><option value="Small">Small</option></select>
+              <select class="gp2-input" data-bind-options="optionsOptions2" data-bind-value="jobInfo.dealSize"><option value="">Unassigned</option></select>
             </label>
             <label class="gp2-field">
               <span class="gp2-label">Type</span>
-              <select class="gp2-input" data-bind-options="optionsOptions3"></select>
+              <select class="gp2-input" data-bind-options="optionsOptions3" data-bind-value="jobInfo.type"><option value="">Unassigned</option></select>
             </label>
             <label class="gp2-field">
               <span class="gp2-label">Branch</span>
-              <select class="gp2-input" data-bind-options="optionsOptions4"><option value="— None —">— None —</option></select>
+              <select class="gp2-input" data-bind-options="optionsOptions4" data-bind-value="jobInfo.branch"><option value="">Unassigned</option></select>
             </label>
             <label class="gp2-field">
               <span class="gp2-label">Estimated hours</span>
-              <input class="gp2-input" type="number" value="2" min="0" step="0.25">
+              <input class="gp2-input" type="number" min="0" step="0.25" data-bind-value="jobInfo.estimatedHours" placeholder="—">
             </label>
           </section>
 
@@ -2355,22 +2278,22 @@ select.gp2-input {
             </div>
             <div class="kpi-strip">
               <div class="kpi-card">
-                <div class="kpi-label" data-bind-text="kpis.0.label">Revenue</div>
+                <div class="kpi-label">Revenue</div>
                 <div class="kpi-value"><span data-bind-text="deal.totalShort">$2,768</span><span class="kpi-cents" data-bind-text="metrics.kpi_cents.0">.50</span></div>
                 <div class="kpi-foot ok" data-bind-attr="class:metrics.kpi_foot_class.0" data-bind-text="metrics.kpi_foot.0">Finalized</div>
               </div>
               <div class="kpi-card">
-                <div class="kpi-label" data-bind-text="kpis.1.label">Cost</div>
+                <div class="kpi-label">Cost</div>
                 <div class="kpi-value"><span data-bind-text="financials2.costValue">$640</span><span class="kpi-cents" data-bind-text="metrics.kpi_cents.1">.00</span></div>
                 <div class="kpi-foot" data-bind-attr="class:metrics.kpi_foot_class.1" data-bind-text="metrics.kpi_foot.1">Materials + fuel</div>
               </div>
               <div class="kpi-card">
-                <div class="kpi-label" data-bind-text="kpis.2.label">Wages</div>
+                <div class="kpi-label">Wages</div>
                 <div class="kpi-value"><span data-bind-text="financials2.wagesValue">$420</span><span class="kpi-cents" data-bind-text="metrics.kpi_cents.2">.00</span></div>
                 <div class="kpi-foot" data-bind-attr="class:metrics.kpi_foot_class.2" data-bind-text="metrics.kpi_foot.2">2 employees · 10h</div>
               </div>
               <div class="kpi-card kpi-emph">
-                <div class="kpi-label" data-bind-text="kpis.3.label">Margin</div>
+                <div class="kpi-label">Margin</div>
                 <div class="kpi-value"><span data-bind-text="financials2.marginValue">$1,708</span><span class="kpi-cents" data-bind-text="metrics.kpi_cents.3">.50</span></div>
                 <div class="kpi-foot ok" data-bind-attr="class:metrics.kpi_foot_class.3" data-bind-text="metrics.kpi_foot.3">61.7% margin</div>
               </div>
@@ -2502,17 +2425,15 @@ select.gp2-input {
                   <span class="pill ok" data-bind-attr="class:customer.statusPillClass"><span class="dot"></span><span data-bind-text="customer.statusPill">Active customer</span></span>
                 </div>
                 <div class="muted" style="margin-top:4px;font-size:12px;" data-bind-text="customer.sinceLine">Customer since Jan 4, 2026 · Referred by Tim Walsh</div>
-                <div style="display:flex;gap:6px;margin-top:10px;">
-                  <span class="tag" data-bind-text="customer.tags.0">VIP</span>
-                  <span class="tag" data-bind-text="customer.tags.1">Downtown</span>
-                  <span class="tag" data-bind-text="customer.tags.2">Referral</span>
+                <div style="display:flex;gap:6px;margin-top:10px;" class="tag-row">
+                  <span data-bind="customer.tags"><template><span class="tag">{{name}}</span></template></span>
                   <button type="button" class="tag" data-jd-open="addTagModal" data-jd-action="open-add-tag" style="cursor:pointer;background:transparent;border:1px dashed var(--line);">+ Add tag</button>
                 </div>
               </div>
               <div class="cust-stats">
-                <div><div class="cust-stat-v"><span data-bind-text="deal.totalShort">$2,768</span></div><div class="cust-stat-l" data-bind-text="kpis.0.label">Lifetime value</div></div>
-                <div><div class="cust-stat-v" data-bind-text="kpis.0.value">1</div><div class="cust-stat-l" data-bind-text="kpis.1.label">Deals</div></div>
-                <div><div class="cust-stat-v" data-bind-text="kpis.1.value">12</div><div class="cust-stat-l" data-bind-text="kpis.2.label">Touchpoints</div></div>
+                <div><div class="cust-stat-v" data-bind-text="customer.lifetimeValue" data-fmt="usd">$0</div><div class="cust-stat-l">Lifetime value</div></div>
+                <div><div class="cust-stat-v" data-bind-text="customer.dealsCount" data-fmt="num">0</div><div class="cust-stat-l">Deals</div></div>
+                <div><div class="cust-stat-v" data-bind-text="customer.touchpoints" data-fmt="num">0</div><div class="cust-stat-l">Touchpoints</div></div>
               </div>
             </div>
           </section>
@@ -2524,7 +2445,7 @@ select.gp2-input {
                 <div class="row"><span class="l">Primary phone</span><span class="v" data-bind-text="customer.phone">(555) 987-6543</span></div>
                 <div class="row"><span class="l">Email</span><span class="v" data-bind-text="customer.email">alice@techstartup.com</span></div>
                 <div class="row"><span class="l">Source</span><span class="v" data-bind-text="customer.source">Tim Walsh referral</span></div>
-                <div class="row"><span class="l">Created</span><span class="v"><span data-bind-text="jobDates.0">Jan 4, 2026</span></span></div>
+                <div class="row"><span class="l">Created</span><span class="v"><span data-bind-text="customer.created" data-fmt="date">—</span></span></div>
                 <div class="row"><span class="l">Last contact</span><span class="v" data-bind-text="customer.lastContact">Today · 9:43 AM</span></div>
               </div>
             </section>
@@ -2618,7 +2539,7 @@ select.gp2-input {
           </div>
           <div class="s-body">
             <div class="row"><span class="l">Subtotal</span><span class="v muted" style="font-weight:400;">$0.00</span></div>
-            <div class="row"><span class="l">Sales tax (0%)</span><span class="v muted" style="font-weight:400;">$0.00</span></div>
+            <div class="row"><span class="l" data-bind-text="finalize.taxLabel">Tax (HST 13%)</span><span class="v muted" style="font-weight:400;" data-bind-text="finalize.taxAmount">$0.00</span></div>
             <div class="total">
               <span class="l">Estimated total</span>
               <span class="v">$0.00</span>
@@ -2720,14 +2641,19 @@ select.gp2-input {
             <a data-comm-action="action:jobDetail.add-payment" class="s-action" href="#">+ Add payment</a>
           </div>
           <div class="s-body">
-            <div class="pay-item">
-              <span class="pay-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></span>
-              <div class="pay-body">
-                <div class="pay-top">Credit card <span class="pill" style="background:var(--terra-soft);color:var(--terra);border-color:transparent;">Deposit</span></div>
-                <div class="pay-sub" data-bind-text="payment.sub">May 1, 2026 · 3:23 AM · ch_1234567890abcdef</div>
-              </div>
-              <div class="pay-amt" data-bind-text="metrics.pay_amt.0">$10,850.00</div>
+            <div class="pay-list" data-bind="payments">
+              <template>
+                <div class="pay-item">
+                  <span class="pay-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></span>
+                  <div class="pay-body">
+                    <div class="pay-top">{{method}} <span class="pill" style="background:var(--terra-soft);color:var(--terra);border-color:transparent;">{{kind}}</span></div>
+                    <div class="pay-sub">{{sub}}</div>
+                  </div>
+                  <div class="pay-amt">{{amount|usd}}</div>
+                </div>
+              </template>
             </div>
+            <div class="pay-empty" data-bind-text="paymentsEmpty" style="font-size:12px;color:var(--ink-3);font-style:italic;padding:6px 0;">No payments yet.</div>
             <div class="row" style="border-bottom:0;padding-top:14px;">
               <span class="l">Cards on file</span>
               <a data-comm-action="action:jobDetail.send-link-to-customer" href="#" style="color:var(--terra);font-weight:500;font-size:12px;">+ Send link to customer</a>
@@ -3328,6 +3254,7 @@ select.gp2-input {
   <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Save inventory</button></div>
 </div></div>
 <script src="../../core/event-bus.js"></script>
+<script src="../../core/_log.js"></script>
 <script src="../../core/state-store.js"></script>
 <script src="../../core/schema.js"></script>
 <script src="../../core/fixtures.js"></script>

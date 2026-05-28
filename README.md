@@ -20,6 +20,7 @@ service1_ui/
 │   └── css/{_system,_aesthetic,lab}.css
 ├── core/
 │   ├── event-bus.js            ← pub/sub            (window.S1.bus)
+│   ├── _log.js                 ← console RPC logger (window.S1.log)
 │   ├── state-store.js          ← in-memory state    (window.S1.store)
 │   ├── schema.js               ← resource catalogue (window.S1.RESOURCES)
 │   ├── fixtures.js             ← ALL example state   (window.S1.fixtures)
@@ -41,6 +42,7 @@ There are no ES modules. Each page loads the core as ordinary
 ```html
 <!-- modules/<name>/index.html -->
 <script src="../../core/event-bus.js"></script>
+<script src="../../core/_log.js"></script>
 <script src="../../core/state-store.js"></script>
 <script src="../../core/schema.js"></script>
 <script src="../../core/fixtures.js"></script>
@@ -138,3 +140,34 @@ http(s); it does not run from `file://`.)
 `.nojekyll` keeps the `_system.css` / `_aesthetic.css` files (underscore
 prefix) from being filtered out. `.github/workflows/pages.yml` deploys the
 directory on every push to `main`.
+
+## Console logging
+
+Every RPC and the initial JSON state load is logged to the browser
+JavaScript console — open DevTools to see traffic in real time. Tag
+scheme:
+
+| Tag                | Meaning                                      |
+| ------------------ | -------------------------------------------- |
+| `[s1ui]`           | Boot info / handshake                        |
+| `[s1ui →]`         | Outbound RPC request                         |
+| `[s1ui ←]`         | Inbound reply (success)                      |
+| `[s1ui ✗]`         | Inbound reply (error)                        |
+| `[s1ui ⇐ state]`   | Initial JSON state load from the host        |
+| `[s1ui ⇐ evt]`     | Server-pushed event                          |
+| `[s1ui ⌛]`         | RPC timeout (30 s)                           |
+
+Every JSON payload, result, state object, and event is emitted on its
+own `console.log(obj)` call so DevTools "Copy Object" / "Store as global
+variable" works cleanly on the object node.
+
+**Kill-switch.** Default is ON. To silence in noisy environments:
+
+```js
+localStorage.s1ui_log = '0'  // persists across reloads
+// or, before the comm stack loads:
+window.SERVICE1_UI_LOG = false
+```
+
+Note: log output mirrors the real RPC stream, including `auth/me`
+responses. Treat the console contents as PII when sharing screenshots.

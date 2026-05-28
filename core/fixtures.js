@@ -1536,13 +1536,14 @@
       created: "Jan 4, 2026",
       lastContact: "Today · 9:43 AM",
       sinceLine: "Customer since Jan 4, 2026 · Referred by Tim Walsh",
-      lifetimeValue: "$2,768",
+      lifetimeValue: 2768,
       dealCount: "1",
-      touchpoints: "12",
+      dealsCount: 1,
+      touchpoints: 12,
       firstJobNote: "No earlier deals — this is Alice's first job.",
       internalNote: "Referred by Tim Walsh (job #16204). 3-bedroom downtown apartment, no elevator on origin side. Sensitive about timing — needs to be out by 11 AM for landlord walkthrough.",
       statusPill: "Active customer",
-      tags: ["VIP", "Downtown", "Referral"],
+      tags: [{ name: "VIP" }, { name: "Downtown" }, { name: "Referral" }],
       availableTags: [
         { name: "VIP" }, { name: "Downtown" }, { name: "Referral" },
         { name: "First-time" }, { name: "Repeat" }, { name: "Commercial" },
@@ -1586,6 +1587,10 @@
       sub: "May 1, 2026 · 3:23 AM · ch_1234567890abcdef",
       amount: "$10,850.00"
     },
+    payments: [
+      { method: "Credit card", kind: "Deposit", sub: "May 1, 2026 · 3:23 AM · ch_1234567890abcdef", amount: 10850 }
+    ],
+    paymentsEmpty: "No payments yet.",
     timeline: {
       salesRep: "John Sales",
       composerPlaceholder: "Reply to Alice — she'll get this as an SMS from (555) 200-0143.",
@@ -1600,8 +1605,21 @@
       filterEmail: "Email 2",
       filterNotes: "Notes 2",
       daySections: [
-        { label: "Today · Jan 8, 2026" },
-        { label: "Wed · Jan 7, 2026" }
+        {
+          label: "Today · Jan 8, 2026",
+          items: [
+            { kind: "call",    kindLabel: "Outbound call", arrow: "→", by: "John Sales called Alice", body: "Confirmed Jan 12 7:00 AM window. Customer asked about packing add-on — sent her the box delivery FAQ. Will follow up Wednesday.", time: "9:43 AM" },
+            { kind: "sms",     kindLabel: "SMS",           arrow: "←", by: "Alice → John Sales",        body: "Sounds good. Tim said you guys were great with his move last fall — looking forward to it.", time: "9:38 AM" },
+            { kind: "sms",     kindLabel: "SMS",           arrow: "→", by: "John Sales → Alice",        body: "Hi Alice — just confirming your move for Jan 12 at 7 AM. Two movers, one truck.", time: "9:35 AM" }
+          ]
+        },
+        {
+          label: "Wed · Jan 7, 2026",
+          items: [
+            { kind: "mail", kindLabel: "Email sent", arrow: "→", by: "Discovery call confirmation", body: "Your move with Service1 — Jan 12 7:00 AM", time: "2:20 PM" },
+            { kind: "note", kindLabel: "Note",      arrow: "",  by: "John Sales",                   body: "Referred by Tim Walsh (job #16204). 3-bedroom downtown apartment.", time: "11:02 AM" }
+          ]
+        }
       ],
       callDuration: "4m 12s",
       callTime: "9:43 AM",
@@ -1646,6 +1664,7 @@
       type: "Local",
       branch: "Unassigned",
       assignedTo: "Unassigned",
+      estimatedHours: 2,
       serviceDateInput: "2026-01-12T07:00"
     },
     schedule: {
