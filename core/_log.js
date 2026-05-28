@@ -4,10 +4,9 @@
 // Kill-switch: window.SERVICE1_UI_LOG = false  OR  localStorage.s1ui_log = '0'
 // Default: ON (every RPC and initial JSON load is logged).
 //
-// HARD RULE: every JSON payload/result/state object is emitted on its own
-// dedicated console.log(obj) call with the object as the sole argument, so
-// "Copy Object" / "Store as global variable" in DevTools is unambiguous.
-// The labelled, styled prefix line goes first as a separate console call.
+// Every entry is a single console.log call: one flat line "[tag] label  <json>".
+// No %c styling, no console.groupCollapsed — payload JSON is inline so Ctrl+C
+// copies it verbatim and you don't have to expand any tree nodes.
 (function () {
   function enabled() {
     if (typeof window !== 'undefined' && window.SERVICE1_UI_LOG === false) return false;
@@ -27,62 +26,36 @@
       }, 2);
     } catch (e) { return String(v); }
   }
-  function dump(v) {
-    console.log(asJson(v));
-  }
-  var STYLE = {
-    req:   'color:#FF9800;font-weight:600',
-    res:   'color:#43A047;font-weight:600',
-    err:   'color:#E53935;font-weight:600',
-    evt:   'color:#E91E63;font-weight:600',
-    state: 'color:#00897B;font-weight:600',
-    info:  'color:#1E88E5;font-weight:600',
-    tmo:   'color:#E53935;font-weight:600'
-  };
 
   function req(id, method, resource, payload) {
     if (!enabled()) return;
-    var open = console.groupCollapsed || console.log;
-    open.call(console,
-      '%c[s1ui \u2192]%c ' + method + ' ' + resource + ' #' + id,
-      STYLE.req, '');
-    dump(payload);
+    console.log('[s1ui \u2192] ' + method + ' ' + resource + ' #' + id + '  ' + asJson(payload));
   }
   function res(id, method, resource, ms, data) {
     if (!enabled()) return;
-    console.log('%c[s1ui \u2190]%c ' + method + ' ' + resource + ' #' + id + '  ' + ms + 'ms',
-      STYLE.res, '');
-    dump(data);
-    if (console.groupEnd) console.groupEnd();
+    console.log('[s1ui \u2190] ' + method + ' ' + resource + ' #' + id + '  ' + ms + 'ms  ' + asJson(data));
   }
   function err(id, method, resource, ms, error) {
     if (!enabled()) return;
-    console.warn('%c[s1ui \u2717]%c ' + method + ' ' + resource + ' #' + id + '  ' + ms + 'ms',
-      STYLE.err, '');
-    dump(error);
-    if (console.groupEnd) console.groupEnd();
+    console.warn('[s1ui \u2717] ' + method + ' ' + resource + ' #' + id + '  ' + ms + 'ms  ' + asJson(error));
   }
   function evt(resource, event) {
     if (!enabled()) return;
-    console.log('%c[s1ui \u21D0 evt]%c ' + resource, STYLE.evt, '');
-    dump(event);
+    console.log('[s1ui \u21D0 evt] ' + resource + '  ' + asJson(event));
   }
   function state(fixture, stateObj) {
     if (!enabled()) return;
-    console.log('%c[s1ui \u21D0 state]%c fixture=' + (fixture || '(none)'), STYLE.state, '');
-    dump(stateObj);
+    console.log('[s1ui \u21D0 state] fixture=' + (fixture || '(none)') + '  ' + asJson(stateObj));
   }
   function info(msg, extra) {
     if (!enabled()) return;
-    console.info('%c[s1ui]%c ' + msg, STYLE.info, '');
-    if (extra !== undefined) dump(extra);
+    var line = '[s1ui] ' + msg;
+    if (extra !== undefined) line += '  ' + asJson(extra);
+    console.info(line);
   }
   function tmo(id, method, resource, ms) {
-    if (enabled()) {
-      console.warn('%c[s1ui \u231B]%c ' + method + ' ' + resource + ' #' + id +
-        ' timed out after ' + ms + 'ms', STYLE.tmo, '');
-    }
-    if (console.groupEnd) console.groupEnd();
+    if (!enabled()) return;
+    console.warn('[s1ui \u231B] ' + method + ' ' + resource + ' #' + id + ' timed out after ' + ms + 'ms');
   }
 
   window.S1 = window.S1 || {};
