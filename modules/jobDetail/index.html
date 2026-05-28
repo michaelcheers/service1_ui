@@ -413,46 +413,217 @@ select.field {
    MAIN COLUMN — Communication tab
    ───────────────────────────────────────────── */
 
-/* Composer */
-.composer .s-head { border-bottom: 0; padding-bottom: 0; }
-.composer-tabs {
-  display: flex; gap: 2px;
+/* Composer — 4-tab (Email / Text / Log call / Notes) */
+.composer { overflow: visible; }
+.cmx-ctx { display: flex; align-items: baseline; gap: 14px; padding: 14px 16px 10px; }
+.cmx-ctx h2 { margin: 0; font-size: 14px; font-weight: 600; color: var(--ink); }
+.cmx-ctx .sub { font-size: 12.5px; color: var(--ink-3); }
+.cmx-tabs {
+  display: flex; align-items: center;
   padding: 0 16px;
   border-bottom: var(--hair);
+  gap: 4px; position: relative;
 }
-.composer-tab {
-  position: relative;
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 10px 12px;
-  font-size: 12px; font-weight: 500;
-  color: var(--ink-3);
+.cmx-tab {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 12px 12px 11px;
+  font-size: 13px; font-weight: 500; color: var(--ink-3);
   border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
-  white-space: nowrap;
+  margin-bottom: -1px; white-space: nowrap;
 }
-.composer-tab:hover { color: var(--ink); }
-.composer-tab.active { color: var(--ink); border-bottom-color: var(--terra); font-weight: 600; }
-.composer-body { padding: 14px 16px; }
-.composer-body textarea {
-  width: 100%; min-height: 92px;
-  resize: vertical;
-  padding: 10px 12px;
-  border: 1px solid var(--line-2);
-  border-radius: var(--r);
-  font-size: 13px;
-  line-height: 1.5;
-  outline: none;
-  background: #fff;
+.cmx-tab:hover { color: var(--ink); }
+.cmx-tab svg { width: 15px; height: 15px; }
+.cmx-tab.active { color: var(--ink); font-weight: 600; border-bottom-color: var(--terra); }
+.cmx-send-hint {
+  margin-left: auto; display: flex; align-items: center; gap: 6px;
+  color: var(--ink-3); font-size: 12px; padding: 0 6px;
 }
-.composer-body textarea:focus { border-color: var(--terra); box-shadow: 0 0 0 3px var(--terra-soft); }
-.composer-foot {
-  display: flex; align-items: center; gap: 8px;
-  padding: 10px 16px 14px;
-  border-top: var(--hair);
+.cmx-send-hint kbd {
+  font: inherit; font-size: 11px;
+  width: 22px; height: 22px; border-radius: 5px;
+  border: var(--hair); background: #fff;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--ink-2);
 }
-.composer-foot .left { display: flex; gap: 4px; }
-.composer-foot .right { margin-left: auto; display: flex; gap: 8px; align-items: center; }
-.composer-tools .icon-btn { color: var(--ink-3); }
+.cmx-pane { padding: 18px 20px 4px; }
+.cmx-actions {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.cmx-actions .cmx-select { flex: 1; min-width: 220px; max-width: 360px; }
+.cmx-lbl {
+  display: block; font-size: 11.5px; font-weight: 500;
+  color: var(--ink-3); margin: 0 0 5px 2px;
+}
+.cmx-helper { font-size: 12px; color: var(--ink-3); margin: -4px 2px 12px; line-height: 1.5; }
+.cmx-helper code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11.5px; background: var(--line); color: var(--ink-2);
+  padding: 1px 5px; border-radius: 4px;
+}
+.cmx-field { margin-bottom: 14px; }
+.cmx-input {
+  width: 100%; height: 34px;
+  padding: 0 11px; border-radius: 8px;
+  border: 1px solid var(--line); background: #fff;
+  color: var(--ink); font: inherit; font-size: 13.5px;
+}
+.cmx-input::placeholder { color: var(--ink-4); }
+.cmx-input:hover { border-color: var(--line-2); }
+.cmx-input:focus { outline: none; border-color: var(--terra); box-shadow: 0 0 0 3px var(--terra-soft); }
+.cmx-input.tinted { background: var(--terra-soft); border-color: #B8DBD3; color: var(--terra); }
+.cmx-select {
+  position: relative;
+  display: inline-flex; align-items: center; gap: 8px;
+  height: 34px; padding: 0 32px 0 11px;
+  border: 1px solid var(--line); border-radius: 8px; background: #fff;
+  color: var(--ink); font-size: 13px; font-weight: 500;
+  cursor: default; user-select: none; white-space: nowrap;
+}
+.cmx-select:hover { border-color: var(--line-2); }
+.cmx-select.muted { color: var(--ink-3); }
+.cmx-select.tinted { background: var(--terra-soft); border-color: #B8DBD3; color: var(--terra); }
+.cmx-select::after {
+  content: ""; position: absolute; right: 11px; top: 50%;
+  width: 8px; height: 8px;
+  border-right: 1.5px solid var(--ink-3); border-bottom: 1.5px solid var(--ink-3);
+  transform: translateY(-65%) rotate(45deg);
+}
+.cmx-select svg { width: 14px; height: 14px; color: var(--ink-3); }
+.cmx-select.tinted svg { color: var(--terra); }
+.cmx-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 34px; padding: 0 12px; border-radius: 8px;
+  border: 1px solid var(--line); background: #fff;
+  color: var(--ink); font: 600 12.5px inherit;
+  cursor: pointer; white-space: nowrap;
+}
+.cmx-btn:hover { background: var(--surface-2); border-color: var(--line-2); }
+.cmx-btn svg { width: 14px; height: 14px; color: var(--ink-2); }
+.cmx-btn.primary { background: var(--terra); color: #fff; border-color: var(--terra); }
+.cmx-btn.primary:hover { background: var(--terra-hover); }
+.cmx-btn.primary svg { color: #fff; }
+.cmx-btn.danger { color: var(--bad); }
+.cmx-btn.danger:hover { background: var(--bad-bg); border-color: #E6BCBC; }
+.cmx-btn.danger .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--bad); }
+.cmx-btn.sm { height: 28px; padding: 0 9px; font-size: 12px; }
+.cmx-var-row {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 10px; font-size: 12.5px; color: var(--ink-3);
+}
+.cmx-editor { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: #fff; margin-bottom: 14px; }
+.cmx-tb {
+  display: flex; align-items: center; gap: 1px; flex-wrap: wrap;
+  padding: 5px 8px; border-bottom: 1px solid var(--line); background: #fff;
+}
+.cmx-tb-btn {
+  min-width: 26px; height: 26px; padding: 0 5px; border-radius: 5px;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--ink-2); cursor: pointer;
+  font-size: 13px; font-weight: 500;
+}
+.cmx-tb-btn:hover { background: var(--surface-2); color: var(--ink); }
+.cmx-tb-btn svg { width: 14px; height: 14px; stroke-width: 1.6; }
+.cmx-tb-btn .glyph.b { font-weight: 800; }
+.cmx-tb-btn .glyph.i { font-style: italic; font-weight: 600; font-family: "Times New Roman", Georgia, serif; font-size: 14px; }
+.cmx-tb-btn .glyph.s { font-weight: 600; text-decoration: line-through; }
+.cmx-tb-sep { width: 1px; height: 14px; background: var(--line); margin: 0 4px; flex: 0 0 auto; }
+.cmx-tb-spacer { flex: 1; }
+.cmx-editable {
+  width: 100%; min-height: 160px;
+  padding: 14px 16px;
+  border: 0; outline: none; resize: vertical;
+  font: inherit; color: var(--ink); background: #fff; line-height: 1.55;
+}
+.cmx-editable::placeholder { color: var(--ink-4); }
+.cmx-ai-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 4px 14px; font-size: 12.5px; color: var(--ink-3);
+}
+.cmx-ai-row .suggest {
+  display: inline-flex; align-items: center; gap: 6px;
+  color: var(--terra); font-weight: 600;
+  padding: 6px 10px; border-radius: 7px; cursor: pointer;
+}
+.cmx-ai-row .suggest:hover { background: var(--terra-soft); }
+.cmx-ai-row .suggest svg { width: 14px; height: 14px; color: var(--warn); }
+.cmx-send-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; padding: 12px 20px 16px; border-top: var(--hair); background: #fff;
+}
+.cmx-send-row .left { display: flex; align-items: center; gap: 10px; }
+.cmx-send-row .right { display: flex; align-items: center; gap: 8px; }
+.cmx-check {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 13px; color: var(--ink-2); cursor: pointer; user-select: none;
+}
+.cmx-check .box {
+  width: 16px; height: 16px; border-radius: 4px;
+  border: 1.5px solid var(--line); background: #fff;
+  display: inline-flex; align-items: center; justify-content: center; color: #fff;
+}
+.cmx-check .box svg { display: none; width: 11px; height: 11px; }
+.cmx-check.on .box { background: var(--terra); border-color: var(--terra); }
+.cmx-check.on .box svg { display: block; }
+.cmx-count { font-size: 12.5px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.cmx-pop-wrap { position: relative; }
+.cmx-pop {
+  position: absolute; left: 0; top: calc(100% + 6px);
+  background: #fff; border: var(--hair); border-radius: 10px;
+  box-shadow: 0 12px 28px rgba(13,31,27,.10), 0 2px 6px rgba(13,31,27,.05);
+  width: 320px; padding: 6px; z-index: 10; display: none;
+}
+.cmx-pop.open { display: block; }
+.cmx-pop-hd {
+  padding: 6px 8px; font-size: 11px; font-weight: 600;
+  color: var(--ink-3); letter-spacing: .04em;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.cmx-pop-search {
+  margin: 2px 4px 6px; display: flex; align-items: center; gap: 6px;
+  height: 28px; padding: 0 8px; border-radius: 6px;
+  background: var(--surface-2); color: var(--ink-3); font-size: 12px;
+}
+.cmx-pop-search svg { width: 12px; height: 12px; }
+.cmx-pop-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 7px 9px; border-radius: 6px;
+  font-size: 12.5px; color: var(--ink); cursor: pointer;
+}
+.cmx-pop-item .meta { font-size: 11px; color: var(--ink-3); }
+.cmx-pop-item:hover { background: var(--surface-2); }
+.cmx-pop-item.selected { background: var(--terra-soft); color: var(--terra); }
+.cmx-pop-foot {
+  border-top: 1px dashed var(--line); margin-top: 4px; padding: 6px 4px 2px;
+  display: flex; justify-content: space-between;
+}
+.cmx-pop-link {
+  font-size: 12px; color: var(--terra); font-weight: 600;
+  padding: 6px 8px; border-radius: 6px; cursor: pointer;
+}
+.cmx-pop-link:hover { background: var(--terra-soft); }
+.cmx-body { display: none; }
+.cmx-body.active { display: block; }
+.cmx-call-top {
+  display: grid; grid-template-columns: 1fr 1fr auto;
+  gap: 12px; align-items: end; margin-bottom: 12px;
+}
+.cmx-call-top .duration-wrap { display: flex; align-items: center; gap: 8px; height: 34px; }
+.cmx-call-top .duration-wrap .num {
+  width: 64px; text-align: right;
+  height: 34px; padding: 0 10px;
+  border: 1px solid var(--line); border-radius: 8px; background: #fff;
+  font-variant-numeric: tabular-nums; font: inherit; font-size: 13.5px; color: var(--ink);
+}
+.cmx-call-top .duration-wrap .num:focus { outline: none; border-color: var(--terra); box-shadow: 0 0 0 3px var(--terra-soft); }
+.cmx-call-top .duration-wrap .min-lbl { color: var(--ink-3); font-size: 12.5px; }
+.cmx-call-tpl-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 8px; }
+.cmx-call-tpl-row .cmx-select { width: 100%; justify-content: flex-start; }
+@media (max-width: 720px) {
+  .cmx-call-top { grid-template-columns: 1fr 1fr; }
+  .cmx-call-top .duration-wrap { grid-column: 1 / -1; }
+  .cmx-call-tpl-row { grid-template-columns: 1fr; }
+}
 
 /* Timeline */
 .timeline-head {
@@ -1452,46 +1623,387 @@ select.gp2-input {
         <!-- ╔══════════════ COMMUNICATION ══════════════╗ -->
         <div class="tab-pane active" data-pane="communication">
 
-        <!-- Composer -->
+        <!-- Composer (4-tab: Email / Text / Log call / Notes) -->
         <section class="card composer">
-          <div class="composer-tabs">
-            <button data-comm-action="action:jobDetail.reply-by-sms" class="composer-tab active">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8z"/></svg>
-              Reply by SMS
-            </button>
-            <button data-comm-action="action:jobDetail.email" class="composer-tab">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          <div class="cmx-ctx">
+            <h2>Communication</h2>
+            <span class="sub" data-bind-text="composer.contextLine">Maya Hernandez · 312 Pine St</span>
+          </div>
+
+          <div class="cmx-tabs" id="cmxTabs">
+            <button class="cmx-tab active" data-cmx-tab="email" data-comm-action="action:jobDetail.email">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/></svg>
               Email
             </button>
-            <button data-comm-action="action:jobDetail.internal-note" class="composer-tab">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5l-7 7 7 7"/><path d="M20 12H4"/></svg>
-              Internal note
+            <button class="cmx-tab" data-cmx-tab="text" data-comm-action="action:jobDetail.reply-by-sms">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 21l1.8-5.3A8 8 0 1 1 21 12z"/></svg>
+              Text
             </button>
-            <button data-comm-action="action:jobDetail.log-call" class="composer-tab">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            <button class="cmx-tab" data-cmx-tab="call" data-comm-action="action:jobDetail.log-call">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m8 9 4 3 4-3M8 13h4"/></svg>
               Log call
             </button>
-            <span class="right" style="display:flex;align-items:center;padding:8px 4px;gap:4px;color:var(--ink-3);font-size:11px;white-space:nowrap;">
-              <span class="kbd">⌘</span><span class="kbd">↵</span> to send
-            </span>
-          </div>
-          <div class="composer-body">
-            <textarea placeholder="Reply to Alice — she'll get this as an SMS from (555) 200-0143."></textarea>
-          </div>
-          <div class="composer-foot">
-            <div class="composer-tools left">
-              <button class="icon-btn" title="Attach"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.49"/></svg></button>
-              <button class="icon-btn" title="Insert template" id="jdInsertTplBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></button>
-              <button class="icon-btn" title="Record video" id="jdRecordVideoBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></button>
-              <button class="icon-btn" title="Emoji" id="jdEmojiBtn" style="position:relative;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><circle cx="9" cy="9" r="1" fill="currentColor"/><circle cx="15" cy="9" r="1" fill="currentColor"/></svg></button>
+            <button class="cmx-tab" data-cmx-tab="note" data-comm-action="action:jobDetail.internal-note">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h8l4 4v14H7z"/><path d="M14 3v5h5"/></svg>
+              Notes
+            </button>
+            <div class="cmx-send-hint" id="cmxSendHint">
+              <kbd>⌘</kbd><kbd>↵</kbd><span>to send</span>
             </div>
-            <div class="right">
-              <span class="muted" style="font-size:11px;">0/160</span>
-              <button data-comm-action="action:jobDetail.save-draft" class="btn btn-secondary btn-sm">Save draft</button>
-              <button data-comm-action="action:jobDetail.send" class="btn btn-primary btn-sm">
-                Send
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-              </button>
+          </div>
+
+          <!-- ═══ EMAIL ═══ -->
+          <div class="cmx-body active" data-cmx-body="email">
+            <div class="cmx-pane">
+              <div class="cmx-actions">
+                <div class="cmx-pop-wrap cmx-select" data-cmx-pop="emailTplPop" style="flex:1;max-width:360px;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg>
+                  <span>Select template…</span>
+                  <div class="cmx-pop" id="emailTplPop">
+                    <div class="cmx-pop-hd"><span>EMAIL TEMPLATES</span><span class="cmx-pop-link">Manage</span></div>
+                    <div class="cmx-pop-search">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                      <span>Search templates</span>
+                    </div>
+                    <div class="cmx-pop-item selected"><span>None</span></div>
+                    <div class="cmx-pop-item"><span>Initial outreach</span><span class="meta">⌘1</span></div>
+                    <div class="cmx-pop-item"><span>Follow-up after estimate</span><span class="meta">⌘2</span></div>
+                    <div class="cmx-pop-item"><span>Booking confirmation</span><span class="meta">⌘3</span></div>
+                    <div class="cmx-pop-item"><span>Post-job thank you</span><span class="meta">⌘4</span></div>
+                    <div class="cmx-pop-foot"><span class="cmx-pop-link">+ Save current as template</span></div>
+                  </div>
+                </div>
+                <button class="cmx-btn" data-comm-action="action:jobDetail.save-template">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h11l3 3v15H5z"/><path d="M8 3v5h8V3M8 21v-7h8v7"/></svg>
+                  Save Template
+                </button>
+                <button class="cmx-btn" id="cmxToggleCc">CC/BCC</button>
+                <button class="cmx-btn" data-comm-action="action:jobDetail.attach">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m21 12-9 9a5 5 0 0 1-7-7l9-9a3.5 3.5 0 0 1 5 5l-9 9a2 2 0 1 1-3-3l8-8"/></svg>
+                  Attach
+                </button>
+                <button class="cmx-btn" data-comm-action="action:jobDetail.insert-logo">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m21 16-5-5-9 9"/></svg>
+                  Insert Logo
+                </button>
+                <button class="cmx-btn danger" id="jdRecordVideoBtn" data-comm-action="action:jobDetail.record-video">
+                  <span class="dot"></span>Record Video
+                </button>
+              </div>
+
+              <div class="cmx-field">
+                <label class="cmx-lbl">To</label>
+                <input class="cmx-input" type="text" data-bind-value="composer.email.to" placeholder="recipient@example.com" />
+              </div>
+
+              <div class="cmx-field" id="cmxCcRow" style="display:none;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                  <div>
+                    <label class="cmx-lbl">Cc</label>
+                    <input class="cmx-input" type="text" data-bind-value="composer.email.cc" placeholder="Add Cc recipients…" />
+                  </div>
+                  <div>
+                    <label class="cmx-lbl">Bcc</label>
+                    <input class="cmx-input" type="text" data-bind-value="composer.email.bcc" placeholder="Add Bcc recipients…" />
+                  </div>
+                </div>
+              </div>
+
+              <div class="cmx-field">
+                <label class="cmx-lbl">Subject</label>
+                <input class="cmx-input" type="text" data-bind-value="composer.email.subject" placeholder="Regarding your job…" />
+              </div>
+
+              <div class="cmx-var-row">
+                <span>Insert variable:</span>
+                <button class="cmx-btn sm" data-comm-action="action:jobDetail.insert-variable">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
+                  Add Variable
+                </button>
+              </div>
+
+              <div class="cmx-editor">
+                <div class="cmx-tb">
+                  <span class="cmx-tb-btn" title="Bold"><span class="glyph b">B</span></span>
+                  <span class="cmx-tb-btn" title="Italic"><span class="glyph i">I</span></span>
+                  <span class="cmx-tb-btn" title="Strikethrough"><span class="glyph s">S</span></span>
+                  <span class="cmx-tb-btn" title="Link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 13.5a3.5 3.5 0 0 0 5 0l3-3a3.5 3.5 0 0 0-5-5l-1 1"/><path d="M13.5 10.5a3.5 3.5 0 0 0-5 0l-3 3a3.5 3.5 0 0 0 5 5l1-1"/></svg></span>
+                  <span class="cmx-tb-sep"></span>
+                  <span class="cmx-tb-btn" title="Heading"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v16M18 4v16M6 12h12"/></svg></span>
+                  <span class="cmx-tb-btn" title="Quote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7v6a3 3 0 0 0 3 3"/><path d="M6 7h3v6H6z"/><path d="M14 7v6a3 3 0 0 0 3 3"/><path d="M14 7h3v6h-3z"/></svg></span>
+                  <span class="cmx-tb-btn" title="Code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m8 8-4 4 4 4M16 8l4 4-4 4M14 5l-4 14"/></svg></span>
+                  <span class="cmx-tb-sep"></span>
+                  <span class="cmx-tb-btn" title="Bullet list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4" cy="6" r="1.2" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1.2" fill="currentColor" stroke="none"/></svg></span>
+                  <span class="cmx-tb-btn" title="Numbered list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10 6h11M10 12h11M10 18h11"/><path d="M4 6h2M5 6V4M3 18h3M3 12h3l-3 3h3"/></svg></span>
+                  <span class="cmx-tb-btn" title="Outdent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 6H10M21 12H14M21 18H10M7 9l-3 3 3 3"/></svg></span>
+                  <span class="cmx-tb-btn" title="Indent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h11M3 12h7M3 18h11M17 9l3 3-3 3"/></svg></span>
+                  <span class="cmx-tb-sep"></span>
+                  <span class="cmx-tb-btn" title="Attach"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11.5 12 19a4.5 4.5 0 0 1-6.4-6.4L13 5.2a3 3 0 0 1 4.2 4.2l-7.4 7.4a1.5 1.5 0 0 1-2.1-2.1L14 8.5"/></svg></span>
+                  <span class="cmx-tb-spacer"></span>
+                  <span class="cmx-tb-btn" title="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></span>
+                  <span class="cmx-tb-btn" title="Redo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg></span>
+                </div>
+                <textarea class="cmx-editable" data-bind-value="composer.email.body" placeholder="Write your email… Use @Name, @Date, @RepName etc. for dynamic content"></textarea>
+              </div>
+
+              <div class="cmx-ai-row">
+                <span>Or let AI draft an email</span>
+                <span class="suggest" data-comm-action="action:jobDetail.ai-suggest-email">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 2.4 5.6L20 11l-5.6 2.4L12 19l-2.4-5.6L4 11l5.6-2.4z"/></svg>
+                  Suggest
+                </span>
+              </div>
+            </div>
+
+            <div class="cmx-send-row">
+              <div class="left">
+                <span class="cmx-check" data-cmx-check="emailFollow">
+                  <span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-11"/></svg></span>
+                  Create follow-up
+                </span>
+              </div>
+              <div class="right">
+                <button class="cmx-btn" data-comm-action="action:jobDetail.save-draft">Save Draft</button>
+                <button class="cmx-btn primary" data-comm-action="action:jobDetail.send">
+                  Send Email
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ═══ TEXT ═══ -->
+          <div class="cmx-body" data-cmx-body="text">
+            <div class="cmx-pane">
+              <div class="cmx-field">
+                <label class="cmx-lbl">From Line</label>
+                <input class="cmx-input tinted" type="text" data-bind-value="composer.text.from" value=".COM LANDING TORONTO (+16472518188)" />
+              </div>
+
+              <div class="cmx-actions">
+                <div class="cmx-pop-wrap cmx-select" data-cmx-pop="textTplPop" style="flex:1;max-width:360px;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg>
+                  <span class="muted">Select template…</span>
+                  <div class="cmx-pop" id="textTplPop">
+                    <div class="cmx-pop-hd"><span>TEXT TEMPLATES</span><span class="cmx-pop-link">Manage</span></div>
+                    <div class="cmx-pop-search">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                      <span>Search templates</span>
+                    </div>
+                    <div class="cmx-pop-item selected"><span>None</span></div>
+                    <div class="cmx-pop-item"><span>Quick callback request</span></div>
+                    <div class="cmx-pop-item"><span>On-my-way</span></div>
+                    <div class="cmx-pop-item"><span>Booking confirmation</span></div>
+                    <div class="cmx-pop-foot"><span class="cmx-pop-link">+ Save current as template</span></div>
+                  </div>
+                </div>
+                <button class="cmx-btn" data-comm-action="action:jobDetail.save-template">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h11l3 3v15H5z"/><path d="M8 3v5h8V3M8 21v-7h8v7"/></svg>
+                  Save Template
+                </button>
+                <button class="cmx-btn danger" data-comm-action="action:jobDetail.record-video">
+                  <span class="dot"></span>Record Video
+                </button>
+              </div>
+
+              <div class="cmx-field">
+                <label class="cmx-lbl">To</label>
+                <input class="cmx-input" type="text" data-bind-value="composer.text.to" placeholder="4165551234" />
+              </div>
+
+              <div class="cmx-var-row" style="justify-content:space-between;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <span class="cmx-lbl" style="margin:0;">Message</span>
+                  <span style="color:var(--ink-4);">·</span>
+                  <span>Insert:</span>
+                  <button class="cmx-btn sm" data-comm-action="action:jobDetail.insert-variable">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
+                    Variable
+                  </button>
+                </div>
+                <span class="cmx-count"><span id="cmxTextCount">0</span> / <span id="cmxTextCap">160</span></span>
+              </div>
+
+              <div class="cmx-editor">
+                <textarea class="cmx-editable" id="cmxTextBody" data-bind-value="composer.text.body" placeholder="Type your message… Use @Name, @Time, @CrewSize, @TruckSize, @HourlyRate etc."></textarea>
+              </div>
+
+              <div class="cmx-ai-row">
+                <span>Or let AI draft a message</span>
+                <span class="suggest" data-comm-action="action:jobDetail.ai-suggest-text">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 2.4 5.6L20 11l-5.6 2.4L12 19l-2.4-5.6L4 11l5.6-2.4z"/></svg>
+                  Suggest
+                </span>
+              </div>
+            </div>
+
+            <div class="cmx-send-row">
+              <div class="left">
+                <span class="cmx-check" data-cmx-check="textFollow">
+                  <span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-11"/></svg></span>
+                  Create follow-up
+                </span>
+              </div>
+              <div class="right">
+                <button class="cmx-btn" data-comm-action="action:jobDetail.save-draft">Save Draft</button>
+                <button class="cmx-btn primary" data-comm-action="action:jobDetail.send">
+                  Send Text
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ═══ LOG CALL ═══ -->
+          <div class="cmx-body" data-cmx-body="call">
+            <div class="cmx-pane">
+              <div class="cmx-call-top">
+                <div>
+                  <label class="cmx-lbl">Direction</label>
+                  <div class="cmx-select tinted" style="width:100%;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M17 7H9M17 7v8"/></svg>
+                    <span>Outbound</span>
+                  </div>
+                </div>
+                <div>
+                  <label class="cmx-lbl">Outcome</label>
+                  <div class="cmx-select tinted" style="width:100%;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4 10-12"/></svg>
+                    <span>Outcome — Set outcome</span>
+                  </div>
+                </div>
+                <div>
+                  <label class="cmx-lbl">Duration</label>
+                  <div class="duration-wrap">
+                    <input class="num" type="number" min="0" value="0" data-bind-value="composer.call.duration" />
+                    <span class="min-lbl">min</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="cmx-call-tpl-row">
+                <div class="cmx-pop-wrap cmx-select tinted" data-cmx-pop="callEmailPop">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/></svg>
+                  <span>Email template — none</span>
+                  <div class="cmx-pop" id="callEmailPop">
+                    <div class="cmx-pop-hd"><span>EMAIL TEMPLATES</span><span class="cmx-pop-link">Manage</span></div>
+                    <div class="cmx-pop-item selected"><span>None</span></div>
+                    <div class="cmx-pop-item"><span>Booking confirmation</span></div>
+                    <div class="cmx-pop-item"><span>Estimate follow-up</span></div>
+                    <div class="cmx-pop-item"><span>Reschedule request</span></div>
+                  </div>
+                </div>
+                <div class="cmx-pop-wrap cmx-select" data-cmx-pop="callTextPop">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 21l1.8-5.3A8 8 0 1 1 21 12z"/></svg>
+                  <span class="muted">Text template — none</span>
+                  <div class="cmx-pop" id="callTextPop">
+                    <div class="cmx-pop-hd"><span>TEXT TEMPLATES</span><span class="cmx-pop-link">Manage</span></div>
+                    <div class="cmx-pop-item selected"><span>None</span></div>
+                    <div class="cmx-pop-item"><span>Quick callback request</span></div>
+                    <div class="cmx-pop-item"><span>On-my-way</span></div>
+                  </div>
+                </div>
+              </div>
+
+              <p class="cmx-helper">
+                If selected, this email/text will be sent to the customer right after the call is logged.
+                Variables like <code>@Name</code> are substituted automatically.
+              </p>
+
+              <label class="cmx-lbl">Note</label>
+              <div class="cmx-editor">
+                <div class="cmx-tb">
+                  <span class="cmx-tb-btn" title="Bold"><span class="glyph b">B</span></span>
+                  <span class="cmx-tb-btn" title="Italic"><span class="glyph i">I</span></span>
+                  <span class="cmx-tb-btn" title="Strikethrough"><span class="glyph s">S</span></span>
+                  <span class="cmx-tb-btn" title="Link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 13.5a3.5 3.5 0 0 0 5 0l3-3a3.5 3.5 0 0 0-5-5l-1 1"/><path d="M13.5 10.5a3.5 3.5 0 0 0-5 0l-3 3a3.5 3.5 0 0 0 5 5l1-1"/></svg></span>
+                  <span class="cmx-tb-sep"></span>
+                  <span class="cmx-tb-btn" title="Heading"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v16M18 4v16M6 12h12"/></svg></span>
+                  <span class="cmx-tb-btn" title="Quote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7v6a3 3 0 0 0 3 3"/><path d="M6 7h3v6H6z"/><path d="M14 7v6a3 3 0 0 0 3 3"/><path d="M14 7h3v6h-3z"/></svg></span>
+                  <span class="cmx-tb-btn" title="Code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m8 8-4 4 4 4M16 8l4 4-4 4M14 5l-4 14"/></svg></span>
+                  <span class="cmx-tb-sep"></span>
+                  <span class="cmx-tb-btn" title="Bullet list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4" cy="6" r="1.2" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1.2" fill="currentColor" stroke="none"/></svg></span>
+                  <span class="cmx-tb-btn" title="Numbered list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10 6h11M10 12h11M10 18h11"/><path d="M4 6h2M5 6V4M3 18h3M3 12h3l-3 3h3"/></svg></span>
+                  <span class="cmx-tb-btn" title="Outdent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 6H10M21 12H14M21 18H10M7 9l-3 3 3 3"/></svg></span>
+                  <span class="cmx-tb-btn" title="Indent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h11M3 12h7M3 18h11M17 9l3 3-3 3"/></svg></span>
+                  <span class="cmx-tb-sep"></span>
+                  <span class="cmx-tb-btn" title="Attach"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11.5 12 19a4.5 4.5 0 0 1-6.4-6.4L13 5.2a3 3 0 0 1 4.2 4.2l-7.4 7.4a1.5 1.5 0 0 1-2.1-2.1L14 8.5"/></svg></span>
+                  <span class="cmx-tb-spacer"></span>
+                  <span class="cmx-tb-btn" title="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></span>
+                  <span class="cmx-tb-btn" title="Redo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg></span>
+                </div>
+                <textarea class="cmx-editable" data-bind-value="composer.call.notes" placeholder="Call summary and notes…"></textarea>
+              </div>
+
+              <div class="cmx-ai-row">
+                <span>Or let AI suggest talking points</span>
+                <span class="suggest" data-comm-action="action:jobDetail.ai-suggest-call">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 2.4 5.6L20 11l-5.6 2.4L12 19l-2.4-5.6L4 11l5.6-2.4z"/></svg>
+                  Suggest
+                </span>
+              </div>
+            </div>
+
+            <div class="cmx-send-row">
+              <div class="left"></div>
+              <div class="right">
+                <button class="cmx-btn" data-comm-action="action:jobDetail.save-draft">Save Draft</button>
+                <button class="cmx-btn primary" data-comm-action="action:jobDetail.log-call-commit">
+                  Log Call
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4 10-12"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ═══ NOTES ═══ -->
+          <div class="cmx-body" data-cmx-body="note">
+            <div class="cmx-pane">
+              <div class="cmx-actions">
+                <button class="cmx-btn" data-comm-action="action:jobDetail.pin-note">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4l6 6-4 1-3 7-3-3-6 6 6-6-3-3 7-3z"/></svg>
+                  Pin to top
+                </button>
+                <button class="cmx-btn" data-comm-action="action:jobDetail.tag-note">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+                  Tag
+                </button>
+                <button class="cmx-btn" data-comm-action="action:jobDetail.mention-teammate">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 5-6 8-6s6.5 2 8 6"/></svg>
+                  Mention teammate
+                </button>
+                <button class="cmx-btn" data-comm-action="action:jobDetail.attach">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m21 12-9 9a5 5 0 0 1-7-7l9-9a3.5 3.5 0 0 1 5 5l-9 9a2 2 0 1 1-3-3l8-8"/></svg>
+                  Attach
+                </button>
+              </div>
+
+              <label class="cmx-lbl">Note</label>
+              <div class="cmx-editor">
+                <div class="cmx-tb">
+                  <span class="cmx-tb-btn" title="Bold"><span class="glyph b">B</span></span>
+                  <span class="cmx-tb-btn" title="Italic"><span class="glyph i">I</span></span>
+                  <span class="cmx-tb-btn" title="Strikethrough"><span class="glyph s">S</span></span>
+                  <span class="cmx-tb-btn" title="Link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 13.5a3.5 3.5 0 0 0 5 0l3-3a3.5 3.5 0 0 0-5-5l-1 1"/><path d="M13.5 10.5a3.5 3.5 0 0 0-5 0l-3 3a3.5 3.5 0 0 0 5 5l1-1"/></svg></span>
+                  <span class="cmx-tb-sep"></span>
+                  <span class="cmx-tb-btn" title="Bullet list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4" cy="6" r="1.2" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1.2" fill="currentColor" stroke="none"/></svg></span>
+                  <span class="cmx-tb-btn" title="Numbered list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10 6h11M10 12h11M10 18h11"/><path d="M4 6h2M5 6V4M3 18h3M3 12h3l-3 3h3"/></svg></span>
+                  <span class="cmx-tb-spacer"></span>
+                  <span class="cmx-tb-btn" title="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></span>
+                  <span class="cmx-tb-btn" title="Redo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg></span>
+                </div>
+                <textarea class="cmx-editable" data-bind-value="composer.note.body" placeholder="Add an internal note for this lead… visible to your team only."></textarea>
+              </div>
+            </div>
+
+            <div class="cmx-send-row">
+              <div class="left">
+                <span style="font-size:12.5px;color:var(--ink-3);">Visible to team only · not sent to customer</span>
+              </div>
+              <div class="right">
+                <button class="cmx-btn" data-comm-action="action:jobDetail.cancel-note">Cancel</button>
+                <button class="cmx-btn primary" data-comm-action="action:jobDetail.save-note">Save Note</button>
+              </div>
             </div>
           </div>
         </section>
@@ -2823,13 +3335,80 @@ select.gp2-input {
     }));
   })();
 
-  // Composer message-type tabs (visual only)
-  document.querySelectorAll('.composer-tabs').forEach(group => {
-    const items = group.querySelectorAll('.composer-tab');
-    items.forEach(i => i.addEventListener('click', () => {
-      items.forEach(x => x.classList.toggle('active', x === i));
-    }));
-  });
+  // Composer 4-tab (Email / Text / Log call / Notes)
+  (function () {
+    const tabs = document.querySelectorAll('#cmxTabs .cmx-tab');
+    const bodies = document.querySelectorAll('.cmx-body');
+    const hint = document.getElementById('cmxSendHint');
+    function setTab(name) {
+      tabs.forEach(t => t.classList.toggle('active', t.dataset.cmxTab === name));
+      bodies.forEach(b => b.classList.toggle('active', b.dataset.cmxBody === name));
+      if (hint) hint.style.visibility = (name === 'email' || name === 'text') ? 'visible' : 'hidden';
+    }
+    tabs.forEach(t => t.addEventListener('click', () => setTab(t.dataset.cmxTab)));
+
+    // CC/BCC toggle
+    const ccBtn = document.getElementById('cmxToggleCc');
+    const ccRow = document.getElementById('cmxCcRow');
+    ccBtn?.addEventListener('click', () => {
+      const open = ccRow.style.display !== 'none';
+      ccRow.style.display = open ? 'none' : 'block';
+    });
+
+    // Checkboxes (Create follow-up etc.)
+    document.querySelectorAll('.cmx-check').forEach(c => {
+      c.addEventListener('click', () => c.classList.toggle('on'));
+    });
+
+    // SMS segment-aware counter
+    const textBody = document.getElementById('cmxTextBody');
+    const textCount = document.getElementById('cmxTextCount');
+    const textCap = document.getElementById('cmxTextCap');
+    textBody?.addEventListener('input', () => {
+      const n = textBody.value.length;
+      const segs = Math.max(1, Math.ceil(n / 160));
+      if (textCount) textCount.textContent = n;
+      if (textCap) textCap.textContent = segs * 160;
+    });
+
+    // Template popovers
+    document.querySelectorAll('.cmx-pop-wrap').forEach(wrap => {
+      const popId = wrap.dataset.cmxPop;
+      const pop = document.getElementById(popId);
+      if (!pop) return;
+      wrap.addEventListener('click', (e) => {
+        e.stopPropagation();
+        document.querySelectorAll('.cmx-pop.open').forEach(p => { if (p !== pop) p.classList.remove('open'); });
+        pop.classList.toggle('open');
+      });
+    });
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.cmx-pop') && !e.target.closest('.cmx-pop-wrap')) {
+        document.querySelectorAll('.cmx-pop.open').forEach(p => p.classList.remove('open'));
+      }
+    });
+    document.querySelectorAll('.cmx-pop-item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const pop = item.closest('.cmx-pop');
+        pop?.querySelectorAll('.cmx-pop-item').forEach(x => x.classList.toggle('selected', x === item));
+        pop?.classList.remove('open');
+      });
+    });
+
+    // ⌘+Enter / Ctrl+Enter to send on Email/Text panes
+    document.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        const active = document.querySelector('.cmx-body.active');
+        if (!active) return;
+        const kind = active.dataset.cmxBody;
+        if (kind !== 'email' && kind !== 'text') return;
+        const sendBtn = active.querySelector('.cmx-btn.primary');
+        sendBtn?.click();
+        e.preventDefault();
+      }
+    });
+  })();
 
   // Filter chips & accounting sub-tabs (visual only)
   document.querySelectorAll('.timeline-head, .acct-tabs, .files-grid + *, .s-head').forEach(scope => {});
@@ -2925,7 +3504,8 @@ function jdRenderEmoji(cat, q) {
   });
 }
 function jdInsertEmoji(e) {
-  const ta = document.querySelector('.composer-body textarea');
+  const active = document.querySelector('.cmx-body.active');
+  const ta = active?.querySelector('textarea.cmx-editable');
   if (ta) {
     const start = ta.selectionStart || 0;
     const v = ta.value;
