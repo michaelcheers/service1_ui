@@ -22,6 +22,13 @@
 .st-pill.accepted    { background:var(--ok-soft); color:var(--ok); }
 .st-pill.closed      { background:var(--surface-3); color:var(--ink-3); }
 
+/* Clickable rows + plain-text anchors */
+.tbl tbody tr[data-id] { cursor: pointer; }
+.ml-card[data-id] { cursor: pointer; }
+.row-link { color: inherit; text-decoration: none; display: block; }
+.row-link:hover .who-nm { text-decoration: underline; }
+a.icon-btn, a.icon-btn:hover, a.icon-btn:visited { color: inherit; text-decoration: none; }
+
 /* Inline lead-status dropdown */
 .lead-sel {
   appearance:none; -webkit-appearance:none; cursor:pointer;
@@ -54,8 +61,8 @@
 .ml-card .d-l { font-size:11px; color:var(--ink-3); margin-bottom:2px; }
 .ml-card .d-v { font-size:12.5px; font-weight:500; color:var(--ink); }
 .ml-card .actions { display:flex; gap:6px; padding-top:12px; border-top:var(--hair); }
-.ml-card .actions button { flex:1; padding:7px 10px; background:#fff; color:var(--ink-2); border:var(--hair); border-radius:6px; font-size:12px; font-weight:500; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:5px; }
-.ml-card .actions button:hover { background:var(--surface-2); color:var(--ink); }
+.ml-card .actions button, .ml-card .actions a { flex:1; padding:7px 10px; background:#fff; color:var(--ink-2); border:var(--hair); border-radius:6px; font-size:12px; font-weight:500; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:5px; text-decoration:none; }
+.ml-card .actions button:hover, .ml-card .actions a:hover { background:var(--surface-2); color:var(--ink); }
 
 .pager { display:flex; justify-content:center; align-items:center; gap:6px; padding:20px 0 4px; }
 .pager .pb { padding:6px 12px; font-size:12.5px; font-weight:500; color:var(--ink-2); background:#fff; border:var(--hair); border-radius:6px; cursor:pointer; }
@@ -211,6 +218,21 @@ function leadStatusOptions() {
   if (o && o.length) return o.map(x => ({ value: x.value || x.Value || x.label || x.Label || '', label: x.label || x.Label || x.value || x.Value || '' }));
   return LEAD_STATUS_OPTIONS_FALLBACK;
 }
+function appBase() {
+  const fx = (window.S1 && window.S1.fixtures && window.S1.fixtures["salesMyLeads"]) || null;
+  return (fx && typeof fx.appBaseUrl === 'string' && fx.appBaseUrl) ? fx.appBaseUrl.replace(/\/+$/, '') : '';
+}
+function leadHref(lead) {
+  if (!lead) return '';
+  const base = appBase();
+  if (lead.jobId != null && lead.jobId !== '') {
+    return base + '/JobDetail/' + encodeURIComponent(lead.jobId);
+  }
+  if (lead.id != null && lead.id !== '') {
+    return base + '/Customers/Details?id=' + encodeURIComponent(lead.id);
+  }
+  return '';
+}
 function navigateToJob(jobId) {
   if (jobId == null || jobId === '') return;
   window.parent.postMessage({ type: 's1ui:navigate', href: '/JobDetail/' + jobId }, '*');
@@ -224,6 +246,14 @@ function navigateToLead(lead) {
   if (lead.id != null && lead.id !== '') {
     window.parent.postMessage({ type: 's1ui:navigate', href: '/Customers/Details?id=' + encodeURIComponent(lead.id) }, '*');
   }
+}
+// Intercept anchor clicks: regular click → SPA-ish postMessage navigate;
+// ctrl/meta/middle-click → let the browser open the absolute URL in a new tab.
+function handleLeadAnchorClick(e, lead) {
+  if (e.ctrlKey || e.metaKey || e.shiftKey || e.button === 1) return; // browser handles
+  e.preventDefault();
+  e.stopPropagation();
+  navigateToLead(lead);
 }
 function dialNumber(phone) {
   const num = String(phone || '').trim();
@@ -293,13 +323,18 @@ function renderTable() {
     tr.appendChild(td1);
 
     const td2 = document.createElement('td');
+    const href = leadHref(l);
+    const linkEl = href ? makeEl('a', { className: 'row-link', attrs: { href: href, target: '_top' } })
+                        : makeEl('div', { className: 'row-link' });
+    if (href) linkEl.addEventListener('click', (e) => handleLeadAnchorClick(e, l));
     const who = makeEl('div', { className: 'who' });
     who.appendChild(makeEl('span', { className: 'who-av', style: 'background:' + l.avc + ';', text: l.av }));
     const whoInner = document.createElement('div');
     whoInner.appendChild(makeEl('div', { className: 'who-nm', text: l.name }));
     whoInner.appendChild(makeEl('div', { className: 'who-sub', text: '#' + l.job }));
     who.appendChild(whoInner);
-    td2.appendChild(who);
+    linkEl.appendChild(who);
+    td2.appendChild(linkEl);
     tr.appendChild(td2);
 
     const td3 = document.createElement('td');
@@ -349,22 +384,23 @@ function renderTable() {
       { tag: 'path', attrs: { d: 'M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z' } }
     ]));
     actions.appendChild(callBtn);
-    const emailBtn = makeEl('button', {
+    const leadHrefVal = leadHref(l);
+    const emailBtn = makeEl('a', {
       className: 'icon-btn',
-      style: 'width:28px;height:28px;',
-      attrs: { title: 'Email' },
-      onclick: (e) => { e.stopPropagation(); navigateToLead(l); }
+      style: 'width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;',
+      attrs: { title: 'Email', href: leadHrefVal || '#', target: '_top' },
+      onclick: (e) => handleLeadAnchorClick(e, l)
     });
     emailBtn.appendChild(svgEl({ width: '13', height: '13', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2' }, [
       { tag: 'rect', attrs: { x: '2', y: '4', width: '20', height: '16', rx: '2' } },
       { tag: 'polyline', attrs: { points: '22 6 12 13 2 6' } }
     ]));
     actions.appendChild(emailBtn);
-    const notesBtn = makeEl('button', {
+    const notesBtn = makeEl('a', {
       className: 'icon-btn',
-      style: 'width:28px;height:28px;',
-      attrs: { title: 'Notes' },
-      onclick: (e) => { e.stopPropagation(); navigateToLead(l); }
+      style: 'width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;',
+      attrs: { title: 'Notes', href: leadHrefVal || '#', target: '_top' },
+      onclick: (e) => handleLeadAnchorClick(e, l)
     });
     notesBtn.appendChild(svgEl({ width: '13', height: '13', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2' }, [
       { tag: 'path', attrs: { d: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z' } }
@@ -387,9 +423,13 @@ function renderGrid() {
   }
   for (const l of shown) {
     const card = makeEl('div', { className: 'ml-card', attrs: { 'data-id': String(l.id) } });
+    const cardHref = leadHref(l);
 
     const head = makeEl('div', { className: 'head' });
-    const headLeft = document.createElement('div');
+    const headLeft = cardHref
+      ? makeEl('a', { className: 'row-link', attrs: { href: cardHref, target: '_top' } })
+      : document.createElement('div');
+    if (cardHref) headLeft.addEventListener('click', (e) => handleLeadAnchorClick(e, l));
     headLeft.appendChild(makeEl('div', { className: 'nm', text: l.name }));
     headLeft.appendChild(makeEl('div', { className: 'jb', text: '#' + l.job + ' · ' + l.type }));
     head.appendChild(headLeft);
@@ -419,13 +459,15 @@ function renderGrid() {
       attrs: { title: hasPhoneG ? ('Call ' + l.phone) : 'No phone on file' },
       onclick: (e) => { e.stopPropagation(); dialNumber(l.phone); }
     });
-    const gEmail = makeEl('button', {
+    const gEmail = makeEl('a', {
       text: '✉ Email',
-      onclick: (e) => { e.stopPropagation(); navigateToLead(l); }
+      attrs: { href: cardHref || '#', target: '_top' },
+      onclick: (e) => handleLeadAnchorClick(e, l)
     });
-    const gNotes = makeEl('button', {
+    const gNotes = makeEl('a', {
       text: '📝 Notes',
-      onclick: (e) => { e.stopPropagation(); navigateToLead(l); }
+      attrs: { href: cardHref || '#', target: '_top' },
+      onclick: (e) => handleLeadAnchorClick(e, l)
     });
     actions.appendChild(gCall);
     actions.appendChild(gEmail);
