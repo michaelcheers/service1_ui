@@ -14,6 +14,22 @@
     try { if (localStorage.getItem('s1ui_log') === '0') return false; } catch (e) {}
     return true;
   }
+  function asJson(v) {
+    if (v === undefined) return 'undefined';
+    try {
+      var seen = [];
+      return JSON.stringify(v, function (k, val) {
+        if (val && typeof val === 'object') {
+          if (seen.indexOf(val) !== -1) return '[Circular]';
+          seen.push(val);
+        }
+        return val;
+      }, 2);
+    } catch (e) { return String(v); }
+  }
+  function dump(v) {
+    console.log(asJson(v));
+  }
   var STYLE = {
     req:   'color:#FF9800;font-weight:600',
     res:   'color:#43A047;font-weight:600',
@@ -30,36 +46,36 @@
     open.call(console,
       '%c[s1ui \u2192]%c ' + method + ' ' + resource + ' #' + id,
       STYLE.req, '');
-    console.log(payload);
+    dump(payload);
   }
   function res(id, method, resource, ms, data) {
     if (!enabled()) return;
     console.log('%c[s1ui \u2190]%c ' + method + ' ' + resource + ' #' + id + '  ' + ms + 'ms',
       STYLE.res, '');
-    console.log(data);
+    dump(data);
     if (console.groupEnd) console.groupEnd();
   }
   function err(id, method, resource, ms, error) {
     if (!enabled()) return;
     console.warn('%c[s1ui \u2717]%c ' + method + ' ' + resource + ' #' + id + '  ' + ms + 'ms',
       STYLE.err, '');
-    console.log(error);
+    dump(error);
     if (console.groupEnd) console.groupEnd();
   }
   function evt(resource, event) {
     if (!enabled()) return;
     console.log('%c[s1ui \u21D0 evt]%c ' + resource, STYLE.evt, '');
-    console.log(event);
+    dump(event);
   }
   function state(fixture, stateObj) {
     if (!enabled()) return;
     console.log('%c[s1ui \u21D0 state]%c fixture=' + (fixture || '(none)'), STYLE.state, '');
-    console.log(stateObj);
+    dump(stateObj);
   }
   function info(msg, extra) {
     if (!enabled()) return;
     console.info('%c[s1ui]%c ' + msg, STYLE.info, '');
-    if (extra !== undefined) console.log(extra);
+    if (extra !== undefined) dump(extra);
   }
   function tmo(id, method, resource, ms) {
     if (enabled()) {
