@@ -1350,6 +1350,46 @@
     }
   };
   F["jobDetail"] = {
+  templates: {
+    email: [
+      { id: "1", name: "Initial outreach",         hotkey: "⌘1", category: "Outreach",
+        subject: "Following up on your @ServiceType estimate",
+        body: "Hi @Name,\nThanks for reaching out about your @ServiceType…",
+        isDefault: true },
+      { id: "2", name: "Follow-up after estimate", hotkey: "⌘2", category: "Follow-up",
+        subject: "Quick follow-up on your estimate",
+        body: "Hi @Name,\nJust checking in on the estimate I sent on @Date…",
+        isDefault: false },
+      { id: "3", name: "Booking confirmation",     hotkey: "⌘3", category: "Booking",
+        subject: "Your booking is confirmed — @Date",
+        body: "Hi @Name,\nYou're booked for @Date with @CrewSize movers…",
+        isDefault: false },
+      { id: "4", name: "Post-job thank you",       hotkey: "⌘4", category: "Closeout",
+        subject: "Thanks for choosing us, @Name",
+        body: "Hi @Name,\nThank you for trusting us with your move…",
+        isDefault: false }
+    ],
+    text: [
+      { id: "5", name: "Quick callback request", hotkey: "", category: "",
+        subject: "", body: "Hi @Name — got a sec to chat about your @ServiceType? — @RepName",
+        isDefault: false },
+      { id: "6", name: "On-my-way", hotkey: "", category: "",
+        subject: "", body: "Hi @Name, @RepName here — on my way, ETA @Time.",
+        isDefault: false },
+      { id: "7", name: "Booking confirmation", hotkey: "", category: "",
+        subject: "", body: "Booked @Date · @CrewSize crew · @TruckSize truck · @HourlyRate/hr.",
+        isDefault: false }
+    ],
+    callEmail: [
+      { id: "1", name: "Initial outreach" },
+      { id: "2", name: "Follow-up after estimate" },
+      { id: "3", name: "Booking confirmation" }
+    ],
+    callText: [
+      { id: "5", name: "Quick callback request" },
+      { id: "6", name: "On-my-way" }
+    ]
+  },
   route: {
     origin: {
       city: "Toronto",

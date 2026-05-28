@@ -1665,13 +1665,17 @@ select.gp2-input {
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
                       <span>Search templates</span>
                     </div>
-                    <div class="cmx-pop-item selected"><span>None</span></div>
-                    <div class="cmx-pop-item"><span>Initial outreach</span><span class="meta">⌘1</span></div>
-                    <div class="cmx-pop-item"><span>Follow-up after estimate</span><span class="meta">⌘2</span></div>
-                    <div class="cmx-pop-item"><span>Booking confirmation</span><span class="meta">⌘3</span></div>
-                    <div class="cmx-pop-item"><span>Post-job thank you</span><span class="meta">⌘4</span></div>
+                    <div class="cmx-pop-item selected" data-tpl-id=""><span>None</span></div>
+                    <div class="cmx-pop-list" data-bind="templates.email">
+                      <template>
+                        <div class="cmx-pop-item" data-tpl-id="{{id}}">
+                          <span>{{name}}</span><span class="meta">{{hotkey}}</span>
+                        </div>
+                      </template>
+                    </div>
                     <div class="cmx-pop-foot"><span class="cmx-pop-link">+ Save current as template</span></div>
                   </div>
+                  <input type="hidden" data-bind-value="composer.email.templateId" id="cmxEmailTplId" />
                 </div>
                 <button class="cmx-btn" data-comm-action="action:jobDetail.save-template">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h11l3 3v15H5z"/><path d="M8 3v5h8V3M8 21v-7h8v7"/></svg>
@@ -1790,12 +1794,17 @@ select.gp2-input {
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
                       <span>Search templates</span>
                     </div>
-                    <div class="cmx-pop-item selected"><span>None</span></div>
-                    <div class="cmx-pop-item"><span>Quick callback request</span></div>
-                    <div class="cmx-pop-item"><span>On-my-way</span></div>
-                    <div class="cmx-pop-item"><span>Booking confirmation</span></div>
+                    <div class="cmx-pop-item selected" data-tpl-id=""><span>None</span></div>
+                    <div class="cmx-pop-list" data-bind="templates.text">
+                      <template>
+                        <div class="cmx-pop-item" data-tpl-id="{{id}}">
+                          <span>{{name}}</span>
+                        </div>
+                      </template>
+                    </div>
                     <div class="cmx-pop-foot"><span class="cmx-pop-link">+ Save current as template</span></div>
                   </div>
+                  <input type="hidden" data-bind-value="composer.text.templateId" id="cmxTextTplId" />
                 </div>
                 <button class="cmx-btn" data-comm-action="action:jobDetail.save-template">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h11l3 3v15H5z"/><path d="M8 3v5h8V3M8 21v-7h8v7"/></svg>
@@ -1887,21 +1896,32 @@ select.gp2-input {
                   <span>Email template — none</span>
                   <div class="cmx-pop" id="callEmailPop">
                     <div class="cmx-pop-hd"><span>EMAIL TEMPLATES</span><span class="cmx-pop-link">Manage</span></div>
-                    <div class="cmx-pop-item selected"><span>None</span></div>
-                    <div class="cmx-pop-item"><span>Booking confirmation</span></div>
-                    <div class="cmx-pop-item"><span>Estimate follow-up</span></div>
-                    <div class="cmx-pop-item"><span>Reschedule request</span></div>
+                    <div class="cmx-pop-item selected" data-tpl-id=""><span>None</span></div>
+                    <div class="cmx-pop-list" data-bind="templates.callEmail">
+                      <template>
+                        <div class="cmx-pop-item" data-tpl-id="{{id}}">
+                          <span>{{name}}</span>
+                        </div>
+                      </template>
+                    </div>
                   </div>
+                  <input type="hidden" data-bind-value="composer.call.followUpEmailTemplateId" id="cmxCallEmailTplId" />
                 </div>
                 <div class="cmx-pop-wrap cmx-select" data-cmx-pop="callTextPop">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 21l1.8-5.3A8 8 0 1 1 21 12z"/></svg>
                   <span class="muted">Text template — none</span>
                   <div class="cmx-pop" id="callTextPop">
                     <div class="cmx-pop-hd"><span>TEXT TEMPLATES</span><span class="cmx-pop-link">Manage</span></div>
-                    <div class="cmx-pop-item selected"><span>None</span></div>
-                    <div class="cmx-pop-item"><span>Quick callback request</span></div>
-                    <div class="cmx-pop-item"><span>On-my-way</span></div>
+                    <div class="cmx-pop-item selected" data-tpl-id=""><span>None</span></div>
+                    <div class="cmx-pop-list" data-bind="templates.callText">
+                      <template>
+                        <div class="cmx-pop-item" data-tpl-id="{{id}}">
+                          <span>{{name}}</span>
+                        </div>
+                      </template>
+                    </div>
                   </div>
+                  <input type="hidden" data-bind-value="composer.call.followUpTextTemplateId" id="cmxCallTextTplId" />
                 </div>
               </div>
 
@@ -2927,23 +2947,6 @@ select.gp2-input {
 .jd-fu-preset:hover { background:var(--cream); border-color:var(--terra-soft); color:var(--terra); }
 .jd-fu-foot { display:flex; justify-content:flex-end; gap:8px; padding-top:10px; border-top:var(--hair); }
 </style>
-
-<!-- Add Contact -->
-<div class="jd-overlay" id="jdAddContactModal">
-  <div class="jd-modal" style="width:460px;">
-    <div class="jd-modal-head"><div class="jd-modal-title">Add Contact Person</div><button class="jd-modal-close" onclick="jdCloseModal('jdAddContactModal')">✕</button></div>
-    <div class="jd-modal-body">
-      <div class="jd-field"><label class="jd-label">Name</label><input name="name" class="jd-input" type="text" placeholder="Full name"></div>
-      <div class="jd-field"><label class="jd-label">Email</label><input name="email" class="jd-input" type="email" placeholder="Email address"></div>
-      <div class="jd-field"><label class="jd-label">Phone</label><input name="phone" class="jd-input" type="tel" placeholder="Phone number"></div>
-      <div class="jd-field"><label class="jd-label">Role</label><select name="role" class="jd-select" data-bind-options="roleOptions"></select></div>
-    </div>
-    <div class="jd-modal-foot">
-      <button data-modal-close class="btn btn-secondary" onclick="jdCloseModal('jdAddContactModal')">Cancel</button>
-      <button data-modal-save class="btn btn-primary" onclick="jdCloseModal('jdAddContactModal')">Save</button>
-    </div>
-  </div>
-</div>
 
 <!-- Record Video -->
 <div class="jd-overlay" id="jdVideoModal">

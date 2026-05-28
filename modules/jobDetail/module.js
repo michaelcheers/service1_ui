@@ -113,7 +113,13 @@ composerTabs.forEach((b, i) => {
     const body = (ta && ta.value || '').trim();
     if (!body) { flash('Type something first.', 'bad'); return; }
     await safe('Send', async () => {
-      const r = await comm.action('jobDetail.send', { composer: composerMode, message: body });
+      const tplKey = composerMode === 'email' ? 'composer.email.templateId'
+                   : composerMode === 'sms'   ? 'composer.text.templateId' : null;
+      const tplEl  = tplKey ? document.querySelector('[data-bind-value="' + tplKey + '"]') : null;
+      const tplId  = (tplEl && tplEl.value) || '';
+      const subjEl = composerMode === 'email' ? document.querySelector('[data-bind-value="composer.email.subject"]') : null;
+      const subject = (subjEl && subjEl.value) || '';
+      const r = await comm.action('jobDetail.send', { composer: composerMode, message: body, templateId: tplId, subject: subject });
       if (r && r.ok) {
         if (ta) ta.value = '';
         const counter = $('.composer-foot .right .muted');
@@ -673,6 +679,114 @@ document.addEventListener('click', (ev) => {
   bindings.forEach(([sel, rpc]) => {
     window.S1.modal.bindForm(sel, rpc, { label: rpc, onSuccess: () => { try { (window.S1.fixtures||{}).jobDetail && window.S1.render.bind(document, window.S1.fixtures.jobDetail); } catch {} } });
   });
+})();
+
+// ── Template pickers (email/text composer + call-log) ──────────────────
+// Items are rendered from window.S1.fixtures.jobDetail.templates via the
+// existing [data-bind] mechanism (production overlays the same shape from
+// BuildS1State). This wiring handles click → populate composer fields,
+// search → filter, and ⌘1–⌘4 → first four email templates.
+(function () {
+  var BUCKET_OF = {
+    emailTplPop:  'email',
+    textTplPop:   'text',
+    callEmailPop: 'callEmail',
+    callTextPop:  'callText'
+  };
+  function tplData() {
+    var fx = (window.S1.fixtures || {}).jobDetail || {};
+    return fx.templates || {};
+  }
+  function setVal(sel, v) {
+    var el = document.querySelector(sel); if (!el) return;
+    if ('value' in el) el.value = v; else el.textContent = v;
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+  document.addEventListener('click', function (ev) {
+    var item = ev.target.closest('.cmx-pop-item[data-tpl-id]');
+    if (!item) return;
+    var wrap = item.closest('[data-cmx-pop]');
+    if (!wrap) return;
+    var key = wrap.getAttribute('data-cmx-pop');
+    var bucket = BUCKET_OF[key];
+    if (!bucket) return;
+    var id = item.getAttribute('data-tpl-id') || '';
+    var fx = tplData();
+    var rec = id ? ((fx[bucket] || []).find(function (t) { return String(t.id) === id; }) || null) : null;
+    // mark selected
+    var items = wrap.querySelectorAll('.cmx-pop-item');
+    for (var i = 0; i < items.length; i++) items[i].classList.remove('selected');
+    item.classList.add('selected');
+    // update trigger label
+    var label = wrap.querySelector(':scope > span');
+    if (label) {
+      var fallback = bucket === 'email' ? 'Select template…'
+                   : bucket === 'text'  ? 'Select template…'
+                   : bucket === 'callEmail' ? 'Email template — none'
+                   : 'Text template — none';
+      label.textContent = rec ? rec.name : fallback;
+    }
+    if (bucket === 'email') {
+      setVal('[data-bind-value="composer.email.subject"]', rec ? (rec.subject || '') : '');
+      setVal('[data-bind-value="composer.email.body"]',    rec ? (rec.body || '')    : '');
+      setVal('[data-bind-value="composer.email.templateId"]', id);
+    } else if (bucket === 'text') {
+      setVal('[data-bind-value="composer.text.body"]',     rec ? (rec.body || '')    : '');
+      setVal('[data-bind-value="composer.text.templateId"]', id);
+    } else if (bucket === 'callEmail') {
+      setVal('[data-bind-value="composer.call.followUpEmailTemplateId"]', id);
+    } else if (bucket === 'callText') {
+      setVal('[data-bind-value="composer.call.followUpTextTemplateId"]', id);
+    }
+  });
+  // Search input filters visible items by case-insensitive name match.
+  document.addEventListener('input', function (ev) {
+    var inp = ev.target.closest('.cmx-pop-search input, .cmx-pop-search [contenteditable]');
+    if (!inp) return;
+    var q = (inp.value || inp.textContent || '').toLowerCase();
+    var host = inp.closest('.cmx-pop');
+    if (!host) return;
+    var items = host.querySelectorAll('.cmx-pop-item[data-tpl-id]');
+    for (var i = 0; i < items.length; i++) {
+      var it = items[i];
+      var nameSpan = it.querySelector('span');
+      var nm = (nameSpan && nameSpan.textContent || '').toLowerCase();
+      it.style.display = (!q || nm.indexOf(q) >= 0) ? '' : 'none';
+    }
+  });
+  // ⌘1..⌘4 / Ctrl+1..4 → first four email templates (skip the None sentinel).
+  document.addEventListener('keydown', function (e) {
+    if (!(e.metaKey || e.ctrlKey)) return;
+    var n = parseInt(e.key, 10);
+    if (!(n >= 1 && n <= 4)) return;
+    var pop = document.getElementById('emailTplPop');
+    if (!pop) return;
+    var items = pop.querySelectorAll('.cmx-pop-item[data-tpl-id]');
+    var picks = [];
+    for (var i = 0; i < items.length; i++) {
+      if ((items[i].getAttribute('data-tpl-id') || '') !== '') picks.push(items[i]);
+    }
+    if (picks[n - 1]) { e.preventDefault(); picks[n - 1].click(); }
+  });
+})();
+
+// Forward composer.email.templateId / composer.text.templateId into the
+// Send payload so the backend can record the chosen template id.
+(function () {
+  if (!window.S1) return;
+  var origCollect = window.S1.collectPayload;
+  if (typeof origCollect !== 'function') return;
+  window.S1.collectPayload = function (el) {
+    var p = origCollect(el) || {};
+    if (!p.templateId) {
+      var bindKey = 'composer.email.templateId';
+      var modeMatch = document.querySelector('.composer-tab.active');
+      if (modeMatch && /text|sms/i.test(modeMatch.textContent)) bindKey = 'composer.text.templateId';
+      var hidden = document.querySelector('[data-bind-value="' + bindKey + '"]');
+      if (hidden && hidden.value) p.templateId = hidden.value;
+    }
+    return p;
+  };
 })();
 
 // Install document-level click handlers ([data-comm-action] dispatcher,
