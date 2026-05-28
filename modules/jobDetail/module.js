@@ -647,6 +647,7 @@ document.addEventListener('click', (ev) => {
 
 // ── 24) AI fab ──────────────────────────────────────────────────────────
 (function () {
+  const fab = document.querySelector('[data-ai-fab]');
   if (!fab) return;
   fab.addEventListener('click', (ev) => {
     ev.preventDefault();
