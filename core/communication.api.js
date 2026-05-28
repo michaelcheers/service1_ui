@@ -126,11 +126,12 @@
         r.onerror = function () { reject(r.error || new Error('read failed')); };
         r.readAsDataURL(file);
       });
-      const out = await rpc('upload', 'file', {
+      const resource = (meta && meta.resource) || 'file';
+      const out = await rpc('upload', resource, {
         name: file && file.name, size: file && file.size, type: file && file.type,
         meta: meta || null, dataUrl: dataUrl
       });
-      this._record('upload', 'file', { name: file && file.name, size: file && file.size }, out);
+      this._record('upload', resource, { name: file && file.name, size: file && file.size }, out);
       return out;
     }
 

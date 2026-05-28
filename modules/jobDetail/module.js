@@ -1032,6 +1032,238 @@ document.addEventListener('click', (ev) => {
   };
 })();
 
+// ── cmx composer: full-payload send/save-draft + cc/bcc toggle + attach chips
+(function () {
+  const pendingAttachments = { email: [], text: [], call: [], note: [] };
+
+  function activeRole() {
+    const a = document.querySelector('.cmx-body.active[data-cmx-body]');
+    return a ? a.getAttribute('data-cmx-body') : null;
+  }
+  function readBind(role, field) {
+    const el = document.querySelector('[data-bind-value="composer.' + role + '.' + field + '"]');
+    if (!el) return '';
+    return (el.value != null ? el.value : '').toString();
+  }
+  function chipContainer(bodyEl) {
+    let c = bodyEl.querySelector('.cmx-attach-chips');
+    if (!c) {
+      const sendRow = bodyEl.querySelector('.cmx-send-row');
+      c = document.createElement('div');
+      c.className = 'cmx-attach-chips';
+      c.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;padding:0 0 8px 4px;';
+      if (sendRow && sendRow.parentNode) sendRow.parentNode.insertBefore(c, sendRow);
+    }
+    return c;
+  }
+  function renderChips(role) {
+    const body = document.querySelector('.cmx-body[data-cmx-body="' + role + '"]');
+    if (!body) return;
+    const c = chipContainer(body);
+    while (c.firstChild) c.removeChild(c.firstChild);
+    (pendingAttachments[role] || []).forEach((a, idx) => {
+      const chip = document.createElement('span');
+      chip.className = 'cmx-attach-chip';
+      chip.style.cssText = 'display:inline-flex;align-items:center;gap:6px;background:#ecfeff;border:1px solid #67e8f9;border-radius:12px;padding:3px 10px;font-size:11px;';
+      const name = document.createElement('span');
+      name.textContent = '📎 ' + a.name + ' · ' + Math.round((a.size || 0) / 1024) + ' KB';
+      const x = document.createElement('button');
+      x.type = 'button';
+      x.textContent = '×';
+      x.style.cssText = 'border:0;background:transparent;cursor:pointer;font-size:14px;line-height:1;color:#0e7490;';
+      x.addEventListener('click', () => {
+        pendingAttachments[role].splice(idx, 1);
+        renderChips(role);
+      });
+      chip.appendChild(name);
+      chip.appendChild(x);
+      c.appendChild(chip);
+    });
+  }
+  function clearAttachments(role) {
+    pendingAttachments[role] = [];
+    renderChips(role);
+  }
+
+  async function gatherEmailPayload() {
+    const body = (window.__jobDetailEditors && window.__jobDetailEditors.get)
+      ? await window.__jobDetailEditors.get('email')
+      : '';
+    const follow = document.querySelector('.cmx-check[data-cmx-check="emailFollow"]');
+    return {
+      composer: 'email',
+      to:       readBind('email', 'to'),
+      cc:       readBind('email', 'cc'),
+      bcc:      readBind('email', 'bcc'),
+      subject:  readBind('email', 'subject'),
+      body:     body || '',
+      isHtml:   true,
+      templateId: readBind('email', 'templateId'),
+      attachments: pendingAttachments.email.slice(),
+      followUp: !!(follow && follow.classList.contains('on'))
+    };
+  }
+  function gatherTextPayload() {
+    const ta = document.getElementById('cmxTextBody');
+    const follow = document.querySelector('.cmx-check[data-cmx-check="textFollow"]');
+    return {
+      composer: 'sms',
+      to:       readBind('text', 'to'),
+      from:     readBind('text', 'from'),
+      message:  (ta && ta.value) || readBind('text', 'body') || '',
+      templateId: readBind('text', 'templateId'),
+      attachments: pendingAttachments.text.slice(),
+      followUp: !!(follow && follow.classList.contains('on'))
+    };
+  }
+  async function gatherPayloadForRole(role) {
+    if (role === 'email') return await gatherEmailPayload();
+    if (role === 'text')  return gatherTextPayload();
+    return null;
+  }
+
+  // ── Send / Save Draft for cmx composer (email + text tabs) ────────────
+  function wireCmxSendButtons() {
+    document.querySelectorAll('.cmx-send-row .cmx-btn.primary[data-comm-action="action:jobDetail.send"]').forEach(btn => {
+      if (btn.__s1Wired) return;
+      btn.__s1Wired = true;
+      btn.addEventListener('click', async (ev) => {
+        const body = btn.closest('.cmx-body');
+        const role = body && body.getAttribute('data-cmx-body');
+        if (role !== 'email' && role !== 'text') return;
+        ev.preventDefault();
+        ev.stopPropagation();
+        await safe('Send', async () => {
+          const payload = await gatherPayloadForRole(role);
+          if (!payload) return;
+          if (role === 'email' && !payload.body.replace(/<[^>]*>/g, '').trim()) {
+            flash('Type something first.', 'bad');
+            return;
+          }
+          if (role === 'text' && !payload.message.trim()) {
+            flash('Type something first.', 'bad');
+            return;
+          }
+          const r = await comm.action('jobDetail.send', payload);
+          if (r && r.ok) {
+            if (role === 'email') {
+              ['to','cc','bcc','subject'].forEach(f => {
+                const el = document.querySelector('[data-bind-value="composer.email.' + f + '"]');
+                if (el) el.value = '';
+              });
+              // Editor iframe content reset is handled by the host on next fixture load.
+            } else {
+              const ta = document.getElementById('cmxTextBody');
+              if (ta) { ta.value = ''; ta.dispatchEvent(new Event('input')); }
+            }
+            clearAttachments(role);
+            flash('Sent ' + (role === 'email' ? 'EMAIL' : 'SMS'));
+          } else if (r && r.error) {
+            flash(r.error, 'bad');
+          }
+        });
+      });
+    });
+    document.querySelectorAll('.cmx-send-row .cmx-btn[data-comm-action="action:jobDetail.save-draft"]').forEach(btn => {
+      if (btn.__s1Wired) return;
+      btn.__s1Wired = true;
+      btn.addEventListener('click', async (ev) => {
+        const body = btn.closest('.cmx-body');
+        const role = body && body.getAttribute('data-cmx-body');
+        if (role !== 'email' && role !== 'text') return;
+        ev.preventDefault();
+        ev.stopPropagation();
+        await safe('Save draft', async () => {
+          const payload = await gatherPayloadForRole(role);
+          if (!payload) return;
+          const r = await comm.action('jobDetail.save-draft', payload);
+          if (r && r.ok) flash('Draft saved');
+          else if (r && r.error) flash(r.error, 'bad');
+        });
+      });
+    });
+  }
+
+  // ── CC/BCC toggle ────────────────────────────────────────────────────
+  function wireCcToggle() {
+    const btn = document.getElementById('cmxToggleCc');
+    const row = document.getElementById('cmxCcRow');
+    if (!btn || !row || btn.__s1Wired) return;
+    btn.__s1Wired = true;
+    btn.addEventListener('click', (ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      const showing = row.style.display !== 'none';
+      row.style.display = showing ? 'none' : '';
+      btn.classList.toggle('on', !showing);
+    });
+  }
+
+  // ── follow-up checkbox toggle (visual + state) ────────────────────────
+  function wireFollowChecks() {
+    document.querySelectorAll('.cmx-check[data-cmx-check]').forEach(el => {
+      if (el.__s1Wired) return;
+      el.__s1Wired = true;
+      el.addEventListener('click', (ev) => {
+        ev.preventDefault();
+        el.classList.toggle('on');
+      });
+    });
+  }
+
+  // ── cmx Attach button (chip-tracked upload) ──────────────────────────
+  function wireCmxAttach() {
+    document.querySelectorAll('.cmx-btn[data-comm-action="action:jobDetail.attach"]').forEach(btn => {
+      if (btn.__s1Wired) return;
+      btn.__s1Wired = true;
+      btn.addEventListener('click', (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        const body = btn.closest('.cmx-body');
+        const role = body && body.getAttribute('data-cmx-body');
+        if (!role) return;
+        let input = btn.__fileInput;
+        if (!input) {
+          input = document.createElement('input');
+          input.type = 'file';
+          input.multiple = true;
+          input.style.display = 'none';
+          document.body.appendChild(input);
+          btn.__fileInput = input;
+          input.addEventListener('change', async () => {
+            const files = Array.from(input.files || []);
+            for (const f of files) {
+              await safe('Upload ' + f.name, async () => {
+                const r = await comm.upload(f, { resource: 'jobDetail.attachment' });
+                if (r && r.ok && r.id) {
+                  pendingAttachments[role].push({ id: r.id, name: r.name || f.name, size: r.size || f.size });
+                  renderChips(role);
+                  flash('Attached ' + (r.name || f.name));
+                } else if (r && r.error) {
+                  flash(r.error, 'bad');
+                }
+              });
+            }
+            input.value = '';
+          });
+        }
+        input.click();
+      });
+    });
+  }
+
+  function wireAll() {
+    wireCmxSendButtons();
+    wireCcToggle();
+    wireFollowChecks();
+    wireCmxAttach();
+  }
+  wireAll();
+  document.addEventListener('s1ui:ready', wireAll);
+  const mo = new MutationObserver(wireAll);
+  mo.observe(document.body, { childList: true, subtree: true });
+})();
+
 // Install document-level click handlers ([data-comm-action] dispatcher,
 // tab/panel switcher, etc.) provided by core/standard-page.js.
 if (window.S1 && window.S1.wireStandardPage) window.S1.wireStandardPage('jobDetail');
