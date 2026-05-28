@@ -536,6 +536,18 @@ select.field {
   font: inherit; color: var(--ink); background: #fff; line-height: 1.55;
 }
 .cmx-editable::placeholder { color: var(--ink-4); }
+iframe.cmx-editor-frame { width: 100%; min-height: 160px; border: 0; display: block; background: #fff; }
+.cmx-tb-btn.on { background: #dff0eb; color: #004D40; }
+.cmx-link-pop {
+  position: absolute; z-index: 1000; background: #fff; border: 1px solid var(--line);
+  border-radius: 10px; box-shadow: 0 12px 28px rgba(13,31,27,.10); padding: 10px 12px; width: 280px;
+}
+.cmx-link-pop label { font-size: 11px; font-weight: 600; color: #6b7370; letter-spacing: .04em; text-transform: uppercase; display: block; margin-bottom: 6px; }
+.cmx-link-pop input { width: 100%; height: 30px; border: 1px solid #d1d5db; border-radius: 6px; padding: 0 8px; font-size: 13px; box-sizing: border-box; }
+.cmx-link-pop .row { display: flex; justify-content: flex-end; gap: 6px; margin-top: 8px; }
+.cmx-link-pop button { border-radius: 6px; padding: 5px 11px; font-size: 12px; cursor: pointer; }
+.cmx-link-pop .cancel { background: #fff; border: 1px solid #d1d5db; color: #1f2937; }
+.cmx-link-pop .ok { background: #004D40; color: #fff; border: none; font-weight: 600; }
 .cmx-ai-row {
   display: flex; align-items: center; justify-content: space-between;
   padding: 6px 4px 14px; font-size: 12.5px; color: var(--ink-3);
@@ -1727,27 +1739,27 @@ select.gp2-input {
               </div>
 
               <div class="cmx-editor">
-                <div class="cmx-tb">
-                  <span class="cmx-tb-btn" title="Bold"><span class="glyph b">B</span></span>
-                  <span class="cmx-tb-btn" title="Italic"><span class="glyph i">I</span></span>
-                  <span class="cmx-tb-btn" title="Strikethrough"><span class="glyph s">S</span></span>
-                  <span class="cmx-tb-btn" title="Link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 13.5a3.5 3.5 0 0 0 5 0l3-3a3.5 3.5 0 0 0-5-5l-1 1"/><path d="M13.5 10.5a3.5 3.5 0 0 0-5 0l-3 3a3.5 3.5 0 0 0 5 5l1-1"/></svg></span>
+                <div class="cmx-tb" data-cmx-editor-id="email">
+                  <span class="cmx-tb-btn" data-cmx-exec="bold" title="Bold"><span class="glyph b">B</span></span>
+                  <span class="cmx-tb-btn" data-cmx-exec="italic" title="Italic"><span class="glyph i">I</span></span>
+                  <span class="cmx-tb-btn" data-cmx-exec="strike" title="Strikethrough"><span class="glyph s">S</span></span>
+                  <span class="cmx-tb-btn" data-cmx-exec="link" title="Link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 13.5a3.5 3.5 0 0 0 5 0l3-3a3.5 3.5 0 0 0-5-5l-1 1"/><path d="M13.5 10.5a3.5 3.5 0 0 0-5 0l-3 3a3.5 3.5 0 0 0 5 5l1-1"/></svg></span>
                   <span class="cmx-tb-sep"></span>
-                  <span class="cmx-tb-btn" title="Heading"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v16M18 4v16M6 12h12"/></svg></span>
-                  <span class="cmx-tb-btn" title="Quote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7v6a3 3 0 0 0 3 3"/><path d="M6 7h3v6H6z"/><path d="M14 7v6a3 3 0 0 0 3 3"/><path d="M14 7h3v6h-3z"/></svg></span>
-                  <span class="cmx-tb-btn" title="Code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m8 8-4 4 4 4M16 8l4 4-4 4M14 5l-4 14"/></svg></span>
+                  <span class="cmx-tb-btn" data-cmx-exec="heading" title="Heading"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v16M18 4v16M6 12h12"/></svg></span>
+                  <span class="cmx-tb-btn" data-cmx-exec="quote" title="Quote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7v6a3 3 0 0 0 3 3"/><path d="M6 7h3v6H6z"/><path d="M14 7v6a3 3 0 0 0 3 3"/><path d="M14 7h3v6h-3z"/></svg></span>
+                  <span class="cmx-tb-btn" data-cmx-exec="code" title="Code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m8 8-4 4 4 4M16 8l4 4-4 4M14 5l-4 14"/></svg></span>
                   <span class="cmx-tb-sep"></span>
-                  <span class="cmx-tb-btn" title="Bullet list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4" cy="6" r="1.2" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1.2" fill="currentColor" stroke="none"/></svg></span>
-                  <span class="cmx-tb-btn" title="Numbered list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10 6h11M10 12h11M10 18h11"/><path d="M4 6h2M5 6V4M3 18h3M3 12h3l-3 3h3"/></svg></span>
-                  <span class="cmx-tb-btn" title="Outdent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 6H10M21 12H14M21 18H10M7 9l-3 3 3 3"/></svg></span>
-                  <span class="cmx-tb-btn" title="Indent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h11M3 12h7M3 18h11M17 9l3 3-3 3"/></svg></span>
+                  <span class="cmx-tb-btn" data-cmx-exec="bullet-list" title="Bullet list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4" cy="6" r="1.2" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1.2" fill="currentColor" stroke="none"/></svg></span>
+                  <span class="cmx-tb-btn" data-cmx-exec="numbered-list" title="Numbered list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10 6h11M10 12h11M10 18h11"/><path d="M4 6h2M5 6V4M3 18h3M3 12h3l-3 3h3"/></svg></span>
+                  <span class="cmx-tb-btn" data-cmx-exec="outdent" title="Outdent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 6H10M21 12H14M21 18H10M7 9l-3 3 3 3"/></svg></span>
+                  <span class="cmx-tb-btn" data-cmx-exec="indent" title="Indent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h11M3 12h7M3 18h11M17 9l3 3-3 3"/></svg></span>
                   <span class="cmx-tb-sep"></span>
-                  <span class="cmx-tb-btn" title="Attach"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11.5 12 19a4.5 4.5 0 0 1-6.4-6.4L13 5.2a3 3 0 0 1 4.2 4.2l-7.4 7.4a1.5 1.5 0 0 1-2.1-2.1L14 8.5"/></svg></span>
+                  <span class="cmx-tb-btn" data-cmx-exec="attach" title="Attach"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11.5 12 19a4.5 4.5 0 0 1-6.4-6.4L13 5.2a3 3 0 0 1 4.2 4.2l-7.4 7.4a1.5 1.5 0 0 1-2.1-2.1L14 8.5"/></svg></span>
                   <span class="cmx-tb-spacer"></span>
-                  <span class="cmx-tb-btn" title="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></span>
-                  <span class="cmx-tb-btn" title="Redo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg></span>
+                  <span class="cmx-tb-btn" data-cmx-exec="undo" title="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></span>
+                  <span class="cmx-tb-btn" data-cmx-exec="redo" title="Redo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg></span>
                 </div>
-                <textarea class="cmx-editable" data-bind-value="composer.email.body" placeholder="Write your email… Use @Name, @Date, @RepName etc. for dynamic content"></textarea>
+                <iframe class="cmx-editable cmx-editor-frame" data-bind-value="composer.email.body" data-cmx-editor-id="email" data-placeholder="Write your email… Use @Name, @Date, @RepName etc. for dynamic content" src="https://editor.service1.app/" sandbox="allow-scripts allow-same-origin" title="Email body editor"></iframe>
               </div>
 
               <div class="cmx-ai-row">
@@ -1932,27 +1944,27 @@ select.gp2-input {
 
               <label class="cmx-lbl">Note</label>
               <div class="cmx-editor">
-                <div class="cmx-tb">
-                  <span class="cmx-tb-btn" title="Bold"><span class="glyph b">B</span></span>
-                  <span class="cmx-tb-btn" title="Italic"><span class="glyph i">I</span></span>
-                  <span class="cmx-tb-btn" title="Strikethrough"><span class="glyph s">S</span></span>
-                  <span class="cmx-tb-btn" title="Link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 13.5a3.5 3.5 0 0 0 5 0l3-3a3.5 3.5 0 0 0-5-5l-1 1"/><path d="M13.5 10.5a3.5 3.5 0 0 0-5 0l-3 3a3.5 3.5 0 0 0 5 5l1-1"/></svg></span>
+                <div class="cmx-tb" data-cmx-editor-id="call">
+                  <span class="cmx-tb-btn" data-cmx-exec="bold" title="Bold"><span class="glyph b">B</span></span>
+                  <span class="cmx-tb-btn" data-cmx-exec="italic" title="Italic"><span class="glyph i">I</span></span>
+                  <span class="cmx-tb-btn" data-cmx-exec="strike" title="Strikethrough"><span class="glyph s">S</span></span>
+                  <span class="cmx-tb-btn" data-cmx-exec="link" title="Link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 13.5a3.5 3.5 0 0 0 5 0l3-3a3.5 3.5 0 0 0-5-5l-1 1"/><path d="M13.5 10.5a3.5 3.5 0 0 0-5 0l-3 3a3.5 3.5 0 0 0 5 5l1-1"/></svg></span>
                   <span class="cmx-tb-sep"></span>
-                  <span class="cmx-tb-btn" title="Heading"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v16M18 4v16M6 12h12"/></svg></span>
-                  <span class="cmx-tb-btn" title="Quote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7v6a3 3 0 0 0 3 3"/><path d="M6 7h3v6H6z"/><path d="M14 7v6a3 3 0 0 0 3 3"/><path d="M14 7h3v6h-3z"/></svg></span>
-                  <span class="cmx-tb-btn" title="Code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m8 8-4 4 4 4M16 8l4 4-4 4M14 5l-4 14"/></svg></span>
+                  <span class="cmx-tb-btn" data-cmx-exec="heading" title="Heading"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v16M18 4v16M6 12h12"/></svg></span>
+                  <span class="cmx-tb-btn" data-cmx-exec="quote" title="Quote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7v6a3 3 0 0 0 3 3"/><path d="M6 7h3v6H6z"/><path d="M14 7v6a3 3 0 0 0 3 3"/><path d="M14 7h3v6h-3z"/></svg></span>
+                  <span class="cmx-tb-btn" data-cmx-exec="code" title="Code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m8 8-4 4 4 4M16 8l4 4-4 4M14 5l-4 14"/></svg></span>
                   <span class="cmx-tb-sep"></span>
-                  <span class="cmx-tb-btn" title="Bullet list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4" cy="6" r="1.2" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1.2" fill="currentColor" stroke="none"/></svg></span>
-                  <span class="cmx-tb-btn" title="Numbered list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10 6h11M10 12h11M10 18h11"/><path d="M4 6h2M5 6V4M3 18h3M3 12h3l-3 3h3"/></svg></span>
-                  <span class="cmx-tb-btn" title="Outdent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 6H10M21 12H14M21 18H10M7 9l-3 3 3 3"/></svg></span>
-                  <span class="cmx-tb-btn" title="Indent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h11M3 12h7M3 18h11M17 9l3 3-3 3"/></svg></span>
+                  <span class="cmx-tb-btn" data-cmx-exec="bullet-list" title="Bullet list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4" cy="6" r="1.2" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1.2" fill="currentColor" stroke="none"/></svg></span>
+                  <span class="cmx-tb-btn" data-cmx-exec="numbered-list" title="Numbered list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10 6h11M10 12h11M10 18h11"/><path d="M4 6h2M5 6V4M3 18h3M3 12h3l-3 3h3"/></svg></span>
+                  <span class="cmx-tb-btn" data-cmx-exec="outdent" title="Outdent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 6H10M21 12H14M21 18H10M7 9l-3 3 3 3"/></svg></span>
+                  <span class="cmx-tb-btn" data-cmx-exec="indent" title="Indent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h11M3 12h7M3 18h11M17 9l3 3-3 3"/></svg></span>
                   <span class="cmx-tb-sep"></span>
-                  <span class="cmx-tb-btn" title="Attach"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11.5 12 19a4.5 4.5 0 0 1-6.4-6.4L13 5.2a3 3 0 0 1 4.2 4.2l-7.4 7.4a1.5 1.5 0 0 1-2.1-2.1L14 8.5"/></svg></span>
+                  <span class="cmx-tb-btn" data-cmx-exec="attach" title="Attach"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11.5 12 19a4.5 4.5 0 0 1-6.4-6.4L13 5.2a3 3 0 0 1 4.2 4.2l-7.4 7.4a1.5 1.5 0 0 1-2.1-2.1L14 8.5"/></svg></span>
                   <span class="cmx-tb-spacer"></span>
-                  <span class="cmx-tb-btn" title="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></span>
-                  <span class="cmx-tb-btn" title="Redo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg></span>
+                  <span class="cmx-tb-btn" data-cmx-exec="undo" title="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></span>
+                  <span class="cmx-tb-btn" data-cmx-exec="redo" title="Redo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg></span>
                 </div>
-                <textarea class="cmx-editable" data-bind-value="composer.call.notes" placeholder="Call summary and notes…"></textarea>
+                <iframe class="cmx-editable cmx-editor-frame" data-bind-value="composer.call.notes" data-cmx-editor-id="call" data-placeholder="Call summary and notes…" src="https://editor.service1.app/" sandbox="allow-scripts allow-same-origin" title="Call notes editor"></iframe>
               </div>
 
               <div class="cmx-ai-row">
@@ -2000,19 +2012,19 @@ select.gp2-input {
 
               <label class="cmx-lbl">Note</label>
               <div class="cmx-editor">
-                <div class="cmx-tb">
-                  <span class="cmx-tb-btn" title="Bold"><span class="glyph b">B</span></span>
-                  <span class="cmx-tb-btn" title="Italic"><span class="glyph i">I</span></span>
-                  <span class="cmx-tb-btn" title="Strikethrough"><span class="glyph s">S</span></span>
-                  <span class="cmx-tb-btn" title="Link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 13.5a3.5 3.5 0 0 0 5 0l3-3a3.5 3.5 0 0 0-5-5l-1 1"/><path d="M13.5 10.5a3.5 3.5 0 0 0-5 0l-3 3a3.5 3.5 0 0 0 5 5l1-1"/></svg></span>
+                <div class="cmx-tb" data-cmx-editor-id="note">
+                  <span class="cmx-tb-btn" data-cmx-exec="bold" title="Bold"><span class="glyph b">B</span></span>
+                  <span class="cmx-tb-btn" data-cmx-exec="italic" title="Italic"><span class="glyph i">I</span></span>
+                  <span class="cmx-tb-btn" data-cmx-exec="strike" title="Strikethrough"><span class="glyph s">S</span></span>
+                  <span class="cmx-tb-btn" data-cmx-exec="link" title="Link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 13.5a3.5 3.5 0 0 0 5 0l3-3a3.5 3.5 0 0 0-5-5l-1 1"/><path d="M13.5 10.5a3.5 3.5 0 0 0-5 0l-3 3a3.5 3.5 0 0 0 5 5l1-1"/></svg></span>
                   <span class="cmx-tb-sep"></span>
-                  <span class="cmx-tb-btn" title="Bullet list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4" cy="6" r="1.2" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1.2" fill="currentColor" stroke="none"/></svg></span>
-                  <span class="cmx-tb-btn" title="Numbered list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10 6h11M10 12h11M10 18h11"/><path d="M4 6h2M5 6V4M3 18h3M3 12h3l-3 3h3"/></svg></span>
+                  <span class="cmx-tb-btn" data-cmx-exec="bullet-list" title="Bullet list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4" cy="6" r="1.2" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1.2" fill="currentColor" stroke="none"/></svg></span>
+                  <span class="cmx-tb-btn" data-cmx-exec="numbered-list" title="Numbered list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10 6h11M10 12h11M10 18h11"/><path d="M4 6h2M5 6V4M3 18h3M3 12h3l-3 3h3"/></svg></span>
                   <span class="cmx-tb-spacer"></span>
-                  <span class="cmx-tb-btn" title="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></span>
-                  <span class="cmx-tb-btn" title="Redo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg></span>
+                  <span class="cmx-tb-btn" data-cmx-exec="undo" title="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></span>
+                  <span class="cmx-tb-btn" data-cmx-exec="redo" title="Redo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg></span>
                 </div>
-                <textarea class="cmx-editable" data-bind-value="composer.note.body" placeholder="Add an internal note for this lead… visible to your team only."></textarea>
+                <iframe class="cmx-editable cmx-editor-frame" data-bind-value="composer.note.body" data-cmx-editor-id="note" data-placeholder="Add an internal note for this lead… visible to your team only." src="https://editor.service1.app/" sandbox="allow-scripts allow-same-origin" title="Note editor"></iframe>
               </div>
             </div>
 

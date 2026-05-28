@@ -789,6 +789,248 @@ document.addEventListener('click', (ev) => {
   };
 })();
 
+// ── EditorBridge: postMessage wiring for the rich-text iframe editors ────
+(function () {
+  const EDITOR_ORIGIN = 'https://editor.service1.app';
+
+  function getRole(iframe) { return iframe.getAttribute('data-cmx-editor-id') || iframe.getAttribute('data-editor-role') || ''; }
+  function readBound(iframe) {
+    const key = iframe.getAttribute('data-bind-value');
+    if (!key) return '';
+    const fixtures = (window.S1 && window.S1.fixtures && window.S1.fixtures.jobDetail) || {};
+    return key.split('.').reduce((acc, k) => (acc && acc[k] != null) ? acc[k] : '', fixtures) || '';
+  }
+  function writeBound(iframe, html) {
+    const key = iframe.getAttribute('data-bind-value');
+    if (!key) return;
+    const fixtures = (window.S1 && window.S1.fixtures && window.S1.fixtures.jobDetail) || {};
+    const parts = key.split('.');
+    let cur = fixtures;
+    for (let i = 0; i < parts.length - 1; i++) {
+      if (!cur[parts[i]] || typeof cur[parts[i]] !== 'object') cur[parts[i]] = {};
+      cur = cur[parts[i]];
+    }
+    cur[parts[parts.length - 1]] = html;
+  }
+
+  const bridges = new Map(); // role -> bridge
+  function getBridgeByIframe(iframe) {
+    for (const b of bridges.values()) if (b.iframe === iframe) return b;
+    return null;
+  }
+  function getBridgeByRole(role) { return bridges.get(role) || null; }
+
+  function postToEditor(iframe, msg) {
+    try { iframe.contentWindow && iframe.contentWindow.postMessage(msg, EDITOR_ORIGIN); } catch (_) {}
+  }
+
+  function pushAttach(iframe) {
+    const bridge = getBridgeByIframe(iframe);
+    if (!bridge) return;
+    let input = bridge._fileInput;
+    if (!input) {
+      input = document.createElement('input');
+      input.type = 'file';
+      input.style.display = 'none';
+      document.body.appendChild(input);
+      bridge._fileInput = input;
+      input.addEventListener('change', async () => {
+        const files = Array.from(input.files || []);
+        for (const f of files) {
+          try {
+            const r = await comm.upload(f, { resource: 'jobDetail.attachment' });
+            const url = (r && (r.url || r.location)) || '#';
+            const name = (f.name || 'file').replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c]));
+            postToEditor(iframe, { type: 'insert-html', html: '<a href="' + url + '">' + name + '</a>' });
+            flash('Attached ' + f.name);
+          } catch (e) { flash('Upload failed: ' + (e && e.message || e), 'bad'); }
+        }
+        input.value = '';
+      });
+    }
+    input.click();
+  }
+
+  function setToolbarState(role, active) {
+    const tb = document.querySelector('.cmx-tb[data-cmx-editor-id="' + role + '"]');
+    if (!tb) return;
+    tb.querySelectorAll('[data-cmx-exec]').forEach(btn => {
+      const cmd = btn.getAttribute('data-cmx-exec');
+      btn.classList.toggle('on', !!(active && active[cmd]));
+    });
+  }
+
+  window.addEventListener('message', (e) => {
+    if (e.origin !== EDITOR_ORIGIN) return;
+    const data = e.data;
+    if (!data || typeof data !== 'object') return;
+    let bridge = null;
+    for (const b of bridges.values()) {
+      if (b.iframe && b.iframe.contentWindow === e.source) { bridge = b; break; }
+    }
+    if (!bridge) return;
+
+    if (data.type === 'editor-ready') {
+      bridge.ready = true;
+      const initial = readBound(bridge.iframe);
+      const placeholder = bridge.iframe.getAttribute('data-placeholder') || '';
+      postToEditor(bridge.iframe, { type: 'set-placeholder', text: placeholder });
+      postToEditor(bridge.iframe, { type: 'set-content', html: initial });
+    } else if (data.type === 'content') {
+      bridge.lastHtml = String(data.html || '');
+      writeBound(bridge.iframe, bridge.lastHtml);
+      if (bridge._pendingContent) { const fn = bridge._pendingContent; bridge._pendingContent = null; fn(bridge.lastHtml); }
+    } else if (data.type === 'attach-request') {
+      pushAttach(bridge.iframe);
+    } else if (data.type === 'exec-result') {
+      if (data.active) setToolbarState(bridge.role, data.active);
+    }
+  });
+
+  function registerEditors() {
+    document.querySelectorAll('iframe.cmx-editor-frame').forEach(iframe => {
+      const role = getRole(iframe);
+      if (!role || bridges.has(role)) return;
+      bridges.set(role, { iframe, role, ready: false, lastHtml: '', _pendingContent: null });
+    });
+  }
+
+  // Initial registration + observe later renders
+  registerEditors();
+  document.addEventListener('s1ui:ready', registerEditors);
+  const mo = new MutationObserver(registerEditors);
+  mo.observe(document.body, { childList: true, subtree: true });
+
+  // Toolbar click delegation
+  document.addEventListener('click', (ev) => {
+    const btn = ev.target.closest && ev.target.closest('[data-cmx-exec]');
+    if (!btn) return;
+    const tb = btn.closest('.cmx-tb[data-cmx-editor-id]');
+    if (!tb) return;
+    const role = tb.getAttribute('data-cmx-editor-id');
+    const bridge = getBridgeByRole(role);
+    if (!bridge) return;
+    const cmd = btn.getAttribute('data-cmx-exec');
+    if (cmd === 'link') {
+      openLinkPopover(btn, (href) => {
+        postToEditor(bridge.iframe, { type: 'exec', command: 'link', value: href ? { href } : null });
+      });
+    } else {
+      postToEditor(bridge.iframe, { type: 'exec', command: cmd });
+    }
+    ev.preventDefault();
+  });
+
+  function openLinkPopover(anchor, cb) {
+    const existing = document.querySelector('.cmx-link-pop');
+    if (existing) existing.remove();
+    const pop = document.createElement('div');
+    pop.className = 'cmx-link-pop';
+    const label = document.createElement('label'); label.textContent = 'Add link';
+    const input = document.createElement('input');
+    input.type = 'text'; input.placeholder = 'https://';
+    const row = document.createElement('div'); row.className = 'row';
+    const cancel = document.createElement('button'); cancel.type = 'button'; cancel.className = 'cancel'; cancel.textContent = 'Cancel';
+    const ok = document.createElement('button'); ok.type = 'button'; ok.className = 'ok'; ok.textContent = 'Add';
+    row.appendChild(cancel); row.appendChild(ok);
+    pop.appendChild(label); pop.appendChild(input); pop.appendChild(row);
+    document.body.appendChild(pop);
+    const r = anchor.getBoundingClientRect();
+    pop.style.top = (window.scrollY + r.bottom + 6) + 'px';
+    pop.style.left = (window.scrollX + r.left) + 'px';
+    setTimeout(() => input.focus(), 0);
+    function close(href) { pop.remove(); cb(href); }
+    cancel.addEventListener('click', () => close(null));
+    ok.addEventListener('click', () => close(input.value.trim() || null));
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') close(input.value.trim() || null);
+      else if (e.key === 'Escape') close(null);
+    });
+  }
+
+  // Expose a getter that returns content from the editor (for send/save handlers)
+  function getEditorContent(role) {
+    return new Promise(resolve => {
+      const bridge = getBridgeByRole(role);
+      if (!bridge || !bridge.iframe) return resolve('');
+      bridge._pendingContent = resolve;
+      postToEditor(bridge.iframe, { type: 'get-content' });
+      setTimeout(() => {
+        if (bridge._pendingContent === resolve) {
+          bridge._pendingContent = null;
+          resolve(bridge.lastHtml || '');
+        }
+      }, 400);
+    });
+  }
+  function getEditorContentSync(role) {
+    const b = getBridgeByRole(role);
+    return b ? (b.lastHtml || '') : '';
+  }
+
+  window.__jobDetailEditors = {
+    get: getEditorContent,
+    getSync: getEditorContentSync,
+    insertText: (role, text) => { const b = getBridgeByRole(role); if (b) postToEditor(b.iframe, { type: 'insert-text', text }); },
+    insertHTML: (role, html) => { const b = getBridgeByRole(role); if (b) postToEditor(b.iframe, { type: 'insert-html', html }); },
+    focus: (role) => { const b = getBridgeByRole(role); if (b) postToEditor(b.iframe, { type: 'focus' }); }
+  };
+})();
+
+// Intercept the cmx send/save buttons so they pull HTML from the iframe
+(function () {
+  function roleFromAction(action) {
+    if (action === 'jobDetail.send') return 'email';
+    if (action === 'jobDetail.log-call-commit') return 'call';
+    if (action === 'jobDetail.save-note') return 'note';
+    if (action === 'jobDetail.save-draft') {
+      const active = document.querySelector('.cmx-body.active') || document.querySelector('.cmx-body[data-cmx-body]');
+      if (!active) return null;
+      const k = active.getAttribute('data-cmx-body');
+      if (k === 'email') return 'email';
+      if (k === 'call') return 'call';
+      if (k === 'note') return 'note';
+    }
+    return null;
+  }
+  document.addEventListener('click', async (ev) => {
+    const btn = ev.target.closest && ev.target.closest('[data-comm-action]');
+    if (!btn) return;
+    const raw = btn.getAttribute('data-comm-action') || '';
+    const action = raw.replace(/^action:/, '').replace(/:.*$/, '');
+    const role = roleFromAction(action);
+    if (!role) return;
+    if (btn.__jdEditorWired) return;
+    btn.__jdEditorWired = true;
+    // No actual interception of the comm dispatch — the bridge already
+    // mirrors the iframe HTML into the bound fixtures path on every
+    // `change` message, so by the time the action fires the bound value
+    // is up to date. We still trigger a get-content to flush any
+    // in-flight debounced changes.
+    if (window.__jobDetailEditors) {
+      window.__jobDetailEditors.get(role);
+    }
+  }, true);
+})();
+
+// Hook emoji insertion to send insert-text to the iframe when active body has one
+(function () {
+  const orig = window.jdInsertEmoji;
+  if (typeof orig !== 'function') return;
+  window.jdInsertEmoji = function (e) {
+    const active = document.querySelector('.cmx-body.active');
+    const iframe = active && active.querySelector('iframe.cmx-editor-frame');
+    if (iframe && window.__jobDetailEditors) {
+      const role = iframe.getAttribute('data-cmx-editor-id');
+      window.__jobDetailEditors.insertText(role, e);
+      const pop = document.getElementById('jdEmojiPop');
+      if (pop) pop.classList.remove('open');
+      return;
+    }
+    return orig.apply(this, arguments);
+  };
+})();
+
 // Install document-level click handlers ([data-comm-action] dispatcher,
 // tab/panel switcher, etc.) provided by core/standard-page.js.
 if (window.S1 && window.S1.wireStandardPage) window.S1.wireStandardPage('jobDetail');
