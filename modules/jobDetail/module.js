@@ -679,7 +679,7 @@ if (window.S1 && window.S1.modal && window.S1.modal.bindForm) {
       $$('.acct-table tbody tr', root).forEach(row => {
         if (label === 'revenue') { row.style.display = ''; return; }
         const cat = (row.querySelector('td') && row.querySelector('td').textContent || '').toLowerCase();
-        const wants = label === 'expenses' ? /(materials|rentals|fuel|expense)/
+        const wants = label === 'expenses' ? /(material|rental|fuel|expense|travel|packing|specialty|storage)/
                     : label === 'wages'    ? /(labor|wage)/
                     : label === 'tax'      ? /(tax)/ : /./;
         row.style.display = wants.test(cat) ? '' : 'none';
@@ -687,6 +687,22 @@ if (window.S1 && window.S1.modal && window.S1.modal.bindForm) {
     });
   });
 })();
+
+// ── 22b) Per-note pin control on timeline rows ─────────────────────────
+document.addEventListener('click', async (ev) => {
+  const btn = ev.target.closest && ev.target.closest('[data-jd-pin]');
+  if (!btn) return;
+  ev.preventDefault();
+  ev.stopPropagation();
+  const noteId = btn.getAttribute('data-jd-pin');
+  if (!noteId) return;
+  await safe('Pin note', async () => {
+    const r = await comm.action('jobDetail.pin-note', { noteId });
+    if (r && r.ok === false) { flash(r.error || 'Pin failed', 'bad'); return; }
+    btn.classList.toggle('pinned');
+    flash('Note pin toggled');
+  });
+});
 
 // ── 23) Generic fallback for any [data-comm-action] not wired above ─────
 document.addEventListener('click', (ev) => {
@@ -736,24 +752,23 @@ document.addEventListener('click', (ev) => {
     }],
     ['#addWagesModal',          'job.wages.add',          {}],
     ['#addChargeModal',         'job.charge.add', {
+      // Emit the field names S1AddChargeAsync actually reads:
+      // chargeType / itemName / description / quantity / rate.
       transform: function (p) {
         return {
-          jobId:        jobId(),
-          preset:       p.preset || '',
-          categoryId:   p.category || p.categoryId || '',
-          chargeType:   p.chargeType || '',
-          label:        p.description || p.label || '',
-          qty:          Number(p.quantity || p.qty || 1),
-          unitPrice:    Number(p.rate || p.unitPrice || 0),
+          chargeType:   p.chargeType || p.category || '',
+          itemName:     p.description || '',
+          description:  p.notes || '',
+          quantity:     Number(p.quantity || 1),
+          rate:         Number(p.rate || 0),
           crewCount:    Number(p.crewCount || 0),
           vehicleCount: Number(p.vehicleCount || 0),
-          taxable:      !!p.taxable,
-          memo:         p.notes || p.memo || ''
+          taxable:      !!p.taxable
         };
       },
       validate: function (p) {
-        if (!p.label) return 'Description is required';
-        if (!(p.unitPrice > 0)) return 'Rate must be greater than 0';
+        if (!p.itemName) return 'Description is required';
+        if (!(p.rate > 0)) return 'Rate must be greater than 0';
         return null;
       },
       successMsg: 'Charge added'
@@ -764,8 +779,44 @@ document.addEventListener('click', (ev) => {
     ['#jdAddDiscountModal',     'job.discount.add',       {}],
     ['#jdNteModal',             'job.nte.set',            {}],
     ['#jdJobDetailsModal',      'job.details.update',     {}],
-    ['#jdContactDetailsModal',  'job.contact.update',     {}],
-    ['#jdInventoryModal',       'job.inventory.upsert',   {}]
+    // This modal edits the CUSTOMER record (name/phone/email), not a JobContact,
+    // so route to jobDetail.customer (S1EditCustomerAsync) and split the single
+    // name field into firstName / lastName.
+    ['#jdContactDetailsModal',  'jobDetail.customer', {
+      transform: function (p) {
+        var name = (p.customerName || '').trim();
+        var sp = name.indexOf(' ');
+        return {
+          firstName: sp === -1 ? name : name.slice(0, sp),
+          lastName:  sp === -1 ? ''   : name.slice(sp + 1).trim(),
+          phone:     p.primaryPhone || '',
+          email:     p.email || ''
+        };
+      },
+      successMsg: 'Contact details saved'
+    }],
+    ['#jdInventoryModal',       'job.inventory.upsert',   {}],
+    ['#jdPaymentModal',         'jobDetail.add-payment', {
+      validate: function (p) {
+        if (!(Number(p.amount) > 0)) return 'Amount must be greater than 0';
+        return null;
+      },
+      successMsg: 'Payment recorded'
+    }],
+    ['#jdScheduleModal',        'jobDetail.schedule', {
+      transform: function (p) {
+        return {
+          scheduledDate: p.date || '',
+          time:          p.time || '',
+          meetingType:   p.meetingType || ''
+        };
+      },
+      validate: function (p) {
+        if (!p.scheduledDate) return 'Date is required';
+        return null;
+      },
+      successMsg: 'Schedule saved'
+    }]
   ];
   bindings.forEach(([sel, rpc, extra]) => {
     const matches = document.querySelectorAll(sel);
@@ -1071,6 +1122,8 @@ document.addEventListener('click', (ev) => {
     getSync: getEditorContentSync,
     insertText: (role, text) => { const b = getBridgeByRole(role); if (b) postToEditor(b.iframe, { type: 'insert-text', text }); },
     insertHTML: (role, html) => { const b = getBridgeByRole(role); if (b) postToEditor(b.iframe, { type: 'insert-html', html }); },
+    setContent: (role, html) => { const b = getBridgeByRole(role); if (b) { postToEditor(b.iframe, { type: 'set-content', html: html || '' }); b.lastHtml = html || ''; } },
+    clear: (role) => { const b = getBridgeByRole(role); if (b) { postToEditor(b.iframe, { type: 'set-content', html: '' }); b.lastHtml = ''; } },
     focus: (role) => { const b = getBridgeByRole(role); if (b) postToEditor(b.iframe, { type: 'focus' }); }
   };
 })();
@@ -1108,6 +1161,106 @@ document.addEventListener('click', (ev) => {
     if (window.__jobDetailEditors) {
       window.__jobDetailEditors.get(role);
     }
+  }, true);
+})();
+
+// ── AI suggest: call the GET-backed handler, inject the result into the
+// active composer pane (subject/body editor for email, message box for text,
+// note editor for call). The backend dispatcher routes these action keys to
+// the OnGetSuggest* handlers and returns { subject, body } / { message } /
+// { notes } (or { error }).
+(function () {
+  function setVal(sel, v) {
+    var el = document.querySelector(sel); if (!el) return;
+    if ('value' in el) el.value = v; else el.textContent = v;
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+  document.addEventListener('click', async function (ev) {
+    var btn = ev.target.closest && ev.target.closest('[data-comm-action^="action:jobDetail.ai-suggest-"]');
+    if (!btn) return;
+    ev.preventDefault();
+    ev.stopPropagation();
+    if (btn.__jdBusy) return;
+    btn.__jdBusy = true;
+    btn.__s1Wired = true;
+    btn.style.opacity = '0.6';
+    var key = (btn.getAttribute('data-comm-action') || '').replace(/^action:/, '').replace(/:.*$/, '');
+    await safe('Suggest', async function () {
+      try {
+        flash('Generating suggestion…');
+        var r = await comm.action(key, {});
+        if (!r || r.error) { flash((r && r.error) || 'No suggestion available.', 'bad'); return; }
+        if (key === 'jobDetail.ai-suggest-email') {
+          if (r.subject != null) setVal('[data-bind-value="composer.email.subject"]', r.subject);
+          if (window.__jobDetailEditors) window.__jobDetailEditors.insertHTML('email', r.body || '');
+          flash('Email draft inserted');
+        } else if (key === 'jobDetail.ai-suggest-text') {
+          setVal('#cmxTextBody', r.message || '');
+          flash('Text draft inserted');
+        } else if (key === 'jobDetail.ai-suggest-call') {
+          if (window.__jobDetailEditors) window.__jobDetailEditors.insertText('call', r.notes || '');
+          flash('Talking points inserted');
+        }
+      } finally {
+        btn.__jdBusy = false;
+        btn.style.opacity = '';
+      }
+    });
+  }, true);
+})();
+
+// ── Client-side tab navigation (previously fired no-op RPCs) ────────────
+document.addEventListener('click', function (ev) {
+  var link = ev.target.closest && ev.target.closest('[data-jd-tab]');
+  if (!link) return;
+  ev.preventDefault();
+  var tab = document.querySelector('.tab[data-tab="' + link.getAttribute('data-jd-tab') + '"]');
+  if (tab) tab.click();
+});
+
+// ── Composer editor intents (client-only — previously fired no-op RPCs) ──
+// insert-variable / insert-logo / tag-note / mention-teammate insert text into
+// the active editor; cancel-note clears the note editor.
+(function () {
+  function activeRole() {
+    var a = document.querySelector('.cmx-body.active[data-cmx-body]');
+    return a ? a.getAttribute('data-cmx-body') : null;
+  }
+  function insertIntoActive(text) {
+    var role = activeRole();
+    if (!role) return;
+    var body = document.querySelector('.cmx-body[data-cmx-body="' + role + '"]');
+    var iframe = body && body.querySelector('iframe.cmx-editor-frame');
+    if (iframe && window.__jobDetailEditors) {
+      window.__jobDetailEditors.insertText(role, text);
+      return;
+    }
+    var ta = body && body.querySelector('textarea');
+    if (ta) {
+      var s = ta.selectionStart != null ? ta.selectionStart : ta.value.length;
+      var e = ta.selectionEnd != null ? ta.selectionEnd : s;
+      ta.value = ta.value.slice(0, s) + text + ta.value.slice(e);
+      ta.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+  }
+  var TOKENS = {
+    'insert-variable':  '{{customer.firstName}}',
+    'insert-logo':      '{{company.logo}}',
+    'tag-note':         '#',
+    'mention-teammate': '@'
+  };
+  document.addEventListener('click', function (ev) {
+    var btn = ev.target.closest && ev.target.closest('[data-jd-editor-intent]');
+    if (!btn) return;
+    ev.preventDefault();
+    ev.stopPropagation();
+    var intent = btn.getAttribute('data-jd-editor-intent');
+    if (intent === 'cancel-note') {
+      if (window.__jobDetailEditors) window.__jobDetailEditors.clear('note');
+      flash('Note cleared');
+      return;
+    }
+    if (TOKENS[intent] != null) insertIntoActive(TOKENS[intent]);
   }, true);
 })();
 
@@ -1213,9 +1366,37 @@ document.addEventListener('click', (ev) => {
       followUp: !!(follow && follow.classList.contains('on'))
     };
   }
+  async function gatherCallPayload() {
+    const notes = (window.__jobDetailEditors && window.__jobDetailEditors.get)
+      ? await window.__jobDetailEditors.get('call')
+      : '';
+    return {
+      composer:  'call',
+      direction: readBind('call', 'direction') || 'Outbound',
+      outcome:   readBind('call', 'outcome')   || 'Connected',
+      duration:  readBind('call', 'duration')  || '0',
+      notes:     notes || '',
+      followUpEmailTemplateId: readBind('call', 'followUpEmailTemplateId'),
+      followUpTextTemplateId:  readBind('call', 'followUpTextTemplateId'),
+      attachments: pendingAttachments.call.slice()
+    };
+  }
+  async function gatherNotePayload() {
+    const body = (window.__jobDetailEditors && window.__jobDetailEditors.get)
+      ? await window.__jobDetailEditors.get('note')
+      : '';
+    return {
+      composer:   'note',
+      body:       body || '',
+      visibility: 'internal',
+      attachments: pendingAttachments.note.slice()
+    };
+  }
   async function gatherPayloadForRole(role) {
     if (role === 'email') return await gatherEmailPayload();
     if (role === 'text')  return gatherTextPayload();
+    if (role === 'call')  return await gatherCallPayload();
+    if (role === 'note')  return await gatherNotePayload();
     return null;
   }
 
@@ -1276,6 +1457,34 @@ document.addEventListener('click', (ev) => {
           const r = await comm.action('jobDetail.save-draft', payload);
           if (r && r.ok) flash('Draft saved');
           else if (r && r.error) flash(r.error, 'bad');
+        });
+      });
+    });
+  }
+
+  // ── Log Call / Save Note commit (call + note panes) ───────────────────
+  function wireCmxCommitButtons() {
+    var specs = [
+      { action: 'jobDetail.log-call-commit', role: 'call', rpc: 'jobDetail.log-call-commit', sent: 'Call logged', empty: 'Add call notes first.' },
+      { action: 'jobDetail.save-note',       role: 'note', rpc: 'jobDetail.note.add',         sent: 'Note saved',  empty: 'Type a note first.' }
+    ];
+    specs.forEach(function (spec) {
+      document.querySelectorAll('.cmx-send-row .cmx-btn[data-comm-action="action:' + spec.action + '"]').forEach(function (btn) {
+        if (btn.__s1Wired) return;
+        btn.__s1Wired = true;
+        btn.addEventListener('click', async function (ev) {
+          ev.preventDefault();
+          ev.stopPropagation();
+          await safe(spec.sent, async function () {
+            var payload = await gatherPayloadForRole(spec.role);
+            if (!payload) return;
+            var text = (spec.role === 'call' ? payload.notes : payload.body) || '';
+            if (!text.replace(/<[^>]*>/g, '').trim()) { flash(spec.empty, 'bad'); return; }
+            var r = await comm.action(spec.rpc, payload);
+            if (r && r.ok === false) { flash(r.error || (spec.sent + ' failed'), 'bad'); return; }
+            clearAttachments(spec.role);
+            flash(spec.sent);
+          });
         });
       });
     });
@@ -1351,6 +1560,7 @@ document.addEventListener('click', (ev) => {
 
   function wireAll() {
     wireCmxSendButtons();
+    wireCmxCommitButtons();
     wireCcToggle();
     wireFollowChecks();
     wireCmxAttach();

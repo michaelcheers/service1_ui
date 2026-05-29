@@ -678,6 +678,17 @@ iframe.cmx-editor-frame { width: 100%; min-height: 160px; border: 0; display: bl
   position: relative;
 }
 .tl-item:first-of-type { border-top: 0; }
+.tl-pin {
+  position: absolute; top: 10px; right: 56px;
+  width: 24px; height: 24px; border: 0; background: transparent;
+  color: var(--ink-3); cursor: pointer; border-radius: 6px;
+  display: none; align-items: center; justify-content: center;
+}
+.tl-pin svg { width: 14px; height: 14px; }
+.tl-item.tl-note:hover .tl-pin { display: inline-flex; }
+.tl-pin.pinned { display: inline-flex; color: var(--terra); }
+.tl-pin:hover { background: var(--surface-2); color: var(--ink); }
+.tl-item:not(.tl-note) .tl-pin { display: none !important; }
 .tl-icon {
   width: 28px; height: 28px; border-radius: 8px;
   display: flex; align-items: center; justify-content: center;
@@ -1719,7 +1730,7 @@ select.gp2-input {
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m21 12-9 9a5 5 0 0 1-7-7l9-9a3.5 3.5 0 0 1 5 5l-9 9a2 2 0 1 1-3-3l8-8"/></svg>
                   Attach
                 </button>
-                <button class="cmx-btn" data-comm-action="action:jobDetail.insert-logo">
+                <button class="cmx-btn" data-jd-editor-intent="insert-logo">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m21 16-5-5-9 9"/></svg>
                   Insert Logo
                 </button>
@@ -1753,7 +1764,7 @@ select.gp2-input {
 
               <div class="cmx-var-row">
                 <span>Insert variable:</span>
-                <button class="cmx-btn sm" data-comm-action="action:jobDetail.insert-variable">
+                <button class="cmx-btn sm" data-jd-editor-intent="insert-variable">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
                   Add Variable
                 </button>
@@ -1858,7 +1869,7 @@ select.gp2-input {
                   <span class="cmx-lbl" style="margin:0;">Message</span>
                   <span style="color:var(--ink-4);">·</span>
                   <span>Insert:</span>
-                  <button class="cmx-btn sm" data-comm-action="action:jobDetail.insert-variable">
+                  <button class="cmx-btn sm" data-jd-editor-intent="insert-variable">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
                     Variable
                   </button>
@@ -1902,17 +1913,20 @@ select.gp2-input {
               <div class="cmx-call-top">
                 <div>
                   <label class="cmx-lbl">Direction</label>
-                  <div class="cmx-select tinted" style="width:100%;">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M17 7H9M17 7v8"/></svg>
-                    <span>Outbound</span>
-                  </div>
+                  <select class="cmx-select tinted" style="width:100%;" data-bind-value="composer.call.direction">
+                    <option value="Outbound">Outbound</option>
+                    <option value="Inbound">Inbound</option>
+                  </select>
                 </div>
                 <div>
                   <label class="cmx-lbl">Outcome</label>
-                  <div class="cmx-select tinted" style="width:100%;">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4 10-12"/></svg>
-                    <span>Outcome — Set outcome</span>
-                  </div>
+                  <select class="cmx-select tinted" style="width:100%;" data-bind-value="composer.call.outcome">
+                    <option value="Connected">Connected</option>
+                    <option value="No Answer">No Answer</option>
+                    <option value="Left Voicemail">Left Voicemail</option>
+                    <option value="Busy">Busy</option>
+                    <option value="Wrong Number">Wrong Number</option>
+                  </select>
                 </div>
                 <div>
                   <label class="cmx-lbl">Duration</label>
@@ -2013,15 +2027,11 @@ select.gp2-input {
           <div class="cmx-body" data-cmx-body="note">
             <div class="cmx-pane">
               <div class="cmx-actions">
-                <button class="cmx-btn" data-comm-action="action:jobDetail.pin-note">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4l6 6-4 1-3 7-3-3-6 6 6-6-3-3 7-3z"/></svg>
-                  Pin to top
-                </button>
-                <button class="cmx-btn" data-comm-action="action:jobDetail.tag-note">
+                <button class="cmx-btn" data-jd-editor-intent="tag-note">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
                   Tag
                 </button>
-                <button class="cmx-btn" data-comm-action="action:jobDetail.mention-teammate">
+                <button class="cmx-btn" data-jd-editor-intent="mention-teammate">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 5-6 8-6s6.5 2 8 6"/></svg>
                   Mention teammate
                 </button>
@@ -2054,7 +2064,7 @@ select.gp2-input {
                 <span style="font-size:12.5px;color:var(--ink-3);">Visible to team only · not sent to customer</span>
               </div>
               <div class="right">
-                <button class="cmx-btn" data-comm-action="action:jobDetail.cancel-note">Cancel</button>
+                <button class="cmx-btn" data-jd-editor-intent="cancel-note">Cancel</button>
                 <button class="cmx-btn primary" data-comm-action="action:jobDetail.save-note">Save Note</button>
               </div>
             </div>
@@ -2089,6 +2099,9 @@ select.gp2-input {
                         <div class="tl-text tl-text-text">{{body}}</div>
                         <div class="tl-text tl-text-mail">{{bodyHtml|html}}</div>
                       </div>
+                      <button class="tl-pin" data-jd-pin="{{recordId}}" title="Pin note">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4l6 6-4 1-3 7-3-3-6 6 6-6-3-3 7-3z"/></svg>
+                      </button>
                       <div class="tl-time">{{time}}</div>
                     </div>
                   </template>
@@ -2303,10 +2316,10 @@ select.gp2-input {
           <section class="card" style="margin-top:16px;">
             <div class="s-head">
               <nav class="acct-tabs">
-                <button data-comm-action="action:jobDetail.revenue" class="acct-tab active">Revenue</button>
-                <button data-comm-action="action:jobDetail.expenses" class="acct-tab">Expenses</button>
-                <button data-comm-action="action:jobDetail.wages" class="acct-tab">Wages</button>
-                <button data-comm-action="action:jobDetail.tax" class="acct-tab">Tax</button>
+                <button class="acct-tab active">Revenue</button>
+                <button class="acct-tab">Expenses</button>
+                <button class="acct-tab">Wages</button>
+                <button class="acct-tab">Tax</button>
               </nav>
               <button data-comm-action="action:jobDetail.add-line" class="btn btn-secondary btn-sm">+ Add line</button>
             </div>
@@ -2314,7 +2327,7 @@ select.gp2-input {
               <thead>
                 <tr><th>Category</th><th>Description</th><th>Date</th><th class="num">Amount</th><th class="num">Tax</th><th></th></tr>
               </thead>
-              <tbody data-bind="rows"><template><tr><td><span class="cat-dot" style="background:{{c0_dotBg}};"></span> {{c0_text}}</td><td>{{c1_text}}</td><td>{{c2_text}}</td><td>{{c3_text}}</td><td>{{c4_text}}</td><td><button class="gp-row-x">×</button></td></tr></template></tbody>
+              <tbody data-bind="rows"><template><tr class="{{rowClass}}"><td><span class="cat-dot" style="background:{{catColor}};"></span> {{category}}</td><td>{{description}}</td><td>{{date}}</td><td>{{amount}}</td><td>{{tax}}</td><td><button class="gp-row-x">×</button></td></tr></template></tbody>
               <tfoot>
                 <tr>
                   <td colspan="3" style="text-align:right;font-weight:600;">Subtotal · Tax</td>
@@ -2440,7 +2453,7 @@ select.gp2-input {
 
           <div class="cust-grid">
             <section class="card">
-              <div class="s-head"><div class="s-title">Contact details</div><a data-comm-action="action:jobDetail.edit" class="s-action" href="#" id="jdEditContactDetailsBtn">Edit</a></div>
+              <div class="s-head"><div class="s-title">Contact details</div><a class="s-action" href="#" id="jdEditContactDetailsBtn">Edit</a></div>
               <div class="s-body">
                 <div class="row"><span class="l">Primary phone</span><span class="v" data-bind-text="customer.phone">(555) 987-6543</span></div>
                 <div class="row"><span class="l">Email</span><span class="v" data-bind-text="customer.email">alice@techstartup.com</span></div>
@@ -2451,7 +2464,7 @@ select.gp2-input {
             </section>
 
             <section class="card">
-              <div class="s-head"><div class="s-title">Addresses</div><a data-comm-action="action:jobDetail.add" class="s-action" href="#">+ Add</a></div>
+              <div class="s-head"><div class="s-title">Addresses</div><a data-jd-open="addStopModal" class="s-action" href="#">+ Add</a></div>
               <div class="s-body loc">
                 <div class="loc-row">
                   <span class="loc-tag">A</span>
@@ -2536,7 +2549,7 @@ select.gp2-input {
         <section class="card opp">
           <div class="s-head">
             <div class="s-title">Opportunity</div>
-            <a data-comm-action="action:jobDetail.open-growth-plan" class="s-action" href="#">Open growth plan</a>
+            <a data-jd-tab="growth-plan" class="s-action" href="#">Open growth plan</a>
           </div>
           <div class="s-body">
             <div class="row"><span class="l">Subtotal</span><span class="v muted" style="font-weight:400;">$0.00</span></div>
@@ -2556,7 +2569,7 @@ select.gp2-input {
         <section class="card">
           <div class="s-head">
             <div class="s-title">Job details</div>
-            <a data-comm-action="action:jobDetail.edit-all" class="s-action" href="#" id="jdEditJobDetailsBtn">Edit all</a>
+            <a class="s-action" href="#" id="jdEditJobDetailsBtn">Edit all</a>
           </div>
           <div class="s-body">
             <div class="row"><span class="l">File number</span><span class="v" data-bind-text="jobInfo.fileNumber">17826-1</span></div>
@@ -2585,14 +2598,14 @@ select.gp2-input {
                 <span class="ic"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>
                 Survey
               </span>
-              <span class="v empty">Not scheduled · <a data-comm-action="action:jobDetail.schedule" href="#" style="color:var(--terra);font-weight:500;">Schedule</a></span>
+              <span class="v empty">Not scheduled · <a data-jd-open="jdScheduleModal" href="#" style="color:var(--terra);font-weight:500;">Schedule</a></span>
             </div>
             <div class="row">
               <span class="l">
                 <span class="ic"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></span>
                 Box delivery
               </span>
-              <span class="v empty">Not scheduled · <a data-comm-action="action:jobDetail.schedule" href="#" style="color:var(--terra);font-weight:500;">Schedule</a></span>
+              <span class="v empty">Not scheduled · <a data-jd-open="jdScheduleModal" href="#" style="color:var(--terra);font-weight:500;">Schedule</a></span>
             </div>
             <div class="row">
               <span class="l">
@@ -2639,7 +2652,7 @@ select.gp2-input {
         <section class="card">
           <div class="s-head">
             <div class="s-title">Payments</div>
-            <a data-comm-action="action:jobDetail.add-payment" class="s-action" href="#">+ Add payment</a>
+            <a data-jd-open="jdPaymentModal" class="s-action" href="#">+ Add payment</a>
           </div>
           <div class="s-body">
             <div class="pay-list" data-bind="payments">
@@ -2667,7 +2680,7 @@ select.gp2-input {
         <section class="card">
           <div class="s-head">
             <div class="s-title">Inventory</div>
-            <a data-comm-action="action:jobDetail.edit" class="s-action" href="#" id="jdEditInventoryBtn">Edit</a>
+            <a class="s-action" href="#" id="jdEditInventoryBtn">Edit</a>
           </div>
           <div class="s-body">
             <div class="kpis">
@@ -2797,6 +2810,63 @@ select.gp2-input {
   </div>
 </div>
 
+<div id="jdPaymentModal" class="jd-overlay" style="display:none;">
+  <div class="jd-modal" style="width:480px;">
+    <div class="jd-modal-head"><div class="jd-modal-title">Add Payment</div><button data-modal-close class="jd-close">✕</button></div>
+    <div class="jd-modal-body">
+      <div class="jd-grid">
+        <div class="jd-field full"><label class="jd-label">Amount <span class="req">*</span></label><input name="amount" class="jd-input" type="number" step="0.01" min="0" placeholder="0.00"></div>
+        <div class="jd-field"><label class="jd-label">Method</label>
+          <select name="type" class="jd-input">
+            <option value="Cash">Cash</option>
+            <option value="Card">Card</option>
+            <option value="Check">Check</option>
+            <option value="ACH">ACH / Bank transfer</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="jd-field"><label class="jd-label">Category</label>
+          <select name="category" class="jd-input">
+            <option value="Deposit">Deposit</option>
+            <option value="Balance">Balance</option>
+            <option value="Final">Final payment</option>
+          </select>
+        </div>
+        <div class="jd-field full"><label class="jd-label">Reference #</label><input name="reference" class="jd-input" type="text" placeholder="Optional (check #, txn id)"></div>
+        <div class="jd-field full"><label class="jd-label">Notes</label><textarea name="notes" class="jd-textarea" placeholder=""></textarea></div>
+      </div>
+    </div>
+    <div class="jd-modal-actions">
+      <button data-modal-close class="btn btn-secondary">Cancel</button>
+      <button data-modal-save class="btn btn-primary">Record Payment</button>
+    </div>
+  </div>
+</div>
+
+<div id="jdScheduleModal" class="jd-overlay" style="display:none;">
+  <div class="jd-modal" style="width:480px;">
+    <div class="jd-modal-head"><div class="jd-modal-title">Schedule</div><button data-modal-close class="jd-close">✕</button></div>
+    <div class="jd-modal-body">
+      <div class="jd-grid">
+        <div class="jd-field"><label class="jd-label">Date <span class="req">*</span></label><input name="date" class="jd-input" type="date"></div>
+        <div class="jd-field"><label class="jd-label">Time</label><input name="time" class="jd-input" type="time"></div>
+        <div class="jd-field full"><label class="jd-label">Type</label>
+          <select name="meetingType" class="jd-input">
+            <option value="Survey">Survey</option>
+            <option value="Box delivery">Box delivery</option>
+            <option value="Move">Move</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="jd-modal-actions">
+      <button data-modal-close class="btn btn-secondary">Cancel</button>
+      <button data-modal-save class="btn btn-primary">Save Schedule</button>
+    </div>
+  </div>
+</div>
+
 <!-- AI chat dock --><!-- ──── Job Detail Action Modals ──── -->
 <style>
 .jd-overlay { position:fixed; inset:0; background:rgba(15,23,42,0.45); display:none; align-items:center; justify-content:center; z-index:2000; padding:24px; }
@@ -2908,6 +2978,14 @@ select.gp2-input {
           <span class="jd-vid-time" id="jdVidTime">0:00</span>
         </div>
         <div class="jd-vid-msg" id="jdVidMsg">Click the record button to start. We'll attach the video to your reply.</div>
+        <div style="margin-top:16px;padding-top:16px;border-top:var(--hair);">
+          <div class="jd-label" style="margin-bottom:10px;">Or request a video survey from the customer</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px 16px;">
+            <div class="jd-field"><label class="jd-label">Preferred date</label><input name="date" class="jd-input" type="date"></div>
+            <div class="jd-field"><label class="jd-label">Time slot</label><select name="slot" class="jd-select" data-bind-options="videoSlots"><option value="">Select a slot…</option></select></div>
+            <div class="jd-field" style="grid-column:1/-1;"><label class="jd-label">Notes (optional)</label><textarea name="notes" class="jd-textarea" placeholder="Anything the customer should know…"></textarea></div>
+          </div>
+        </div>
       </div>
       <div class="jd-vid-panel" data-vpanel="library" style="display:none;">
         <div class="jd-vid-library">
@@ -2918,7 +2996,7 @@ select.gp2-input {
         </div>
       </div>
     </div>
-    <div class="jd-modal-foot"><button data-modal-close class="btn btn-secondary" onclick="jdCloseModal('jdVideoModal')">Cancel</button></div>
+    <div class="jd-modal-foot"><button data-modal-close class="btn btn-secondary" onclick="jdCloseModal('jdVideoModal')">Cancel</button><button data-modal-save class="btn btn-primary">Request Video</button></div>
   </div>
 </div>
 
@@ -3086,7 +3164,7 @@ select.gp2-input {
         <div class="jd-field"><label class="jd-label">Heavy items</label><input name="heavyItems" class="jd-input" type="number" placeholder="0" min="0"></div>
         <div class="jd-field" style="grid-column:1/-1;"><label class="jd-label">Special handling</label><textarea name="specialHandling" class="jd-textarea" placeholder="e.g., Grand piano, antique armoire…"></textarea></div>
       </div>
-      <div style="margin-top:6px;font-size:12px;"><a data-comm-action="action:jobDetail.open-full-inventory-editor" href="#" style="color:var(--terra);font-weight:600;">Open full inventory editor →</a></div>
+      <div style="margin-top:6px;font-size:12px;"><a data-jd-tab="growth-plan" href="#" style="color:var(--terra);font-weight:600;">Open full inventory editor →</a></div>
     </div>
     <div class="jd-modal-foot">
       <button data-modal-close class="btn btn-secondary" onclick="jdCloseModal('jdInventoryModal')">Cancel</button>
@@ -3165,18 +3243,9 @@ select.gp2-input {
     }
     tabs.forEach(t => t.addEventListener('click', () => setTab(t.dataset.cmxTab)));
 
-    // CC/BCC toggle
-    const ccBtn = document.getElementById('cmxToggleCc');
-    const ccRow = document.getElementById('cmxCcRow');
-    ccBtn?.addEventListener('click', () => {
-      const open = ccRow.style.display !== 'none';
-      ccRow.style.display = open ? 'none' : 'block';
-    });
-
-    // Checkboxes (Create follow-up etc.)
-    document.querySelectorAll('.cmx-check').forEach(c => {
-      c.addEventListener('click', () => c.classList.toggle('on'));
-    });
+    // CC/BCC toggle and follow-up checkboxes are wired in module.js
+    // (wireCcToggle / wireFollowChecks). Do NOT re-bind here — a second
+    // handler would toggle the state twice and cancel it out.
 
     // SMS segment-aware counter
     const textBody = document.getElementById('cmxTextBody');
@@ -3431,6 +3500,10 @@ function jdSaveFollowup() {
     const d = new Date(v);
     const label = d.toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
     document.getElementById('jdSetFollowupBtn').textContent = '⏰ ' + label;
+    if (window.S1 && window.S1.comm) {
+      window.S1.comm.save('jobDetail.follow-up', { followUp: d.toISOString() })
+        .catch(e => window.S1.flash && window.S1.flash('Follow-up failed: ' + (e.message || e)));
+    }
   }
   document.getElementById('jdFollowupPop').classList.remove('open');
 }
