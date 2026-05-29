@@ -1616,7 +1616,7 @@
           label: "Wed · Jan 7, 2026",
           items: [
             { kind: "mail", kindLabel: "Email sent", arrow: "→", by: "Discovery call confirmation",
-              html:
+              body:
                 '<p>Hi Alice,</p>' +
                 '<p>Confirming your move with <b>Service1</b> on <b>Jan 12 at 7:00 AM</b>. ' +
                 'Two movers, one truck — we will text 30 minutes before arrival.</p>' +

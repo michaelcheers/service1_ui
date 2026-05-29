@@ -25,6 +25,23 @@ async function load() {
   for (const r of window.__module_manifest.reads) { try { await comm.get(r); } catch {} }
   const data = (window.S1.fixtures || {})["jobDetail"] || {};
 
+  // Move mail-kind body → bodyHtml so only emails get the sandboxed-iframe
+  // render path; SMS/call/note keep plain-text body rendering.
+  try {
+    const sections = data && data.timeline && data.timeline.daySections;
+    if (Array.isArray(sections)) {
+      for (const sec of sections) {
+        if (!sec || !Array.isArray(sec.items)) continue;
+        for (const it of sec.items) {
+          if (it && it.kind === 'mail' && it.bodyHtml == null) {
+            it.bodyHtml = it.body || '';
+            it.body = '';
+          }
+        }
+      }
+    }
+  } catch {}
+
   window.S1.render.bind(document, data);
 
   // Seed the email composer's "To" field from customer.email when empty.
