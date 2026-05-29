@@ -472,7 +472,8 @@ $$('button').filter(b => /mark bad lead/i.test(b.textContent.trim())).forEach(b 
   b.__s1Wired = true;
   b.addEventListener('click', (ev) => {
     ev.preventDefault();
-    window.S1.modal.open('#jdMarkLostModal');
+    // Defect A2: open the dedicated bad-lead modal (was opening the lost modal).
+    window.S1.modal.open('#jdMarkBadModal');
   });
 });
 
@@ -521,19 +522,25 @@ function relabelStops() {
     if (cls[i]) tag.classList.add(cls[i]);
   });
 }
-$$('.gp2-stop-x').forEach(btn => {
-  btn.addEventListener('click', async (ev) => {
-    ev.preventDefault();
-    if (!window.confirm('Remove this stop?')) return;
-    const idEl = btn.closest('[data-record-id]');
-    const id   = idEl ? idEl.getAttribute('data-record-id') : null;
-    const stop = btn.closest('.gp2-stop');
-    await safe('Remove stop', async () => {
-      await comm.action('jobDetail.remove-stop', { id });
-      if (stop) stop.remove();
-      relabelStops();
-      flash('Stop removed');
-    });
+// Defect A4/A9: stop rows are now rendered from route.stops via a <template>
+// repeat, so the remove (✕) buttons are created after this script runs. Use a
+// delegated listener so dynamically-rendered buttons fire remove-stop with the
+// real JobLocation id (data-record-id="{{id}}").
+document.addEventListener('click', async (ev) => {
+  const btn = ev.target.closest && ev.target.closest('.gp2-stop-x');
+  if (!btn) return;
+  ev.preventDefault();
+  if (!window.confirm('Remove this stop?')) return;
+  const idEl = btn.closest('[data-record-id]');
+  const id   = idEl ? idEl.getAttribute('data-record-id') : null;
+  const stop = btn.closest('.gp2-stop');
+  if (!id) { flash('Cannot remove this stop (missing id)', 'bad'); return; }
+  await safe('Remove stop', async () => {
+    const r = await comm.action('jobDetail.remove-stop', { id });
+    if (r && r.ok === false) { flash(r.error || 'Remove failed', 'bad'); return; }
+    if (stop) stop.remove();
+    relabelStops();
+    flash('Stop removed');
   });
 });
 
@@ -776,6 +783,11 @@ document.addEventListener('click', (ev) => {
     ['#jdAddContactModal',      'jobDetail.add-contact',  {}],
     ['#jdVideoModal',           'job.video.request',      {}],
     ['#jdMarkLostModal',        'job.markLost',           {}],
+    ['#jdMarkBadModal',         'jobDetail.mark-bad-lead', { successMsg: 'Marked as bad lead' }],
+    ['#jdBookModal',            'jobDetail.book-lead', {
+      validate: function (p) { if (!p.scheduledDate) return 'Scheduled date is required'; return null; },
+      successMsg: 'Lead booked'
+    }],
     ['#jdAddDiscountModal',     'job.discount.add',       {}],
     ['#jdNteModal',             'job.nte.set',            {}],
     ['#jdJobDetailsModal',      'job.details.update',     {}],
@@ -787,10 +799,15 @@ document.addEventListener('click', (ev) => {
         var name = (p.customerName || '').trim();
         var sp = name.indexOf(' ');
         return {
-          firstName: sp === -1 ? name : name.slice(0, sp),
-          lastName:  sp === -1 ? ''   : name.slice(sp + 1).trim(),
-          phone:     p.primaryPhone || '',
-          email:     p.email || ''
+          firstName:        sp === -1 ? name : name.slice(0, sp),
+          lastName:         sp === -1 ? ''   : name.slice(sp + 1).trim(),
+          phone:            p.primaryPhone || '',
+          email:            p.email || '',
+          // C2: forward the rest of the modal so nothing is dropped.
+          secondaryPhone:   p.secondaryPhone || '',
+          preferredContact: p.preferredContact || '',
+          language:         p.language || '',
+          receivesMarketing: p.receivesMarketing ? 'true' : 'false'
         };
       },
       successMsg: 'Contact details saved'
@@ -827,6 +844,53 @@ document.addEventListener('click', (ev) => {
       onSuccess: () => { try { (window.S1.fixtures||{}).jobDetail && window.S1.render.bind(document, window.S1.fixtures.jobDetail); } catch {} }
     }, extra || {});
     window.S1.modal.bindForm(sel, rpc, opts);
+  });
+})();
+
+// B1: charge the customer's saved card on file (Stripe) from the payment modal.
+(function () {
+  var btn = document.getElementById('jdChargeCardBtn');
+  if (!btn) return;
+  btn.addEventListener('click', async function (ev) {
+    ev.preventDefault();
+    var modal = btn.closest('.jd-overlay');
+    var amtEl = modal && modal.querySelector('[name="amount"]');
+    var notesEl = modal && modal.querySelector('[name="notes"]');
+    var amount = amtEl ? amtEl.value : '';
+    if (!(Number(amount) > 0)) { flash('Enter an amount first', 'bad'); return; }
+    await safe('Charge card', async function () {
+      var r = await comm.action('jobDetail.charge-customer', {
+        amount: amount,
+        description: (notesEl && notesEl.value) || 'Job payment'
+      });
+      if (r && r.ok === false) { flash(r.error || 'Charge failed', 'bad'); return; }
+      flash('Card charged');
+      try { window.S1.modal.close ? window.S1.modal.close('#jdPaymentModal') : (window.jdCloseModal && window.jdCloseModal('jdPaymentModal')); } catch (_) {}
+    });
+  });
+})();
+
+// Defects A15/A16: stop spurious unhandled RPCs and wire/disable dead buttons.
+(function () {
+  var all = function (s) { return Array.from(document.querySelectorAll(s)); };
+  // A16: composer tabs + follow-up presets are driven by inline scripts; their
+  // data-comm-action keys have no dispatcher case and fire a no-op RPC per click.
+  all('.cmx-tab[data-comm-action], .jd-fu-preset[data-comm-action]').forEach(function (b) {
+    b.removeAttribute('data-comm-action');
+  });
+  // A15: dead buttons with no backend (+ New deal, Save Template) — drop the
+  // attribute so they no longer fire an unhandled RPC, and mark wired so the
+  // generic fallback skips them.
+  all('[data-comm-action="action:jobDetail.new-deal"], [data-comm-action="action:jobDetail.save-template"]').forEach(function (b) {
+    b.removeAttribute('data-comm-action');
+    b.__s1Wired = true;
+  });
+  // A15: every "Record Video" button (incl. the duplicate that previously no-op'd)
+  // opens the video modal.
+  all('[data-comm-action="action:jobDetail.record-video"]').forEach(function (b) {
+    b.removeAttribute('data-comm-action');
+    b.__s1Wired = true;
+    b.addEventListener('click', function (ev) { ev.preventDefault(); try { window.S1.modal.open('#jdVideoModal'); } catch (_) {} });
   });
 })();
 
@@ -1243,12 +1307,78 @@ document.addEventListener('click', function (ev) {
       ta.dispatchEvent(new Event('input', { bubbles: true }));
     }
   }
+  // Defect A17: the old buttons inserted a hard-coded {{customer.firstName}} /
+  // {{company.logo}} literal — the wrong syntax (the send engine substitutes
+  // @-prefixed tokens, not {{…}}) and only one token. Restore a real picker over
+  // the TemplateVariables catalog that inserts the engine's @-token.
   var TOKENS = {
-    'insert-variable':  '{{customer.firstName}}',
-    'insert-logo':      '{{company.logo}}',
     'tag-note':         '#',
     'mention-teammate': '@'
   };
+  // Insert Logo: matches the old JobDetail insertCompanyLogo() — drop a real
+  // <img> of the company logo into the active rich editor. The logo URL comes
+  // from state (BuildS1State → companyLogoUrl, sourced from CompanySettings.LogoUrl).
+  function insertCompanyLogo() {
+    var fx = (window.S1.fixtures || {}).jobDetail || {};
+    var url = fx.companyLogoUrl;
+    if (!url) { flash('No company logo configured', 'bad'); return; }
+    var role = activeRole();
+    if (!role) return;
+    var img = '<img src="' + String(url).replace(/"/g, '&quot;') + '" alt="Company Logo" style="height:50px;width:auto;display:block;margin:8px 0">';
+    if (window.__jobDetailEditors) window.__jobDetailEditors.insertHTML(role, img);
+  }
+  var _varCatalog = null;
+  async function loadVarCatalog() {
+    if (_varCatalog) return _varCatalog;
+    try {
+      var r = await comm.action('jobDetail.template-variables', {});
+      _varCatalog = Array.isArray(r) ? r : ((r && r.variables) || []);
+    } catch (_) { _varCatalog = []; }
+    return _varCatalog;
+  }
+  function closeVarPicker() {
+    var ex = document.getElementById('jdVarPicker');
+    if (ex && ex.parentNode) ex.parentNode.removeChild(ex);
+  }
+  async function openVarPicker(btn) {
+    closeVarPicker();
+    var list = await loadVarCatalog();
+    var menu = document.createElement('div');
+    menu.id = 'jdVarPicker';
+    menu.style.cssText = 'position:absolute;z-index:9999;max-height:300px;overflow:auto;background:var(--surface,#fff);color:var(--ink,#111);border:1px solid var(--hair,#ddd);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.18);min-width:260px;padding:6px;';
+    if (!list.length) {
+      var em = document.createElement('div');
+      em.textContent = 'No variables available';
+      em.style.cssText = 'padding:8px;color:#888;font-size:12px;';
+      menu.appendChild(em);
+    }
+    list.forEach(function (v) {
+      var item = document.createElement('button');
+      item.type = 'button';
+      item.style.cssText = 'display:block;width:100%;text-align:left;border:0;background:transparent;padding:6px 8px;cursor:pointer;font-size:12.5px;border-radius:6px;';
+      item.addEventListener('mouseenter', function () { item.style.background = 'rgba(0,0,0,.06)'; });
+      item.addEventListener('mouseleave', function () { item.style.background = 'transparent'; });
+      var nm = document.createElement('span'); nm.textContent = v.name || ''; nm.style.fontWeight = '600';
+      var ds = document.createElement('span'); ds.textContent = '  ' + (v.preview || v.description || ''); ds.style.color = '#888';
+      item.appendChild(nm); item.appendChild(ds);
+      item.addEventListener('click', function (e) {
+        e.preventDefault(); e.stopPropagation();
+        insertIntoActive(v.name || '');
+        closeVarPicker();
+      });
+      menu.appendChild(item);
+    });
+    document.body.appendChild(menu);
+    var rect = btn.getBoundingClientRect();
+    menu.style.left = (window.scrollX + rect.left) + 'px';
+    menu.style.top  = (window.scrollY + rect.bottom + 4) + 'px';
+  }
+  // Dismiss the picker on outside click.
+  document.addEventListener('click', function (ev) {
+    if (ev.target.closest && (ev.target.closest('#jdVarPicker') ||
+        ev.target.closest('[data-jd-editor-intent="insert-variable"]'))) return;
+    closeVarPicker();
+  });
   document.addEventListener('click', function (ev) {
     var btn = ev.target.closest && ev.target.closest('[data-jd-editor-intent]');
     if (!btn) return;
@@ -1260,6 +1390,8 @@ document.addEventListener('click', function (ev) {
       flash('Note cleared');
       return;
     }
+    if (intent === 'insert-variable') { openVarPicker(btn); return; }
+    if (intent === 'insert-logo') { insertCompanyLogo(); return; }
     if (TOKENS[intent] != null) insertIntoActive(TOKENS[intent]);
   }, true);
 })();

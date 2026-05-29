@@ -2149,46 +2149,31 @@ select.gp2-input {
               <button class="s-action" type="button" data-jd-open="addStopModal">+ Add stop</button>
             </div>
 
-            <div class="gp2-stop">
-              <span class="gp2-stop-tag a">A</span>
-              <div class="gp2-stop-body" data-record-id="origin">
-                <div class="gp2-stop-top">
-                  <div>
-                    <div class="gp2-stop-kind">Pickup</div>
-                    <div class="gp2-stop-addr" data-bind-text="route.origin.cityAddr">Toronto · 142 King St W</div>
+            <!-- Defects A4/A8/A9: repeat over every stop (real JobLocation id for
+                 the remove action, street address, and any 3rd+ stop). -->
+            <div data-bind="route.stops" style="display:contents;">
+              <template>
+                <div class="gp2-stop">
+                  <span class="gp2-stop-tag">{{tag}}</span>
+                  <div class="gp2-stop-body" data-record-id="{{id}}">
+                    <div class="gp2-stop-top">
+                      <div>
+                        <div class="gp2-stop-kind">{{heading}}</div>
+                        <div class="gp2-stop-addr">{{addrShort}}</div>
+                      </div>
+                      <button class="gp2-stop-x" title="Remove stop">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+                      </button>
+                    </div>
+                    <div class="gp2-attrs">
+                      <span class="gp2-attr"><span class="gp2-attr-l">Elevator</span><span class="gp2-attr-v muted">{{access.elevator}}</span></span>
+                      <span class="gp2-attr"><span class="gp2-attr-l">Floor</span><span class="gp2-attr-v muted">{{access.floor}}</span></span>
+                      <span class="gp2-attr"><span class="gp2-attr-l">Long walk</span><span class="gp2-attr-v muted">{{access.longWalk}}</span></span>
+                      <span class="gp2-attr"><span class="gp2-attr-l">Stairs</span><span class="gp2-attr-v muted">{{access.stairs}}</span></span>
+                    </div>
                   </div>
-                  <button class="gp2-stop-x" title="Remove stop">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
-                  </button>
                 </div>
-                <div class="gp2-attrs">
-                  <span class="gp2-attr"><span class="gp2-attr-l">Elevator</span><span class="gp2-attr-v muted" data-bind-text="route.origin.access.elevator">—</span></span>
-                  <span class="gp2-attr"><span class="gp2-attr-l">Floor</span><span class="gp2-attr-v muted" data-bind-text="route.origin.access.floor">—</span></span>
-                  <span class="gp2-attr"><span class="gp2-attr-l">Long walk</span><span class="gp2-attr-v muted" data-bind-text="route.origin.access.longWalk">No</span></span>
-                  <span class="gp2-attr"><span class="gp2-attr-l">Stairs</span><span class="gp2-attr-v muted" data-bind-text="route.origin.access.stairs">—</span></span>
-                </div>
-              </div>
-            </div>
-
-            <div class="gp2-stop">
-              <span class="gp2-stop-tag b">B</span>
-              <div class="gp2-stop-body" data-record-id="destination">
-                <div class="gp2-stop-top">
-                  <div>
-                    <div class="gp2-stop-kind">Delivery</div>
-                    <div class="gp2-stop-addr" data-bind-text="route.destination.cityAddr">Hamilton · 88 James St N</div>
-                  </div>
-                  <button class="gp2-stop-x" title="Remove stop">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
-                  </button>
-                </div>
-                <div class="gp2-attrs">
-                  <span class="gp2-attr"><span class="gp2-attr-l">Elevator</span><span class="gp2-attr-v muted" data-bind-text="route.destination.access.elevator">—</span></span>
-                  <span class="gp2-attr"><span class="gp2-attr-l">Floor</span><span class="gp2-attr-v muted" data-bind-text="route.destination.access.floor">—</span></span>
-                  <span class="gp2-attr"><span class="gp2-attr-l">Long walk</span><span class="gp2-attr-v muted" data-bind-text="route.destination.access.longWalk">No</span></span>
-                  <span class="gp2-attr"><span class="gp2-attr-l">Stairs</span><span class="gp2-attr-v muted" data-bind-text="route.destination.access.stairs">—</span></span>
-                </div>
-              </div>
+              </template>
             </div>
 
             <!-- Route metrics -->
@@ -2377,16 +2362,16 @@ select.gp2-input {
               </table>
 
               <div class="jd-section-title" style="margin-top:18px;">Final checks</div>
-              <label class="jd-check"><input type="checkbox" checked> <span data-bind-text="finalize.photosCheck">All photos uploaded (12 of 12)</span></label>
-              <label class="jd-check"><input name="allPhotosUploaded" type="checkbox" checked> Customer signed bill of lading</label>
-              <label class="jd-check"><input name="customerSignedBillOfLading" type="checkbox" checked> Final walk-through completed</label>
-              <label class="jd-check"><input name="finalWalkThroughCompleted" type="checkbox" checked> No damage claim filed</label>
-              <label class="jd-check"><input name="noDamageClaimFiled" type="checkbox"> Trigger review request email (24h delay)</label>
-              <label class="jd-check"><input name="triggerReviewRequestEmail" type="checkbox" checked> Post invoice to QuickBooks</label>
-              <label class="jd-check"><input name="postInvoiceToQuickbooks" type="checkbox" checked> Send customer their PDF receipt</label>
+              <label class="jd-check"><input name="allPhotosUploaded" type="checkbox" checked> <span data-bind-text="finalize.photosCheck">All photos uploaded (12 of 12)</span></label>
+              <label class="jd-check"><input name="customerSignedBillOfLading" type="checkbox" checked> Customer signed bill of lading</label>
+              <label class="jd-check"><input name="finalWalkThroughCompleted" type="checkbox" checked> Final walk-through completed</label>
+              <label class="jd-check"><input name="noDamageClaimFiled" type="checkbox"> No damage claim filed</label>
+              <label class="jd-check"><input name="triggerReviewRequestEmail" type="checkbox" checked> Trigger review request email (24h delay)</label>
+              <label class="jd-check"><input name="postInvoiceToQuickbooks" type="checkbox" checked> Post invoice to QuickBooks</label>
+              <label class="jd-check"><input name="sendCustomerTheirPdfReceipt" type="checkbox" checked> Send customer their PDF receipt</label>
 
               <div class="jd-section-title" style="margin-top:18px;">Internal notes</div>
-              <textarea name="sendCustomerTheirPdfReceipt" class="jd-textarea" placeholder="Anything ops should know about this completed job…"></textarea>
+              <textarea name="notes" class="jd-textarea" placeholder="Anything ops should know about this completed job…"></textarea>
             </div>
             <div class="jd-modal-actions">
               <button data-modal-close class="btn btn-secondary">Cancel</button>
@@ -2535,7 +2520,7 @@ select.gp2-input {
 
         <!-- Job actions -->
         <section class="card actions-card">
-          <button type="button" class="btn btn-primary">
+          <button type="button" class="btn btn-primary" data-jd-open="jdBookModal">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
             Book this lead
           </button>
@@ -2838,6 +2823,7 @@ select.gp2-input {
     </div>
     <div class="jd-modal-actions">
       <button data-modal-close class="btn btn-secondary">Cancel</button>
+      <button type="button" id="jdChargeCardBtn" class="btn btn-secondary" title="Charge the customer's saved card via Stripe">Charge card on file</button>
       <button data-modal-save class="btn btn-primary">Record Payment</button>
     </div>
   </div>
@@ -3006,13 +2992,44 @@ select.gp2-input {
     <div class="jd-modal-head"><div class="jd-modal-title">Mark as Lost</div><button class="jd-modal-close" onclick="jdCloseModal('jdMarkLostModal')">✕</button></div>
     <div class="jd-modal-body">
       <div class="jd-field"><label class="jd-label">Reason for losing this deal</label>
-        <select name="reasonForLosingThisDeal" class="jd-select" data-bind-options="reasonForLosingThisDealOptions"><option value="Select a reason…">Select a reason…</option></select>
+        <select name="reasonForLosingThisDeal" class="jd-select" data-bind-options="reasonForLosingThisDealOptions"><option value="">Select a reason…</option></select>
       </div>
       <div class="jd-field"><label class="jd-label">Notes (optional)</label><textarea name="notes" class="jd-textarea" placeholder="Anything we should remember about this one…"></textarea></div>
     </div>
     <div class="jd-modal-foot">
       <button data-modal-close class="btn btn-secondary" onclick="jdCloseModal('jdMarkLostModal')">Cancel</button>
-      <button class="btn btn-danger" style="background:#DC2626;color:#fff;border:0;" onclick="jdCloseModal('jdMarkLostModal')">Mark as Lost</button>
+      <button data-modal-save class="btn btn-danger" style="background:#DC2626;color:#fff;border:0;" onclick="jdCloseModal('jdMarkLostModal')">Mark as Lost</button>
+    </div>
+  </div>
+</div>
+
+<!-- Book this lead Modal (C1: was a dead button defaulting to +7 days) -->
+<div class="jd-overlay" id="jdBookModal">
+  <div class="jd-modal" style="width:420px;">
+    <div class="jd-modal-head"><div class="jd-modal-title">Book this lead</div><button class="jd-modal-close" onclick="jdCloseModal('jdBookModal')">✕</button></div>
+    <div class="jd-modal-body">
+      <p style="color:var(--ink-3);font-size:13px;margin:0 0 12px;">Converts the quote request into a scheduled booking.</p>
+      <div class="jd-field"><label class="jd-label">Scheduled date <span class="req">*</span></label><input name="scheduledDate" class="jd-input" type="date"></div>
+      <div class="jd-field"><label class="jd-label">Start time (optional)</label><input name="scheduledTime" class="jd-input" type="time"></div>
+    </div>
+    <div class="jd-modal-foot">
+      <button data-modal-close class="btn btn-secondary" onclick="jdCloseModal('jdBookModal')">Cancel</button>
+      <button data-modal-save class="btn btn-primary" onclick="jdCloseModal('jdBookModal')">Book</button>
+    </div>
+  </div>
+</div>
+
+<!-- Mark Bad Lead Modal (defect A2: was opening the lost modal) -->
+<div class="jd-overlay" id="jdMarkBadModal">
+  <div class="jd-modal" style="width:440px;">
+    <div class="jd-modal-head"><div class="jd-modal-title">Mark as Bad Lead</div><button class="jd-modal-close" onclick="jdCloseModal('jdMarkBadModal')">✕</button></div>
+    <div class="jd-modal-body">
+      <p style="color:var(--ink-3);font-size:13px;margin:0 0 12px;">Marks this customer as a bad lead so they're excluded from future outreach.</p>
+      <div class="jd-field"><label class="jd-label">Reason (optional)</label><textarea name="reason" class="jd-textarea" placeholder="Why is this a bad lead…"></textarea></div>
+    </div>
+    <div class="jd-modal-foot">
+      <button data-modal-close class="btn btn-secondary" onclick="jdCloseModal('jdMarkBadModal')">Cancel</button>
+      <button data-modal-save class="btn btn-danger" style="background:#DC2626;color:#fff;border:0;" onclick="jdCloseModal('jdMarkBadModal')">Mark as Bad Lead</button>
     </div>
   </div>
 </div>
@@ -3141,7 +3158,7 @@ select.gp2-input {
         <div class="jd-field" style="grid-column:1/-1;"><label class="jd-label">Email</label><input name="email" class="jd-input" type="email" data-bind-value="customer.email" value="alice@techstartup.com"></div>
         <div class="jd-field"><label class="jd-label">Preferred contact</label><select name="preferredContact" class="jd-select" data-bind-options="preferredContactOptions"></select></div>
         <div class="jd-field"><label class="jd-label">Language</label><select name="language" class="jd-select" data-bind-options="languageOptions"></select></div>
-        <div class="jd-field" style="grid-column:1/-1;"><label style="display:flex;align-items:center;gap:8px;font-size:12.5px;cursor:pointer;"><input name="language" type="checkbox" checked style="accent-color:var(--terra);"> Receives marketing emails</label></div>
+        <div class="jd-field" style="grid-column:1/-1;"><label style="display:flex;align-items:center;gap:8px;font-size:12.5px;cursor:pointer;"><input name="receivesMarketing" type="checkbox" checked style="accent-color:var(--terra);"> Receives marketing emails</label></div>
       </div>
     </div>
     <div class="jd-modal-foot">
