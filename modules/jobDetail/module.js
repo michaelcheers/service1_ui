@@ -522,6 +522,18 @@ function relabelStops() {
     if (cls[i]) tag.classList.add(cls[i]);
   });
 }
+// The origin/destination stops used to be hardcoded `class="gp2-stop-tag a"` /
+// `class="gp2-stop-tag b"` in markup; they got templated out into the
+// route.stops <template> repeat, which only renders the letter as text and
+// leaves no class for the .gp2-stop-tag.a / .b color rules to match. Run the
+// existing relabelStops() on the same lifecycle hooks renderQuickCharges
+// uses so the A/B (and any subsequent) tags pick up their colors on initial
+// paint and on every state refresh, not just after a remove.
+document.addEventListener('s1ui:ready', relabelStops);
+if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
+  window.S1.bus.on('state:replaced', relabelStops);
+}
+relabelStops();
 // Defect A4/A9: stop rows are now rendered from route.stops via a <template>
 // repeat, so the remove (✕) buttons are created after this script runs. Use a
 // delegated listener so dynamically-rendered buttons fire remove-stop with the
