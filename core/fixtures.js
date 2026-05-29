@@ -1615,7 +1615,17 @@
         {
           label: "Wed · Jan 7, 2026",
           items: [
-            { kind: "mail", kindLabel: "Email sent", arrow: "→", by: "Discovery call confirmation", body: "Your move with Service1 — Jan 12 7:00 AM", time: "2:20 PM" },
+            { kind: "mail", kindLabel: "Email sent", arrow: "→", by: "Discovery call confirmation",
+              html:
+                '<p>Hi Alice,</p>' +
+                '<p>Confirming your move with <b>Service1</b> on <b>Jan 12 at 7:00 AM</b>. ' +
+                'Two movers, one truck — we will text 30 minutes before arrival.</p>' +
+                '<p>Attached:<br>' +
+                '<a href="#">Growth Plan #17826-1.pdf</a><br>' +
+                '<a href="#">Move-day checklist.pdf</a></p>' +
+                '<p>Reply to this email with any questions.</p>' +
+                '<p style="color:#64748b;font-size:12px;">— John Sales, Service1</p>',
+              time: "2:20 PM" },
             { kind: "note", kindLabel: "Note",      arrow: "",  by: "John Sales",                   body: "Referred by Tim Walsh (job #16204). 3-bedroom downtown apartment.", time: "11:02 AM" }
           ]
         }

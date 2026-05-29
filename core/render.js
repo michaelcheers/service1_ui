@@ -186,9 +186,25 @@
       if (node.nodeType === 3) {
         var t = node.nodeValue;
         if (t && t.indexOf('{{') !== -1) {
-          node.nodeValue = t.replace(PLACEHOLDER, function (_, key, fmt) {
-            return format(get(item, key), fmt);
-          });
+          var only = t.match(/^\s*\{\{\s*([^}|\s]+)\s*\|\s*html\s*\}\}\s*$/);
+          if (only) {
+            var hv = get(item, only[1]);
+            if (hv == null || hv === '') {
+              node.nodeValue = '';
+            } else {
+              var markup = buildHtmlSrcdocIframe(String(hv));
+              var holder = document.createElement('div');
+              holder.innerHTML = markup;
+              var ifr = holder.firstChild;
+              node.parentNode.replaceChild(ifr, node);
+              walker.currentNode = ifr;
+              node = ifr;
+            }
+          } else {
+            node.nodeValue = t.replace(PLACEHOLDER, function (_, key, fmt) {
+              return format(get(item, key), fmt);
+            });
+          }
         }
       } else if (node.nodeType === 1) {
         var attrs = node.attributes;

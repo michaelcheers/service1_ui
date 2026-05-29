@@ -706,6 +706,22 @@ iframe.cmx-editor-frame { width: 100%; min-height: 160px; border: 0; display: bl
   line-height: 1.5;
   text-wrap: pretty;
 }
+.tl-item:not(.tl-mail) .tl-text-mail { display: none; }
+.tl-mail .tl-text-text { display: none; }
+.tl-mail .tl-text-mail {
+  display: block;
+  border: 1px solid var(--line, #e5e7eb);
+  border-radius: 6px;
+  background: #fff;
+  overflow: hidden;
+}
+.tl-text-mail .s1-html-frame {
+  width: 100%;
+  border: 0;
+  display: block;
+  min-height: 60px;
+  background: #fff;
+}
 .tl-meta {
   margin-top: 6px;
   display: flex; gap: 12px; flex-wrap: wrap;
@@ -2070,7 +2086,8 @@ select.gp2-input {
                           <span class="tl-arrow">{{arrow}}</span>
                           <span class="tl-by">{{by}}</span>
                         </div>
-                        <div class="tl-text">{{body}}</div>
+                        <div class="tl-text tl-text-text">{{body}}</div>
+                        <div class="tl-text tl-text-mail">{{html|html}}</div>
                       </div>
                       <div class="tl-time">{{time}}</div>
                     </div>

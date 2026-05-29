@@ -344,7 +344,7 @@ if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
 $$('.timeline-head .filter-chip').forEach((chip, i) => {
   chip.addEventListener('click', () => {
     $$('.timeline-head .filter-chip').forEach(c => c.classList.toggle('active', c === chip));
-    const kind = ['all','call','sms','email','note'][i] || 'all';
+    const kind = ['all','call','sms','mail','note'][i] || 'all';
     $$('.tab-pane[data-pane="communication"] .tl-item, .tab-pane[data-pane="communication"] .tl-row').forEach(row => {
       if (kind === 'all') { row.style.display = ''; return; }
       row.style.display = row.className.toLowerCase().includes(kind) ? '' : 'none';
