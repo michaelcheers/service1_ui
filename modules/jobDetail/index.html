@@ -2206,32 +2206,13 @@ select.gp2-input {
               </div>
               <div class="gp2-empty-title">No charges added yet</div>
               <div class="gp2-empty-sub">Pick a category to start, or add a custom charge.</div>
-              <div class="gp2-quick-add">
-                <button data-comm-action="action:jobDetail.labor" class="gp2-quick">
-                  <span class="gp2-quick-ic" style="background:var(--terra-soft);color:var(--terra);">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/></svg>
-                  </span>
-                  Labor
+              <div class="gp2-quick-add" data-quick-host></div>
+              <template data-quick-template>
+                <button type="button" class="gp2-quick">
+                  <span class="gp2-quick-ic" data-quick-icon></span>
+                  <span data-quick-label></span>
                 </button>
-                <button data-comm-action="action:jobDetail.travel" class="gp2-quick">
-                  <span class="gp2-quick-ic" style="background:var(--info-bg);color:var(--info);">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M12 3v18"/></svg>
-                  </span>
-                  Travel
-                </button>
-                <button data-comm-action="action:jobDetail.packing" class="gp2-quick">
-                  <span class="gp2-quick-ic" style="background:var(--warn-bg);color:var(--warn);">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-                  </span>
-                  Packing
-                </button>
-                <button data-comm-action="action:jobDetail.specialty" class="gp2-quick">
-                  <span class="gp2-quick-ic" style="background:#F1E8DD;color:#8B6324;">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                  </span>
-                  Specialty
-                </button>
-              </div>
+              </template>
             </div>
           </section>
 

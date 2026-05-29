@@ -553,24 +553,54 @@ $$('button').filter(b => /^\+\s*add line$/i.test(b.textContent.trim())).forEach(
   b.addEventListener('click', addCharge);
 });
 
-$$('.gp2-quick').forEach((b, i) => {
-  const presets = [
-    { chargeType: 'Labor',     itemName: 'Labor',     rate: 120, quantity: 1 },
-    { chargeType: 'Materials', itemName: 'Materials', rate:  40, quantity: 1 },
-    { chargeType: 'Fuel',      itemName: 'Fuel',      rate:  25, quantity: 1 },
-    { chargeType: 'Discount',  itemName: 'Discount',  rate: -50, quantity: 1 }
-  ];
-  const preset = presets[i] || presets[0];
-  b.setAttribute('data-comm-action', 'action:jobDetail.add-quick-charge:');
-  b.__s1Wired = true;
-  b.addEventListener('click', async (ev) => {
-    ev.preventDefault();
-    await safe('Quick charge', async () => {
-      await comm.action('jobDetail.add-quick-charge', preset);
-      flash('Added ' + preset.chargeType);
+function renderQuickCharges() {
+  const host = $('[data-quick-host]');
+  const tmpl = $('[data-quick-template]');
+  if (!host || !tmpl) return;
+  const state = (window.S1.fixtures || {}).jobDetail || {};
+  const presets = Array.isArray(state.chargePresets) ? state.chargePresets : [];
+  const PALETTE = {
+    Labor:     { bg: 'var(--terra-soft)', fg: 'var(--terra)' },
+    Travel:    { bg: 'var(--info-bg)',    fg: 'var(--info)' },
+    Packing:   { bg: 'var(--warn-bg)',    fg: 'var(--warn)' },
+    Specialty: { bg: '#F1E8DD',           fg: '#8B6324' }
+  };
+  while (host.firstChild) host.removeChild(host.firstChild);
+  presets.forEach(p => {
+    const node = tmpl.content.firstElementChild.cloneNode(true);
+    const label = node.querySelector('[data-quick-label]');
+    if (label) label.textContent = p.name || p.chargeType || 'Charge';
+    const ic = node.querySelector('[data-quick-icon]');
+    const c  = PALETTE[p.name] || PALETTE[p.chargeType] || { bg: 'var(--surface-2)', fg: 'var(--ink-2)' };
+    if (ic) { ic.style.background = c.bg; ic.style.color = c.fg; ic.textContent = (p.name || p.chargeType || '?').charAt(0); }
+    if (p.id != null) node.setAttribute('data-preset-id', String(p.id));
+    node.setAttribute('data-preset-name',       p.name || '');
+    node.setAttribute('data-preset-chargetype', p.chargeType || p.name || '');
+    node.setAttribute('data-preset-rate',       String(p.defaultRate != null ? p.defaultRate : 0));
+    node.setAttribute('data-preset-qty',        String(p.defaultQty  != null ? p.defaultQty  : 1));
+    node.__s1Wired = true;
+    node.addEventListener('click', async (ev) => {
+      ev.preventDefault();
+      const pid = node.getAttribute('data-preset-id');
+      const payload = pid
+        ? { presetId: Number(pid) }
+        : { chargeType: node.getAttribute('data-preset-chargetype'),
+            itemName:   node.getAttribute('data-preset-name'),
+            rate:       parseFloat(node.getAttribute('data-preset-rate')),
+            quantity:   parseFloat(node.getAttribute('data-preset-qty')) };
+      await safe('Quick charge', async () => {
+        await comm.action('jobDetail.add-quick-charge', payload);
+        flash('Added ' + (node.getAttribute('data-preset-name') || 'charge'));
+      });
     });
+    host.appendChild(node);
   });
-});
+}
+document.addEventListener('s1ui:ready', renderQuickCharges);
+if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
+  window.S1.bus.on('state:replaced', renderQuickCharges);
+}
+renderQuickCharges();
 
 $$('.gp-row-x').forEach(btn => {
   btn.addEventListener('click', async (ev) => {
