@@ -1575,6 +1575,11 @@ document.addEventListener('click', async function (ev) {
     } else if (bucket === 'callText') {
       setVal('[data-bind-value="composer.call.followUpTextTemplateId"]', id);
     }
+    // Close the popover after a pick. (The duplicate inline handler in
+    // index.html that used to do this was removed because it also called
+    // stopPropagation and prevented this handler from ever running.)
+    var openPop = wrap.querySelector('.cmx-pop');
+    if (openPop) openPop.classList.remove('open');
   });
   // Search input filters visible items by case-insensitive name match.
   document.addEventListener('input', function (ev) {

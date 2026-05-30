@@ -3539,7 +3539,13 @@ select.gp2-input {
       const pop = document.getElementById(popId);
       if (!pop) return;
       wrap.addEventListener('click', (e) => {
-        e.stopPropagation();
+        // If the click is inside the popover itself (an item, the search box,
+        // the header link, etc.), let the document-level handlers process it
+        // — don't toggle open/closed here, and don't stopPropagation. The old
+        // code called stopPropagation unconditionally, which killed bubbling to
+        // the template-picker delegate in module.js:1531 so item clicks never
+        // filled the composer (they only appeared to "blink" the popover).
+        if (e.target.closest('.cmx-pop')) return;
         document.querySelectorAll('.cmx-pop.open').forEach(p => { if (p !== pop) p.classList.remove('open'); });
         pop.classList.toggle('open');
       });
@@ -3549,14 +3555,12 @@ select.gp2-input {
         document.querySelectorAll('.cmx-pop.open').forEach(p => p.classList.remove('open'));
       }
     });
-    document.querySelectorAll('.cmx-pop-item').forEach(item => {
-      item.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const pop = item.closest('.cmx-pop');
-        pop?.querySelectorAll('.cmx-pop-item').forEach(x => x.classList.toggle('selected', x === item));
-        pop?.classList.remove('open');
-      });
-    });
+    // The per-item click handler that used to live here only attached at page
+    // load time, so it covered the static "None" items but not the
+    // dynamically-rendered template rows. It also called stopPropagation, which
+    // again killed module.js:1531's delegated picker. The module.js handler now
+    // owns selection (marking .selected) and closes the popover itself, so this
+    // duplicate inline handler is removed entirely.
 
   })();
 
