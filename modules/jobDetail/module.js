@@ -1553,7 +1553,19 @@ document.addEventListener('click', async function (ev) {
     }
     if (bucket === 'email') {
       setVal('[data-bind-value="composer.email.subject"]', rec ? (rec.subject || '') : '');
-      setVal('[data-bind-value="composer.email.body"]',    rec ? (rec.body || '')    : '');
+      // composer.email.body is the cross-origin rich-text iframe (src=editor.service1.app),
+      // not an <input>/<textarea>. setVal would fall through to `iframe.textContent =`
+      // which silently no-ops on iframes — so clicking a template appeared to do
+      // nothing for the body. Route through the EditorBridge's public API instead,
+      // which posts a `set-content` message the editor knows how to render. Send
+      // already reads from this same bridge via window.__jobDetailEditors.get('email'),
+      // so the new body persists through the Send payload too.
+      var bodyHtml = rec ? (rec.body || '') : '';
+      if (window.__jobDetailEditors && typeof window.__jobDetailEditors.setContent === 'function') {
+        window.__jobDetailEditors.setContent('email', bodyHtml);
+      } else {
+        setVal('[data-bind-value="composer.email.body"]', bodyHtml);
+      }
       setVal('[data-bind-value="composer.email.templateId"]', id);
     } else if (bucket === 'text') {
       setVal('[data-bind-value="composer.text.body"]',     rec ? (rec.body || '')    : '');
