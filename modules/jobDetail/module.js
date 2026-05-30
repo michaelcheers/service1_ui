@@ -85,142 +85,10 @@ $$('.tab[data-tab]').forEach(btn => {
   });
 });
 
-// ── 2) Composer tabs (SMS / Email / Note / Log call) ────────────────────
-let composerMode = 'sms';
-const composerTabs = $$('.composer-tabs .composer-tab');
-const composerPlaceholders = {
-  sms:   'Reply by SMS…',
-  email: 'Reply by email — type subject on the next line',
-  note:  'Add an internal note…',
-  call:  'Log a phone call with notes…'
-};
-const composerKey = ['sms', 'email', 'note', 'call'];
-composerTabs.forEach((b, i) => {
-  b.addEventListener('click', () => {
-    composerTabs.forEach(x => x.classList.toggle('active', x === b));
-    composerMode = composerKey[i] || 'sms';
-    const ta = $('.composer textarea[name="message"]');
-    if (ta) ta.placeholder = composerPlaceholders[composerMode];
-    const counter = $('.composer-foot .right .muted');
-    if (counter) counter.textContent = composerMode === 'sms' ? '0/160' : '0';
-  });
-});
-
-// Live char-count + ⌘↵ to send
-(function () {
-  const ta = $('.composer textarea[name="message"]');
-  const counter = $('.composer-foot .right .muted');
-  if (!ta) return;
-  ta.addEventListener('input', () => {
-    if (!counter) return;
-    counter.textContent = composerMode === 'sms' ? (ta.value.length + '/160') : String(ta.value.length);
-  });
-  ta.addEventListener('keydown', (ev) => {
-    if ((ev.metaKey || ev.ctrlKey) && ev.key === 'Enter') {
-      ev.preventDefault();
-      const send = $('.composer .btn-primary');
-      if (send) send.click();
-    }
-  });
-})();
-
-// ── 3) Send button ──────────────────────────────────────────────────────
-(function () {
-  const send = $('.composer .btn-primary');
-  if (!send) return;
-  send.setAttribute('data-comm-action', 'action:jobDetail.send:');
-  send.__s1Wired = true;
-  send.addEventListener('click', async (ev) => {
-    ev.preventDefault();
-    const ta = $('.composer textarea[name="message"]');
-    const body = (ta && ta.value || '').trim();
-    if (!body) { flash('Type something first.', 'bad'); return; }
-    await safe('Send', async () => {
-      const tplKey = composerMode === 'email' ? 'composer.email.templateId'
-                   : composerMode === 'sms'   ? 'composer.text.templateId' : null;
-      const tplEl  = tplKey ? document.querySelector('[data-bind-value="' + tplKey + '"]') : null;
-      const tplId  = (tplEl && tplEl.value) || '';
-      const subjEl = composerMode === 'email' ? document.querySelector('[data-bind-value="composer.email.subject"]') : null;
-      const subject = (subjEl && subjEl.value) || '';
-      const r = await comm.action('jobDetail.send', { composer: composerMode, message: body, templateId: tplId, subject: subject });
-      if (r && r.ok) {
-        if (ta) ta.value = '';
-        const counter = $('.composer-foot .right .muted');
-        if (counter) counter.textContent = composerMode === 'sms' ? '0/160' : '0';
-        flash('Sent ' + composerMode.toUpperCase());
-      }
-    });
-  });
-})();
-
-// ── 4) Save draft ───────────────────────────────────────────────────────
-(function () {
-  const draft = $$('.composer .btn-secondary').find(b => /save draft/i.test(b.textContent));
-  if (!draft) return;
-  draft.setAttribute('data-comm-action', 'action:jobDetail.save-draft:');
-  draft.__s1Wired = true;
-  draft.addEventListener('click', async (ev) => {
-    ev.preventDefault();
-    const ta = $('.composer textarea[name="message"]');
-    const body = ta && ta.value || '';
-    await safe('Save draft', async () => {
-      await comm.action('jobDetail.save-draft', { composer: composerMode, message: body });
-      flash('Draft saved');
-    });
-  });
-})();
-
-// ── 5) Attach icon-btn → file picker → comm.upload ──────────────────────
-(function () {
-  const attach = $$('.composer-foot .icon-btn[title="Attach"]')[0];
-  if (!attach) return;
-  let fileInput = $('#jd-attach-input');
-  if (!fileInput) {
-    fileInput = document.createElement('input');
-    fileInput.id = 'jd-attach-input';
-    fileInput.type = 'file';
-    fileInput.multiple = true;
-    fileInput.style.display = 'none';
-    document.body.appendChild(fileInput);
-  }
-  attach.addEventListener('click', (ev) => { ev.preventDefault(); fileInput.click(); });
-  fileInput.addEventListener('change', async () => {
-    const files = Array.from(fileInput.files || []);
-    for (const f of files) {
-      await safe('Upload ' + f.name, async () => {
-        await comm.upload(f, { resource: 'jobDetail.attachment' });
-        flash('Uploaded ' + f.name);
-      });
-    }
-    fileInput.value = '';
-  });
-})();
-
-// ── 6) Insert template ──────────────────────────────────────────────────
-(function () {
-  const btn = $$('.composer-foot .icon-btn[title="Insert template"]')[0];
-  if (!btn) return;
-  btn.addEventListener('click', async (ev) => {
-    ev.preventDefault();
-    flash('Pick a template from the templates picker');
-  });
-})();
-
-// ── 7) Emoji icon-btn — insert a default thumbs-up; no popup picker. ─────
-(function () {
-  const btn = $$('.composer-foot .icon-btn[title="Emoji"]')[0];
-  if (!btn) return;
-  btn.addEventListener('click', (ev) => {
-    ev.preventDefault();
-    const ta = $('.composer textarea[name="message"]');
-    if (!ta) return;
-    const choice = '👍';
-    const pos = ta.selectionStart || ta.value.length;
-    ta.value = ta.value.slice(0, pos) + choice + ta.value.slice(pos);
-    ta.dispatchEvent(new Event('input'));
-    ta.focus();
-  });
-})();
+// F32: removed dead composer wiring (old sections 2-7). The pre-cmx .composer
+// /.composer-tabs/.composer-foot markup no longer exists — the cmx composer
+// (#cmxTabs inline handler + the cmx IIFE in this file) owns tabs, send,
+// save-draft, attach, template insert, emoji, char-count and ⌘/Ctrl+Enter.
 
 // ── 8) Timeline filter chips ────────────────────────────────────────────
 // Add Discount modal: discount type radio (Fixed amount / Percent of subtotal)
@@ -481,14 +349,19 @@ $$('button').filter(b => /mark bad lead/i.test(b.textContent.trim())).forEach(b 
 (function () {
   const root = $('.tab-pane[data-pane="growth-plan"]');
   if (!root) return;
-  const selects = $$('select.gp2-input', root);
-  const numbers = $$('input.gp2-input[type="number"]', root);
-  const fields = [
-    { el: selects[0], key: 'jobType'  },
-    { el: selects[1], key: 'size'     },
-    { el: selects[2], key: 'crewSize' },
-    { el: numbers[0], key: 'trucks'   }
-  ].filter(f => f.el);
+  // F1/F2: resolve each control by its data-bind-value rather than DOM order,
+  // so a change to one control only writes its own Job column. The positional
+  // map mis-bound Size→JobType, Type→JobSize, dropped Branch, and sent
+  // Estimated-hours as 'trucks' (corrupting Job.TruckCount).
+  const KEY_BY_BIND = {
+    'jobInfo.dealSize':       'size',           // -> Job.JobSize
+    'jobInfo.type':           'jobType',        // -> Job.JobType
+    'jobInfo.branch':         'branch',         // -> Job.Branch
+    'jobInfo.estimatedHours': 'estimatedHours'  // -> Job.EstimatedHours
+  };
+  const fields = $$('.gp2-input', root)
+    .map(el => ({ el, key: KEY_BY_BIND[el.getAttribute('data-bind-value')] }))
+    .filter(f => f.key);
   let timer = null;
   function pushSoon() {
     if (timer) clearTimeout(timer);
@@ -522,6 +395,13 @@ function relabelStops() {
     if (cls[i]) tag.classList.add(cls[i]);
   });
 }
+// F8: color the A/B/C badges on initial load and after every state refresh,
+// not only after a stop removal — mirrors the renderQuickCharges wiring.
+document.addEventListener('s1ui:ready', relabelStops);
+if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
+  window.S1.bus.on('state:replaced', relabelStops);
+}
+relabelStops();
 // Defect A4/A9: stop rows are now rendered from route.stops via a <template>
 // repeat, so the remove (✕) buttons are created after this script runs. Use a
 // delegated listener so dynamically-rendered buttons fire remove-stop with the
@@ -609,18 +489,140 @@ if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
 }
 renderQuickCharges();
 
-$$('.gp-row-x').forEach(btn => {
-  btn.addEventListener('click', async (ev) => {
+// Charge rows render asynchronously from data-bind="rows", so a static
+// $$('.gp-row-x') at module load binds to ZERO elements (the rows don't exist
+// yet) and delete never fires. Use a document-level delegated click instead —
+// same pattern as the .gp2-stop-x stop-remove handler. Mutations rely on the
+// host's post-action S1State re-push to refresh totals + re-render the table,
+// so we do NOT optimistically remove the row (that would leave the server-
+// computed Subtotal / Tax / Customer-pays footer stale until the next load).
+document.addEventListener('click', async (ev) => {
+  const del = ev.target.closest && ev.target.closest('.gp-row-x');
+  // Expense / wage delete buttons reuse .gp-row-x for styling; they have their
+  // own delegated handlers, so skip them here.
+  if (!del || del.classList.contains('exp-row-x') || del.classList.contains('wage-row-x')) return;
+  const row = del.closest('tr[data-record-id]');
+  const id  = row && row.getAttribute('data-record-id');
+  if (!id) return;
+  ev.preventDefault();
+  if (!window.confirm('Delete this line?')) return;
+  await safe('Delete line', async () => {
+    const r = await comm.action('jobDetail.delete-charge', { id });
+    if (r && r.ok === false) { flash(r.error || 'Delete failed', 'bad'); return; }
+    flash('Line deleted');
+  });
+});
+
+// F20: edit charge — open #editChargeModal prefilled from the row's data-edit-* attrs.
+document.addEventListener('click', (ev) => {
+  const pen = ev.target.closest && ev.target.closest('.gp-row-edit');
+  if (!pen) return;
+  ev.preventDefault();
+  const row = pen.closest('tr[data-record-id]');
+  const modal = document.getElementById('editChargeModal');
+  if (!row || !modal) return;
+  const set = (name, val, isCheck) => {
+    const el = modal.querySelector('[name="' + name + '"]');
+    if (!el) return;
+    if (isCheck) el.checked = !!val; else el.value = val == null ? '' : val;
+  };
+  set('chargeId',   row.getAttribute('data-record-id'));
+  set('description', row.getAttribute('data-edit-name') || '');
+  // chargeType is a bound <select>; if the row's type isn't one of the preset
+  // options, inject it so the original value is preserved (not silently changed).
+  var ctType = row.getAttribute('data-edit-type') || '';
+  var ctSel = modal.querySelector('[name="chargeType"]');
+  if (ctSel && ctType) {
+    var has = Array.prototype.some.call(ctSel.options, function (o) { return o.value === ctType; });
+    if (!has) { var opt = document.createElement('option'); opt.value = ctType; opt.textContent = ctType; ctSel.insertBefore(opt, ctSel.firstChild); }
+  }
+  set('chargeType', ctType);
+  set('rate',       row.getAttribute('data-edit-rate') || '');
+  set('quantity',   row.getAttribute('data-edit-qty') || '1');
+  set('crewCount',  row.getAttribute('data-edit-crew') || '0');
+  set('vehicleCount', row.getAttribute('data-edit-vehicle') || '0');
+  set('notes',      row.getAttribute('data-edit-desc') || '');
+  set('taxable',    row.getAttribute('data-edit-tax') === 'true', true);
+  window.S1.modal.open('#editChargeModal');
+});
+
+// F20: drag-to-reorder charge rows. On drop, collect the current order of
+// data-record-id values and fire reorder-charges; the state re-push re-renders.
+(function () {
+  let dragRow = null;
+  function tbody() {
+    const t = document.getElementById('acctRevenueTable');
+    return t ? t.querySelector('tbody[data-bind="rows"]') : null;
+  }
+  document.addEventListener('dragstart', (ev) => {
+    const row = ev.target.closest && ev.target.closest('#acctRevenueTable tbody tr[data-record-id]');
+    if (!row) return;
+    dragRow = row;
+    row.classList.add('gp-dragging');
+    try { ev.dataTransfer.effectAllowed = 'move'; ev.dataTransfer.setData('text/plain', row.getAttribute('data-record-id') || ''); } catch (_) {}
+  });
+  document.addEventListener('dragover', (ev) => {
+    if (!dragRow) return;
+    const row = ev.target.closest && ev.target.closest('#acctRevenueTable tbody tr[data-record-id]');
+    if (!row || row === dragRow) return;
     ev.preventDefault();
-    const row = btn.closest('tr[data-record-id], tr');
-    const id  = row && row.getAttribute && row.getAttribute('data-record-id');
-    if (!id) { if (row) row.remove(); return; }
-    if (!window.confirm('Delete this line?')) return;
-    await safe('Delete line', async () => {
-      await comm.action('jobDetail.delete-charge', { id });
-      if (row) row.remove();
-      flash('Line deleted');
+    const body = tbody();
+    if (!body) return;
+    const rect = row.getBoundingClientRect();
+    const after = (ev.clientY - rect.top) > rect.height / 2;
+    body.insertBefore(dragRow, after ? row.nextSibling : row);
+  });
+  document.addEventListener('drop', (ev) => {
+    if (!dragRow) return;
+    ev.preventDefault();
+  });
+  document.addEventListener('dragend', async () => {
+    if (!dragRow) return;
+    dragRow.classList.remove('gp-dragging');
+    dragRow = null;
+    const body = tbody();
+    if (!body) return;
+    const chargeIds = Array.from(body.querySelectorAll('tr[data-record-id]'))
+      .map(r => Number(r.getAttribute('data-record-id')))
+      .filter(n => !isNaN(n));
+    if (!chargeIds.length) return;
+    await safe('Reorder charges', async () => {
+      const r = await comm.action('jobDetail.reorder-charges', { chargeIds });
+      if (r && r.ok === false) { flash(r.error || 'Reorder failed', 'bad'); return; }
+      flash('Charges reordered');
     });
+  });
+})();
+
+// F23: delete expense — delegated (rows render async from data-bind="expenses").
+document.addEventListener('click', async (ev) => {
+  const del = ev.target.closest && ev.target.closest('.exp-row-x');
+  if (!del) return;
+  ev.preventDefault();
+  const row = del.closest('tr[data-record-id]');
+  const id  = row && row.getAttribute('data-record-id');
+  if (!id) return;
+  if (!window.confirm('Delete this expense?')) return;
+  await safe('Delete expense', async () => {
+    const r = await comm.action('jobDetail.delete-expense', { expenseId: id });
+    if (r && r.ok === false) { flash(r.error || 'Delete failed', 'bad'); return; }
+    flash('Expense deleted');
+  });
+});
+
+// F24: delete wage — delegated (rows render async from data-bind="wages").
+document.addEventListener('click', async (ev) => {
+  const del = ev.target.closest && ev.target.closest('.wage-row-x');
+  if (!del) return;
+  ev.preventDefault();
+  const row = del.closest('tr[data-record-id]');
+  const id  = row && row.getAttribute('data-record-id');
+  if (!id) return;
+  if (!window.confirm('Delete this wage?')) return;
+  await safe('Delete wage', async () => {
+    const r = await comm.action('jobDetail.delete-wage', { wageId: id });
+    if (r && r.ok === false) { flash(r.error || 'Delete failed', 'bad'); return; }
+    flash('Wage deleted');
   });
 });
 
@@ -638,19 +640,13 @@ if (window.S1 && window.S1.modal && window.S1.modal.bindForm) {
   window.S1.modal.bindForm('#addNoteModal', 'jobDetail.note.add', { label: 'Add note' });
 }
 
-// ── 21) Files tab: filter chips + Upload ────────────────────────────────
+// ── 21) Files tab: Upload ───────────────────────────────────────────────
+// F32: removed the dead filter-chip loop here — it targeted nonexistent
+// .file-tile/.file-card elements. The real Files filter is applyFilesFilter()
+// (above), keyed off .files-filters [data-files-filter] and .file elements.
 (function () {
   const filesPane = $('.tab-pane[data-pane="files"]');
   if (!filesPane) return;
-  $$('.filter-chip', filesPane).forEach((chip, i) => {
-    chip.addEventListener('click', () => {
-      $$('.filter-chip', filesPane).forEach(c => c.classList.toggle('active', c === chip));
-      const kind = ['all', 'photo', 'pdf', 'signed'][i] || 'all';
-      $$('.file-tile, .file-card', filesPane).forEach(el => {
-        el.style.display = kind === 'all' || el.className.toLowerCase().includes(kind) ? '' : 'none';
-      });
-    });
-  });
   let fileInput = $('#jd-files-input');
   if (!fileInput) {
     fileInput = document.createElement('input');
@@ -662,8 +658,11 @@ if (window.S1 && window.S1.modal && window.S1.modal.bindForm) {
   }
   function pickFiles(ev) { ev.preventDefault(); fileInput.click(); }
   $$('.btn-secondary, .file-upload', filesPane).forEach(b => {
-    if (/upload/i.test(b.textContent) || b.classList.contains('file-upload'))
+    if (/upload/i.test(b.textContent) || b.classList.contains('file-upload')) {
+      b.removeAttribute('data-comm-action'); // F6: no duplicate dispatcher RPC
+      b.__s1Wired = true;
       b.addEventListener('click', pickFiles);
+    }
   });
   fileInput.addEventListener('change', async () => {
     const files = Array.from(fileInput.files || []);
@@ -676,23 +675,22 @@ if (window.S1 && window.S1.modal && window.S1.modal.bindForm) {
 })();
 
 // ── 22) Accounting sub-tabs ─────────────────────────────────────────────
+// F23/F24: each tab now reveals its OWN section (#acctRevenue charges /
+// #acctExpenses real JobExpense rows / #acctWages real JobWage rows / tax
+// summary) instead of regex-filtering the charge table. The matching header
+// action button (+ Add line / + Add expense / + Add Wages) is shown too.
 (function () {
   const root = $('.tab-pane[data-pane="accounting"]');
   if (!root) return;
+  function showTab(name) {
+    $$('.acct-tab', root).forEach(t => t.classList.toggle('active', t.getAttribute('data-acct-tab') === name));
+    $$('[data-acct-section]', root).forEach(s => { s.style.display = s.getAttribute('data-acct-section') === name ? '' : 'none'; });
+    $$('[data-acct-action]', root).forEach(b => { b.style.display = b.getAttribute('data-acct-action') === name ? '' : 'none'; });
+  }
   $$('.acct-tab', root).forEach((tab) => {
-    tab.addEventListener('click', () => {
-      $$('.acct-tab', root).forEach(t => t.classList.toggle('active', t === tab));
-      const label = tab.textContent.trim().toLowerCase();
-      $$('.acct-table tbody tr', root).forEach(row => {
-        if (label === 'revenue') { row.style.display = ''; return; }
-        const cat = (row.querySelector('td') && row.querySelector('td').textContent || '').toLowerCase();
-        const wants = label === 'expenses' ? /(material|rental|fuel|expense|travel|packing|specialty|storage)/
-                    : label === 'wages'    ? /(labor|wage)/
-                    : label === 'tax'      ? /(tax)/ : /./;
-        row.style.display = wants.test(cat) ? '' : 'none';
-      });
-    });
+    tab.addEventListener('click', () => showTab(tab.getAttribute('data-acct-tab')));
   });
+  showTab('revenue');
 })();
 
 // ── 22b) Per-note pin control on timeline rows ─────────────────────────
@@ -711,6 +709,88 @@ document.addEventListener('click', async (ev) => {
   });
 });
 
+// ── 22c) F27: job-lifecycle actions menu (close / unfinalize / reset-plan /
+// reset / unmark-bad / delete). The trigger toggles the menu; each item fires
+// its data-comm-action key through comm.action, honoring a data-jd-confirm
+// guard for the destructive ones. Items are marked __s1Wired so the generic
+// fallback (section 23) doesn't double-fire.
+(function () {
+  const btn  = document.getElementById('jdJobActionsBtn');
+  const list = document.getElementById('jdJobActionsList');
+  if (!btn || !list) return;
+  function closeMenu() { list.style.display = 'none'; btn.setAttribute('aria-expanded', 'false'); }
+  function openMenu() { list.style.display = ''; btn.setAttribute('aria-expanded', 'true'); }
+  btn.addEventListener('click', (ev) => {
+    ev.preventDefault();
+    ev.stopPropagation();
+    if (list.style.display === 'none') openMenu(); else closeMenu();
+  });
+  document.addEventListener('click', (ev) => {
+    if (!ev.target.closest('.jd-actions-menu')) closeMenu();
+  });
+  $$('.jd-action-item', list).forEach(item => {
+    item.__s1Wired = true;
+    item.addEventListener('click', async (ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      const key = item.getAttribute('data-comm-action') || '';
+      const resource = key.split(':')[1];
+      if (!resource) return;
+      const confirmMsg = item.getAttribute('data-jd-confirm');
+      if (confirmMsg && !window.confirm(confirmMsg)) return;
+      closeMenu();
+      await safe('Job action', async () => {
+        const r = await comm.action(resource, {});
+        if (r && r.ok === false) { flash(r.error || 'Action failed', 'bad'); return; }
+        if (r && r.redirect) {
+          // Server-supplied local path only (guard against open redirect).
+          const dest = String(r.redirect);
+          const local = /^\/(?!\/)/.test(dest) ? dest : '/Jobs';
+          try { window.top.location.href = local; }
+          catch (_) { window.location.href = local; }
+          return;
+        }
+        flash('Done');
+      });
+    });
+  });
+})();
+
+// ── 22d) F25: crew member-hours editor + crew notes (Accounting → Wages) ──
+// Crew rows render from state via data-bind, so the Save buttons are created
+// after this script runs — use delegated clicks. Member-hours fire
+// action:job.member-hours.update; crew notes fire save:job.crew-notes.
+document.addEventListener('click', async (ev) => {
+  const save = ev.target.closest && ev.target.closest('.jd-crew-save');
+  if (!save) return;
+  ev.preventDefault();
+  const row = save.closest('.jd-crew-row');
+  if (!row) return;
+  const userId = row.getAttribute('data-user-id');
+  const input = row.querySelector('.jd-crew-hours');
+  const hours = input ? input.value : '';
+  if (!userId) { flash('Cannot save (missing crew member)', 'bad'); return; }
+  if (hours === '' || isNaN(parseFloat(hours))) { flash('Enter hours first', 'bad'); return; }
+  await safe('Update hours', async () => {
+    const r = await comm.action('job.member-hours.update', { userId: Number(userId), hours: parseFloat(hours) });
+    if (r && r.ok === false) { flash(r.error || 'Update failed', 'bad'); return; }
+    const pay = row.querySelector('.jd-crew-pay');
+    flash('Hours saved' + (pay && pay.textContent ? ' · pay updates on refresh' : ''));
+  });
+});
+document.addEventListener('click', async (ev) => {
+  const save = ev.target.closest && ev.target.closest('#jdCrewNotesSave');
+  if (!save) return;
+  ev.preventDefault();
+  const ta = document.getElementById('jdCrewNotes');
+  const content = ta ? ta.value : '';
+  await safe('Save crew notes', async () => {
+    const r = await comm.save('job.crew-notes', { content });
+    if (r && r.ok === false) { flash(r.error || 'Save failed', 'bad'); return; }
+    flash('Crew notes saved');
+  });
+});
+
 // ── 23) Generic fallback for any [data-comm-action] not wired above ─────
 document.addEventListener('click', (ev) => {
   const t = ev.target.closest('[data-comm-action]'); if (!t) return;
@@ -722,12 +802,346 @@ document.addEventListener('click', (ev) => {
   else if (kind === 'action') comm.action(resource, payload);
 });
 
-// ── 24) AI fab ──────────────────────────────────────────────────────────
+// ── 24) F18: conversational AI assistant (FAB + chat panel) ─────────────
+// The FAB opens a slide-in panel. Send fires jobDetail.ai-chat (a real model
+// call + tools server-side) and keeps the returned `messages` list as running
+// history so multi-turn + tool context survive. The ai-suggest-* draft buttons
+// are untouched. All DOM via createElement/textContent (CLAUDE rule 2).
 (function () {
-  const fab = document.querySelector('[data-ai-fab]');
-  if (!fab) return;
-  fab.addEventListener('click', (ev) => {
+  var fab   = document.querySelector('[data-ai-fab]');
+  var panel = document.getElementById('aiAssistantPanel');
+  if (!fab || !panel) return;
+  var msgsEl = document.getElementById('jdAiMessages');
+  var input  = document.getElementById('jdAiInput');
+  var sendBtn = document.getElementById('jdAiSend');
+  var closeBtn = document.getElementById('jdAiClose');
+  var history = [];   // [{role, content}] — server round-trips the full list.
+  var busy = false;
+
+  function openPanel() { panel.style.display = 'flex'; if (input) input.focus(); }
+  function closePanel() { panel.style.display = 'none'; }
+  fab.addEventListener('click', function (ev) {
     ev.preventDefault();
+    if (panel.style.display === 'flex') closePanel(); else openPanel();
+  });
+  if (closeBtn) closeBtn.addEventListener('click', closePanel);
+
+  function bubble(role, text) {
+    var b = document.createElement('div');
+    b.style.cssText = 'border-radius:10px;padding:7px 10px;max-width:88%;white-space:pre-wrap;word-break:break-word;' +
+      (role === 'user'
+        ? 'background:#eef2f6;align-self:flex-end;'
+        : 'background:#e7f4ee;align-self:flex-start;');
+    b.textContent = text;
+    msgsEl.appendChild(b);
+    msgsEl.scrollTop = msgsEl.scrollHeight;
+    return b;
+  }
+
+  async function send() {
+    if (busy) return;
+    var text = (input && input.value || '').trim();
+    if (!text) return;
+    busy = true;
+    bubble('user', text);
+    if (input) input.value = '';
+    var pending = bubble('assistant', '…');
+    await safe('AI assistant', async function () {
+      var r = await comm.action('jobDetail.ai-chat', { message: text, chatHistory: history });
+      if (r && r.ok === false) { pending.textContent = r.error || 'Assistant failed'; return; }
+      pending.textContent = (r && r.reply) ? r.reply : '(no response)';
+      // Preserve the server's full messages list (incl. tool blocks) as history.
+      if (r && Array.isArray(r.messages)) history = r.messages;
+      msgsEl.scrollTop = msgsEl.scrollHeight;
+    }).catch(function () { pending.textContent = 'Assistant failed — please try again.'; });
+    busy = false;
+  }
+
+  if (sendBtn) sendBtn.addEventListener('click', function (ev) { ev.preventDefault(); send(); });
+  if (input) input.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Enter' && !ev.shiftKey) { ev.preventDefault(); send(); }
+  });
+})();
+
+// ── 25) F19: multi-day / two-day move panel (Growth Plan scheduling region) ──
+// Prefills pickup/delivery/overnight/fee from state.twoDay each render and
+// toggles the Revert button on twoDay.isTwoDay. Create → create-two-day,
+// Revert → revert-two-day, both re-render via comm.subscribe('jobs').
+(function () {
+  function fx() { return ((window.S1.fixtures || {}).jobDetail) || {}; }
+  function sync() {
+    var td = fx().twoDay || {};
+    var ov = document.getElementById('jdTwoDayOvernight');
+    if (ov) ov.checked = !!td.isOvernight;
+    var revert = document.getElementById('jdTwoDayRevertBtn');
+    if (revert) revert.disabled = !td.isTwoDay;
+    var create = document.getElementById('jdTwoDayCreateBtn');
+    if (create) create.disabled = !!td.isTwoDay;
+  }
+  // Re-sync whenever state is (re)bound: on initial ready, and after every
+  // host state push (state:replaced fires on the bus after mutations).
+  document.addEventListener('s1ui:ready', sync);
+  try { window.S1.bus.on('state:replaced', function () { setTimeout(sync, 0); }); } catch (_) {}
+  try { comm.subscribe('jobs', function () { setTimeout(sync, 0); }); } catch (_) {}
+  setTimeout(sync, 0);
+
+  var createBtn = document.getElementById('jdTwoDayCreateBtn');
+  if (createBtn) createBtn.addEventListener('click', async function (ev) {
+    ev.preventDefault();
+    var pickup = (document.getElementById('jdTwoDayPickup') || {}).value || '';
+    var delivery = (document.getElementById('jdTwoDayDelivery') || {}).value || '';
+    var overnight = !!(document.getElementById('jdTwoDayOvernight') || {}).checked;
+    var fee = (document.getElementById('jdTwoDayFee') || {}).value || '0';
+    if (!pickup || !delivery) { flash('Enter pickup and delivery dates', 'bad'); return; }
+    await safe('Convert to 2-day', async function () {
+      var r = await comm.action('jobDetail.create-two-day', {
+        pickupDate: pickup, deliveryDate: delivery,
+        isOvernight: overnight ? 'true' : 'false', overnightStorageFee: fee
+      });
+      if (r && r.ok === false) { flash(r.error || 'Convert failed', 'bad'); return; }
+      flash('Converted to two-day move');
+    });
+  });
+
+  var revertBtn = document.getElementById('jdTwoDayRevertBtn');
+  if (revertBtn) revertBtn.addEventListener('click', async function (ev) {
+    ev.preventDefault();
+    if (!window.confirm('Revert this move back to a single day? The delivery-day job will be removed.')) return;
+    await safe('Revert to single day', async function () {
+      var r = await comm.action('jobDetail.revert-two-day', {});
+      if (r && r.ok === false) { flash(r.error || 'Revert failed', 'bad'); return; }
+      flash('Reverted to single-day move');
+    });
+  });
+})();
+
+// ── 26) F21: note edit (inline textarea) + delete on timeline rows ──────
+document.addEventListener('click', async function (ev) {
+  var edit = ev.target.closest && ev.target.closest('[data-jd-edit-note]');
+  if (edit) {
+    ev.preventDefault(); ev.stopPropagation();
+    var noteId = edit.getAttribute('data-jd-edit-note');
+    if (!noteId) return;
+    var item = edit.closest('.tl-item');
+    var textEl = item && item.querySelector('.tl-text-text');
+    if (!textEl || textEl.__editing) return;
+    textEl.__editing = true;
+    var current = textEl.textContent || '';
+    var ta = document.createElement('textarea');
+    ta.value = current;
+    ta.style.cssText = 'width:100%;border:1px solid #cfd4da;border-radius:6px;padding:6px;font-size:13px;font-family:inherit;box-sizing:border-box;';
+    var bar = document.createElement('div');
+    bar.style.cssText = 'display:flex;gap:8px;margin-top:8px;';
+    var saveB = document.createElement('button');
+    saveB.type = 'button'; saveB.className = 'btn btn-primary btn-sm'; saveB.textContent = 'Save';
+    var cancelB = document.createElement('button');
+    cancelB.type = 'button'; cancelB.className = 'btn btn-secondary btn-sm'; cancelB.textContent = 'Cancel';
+    bar.appendChild(saveB); bar.appendChild(cancelB);
+    textEl.style.display = 'none';
+    textEl.parentNode.insertBefore(ta, textEl.nextSibling);
+    ta.parentNode.insertBefore(bar, ta.nextSibling);
+    ta.focus();
+    function cleanup() { ta.remove(); bar.remove(); textEl.style.display = ''; textEl.__editing = false; }
+    cancelB.addEventListener('click', function (e) { e.preventDefault(); cleanup(); });
+    saveB.addEventListener('click', async function (e) {
+      e.preventDefault();
+      var content = ta.value;
+      await safe('Edit note', async function () {
+        var r = await comm.action('jobDetail.edit-note', { noteId: noteId, content: content });
+        if (r && r.ok === false) { flash(r.error || 'Edit failed', 'bad'); return; }
+        flash('Note updated');
+      });
+    });
+    return;
+  }
+  var del = ev.target.closest && ev.target.closest('[data-jd-del-note]');
+  if (del) {
+    ev.preventDefault(); ev.stopPropagation();
+    var nid = del.getAttribute('data-jd-del-note');
+    if (!nid) return;
+    if (!window.confirm('Delete this note?')) return;
+    await safe('Delete note', async function () {
+      var r = await comm.action('jobDetail.delete-note', { noteId: nid });
+      if (r && r.ok === false) { flash(r.error || 'Delete failed', 'bad'); return; }
+      flash('Note deleted');
+    });
+    return;
+  }
+});
+
+// ── 27) F26: communication pin + reassign on timeline rows ─────────────
+document.addEventListener('click', async function (ev) {
+  var pin = ev.target.closest && ev.target.closest('[data-jd-pin-comm]');
+  if (pin) {
+    ev.preventDefault(); ev.stopPropagation();
+    var commId = pin.getAttribute('data-jd-pin-comm');
+    if (!commId) return;
+    await safe('Pin communication', async function () {
+      var r = await comm.action('jobDetail.pin-comm', { commId: commId });
+      if (r && r.ok === false) { flash(r.error || 'Pin failed', 'bad'); return; }
+      pin.classList.toggle('pinned');
+      flash('Communication pin toggled');
+    });
+    return;
+  }
+  var re = ev.target.closest && ev.target.closest('[data-jd-reassign]');
+  if (re) {
+    ev.preventDefault(); ev.stopPropagation();
+    var cid = re.getAttribute('data-jd-reassign');
+    if (!cid) return;
+    var modal = document.getElementById('reassignCommModal');
+    var listEl = document.getElementById('reassignCommList');
+    var emptyEl = document.getElementById('reassignCommEmpty');
+    var saveBtn = document.getElementById('reassignCommSaveBtn');
+    if (!modal || !listEl) return;
+    while (listEl.firstChild) listEl.removeChild(listEl.firstChild);
+    if (emptyEl) emptyEl.style.display = 'none';
+    var selected = null;
+    try { window.S1.modal.open('#reassignCommModal'); } catch (_) {}
+    await safe('Reassign candidates', async function () {
+      var r = await comm.action('jobDetail.reassign-candidates', { commId: cid });
+      var cands = (r && r.candidates) || [];
+      if (!cands.length) { if (emptyEl) emptyEl.style.display = ''; return; }
+      cands.forEach(function (c) {
+        var row = document.createElement('label');
+        row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;border:1px solid #eee;border-radius:6px;padding:7px 9px;font-size:12px;cursor:pointer;gap:8px;';
+        var left = document.createElement('span');
+        left.style.cssText = 'display:flex;align-items:center;gap:6px;';
+        var radio = document.createElement('input');
+        radio.type = 'radio'; radio.name = 'reassignJob'; radio.value = String(c.jobId);
+        radio.addEventListener('change', function () { selected = c.jobId; });
+        left.appendChild(radio);
+        var lbl = document.createElement('span');
+        lbl.textContent = '#' + (c.jobNumber || c.jobId) + ' · ' + (c.customerName || '');
+        left.appendChild(lbl);
+        var contact = document.createElement('span');
+        contact.style.color = 'var(--ink-3,#777)';
+        contact.textContent = c.customerContact || '';
+        row.appendChild(left); row.appendChild(contact);
+        listEl.appendChild(row);
+      });
+    });
+    if (saveBtn && !saveBtn.__wired) {
+      saveBtn.__wired = true;
+      saveBtn.addEventListener('click', async function (e) {
+        e.preventDefault();
+        if (!selected) { flash('Select a job first', 'bad'); return; }
+        await safe('Reassign communication', async function () {
+          var r = await comm.action('jobDetail.reassign-comm', { commId: cid, targetJobId: selected });
+          if (r && r.ok === false) { flash(r.error || 'Reassign failed', 'bad'); return; }
+          try { window.S1.modal.close('#reassignCommModal'); } catch (_) {}
+          flash('Communication reassigned');
+        });
+      });
+    }
+    return;
+  }
+});
+
+// ── 28) F22: per-file actions (download / rename / delete / replace) ────
+(function () {
+  var replaceInput = document.getElementById('jdReplaceFileInput');
+  var pendingReplaceId = null;
+
+  function fileIdOf(btn) {
+    var holder = btn.closest('[data-file-id]');
+    return holder ? holder.getAttribute('data-file-id') : null;
+  }
+  function fileNameOf(btn) {
+    var card = btn.closest('.file');
+    var nameEl = card && card.querySelector('.file-name');
+    return nameEl ? (nameEl.textContent || '') : '';
+  }
+
+  document.addEventListener('click', async function (ev) {
+    var btn = ev.target.closest && ev.target.closest('[data-file-act]');
+    if (!btn) return;
+    ev.preventDefault(); ev.stopPropagation();
+    var act = btn.getAttribute('data-file-act');
+    var fileId = fileIdOf(btn);
+    if (!fileId) { flash('Missing file id', 'bad'); return; }
+
+    if (act === 'download') {
+      await safe('Download file', async function () {
+        var r = await comm.action('jobDetail.download-file', { fileId: fileId });
+        if (r && r.ok === false) { flash(r.error || 'Download failed', 'bad'); return; }
+        var b64 = r && r.dataBase64 || '';
+        var bin = atob(b64);
+        var len = bin.length;
+        var bytes = new Uint8Array(len);
+        for (var i = 0; i < len; i++) bytes[i] = bin.charCodeAt(i);
+        var blob = new Blob([bytes], { type: (r && r.contentType) || 'application/octet-stream' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url; a.download = (r && r.name) || 'download';
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+      });
+      return;
+    }
+
+    if (act === 'rename') {
+      var modal = document.getElementById('renameFileModal');
+      var nameInput = document.getElementById('renameFileInput');
+      var saveBtn = document.getElementById('renameFileSaveBtn');
+      if (!modal || !nameInput) return;
+      nameInput.value = fileNameOf(btn);
+      try { window.S1.modal.open('#renameFileModal'); } catch (_) {}
+      nameInput.focus();
+      if (saveBtn && !saveBtn.__wired) {
+        saveBtn.__wired = true;
+        saveBtn.__fileId = fileId;
+        saveBtn.addEventListener('click', async function (e) {
+          e.preventDefault();
+          var newName = nameInput.value.trim();
+          if (!newName) { flash('Enter a file name', 'bad'); return; }
+          await safe('Rename file', async function () {
+            var r = await comm.action('jobDetail.rename-file', { fileId: saveBtn.__fileId, newName: newName });
+            if (r && r.ok === false) { flash(r.error || 'Rename failed', 'bad'); return; }
+            try { window.S1.modal.close('#renameFileModal'); } catch (_) {}
+            flash('File renamed');
+          });
+        });
+      }
+      if (saveBtn) saveBtn.__fileId = fileId;
+      return;
+    }
+
+    if (act === 'delete') {
+      if (!window.confirm('Delete this file?')) return;
+      await safe('Delete file', async function () {
+        var r = await comm.action('jobDetail.delete-file', { fileId: fileId });
+        if (r && r.ok === false) { flash(r.error || 'Delete failed', 'bad'); return; }
+        flash('File deleted');
+      });
+      return;
+    }
+
+    if (act === 'replace') {
+      if (!replaceInput) return;
+      pendingReplaceId = fileId;
+      replaceInput.value = '';
+      replaceInput.click();
+      return;
+    }
+  });
+
+  if (replaceInput) replaceInput.addEventListener('change', function () {
+    var file = replaceInput.files && replaceInput.files[0];
+    var fileId = pendingReplaceId;
+    pendingReplaceId = null;
+    if (!file || !fileId) return;
+    var reader = new FileReader();
+    reader.onload = async function () {
+      await safe('Replace file', async function () {
+        var r = await comm.action('jobDetail.replace-file', {
+          fileId: fileId, dataUrl: reader.result, name: file.name, type: file.type || 'application/octet-stream'
+        });
+        if (r && r.ok === false) { flash(r.error || 'Replace failed', 'bad'); return; }
+        flash('File replaced');
+      });
+    };
+    reader.readAsDataURL(file);
   });
 })();
 
@@ -779,6 +1193,46 @@ document.addEventListener('click', (ev) => {
         return null;
       },
       successMsg: 'Charge added'
+    }],
+    // F20: edit an existing charge (hidden chargeId carries the row id).
+    ['#editChargeModal',        'jobDetail.edit-charge', {
+      transform: function (p) {
+        return {
+          chargeId:     p.chargeId,
+          chargeType:   p.chargeType || p.category || '',
+          itemName:     p.description || '',
+          description:  p.notes || '',
+          quantity:     Number(p.quantity || 1),
+          rate:         Number(p.rate || 0),
+          crewCount:    Number(p.crewCount || 0),
+          vehicleCount: Number(p.vehicleCount || 0),
+          taxable:      !!p.taxable
+        };
+      },
+      validate: function (p) {
+        if (!p.chargeId) return 'Missing charge id';
+        if (!p.itemName) return 'Description is required';
+        if (!(p.rate > 0)) return 'Rate must be greater than 0';
+        return null;
+      },
+      successMsg: 'Charge updated'
+    }],
+    // F23: add a real JobExpense.
+    ['#addExpenseModal',        'jobDetail.add-expense', {
+      transform: function (p) {
+        return { category: p.category || '', description: p.description || '', amount: Number(p.amount || 0) };
+      },
+      validate: function (p) {
+        if (!p.category) return 'Category is required';
+        if (!(p.amount > 0)) return 'Amount must be greater than 0';
+        return null;
+      },
+      successMsg: 'Expense added'
+    }],
+    // F28: send the customer their invoice.
+    ['#sendInvoiceModal',       'jobDetail.send-invoice', {
+      validate: function (p) { if (!p.recipientEmail) return 'Recipient email is required'; return null; },
+      successMsg: 'Invoice sent'
     }],
     ['#jdAddContactModal',      'jobDetail.add-contact',  {}],
     ['#jdVideoModal',           'job.video.request',      {}],
@@ -870,6 +1324,166 @@ document.addEventListener('click', (ev) => {
   });
 })();
 
+// F29: Saved-card management panel. Lists the customer's Stripe cards and lets
+// the user add / remove / set-default / charge a chosen card. The bridge keys
+// list-cards / add-card / remove-card / set-default-card / charge-card are all
+// mapped server-side. Card rows are built with createElement/textContent only
+// (CLAUDE rule 2 — never innerHTML).
+(function () {
+  var modal = document.getElementById('savedCardsModal');
+  if (!modal) return;
+  var listEl   = modal.querySelector('#savedCardsList');
+  var emptyEl  = modal.querySelector('#savedCardsEmpty');
+  var addBtn   = modal.querySelector('#savedCardsAddBtn');
+  var chargeBtn = modal.querySelector('#savedCardsChargeBtn');
+  var amountEl = modal.querySelector('#savedCardsAmount');
+  var descEl   = modal.querySelector('#savedCardsDesc');
+  var selectedPm = null;
+
+  function clear(el) { while (el.firstChild) el.removeChild(el.firstChild); }
+
+  function renderCards(cards) {
+    clear(listEl);
+    selectedPm = null;
+    if (!cards || !cards.length) {
+      if (emptyEl) emptyEl.style.display = '';
+      return;
+    }
+    if (emptyEl) emptyEl.style.display = 'none';
+    // Pre-select the default card (if any) so "Charge selected card" has a target.
+    var def = cards.find(function (c) { return c.isDefault; });
+    selectedPm = (def && def.paymentMethodId) || cards[0].paymentMethodId;
+
+    cards.forEach(function (card) {
+      var row = document.createElement('div');
+      row.className = 'jd-cardrow' + (card.paymentMethodId === selectedPm ? ' sel' : '');
+      row.setAttribute('data-pm', card.paymentMethodId || '');
+
+      var meta = document.createElement('label');
+      meta.className = 'jd-card-meta';
+      meta.style.cursor = 'pointer';
+      var radio = document.createElement('input');
+      radio.type = 'radio';
+      radio.name = 'savedCardSelect';
+      radio.value = card.paymentMethodId || '';
+      radio.checked = card.paymentMethodId === selectedPm;
+      radio.addEventListener('change', function () {
+        selectedPm = card.paymentMethodId;
+        Array.prototype.forEach.call(listEl.querySelectorAll('.jd-cardrow'), function (r) {
+          r.classList.toggle('sel', r.getAttribute('data-pm') === selectedPm);
+        });
+      });
+      meta.appendChild(radio);
+
+      var brand = document.createElement('b');
+      brand.textContent = card.brand || 'Card';
+      meta.appendChild(brand);
+
+      var num = document.createElement('span');
+      num.textContent = '•••• ' + (card.last4 || '----');
+      meta.appendChild(num);
+
+      var exp = document.createElement('span');
+      exp.style.color = 'var(--ink-3)';
+      var mm = card.expMonth != null ? ('0' + card.expMonth).slice(-2) : '--';
+      var yy = card.expYear != null ? String(card.expYear).slice(-2) : '--';
+      exp.textContent = 'exp ' + mm + '/' + yy;
+      meta.appendChild(exp);
+
+      if (card.isDefault) {
+        var badge = document.createElement('span');
+        badge.className = 'jd-card-badge';
+        badge.textContent = 'Default';
+        meta.appendChild(badge);
+      }
+      row.appendChild(meta);
+
+      var actions = document.createElement('div');
+      actions.className = 'jd-card-actions';
+
+      if (!card.isDefault) {
+        var defBtn = document.createElement('button');
+        defBtn.type = 'button';
+        defBtn.className = 'btn btn-secondary btn-sm';
+        defBtn.textContent = 'Set default';
+        defBtn.addEventListener('click', async function () {
+          await safe('Set default card', async function () {
+            var r = await comm.action('jobDetail.set-default-card', { paymentMethodId: card.paymentMethodId });
+            if (r && r.ok === false) { flash(r.error || 'Failed', 'bad'); return; }
+            flash('Default card updated');
+            await loadCards();
+          });
+        });
+        actions.appendChild(defBtn);
+      }
+
+      var rmBtn = document.createElement('button');
+      rmBtn.type = 'button';
+      rmBtn.className = 'btn btn-secondary btn-sm';
+      rmBtn.style.color = 'var(--bad)';
+      rmBtn.textContent = 'Remove';
+      rmBtn.addEventListener('click', async function () {
+        if (!window.confirm('Remove this card?')) return;
+        await safe('Remove card', async function () {
+          var r = await comm.action('jobDetail.remove-card', { paymentMethodId: card.paymentMethodId });
+          if (r && r.ok === false) { flash(r.error || 'Failed', 'bad'); return; }
+          flash('Card removed');
+          await loadCards();
+        });
+      });
+      actions.appendChild(rmBtn);
+
+      row.appendChild(actions);
+      listEl.appendChild(row);
+    });
+  }
+
+  async function loadCards() {
+    clear(listEl);
+    await safe('Load cards', async function () {
+      var r = await comm.action('jobDetail.list-cards', {});
+      renderCards((r && r.cards) || []);
+    });
+  }
+
+  // Re-list whenever a "Manage cards" trigger opens the modal. The generic
+  // [data-jd-open] opener (wired further up) handles the actual open; we just
+  // also refresh the list here.
+  Array.prototype.forEach.call(document.querySelectorAll('[data-jd-open="savedCardsModal"]'), function (b) {
+    b.addEventListener('click', function () { loadCards(); });
+  });
+
+  if (addBtn) addBtn.addEventListener('click', async function () {
+    await safe('Add card', async function () {
+      var r = await comm.action('jobDetail.add-card', {});
+      if (r && r.ok === false) { flash(r.error || 'Failed', 'bad'); return; }
+      if (r && r.url) {
+        // The Stripe Checkout link must open in a NEW TAB. A popup from inside
+        // the iframe after this async RPC loses its user-gesture and is blocked,
+        // so hand the URL to the host and let the parent open it.
+        try { window.parent.postMessage({ type: 's1ui:open-url', url: r.url }, '*'); } catch (_) {}
+        flash('Opening secure card form…');
+      }
+    });
+  });
+
+  if (chargeBtn) chargeBtn.addEventListener('click', async function () {
+    var amount = amountEl ? amountEl.value : '';
+    if (!selectedPm) { flash('Select a card first', 'bad'); return; }
+    if (!(Number(amount) > 0)) { flash('Enter an amount first', 'bad'); return; }
+    await safe('Charge card', async function () {
+      var r = await comm.action('jobDetail.charge-card', {
+        paymentMethodId: selectedPm,
+        amount: amount,
+        description: (descEl && descEl.value) || 'Job charge'
+      });
+      if (r && r.ok === false) { flash(r.error || 'Charge failed', 'bad'); return; }
+      flash('Card charged');
+      try { window.S1.modal.close && window.S1.modal.close('#savedCardsModal'); } catch (_) {}
+    });
+  });
+})();
+
 // Defects A15/A16: stop spurious unhandled RPCs and wire/disable dead buttons.
 (function () {
   var all = function (s) { return Array.from(document.querySelectorAll(s)); };
@@ -878,13 +1492,8 @@ document.addEventListener('click', (ev) => {
   all('.cmx-tab[data-comm-action], .jd-fu-preset[data-comm-action]').forEach(function (b) {
     b.removeAttribute('data-comm-action');
   });
-  // A15: dead buttons with no backend (+ New deal, Save Template) — drop the
-  // attribute so they no longer fire an unhandled RPC, and mark wired so the
-  // generic fallback skips them.
-  all('[data-comm-action="action:jobDetail.new-deal"], [data-comm-action="action:jobDetail.save-template"]').forEach(function (b) {
-    b.removeAttribute('data-comm-action');
-    b.__s1Wired = true;
-  });
+  // F7: the dead "+ New deal" / "Save Template" buttons are removed from the
+  // markup (no backend exists), so there's nothing left to strip here.
   // A15: every "Record Video" button (incl. the duplicate that previously no-op'd)
   // opens the video modal.
   all('[data-comm-action="action:jobDetail.record-video"]').forEach(function (b) {
@@ -1690,12 +2299,47 @@ document.addEventListener('click', function (ev) {
     });
   }
 
+  // ── F30: live SMS char counter on the cmx Text body ───────────────────
+  function wireCmxTextCounter() {
+    const ta = document.getElementById('cmxTextBody');
+    if (!ta || ta.__s1CountWired) return;
+    ta.__s1CountWired = true;
+    const update = () => {
+      const n = ta.value.length;
+      const segs = Math.max(1, Math.ceil(n / 160));
+      const count = document.getElementById('cmxTextCount');
+      const cap   = document.getElementById('cmxTextCap');
+      if (count) count.textContent = String(n);
+      if (cap)   cap.textContent = String(segs * 160);
+    };
+    ta.addEventListener('input', update);
+    update();
+  }
+
+  // ── F30: ⌘/Ctrl+Enter sends the active Email/Text pane (bound once) ────
+  let keydownSendWired = false;
+  function wireCmxKeydownSend() {
+    if (keydownSendWired) return;
+    keydownSendWired = true;
+    document.addEventListener('keydown', (e) => {
+      if (!((e.metaKey || e.ctrlKey) && e.key === 'Enter')) return;
+      const active = document.querySelector('.cmx-body.active[data-cmx-body]');
+      if (!active) return;
+      const kind = active.getAttribute('data-cmx-body');
+      if (kind !== 'email' && kind !== 'text') return;
+      const sendBtn = active.querySelector('.cmx-send-row .cmx-btn.primary');
+      if (sendBtn) { e.preventDefault(); sendBtn.click(); }
+    });
+  }
+
   function wireAll() {
     wireCmxSendButtons();
     wireCmxCommitButtons();
     wireCcToggle();
     wireFollowChecks();
     wireCmxAttach();
+    wireCmxTextCounter();
+    wireCmxKeydownSend();
   }
   wireAll();
   document.addEventListener('s1ui:ready', wireAll);

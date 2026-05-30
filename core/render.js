@@ -137,6 +137,19 @@
     }
   }
 
+  // data-bind-hide-empty — hide the element bearing the attribute when the bound
+  // state value is null/empty. Place the attribute on the full row/block to hide
+  // (a label-less value span would otherwise leave a dangling label). Toggles
+  // style.display only — no innerHTML, complies with the no-innerHTML rule.
+  function bindHideEmpty(root, state) {
+    var nodes = root.querySelectorAll('[data-bind-hide-empty]');
+    for (var i = 0; i < nodes.length; i++) {
+      var el = nodes[i];
+      var v = get(state, el.getAttribute('data-bind-hide-empty'));
+      el.style.display = (v == null || String(v).trim() === '') ? 'none' : '';
+    }
+  }
+
   // data-bind-html — render an HTML string from state inside a sandboxed
   // <iframe srcdoc> so the markup parses as HTML without leaking script,
   // style, or layout into the host page. Mirrors the BuildCardSrcdoc /
@@ -365,6 +378,7 @@
     bindValues(root, state);
     bindAttrs(root, state);
     bindEmpty(root, state);
+    bindHideEmpty(root, state);
     bindHtml(root, state);
     bindHtml(root, state); // re-bind for nodes injected by bindLists
   }
