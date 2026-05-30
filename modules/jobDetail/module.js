@@ -797,17 +797,13 @@ document.addEventListener('click', async (ev) => {
     flash('Crew notes saved');
   });
 });
-
 // ── 23) Generic fallback for any [data-comm-action] not wired above ─────
-document.addEventListener('click', (ev) => {
-  const t = ev.target.closest('[data-comm-action]'); if (!t) return;
-  if (t.__s1Wired) return;
-  const [kind, resource, id] = t.getAttribute('data-comm-action').split(':');
-  const payload = (window.S1.collectPayload || function () { return {}; })(t);
-  if (kind === 'save')   comm.save(resource, payload);
-  else if (kind === 'delete') comm.delete(resource, id);
-  else if (kind === 'action') comm.action(resource, payload);
-});
+// Removed: core/standard-page.js already installs an identical document-level
+// dispatcher for [data-comm-action]. Having both attached caused every click
+// on an un-explicitly-wired action button (e.g. "Send portal link",
+// "+ Send link to customer") to fire `comm.action(...)` twice, producing two
+// outbound RPCs per click. The standard-page.js copy is the canonical one;
+// this module-local copy was a leftover duplicate.
 
 // ── 24) F18: conversational AI assistant (FAB + chat panel) ─────────────
 // The FAB opens a slide-in panel. Send fires jobDetail.ai-chat (a real model
