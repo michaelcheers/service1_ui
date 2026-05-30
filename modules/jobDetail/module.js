@@ -397,6 +397,13 @@ function relabelStops() {
 }
 // F8: color the A/B/C badges on initial load and after every state refresh,
 // not only after a stop removal — mirrors the renderQuickCharges wiring.
+// The origin/destination stops used to be hardcoded `class="gp2-stop-tag a"` /
+// `class="gp2-stop-tag b"` in markup; they got templated out into the
+// route.stops <template> repeat, which only renders the letter as text and
+// leaves no class for the .gp2-stop-tag.a / .b color rules to match. Run the
+// existing relabelStops() on the same lifecycle hooks renderQuickCharges
+// uses so the A/B (and any subsequent) tags pick up their colors on initial
+// paint and on every state refresh, not just after a remove.
 document.addEventListener('s1ui:ready', relabelStops);
 if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
   window.S1.bus.on('state:replaced', relabelStops);
