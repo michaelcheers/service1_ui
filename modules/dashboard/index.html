@@ -532,7 +532,7 @@ a { color: inherit; text-decoration: none; }
             <div class="stat-number" data-bind-text="kpis.0.value">48 <span class="small">/ $128,400</span></div>
             <div class="stat-delta">
               <span class="pct" data-bind-attr="class:kpis.0.deltaClass"><span data-bind-text="kpis.0.delta">14.2%</span></span>
-              vs previous 30 days
+              vs <span data-bind-text="compareLabel">previous 30 days</span>
             </div>
           </div>
           <div class="stat-col">
@@ -540,7 +540,7 @@ a { color: inherit; text-decoration: none; }
             <div class="stat-number" data-bind-text="kpis.1.value">12</div>
             <div class="stat-delta">
               <span class="pct" data-bind-attr="class:kpis.1.deltaClass"><span data-bind-text="kpis.1.delta">9.1%</span></span>
-              vs previous 30 days
+              vs <span data-bind-text="compareLabel">previous 30 days</span>
             </div>
           </div>
           <div class="stat-col">
@@ -548,7 +548,7 @@ a { color: inherit; text-decoration: none; }
             <div class="stat-number" data-bind-text="kpis.2.value">3</div>
             <div class="stat-delta">
               <span class="pct" data-bind-attr="class:kpis.2.deltaClass"><span data-bind-text="kpis.2.delta">6.2%</span></span>
-              vs previous 30 days
+              vs <span data-bind-text="compareLabel">previous 30 days</span>
             </div>
           </div>
           <div class="stat-col">
@@ -556,7 +556,7 @@ a { color: inherit; text-decoration: none; }
             <div class="stat-number" data-bind-text="kpis.3.value"><span data-bind-text="amounts.0">$2,675</span></div>
             <div class="stat-delta">
               <span class="pct" data-bind-attr="class:kpis.3.deltaClass"><span data-bind-text="kpis.3.delta">2.1pp</span></span>
-              vs previous 30 days
+              vs <span data-bind-text="compareLabel">previous 30 days</span>
             </div>
           </div>
         </div>
@@ -565,7 +565,7 @@ a { color: inherit; text-decoration: none; }
         <section class="chart-wrap">
           <div class="chart-head">
             <div class="chart-h-left">
-              <div class="chart-h-eyebrow">Net revenue · Last 12 months</div>
+              <div class="chart-h-eyebrow">Net revenue · <span data-bind-text="chart.rangeLabel">Last 12 months</span></div>
               <div class="chart-h-num"><span data-bind-text="amounts.1">$1,420,800</span></div>
               <div class="chart-h-sub">
                 <span><span class="swatch" style="background:var(--terra);"></span>This year · <strong data-bind-text="chart.thisYear">$1.42M</strong></span>

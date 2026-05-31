@@ -76,21 +76,40 @@ function renderPager() {
   next.textContent = '→';
   host.appendChild(next);
 }
-async function goToPage(page) {
+function currentPageSize() {
+  const sel = document.getElementById('mlPageSizeSel');
+  if (sel && sel.value !== '') return +sel.value;  // 0 = All
+  const data = (window.S1.fixtures || {}).salesMyLeads || {};
+  const p = data.pagination || {};
+  return +p.pageSize || 40;
+}
+function applyState(state) {
+  try {
+    if (window.S1 && window.S1.fixtures) window.S1.fixtures['salesMyLeads'] = state;
+    if (window.S1 && window.S1.render && typeof window.S1.render.bind === 'function') {
+      window.S1.render.bind(document, state);
+    }
+    if (window.S1 && window.S1.bus && typeof window.S1.bus.emit === 'function') {
+      window.S1.bus.emit('state:replaced', state);
+    }
+    document.dispatchEvent(new CustomEvent('s1ui:ready', { detail: { module: 'salesMyLeads' } }));
+  } catch (e) { console.warn('[salesMyLeads] state apply failed', e); }
+}
+async function goToPage(page, pageSizeOverride) {
   const data = (window.S1.fixtures || {}).salesMyLeads || {};
   const p = data.pagination || {};
   const current  = +p.currentPage || 1;
   const total    = Math.max(1, +p.totalPages || 1);
-  const pageSize = +p.pageSize || 14;
+  const pageSize = pageSizeOverride != null ? pageSizeOverride : currentPageSize();
   let next;
   if (page === 'prev')      next = Math.max(1, current - 1);
   else if (page === 'next') next = Math.min(total, current + 1);
-  else                      next = Math.max(1, Math.min(total, +page || 1));
+  else                      next = Math.max(1, +page || 1);
   const filters = getFilterValues();
   try {
     const r = await comm.save('salesMyLeads.page', { page: next, pageSize, filters });
     if (r && r.navigateTo) { window.location.href = r.navigateTo; return; }
-    await load();
+    if (r && r.state) applyState(r.state); else await load();
   } catch (e) { flash('Page change failed: ' + (e.message || e)); }
 }
 document.addEventListener('click', (ev) => {
@@ -99,12 +118,25 @@ document.addEventListener('click', (ev) => {
   ev.preventDefault();
   goToPage(b.getAttribute('data-page'));
 });
+function syncPageSizeSel() {
+  const sel = document.getElementById('mlPageSizeSel'); if (!sel) return;
+  const data = (window.S1.fixtures || {}).salesMyLeads || {};
+  const p = data.pagination || {};
+  const ps = (p.pageSize == null) ? 40 : +p.pageSize;  // 0 = All
+  if (sel.value !== String(ps)) sel.value = String(ps);
+}
 document.addEventListener('s1ui:ready', renderPager);
+document.addEventListener('s1ui:ready', syncPageSizeSel);
 if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
   window.S1.bus.on('state:replaced', renderPager);
+  window.S1.bus.on('state:replaced', syncPageSizeSel);
 }
 document.addEventListener('input', (ev) => { if (ev.target && ev.target.id === 'mlSearch') goToPage(1); });
 document.addEventListener('click', (ev) => { if (ev.target.closest('#mlChips .fchip')) goToPage(1); });
+// Page-size selector → reload at page 1 with the chosen size (0 = All).
+document.addEventListener('change', (ev) => {
+  if (ev.target && ev.target.id === 'mlPageSizeSel') goToPage(1, +ev.target.value);
+});
 
 // v12 modal triggers + bindings.
 $$('[data-salesMyLeads-open]').forEach(b => b.addEventListener('click', (e) => { e.preventDefault(); window.S1.modal.open('#' + b.getAttribute('data-salesMyLeads-open')); }));

@@ -44,10 +44,24 @@ async function load() {
 
   window.S1.render.bind(document, data);
 
-  // Seed the email composer's "To" field from customer.email when empty.
-  const toInput = document.querySelector('input[data-bind-value="composer.email.to"]');
-  const leadEmail = (data.customer && data.customer.email) || '';
-  if (toInput && !toInput.value && leadEmail) toInput.value = leadEmail;
+  // Seed the composer "To" fields when empty. The backend now provides
+  // composer.email.to / composer.text.to (#1424); this is a defensive fallback
+  // covering the primary contact when the canonical customer fields are blank.
+  // The !input.value guard keeps a user's typed value from being overwritten.
+  const contacts = (data.contacts && data.contacts.items) || [];
+  const firstContact = (field) => {
+    const primary = contacts.find((x) => x.isPrimary && x[field]);
+    return (primary && primary[field]) ||
+           ((contacts.find((x) => x[field]) || {})[field]) || '';
+  };
+  const emailTo = document.querySelector('input[data-bind-value="composer.email.to"]');
+  if (emailTo && !emailTo.value) {
+    emailTo.value = ((data.customer && data.customer.email) || firstContact('email') || '');
+  }
+  const textTo = document.querySelector('input[data-bind-value="composer.text.to"]');
+  if (textTo && !textTo.value) {
+    textTo.value = ((data.customer && data.customer.phone) || firstContact('phone') || '');
+  }
 
   document.dispatchEvent(new CustomEvent('s1ui:ready', { detail: { module: 'jobDetail' } }));
 }
@@ -375,7 +389,7 @@ $$('button').filter(b => /mark bad lead/i.test(b.textContent.trim())).forEach(b 
 })();
 
 // ── 18) Growth plan: + Add stop and Remove stop ─────────────────────────
-$$('.s-action, .gp2-add-stop').filter(b => /add stop/i.test(b.textContent)).forEach(btn => {
+$$('.s-action').filter(b => /add stop/i.test(b.textContent)).forEach(btn => {
   btn.setAttribute('data-comm-action', 'action:jobDetail.add-stop:');
   btn.__s1Wired = true;
   btn.addEventListener('click', (ev) => {
@@ -429,6 +443,52 @@ document.addEventListener('click', async (ev) => {
     relabelStops();
     flash('Stop removed');
   });
+});
+
+// #1423: edit an existing stop/location — open #editStopModal prefilled from the
+// stop's raw state fields (route.stops). Delegated, since stop cards render from
+// route.stops via a <template> repeat after this script runs.
+document.addEventListener('click', (ev) => {
+  const btn = ev.target.closest && ev.target.closest('.gp2-stop-edit');
+  if (!btn) return;
+  ev.preventDefault();
+  const idEl = btn.closest('[data-record-id]');
+  const id   = idEl ? idEl.getAttribute('data-record-id') : null;
+  const modal = document.getElementById('editStopModal');
+  if (!id || !modal) { flash('Cannot edit this stop (missing id)', 'bad'); return; }
+  const state = (window.S1.fixtures || {}).jobDetail || {};
+  const stops = (state.route && Array.isArray(state.route.stops)) ? state.route.stops : [];
+  const data = stops.find(s => String(s.id) === String(id)) || {};
+  const set = (name, val) => {
+    const el = modal.querySelector('[name="' + name + '"]');
+    if (!el) return;
+    el.value = (val == null) ? '' : val;
+  };
+  const yesNo = (b) => b === true ? 'Yes' : b === false ? 'No' : '';
+  set('id', id);
+  set('address',      data.address);
+  set('city',         data.city === '—' ? '' : data.city);
+  set('provinceState', data.state);
+  set('postalZip',    data.zip);
+  set('country',      data.country);
+  set('unitSuite',    data.unitNumber);
+  // propertyType is a bound <select>; inject the stored value as an option if it
+  // isn't one of the presets so an out-of-list value isn't silently dropped.
+  const pt = data.propertyType || '';
+  const ptSel = modal.querySelector('[name="propertyType"]');
+  if (ptSel && pt) {
+    const has = Array.prototype.some.call(ptSel.options, o => o.value === pt);
+    if (!has) { const opt = document.createElement('option'); opt.value = pt; opt.textContent = pt; ptSel.insertBefore(opt, ptSel.firstChild); }
+  }
+  set('propertyType', pt);
+  set('squareFootage', data.squareFootage);
+  set('floor',        data.floor);
+  set('elevator',     yesNo(data.hasElevator));
+  set('hasStairs',    yesNo(data.hasStairs));
+  set('longCarry',    yesNo(data.hasLongCarry));
+  set('parkingRestrictions', data.parkingType);
+  set('stopNotes',    data.notes);
+  window.S1.modal.open('#editStopModal');
 });
 
 // ── 19) Growth plan + Accounting: charges ───────────────────────────────
@@ -1173,6 +1233,19 @@ document.addEventListener('click', async function (ev) {
         return null;
       },
       successMsg: 'Stop added'
+    }],
+    // #1423: edit an existing location (hidden id carries the JobLocation row).
+    ['#editStopModal',          'jobDetail.edit-stop', {
+      transform: function (p) {
+        p.squareFootage = p.squareFootage ? Number(p.squareFootage) : null;
+        return p;
+      },
+      validate: function (p) {
+        if (!p.id) return 'Missing location id';
+        if (!p.address) return 'Address is required';
+        return null;
+      },
+      successMsg: 'Address updated'
     }],
     ['#addWagesModal',          'job.wages.add',          {}],
     ['#addChargeModal',         'job.charge.add', {

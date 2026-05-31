@@ -50,6 +50,13 @@
 .audio-bar .progress { flex:1; height:4px; background:var(--line-2); border-radius:999px; overflow:hidden; }
 .audio-bar .progress .bar { background:var(--terra); height:100%; width:32%; }
 .audio-bar .dur { font-size:11px; color:var(--ink-3); font-variant-numeric:tabular-nums; }
+
+/* Missed-calls pager */
+.ph-pager-bar { display:flex; justify-content:space-between; align-items:center; margin-top:12px; padding-top:12px; border-top:var(--hair); font-size:12px; color:var(--ink-3); }
+.ph-pager { display:flex; gap:6px; }
+.ph-pager button { padding:5px 10px; border:var(--hair); border-radius:6px; background:#fff; font-size:12px; cursor:pointer; color:var(--ink-1); }
+.ph-pager button.primary { background:var(--terra); color:#fff; border-color:var(--terra); }
+.ph-pager button:disabled { opacity:.5; cursor:default; }
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="_aesthetic.css">
@@ -88,6 +95,7 @@
       <div>
         <div class="ph-tabs">
           <button class="ph-tab active" data-ptab="recent">Recent Calls</button>
+          <button class="ph-tab" data-ptab="missed">Missed Calls</button>
           <button class="ph-tab" data-ptab="voicemails">Voicemails</button>
           <button class="ph-tab" data-ptab="recordings">Call Recordings</button>
           <button class="ph-tab" data-ptab="texts">Texts</button>
@@ -104,6 +112,32 @@
             <div class="list-row"><div data-bind-attr="class:recent.3.iconCls" data-bind-text="recent.3.iconGlyph">▼</div><div><div class="list-num" data-bind-text="recent.3.name">Vicky Milosevic-Hill</div><div class="list-meta" data-bind-text="recent.3.meta">+1 (905) 616-3324 · Inbound · 4m 21s</div></div><div class="list-time" data-bind-text="recent.3.time">11:55 AM</div><div class="list-actions"><button>📞</button><button>💬</button><button>👤</button></div></div>
             <div class="list-row"><div data-bind-attr="class:recent.4.iconCls" data-bind-text="recent.4.iconGlyph">▲</div><div><div class="list-num" data-bind-text="recent.4.name">Frances Knox</div><div class="list-meta" data-bind-text="recent.4.meta">+1 (778) 318-2924 · Outbound · 6m 38s</div></div><div class="list-time" data-bind-text="recent.4.time">Yesterday</div><div class="list-actions"><button>📞</button><button>💬</button><button>👤</button></div></div>
             <div class="list-row"><div data-bind-attr="class:recent.5.iconCls" data-bind-text="recent.5.iconGlyph">✕</div><div><div class="list-num" data-bind-text="recent.5.name">Unknown · +1 (416) 822-9931</div><div class="list-meta" data-bind-text="recent.5.meta">Missed</div></div><div class="list-time" data-bind-text="recent.5.time">Yesterday</div><div class="list-actions"><button>📞</button><button>💬</button><button>👤</button></div></div>
+          </div>
+        </div>
+
+        <div data-ppanel="missed" style="display:none;">
+          <div class="list-card">
+            <h2 data-bind-text="missedHeading">Missed Calls</h2>
+            <div data-bind="missedCalls"><template>
+              <div class="list-row" data-record-id="{{id}}">
+                <div data-bind-attr="class:iconCls" data-bind-text="iconGlyph">✕</div>
+                <div>
+                  <div class="list-num">{{name}}</div>
+                  <div class="list-meta">{{meta}}</div>
+                </div>
+                <div class="list-time">{{time}}</div>
+                <div class="list-actions">
+                  <button data-comm-action="action:phone.call.back">📞 Call back</button>
+                  <button data-comm-action="action:phone.sms.reply">💬</button>
+                  <button data-comm-action="action:phone.contact.view">👤</button>
+                </div>
+              </div>
+            </template></div>
+            <div class="ph-pager-bar">
+              <span>Showing <span data-bind-text="missedPagination.shown">0</span>
+                of <span data-bind-text="missedPagination.total">0</span> missed calls</span>
+              <div class="ph-pager" id="missedCallsPager"></div>
+            </div>
           </div>
         </div>
 

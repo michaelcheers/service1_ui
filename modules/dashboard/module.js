@@ -180,9 +180,12 @@ function renderActiveRange() {
     key = (active && active.getAttribute('data-range')) || '12m';
   }
   setChartRange(key, { persist: false });
-  // Sync picker label so it reflects the server-driven range.
+  // Sync picker label so it reflects the server-driven range. Prefer the
+  // server's own rangeLabel (single source of truth) so the dropdown, chart
+  // eyebrow and KPI subtext can never disagree; fall back to the static map.
   const lbl = document.getElementById('rangePickerLabel');
-  if (lbl && RANGE_LABELS[key]) lbl.textContent = RANGE_LABELS[key];
+  const serverLabel = fx.chart && fx.chart.rangeLabel;
+  if (lbl) lbl.textContent = serverLabel || RANGE_LABELS[key] || lbl.textContent;
   currentPageRange = key;
 }
 // Initial render against seed fixture.

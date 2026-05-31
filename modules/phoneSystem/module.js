@@ -25,6 +25,85 @@ $$('[data-phoneSystem-open]').forEach(b => b.addEventListener('click', (e) => { 
   window.S1.modal.bindForm('#forwardCallModal', 'phone.forward', { label: 'Save', onSuccess: ()=>load() });
   window.S1.modal.bindForm('#voicemailSettingsModal', 'phone.voicemail.settings', { label: 'Save settings', onSuccess: ()=>load() });
 
+// --- Missed Calls server-side pagination -----------------------------------
+// Clones the customers-module pager pattern, namespaced for this module. The
+// page object lives at window.S1.fixtures.phoneSystem.missedPagination; each
+// page change posts save:phone.missedCalls.page and re-binds via load().
+const PHONE_MISSED_PAGE_SIZE = 8; // named constant (CLAUDE rule #11)
+
+function buildMissedPageList(current, total) {
+  const out = [];
+  const add = (v) => { if (out[out.length - 1] !== v) out.push(v); };
+  add(1);
+  for (let p = current - 1; p <= current + 1; p++) {
+    if (p > 1 && p < total) add(p);
+  }
+  if (total > 1) add(total);
+  const withGaps = [];
+  for (let i = 0; i < out.length; i++) {
+    withGaps.push(out[i]);
+    if (i < out.length - 1 && out[i + 1] - out[i] > 1) withGaps.push('…');
+  }
+  return withGaps;
+}
+
+function renderMissedPager() {
+  const host = document.getElementById('missedCallsPager');
+  if (!host) return;
+  const p = ((window.S1.fixtures || {}).phoneSystem || {}).missedPagination || {};
+  const current = +p.currentPage || 1;
+  const total   = Math.max(1, +p.totalPages || 1);
+  while (host.firstChild) host.removeChild(host.firstChild);
+  if (total <= 1) { host.style.display = 'none'; return; }
+  const mk = (text, attrs, cls) => {
+    const b = document.createElement('button');
+    b.textContent = text;
+    if (cls) b.className = cls;
+    for (const k in (attrs || {})) {
+      if (k === 'disabled') { if (attrs[k]) b.disabled = true; }
+      else b.setAttribute(k, attrs[k]);
+    }
+    return b;
+  };
+  if (current > 1) host.appendChild(mk('Previous', { 'data-page': 'prev' }));
+  for (const it of buildMissedPageList(current, total)) {
+    if (it === '…') { host.appendChild(mk('…', { disabled: true })); continue; }
+    host.appendChild(mk(String(it), { 'data-page': String(it) }, it === current ? 'primary' : ''));
+  }
+  if (current < total) host.appendChild(mk('Next', { 'data-page': 'next' }));
+  host.style.display = 'flex';
+}
+
+async function goToMissedPage(page) {
+  const p = ((window.S1.fixtures || {}).phoneSystem || {}).missedPagination || {};
+  const current  = +p.currentPage || 1;
+  const total    = Math.max(1, +p.totalPages || 1);
+  const pageSize = +p.pageSize || PHONE_MISSED_PAGE_SIZE;
+  let next;
+  if (page === 'prev')      next = Math.max(1, current - 1);
+  else if (page === 'next') next = Math.min(total, current + 1);
+  else                      next = Math.max(1, +page || 1);
+  try {
+    await comm.save('phone.missedCalls.page', { page: next, pageSize });
+    await load();
+  } catch (e) { flash('Page change failed: ' + (e.message || e)); }
+}
+
+document.addEventListener('click', (ev) => {
+  const b = ev.target.closest('#missedCallsPager [data-page]');
+  if (!b || b.disabled) return;
+  ev.preventDefault();
+  goToMissedPage(b.getAttribute('data-page'));
+});
+document.addEventListener('s1ui:ready', renderMissedPager);
+if (window.S1.bus && typeof window.S1.bus.on === 'function') {
+  window.S1.bus.on('state:replaced', renderMissedPager);
+}
+// Redraw the pager when the Missed Calls tab becomes visible.
+document.addEventListener('click', (ev) => {
+  if (ev.target.closest('[data-ptab="missed"]')) renderMissedPager();
+});
+
 // Dialer keypad — local UI state. Each [data-dialer] press appends a digit
 // to the in-progress number; ⌫ pops; Call opens the Place-call modal
 // pre-filled with the dialed number (the real RPC fires from the modal's Save).

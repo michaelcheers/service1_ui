@@ -117,6 +117,17 @@ a.icon-btn, a.icon-btn:hover, a.icon-btn:visited { color: inherit; text-decorati
       </div>
       <div class="ml-grid" id="mlGrid"></div>
 
+      <div class="pager-controls" style="display:flex;justify-content:flex-end;align-items:center;padding:12px 0 0;">
+        <label style="font-size:12px;color:var(--ink-3);display:inline-flex;align-items:center;gap:6px;">Rows per page
+          <select class="field-select" id="mlPageSizeSel" style="width:auto;">
+            <option value="40" selected>40</option>
+            <option value="100">100</option>
+            <option value="200">200</option>
+            <option value="0">All</option>
+          </select>
+        </label>
+      </div>
+
       <div class="pager salesMyLeads-pager" id="salesMyLeadsPager"></div>
       <div style="text-align:center;font-size:12px;color:var(--ink-3);padding:4px 0 0;">Showing <span data-bind-text="pagination.shown">12</span> of <span data-bind-text="pagination.total">12</span></div>
     </div>

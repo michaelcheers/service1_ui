@@ -126,6 +126,7 @@
   };
   F["dashboard"] = {
   summary: "Dashboard",
+  compareLabel: "previous 12 months",
   metrics: {
   "stat_delta": [
     "Longest wait \u00b7 42s",
@@ -286,6 +287,7 @@
         { label: "Mar", cls: "" }, { label: "Apr", cls: "" }, { label: "May", cls: "cur" }
       ],
       defaultRange: "12m",
+      rangeLabel: "Last 12 months",
       ranges: {
         "1d": {
           headline: "$25,600", yMax: 6,
@@ -4814,6 +4816,18 @@
     "direction": "inbound"
   }
 ],
+  missedHeading: "Missed Calls",
+  missedPagination: { currentPage: 1, totalPages: 7, pageSize: 8, shown: 8, total: 52 },
+  missedCalls: [
+    { id: 9001, name: "Harman", meta: "+1 (778) 816-2400 · Missed", time: "12:42 PM", iconCls: "list-icon miss", iconGlyph: "✕" },
+    { id: 9002, name: "Unknown · +1 (416) 822-9931", meta: "Missed", time: "11:58 AM", iconCls: "list-icon miss", iconGlyph: "✕" },
+    { id: 9003, name: "Vicky Milosevic-Hill", meta: "+1 (905) 616-3324 · Missed", time: "11:02 AM", iconCls: "list-icon miss", iconGlyph: "✕" },
+    { id: 9004, name: "Robert Fox", meta: "+1 (303) 555-0119 · Missed", time: "9:48 AM", iconCls: "list-icon miss", iconGlyph: "✕" },
+    { id: 9005, name: "Jane Cooper", meta: "+1 (415) 555-0142 · Missed", time: "Yesterday", iconCls: "list-icon miss", iconGlyph: "✕" },
+    { id: 9006, name: "Unknown · +1 (212) 555-7821", meta: "Missed", time: "Yesterday", iconCls: "list-icon miss", iconGlyph: "✕" },
+    { id: 9007, name: "Frances Knox", meta: "+1 (778) 318-2924 · Missed", time: "Yesterday", iconCls: "list-icon miss", iconGlyph: "✕" },
+    { id: 9008, name: "Keera Roberts", meta: "+1 (672) 208-2675 · Missed", time: "Mon", iconCls: "list-icon miss", iconGlyph: "✕" }
+  ],
   headings: {
   "1": "Phone system",
   "2": "Recent calls",
