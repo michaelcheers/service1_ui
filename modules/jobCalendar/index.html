@@ -229,13 +229,13 @@ button.jc-month-label:hover { background:var(--surface-2); }
           </div>
 
           <div class="jc-day-section">Booked jobs <span style="font-weight:500;color:var(--ink-4);font-size:11px;" data-bind-text="selectedDay.booked.count">3</span></div>
-          <div data-bind="selectedDay.booked.items" style="display:contents;"><template><a class="jc-day-item" href="{{href}}"><div class="jc-day-time">{{time}}</div><div class="jc-day-body"><div class="jc-day-title">{{title}}</div><div class="jc-day-sub">{{sub}}</div><span class="jc-day-pill {{pillKind}}">{{pillLabel}}</span></div></a></template></div>
+          <div data-bind="selectedDay.booked.items" style="display:contents;"><template><div class="jc-day-item" data-record-id="{{id}}" role="button" tabindex="0"><div class="jc-day-time">{{time}}</div><div class="jc-day-body"><div class="jc-day-title">{{title}}</div><div class="jc-day-sub">{{sub}}</div><span class="jc-day-pill {{pillKind}}">{{pillLabel}}</span></div></div></template></div>
 
           <div class="jc-day-section">Meetings &amp; estimates <span style="font-weight:500;color:var(--ink-4);font-size:11px;" data-bind-text="selectedDay.meetings.count">2</span></div>
-          <div data-bind="selectedDay.meetings.items" style="display:contents;"><template><a class="jc-day-item" href="{{href}}"><div class="jc-day-time">{{time}}</div><div class="jc-day-body"><div class="jc-day-title">{{title}}</div><div class="jc-day-sub">{{sub}}</div><span class="jc-day-pill {{pillKind}}">{{pillLabel}}</span></div></a></template></div>
+          <div data-bind="selectedDay.meetings.items" style="display:contents;"><template><div class="jc-day-item" data-record-id="{{id}}" role="button" tabindex="0"><div class="jc-day-time">{{time}}</div><div class="jc-day-body"><div class="jc-day-title">{{title}}</div><div class="jc-day-sub">{{sub}}</div><span class="jc-day-pill {{pillKind}}">{{pillLabel}}</span></div></div></template></div>
 
           <div class="jc-day-section">Follow-ups &amp; tasks <span style="font-weight:500;color:var(--ink-4);font-size:11px;" data-bind-text="selectedDay.followups.count">2</span></div>
-          <div data-bind="selectedDay.followups.items" style="display:contents;"><template><a class="jc-day-item" href="{{href}}"><div class="jc-day-time">{{time}}</div><div class="jc-day-body"><div class="jc-day-title">{{title}}</div><div class="jc-day-sub">{{sub}}</div><span class="jc-day-pill {{pillKind}}">{{pillLabel}}</span></div></a></template></div>
+          <div data-bind="selectedDay.followups.items" style="display:contents;"><template><div class="jc-day-item" data-nav="{{href}}" role="button" tabindex="0"><div class="jc-day-time">{{time}}</div><div class="jc-day-body"><div class="jc-day-title">{{title}}</div><div class="jc-day-sub">{{sub}}</div><span class="jc-day-pill {{pillKind}}">{{pillLabel}}</span></div></div></template></div>
         </aside>
     </div>
   </main>

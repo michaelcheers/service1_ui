@@ -57,6 +57,7 @@
 .ph-pager button { padding:5px 10px; border:var(--hair); border-radius:6px; background:#fff; font-size:12px; cursor:pointer; color:var(--ink-1); }
 .ph-pager button.primary { background:var(--terra); color:#fff; border-color:var(--terra); }
 .ph-pager button:disabled { opacity:.5; cursor:default; }
+.list-empty { padding:24px 0; text-align:center; color:var(--ink-3); font-size:13px; }
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="_aesthetic.css">
@@ -104,14 +105,29 @@
 
         <div data-ppanel="recent">
           <div class="list-card">
-            <h2 data-bind-text="headings.1">Recent Calls</h2>
+            <h2 data-bind-text="recentHeading">Recent Calls</h2>
             <div class="list-toolbar"><input placeholder="Search number or name…"><select data-bind-options="optionsOptions2"><option value="All directions">All directions</option></select></div>
-            <div class="list-row"><div data-bind-attr="class:recent.0.iconCls" data-bind-text="recent.0.iconGlyph">▼</div><div><div class="list-num"><span data-bind-text="recent.0.name">Johanna Kuyvenhoven</span></div><div class="list-meta" data-bind-text="recent.0.meta">+1 (587) 920-4170 · Inbound · 4m 21s</div></div><div class="list-time" data-bind-text="recent.0.time">2:14 PM</div><div class="list-actions"><button>📞</button><button>💬</button><button>👤</button></div></div>
-            <div class="list-row"><div data-bind-attr="class:recent.1.iconCls" data-bind-text="recent.1.iconGlyph">▲</div><div><div class="list-num" data-bind-text="recent.1.name">Keera Roberts</div><div class="list-meta" data-bind-text="recent.1.meta">+1 (672) 208-2675 · Outbound · 2m 08s</div></div><div class="list-time" data-bind-text="recent.1.time">1:08 PM</div><div class="list-actions"><button>📞</button><button>💬</button><button>👤</button></div></div>
-            <div class="list-row"><div data-bind-attr="class:recent.2.iconCls" data-bind-text="recent.2.iconGlyph">✕</div><div><div class="list-num" data-bind-text="recent.2.name">Harman</div><div class="list-meta" data-bind-text="recent.2.meta">+1 (778) 816-2400 · Missed</div></div><div class="list-time" data-bind-text="recent.2.time">12:42 PM</div><div class="list-actions"><button>📞</button><button>💬</button><button>👤</button></div></div>
-            <div class="list-row"><div data-bind-attr="class:recent.3.iconCls" data-bind-text="recent.3.iconGlyph">▼</div><div><div class="list-num" data-bind-text="recent.3.name">Vicky Milosevic-Hill</div><div class="list-meta" data-bind-text="recent.3.meta">+1 (905) 616-3324 · Inbound · 4m 21s</div></div><div class="list-time" data-bind-text="recent.3.time">11:55 AM</div><div class="list-actions"><button>📞</button><button>💬</button><button>👤</button></div></div>
-            <div class="list-row"><div data-bind-attr="class:recent.4.iconCls" data-bind-text="recent.4.iconGlyph">▲</div><div><div class="list-num" data-bind-text="recent.4.name">Frances Knox</div><div class="list-meta" data-bind-text="recent.4.meta">+1 (778) 318-2924 · Outbound · 6m 38s</div></div><div class="list-time" data-bind-text="recent.4.time">Yesterday</div><div class="list-actions"><button>📞</button><button>💬</button><button>👤</button></div></div>
-            <div class="list-row"><div data-bind-attr="class:recent.5.iconCls" data-bind-text="recent.5.iconGlyph">✕</div><div><div class="list-num" data-bind-text="recent.5.name">Unknown · +1 (416) 822-9931</div><div class="list-meta" data-bind-text="recent.5.meta">Missed</div></div><div class="list-time" data-bind-text="recent.5.time">Yesterday</div><div class="list-actions"><button>📞</button><button>💬</button><button>👤</button></div></div>
+            <div data-bind="recent"><template>
+              <div class="list-row" data-record-id="{{id}}">
+                <div class="{{iconCls}}">{{iconGlyph}}</div>
+                <div>
+                  <div class="list-num">{{name}}</div>
+                  <div class="list-meta">{{meta}}</div>
+                </div>
+                <div class="list-time" data-utc="{{timeUtc}}"></div>
+                <div class="list-actions">
+                  <button data-comm-action="action:phone.call.back">📞</button>
+                  <button data-comm-action="action:phone.sms.reply">💬</button>
+                  <button data-comm-action="action:phone.contact.view">👤</button>
+                </div>
+              </div>
+            </template></div>
+            <div class="list-empty" data-empty-unless="recent.0.name" data-bind-text="emptyMessage">No phone activity yet.</div>
+            <div class="ph-pager-bar">
+              <span>Showing <span data-bind-text="recentPagination.shown">0</span>
+                of <span data-bind-text="recentPagination.total">0</span> calls</span>
+              <div class="ph-pager" id="recentCallsPager"></div>
+            </div>
           </div>
         </div>
 
@@ -125,7 +141,7 @@
                   <div class="list-num">{{name}}</div>
                   <div class="list-meta">{{meta}}</div>
                 </div>
-                <div class="list-time">{{time}}</div>
+                <div class="list-time" data-utc="{{timeUtc}}"></div>
                 <div class="list-actions">
                   <button data-comm-action="action:phone.call.back">📞 Call back</button>
                   <button data-comm-action="action:phone.sms.reply">💬</button>
@@ -152,8 +168,25 @@
         <div data-ppanel="recordings" style="display:none;">
           <div class="list-card">
             <h2 data-bind-text="headings.3">Call Recordings</h2>
-            <div class="list-row"><div data-bind-attr="class:recordings.0.iconCls" data-bind-text="recordings.0.iconGlyph">▼</div><div style="flex:1;"><div class="list-num"><span data-bind-text="recordings.0.name">Johanna Kuyvenhoven</span></div><div class="list-meta" data-bind-text="recordings.0.meta">+1 (587) 920-4170 · Inbound</div><div class="audio-bar"><button class="play">▶</button><div class="progress"><div class="bar"></div></div><span class="dur">0:00 / 4:21</span></div></div><div class="list-time" data-bind-text="recordings.0.time">2:14 PM</div><div class="list-actions"><button data-comm-action="action:phoneSystem.recording.download">⬇ Download</button></div></div>
-            <div class="list-row"><div data-bind-attr="class:recordings.1.iconCls" data-bind-text="recordings.1.iconGlyph">▲</div><div style="flex:1;"><div class="list-num" data-bind-text="recordings.1.name">Frances Knox</div><div class="list-meta" data-bind-text="recordings.1.meta">+1 (778) 318-2924 · Outbound</div><div class="audio-bar"><button class="play">▶</button><div class="progress"><div class="bar"></div></div><span class="dur">0:00 / 6:38</span></div></div><div class="list-time" data-bind-text="recordings.1.time">Yesterday</div><div class="list-actions"><button data-comm-action="action:phoneSystem.recording.download">⬇ Download</button></div></div>
+            <div class="list-toolbar">
+              <input id="recSearch" type="search" placeholder="Search by phone number…" autocomplete="off" data-rec-filter>
+            </div>
+            <div data-bind="recordings"><template>
+              <div class="list-row" data-record-id="{{id}}" data-phone="{{phoneDigits}}" data-name="{{name}}">
+                <div class="{{iconCls}}">{{iconGlyph}}</div>
+                <div style="flex:1;">
+                  <div class="list-num">{{name}}</div>
+                  <div class="list-meta">{{meta}}</div>
+                  <div class="audio-bar"><button class="play">▶</button>
+                    <div class="progress"><div class="bar"></div></div><span class="dur">{{dur}}</span></div>
+                </div>
+                <div class="list-time">{{time}}</div>
+                <div class="list-actions">
+                  <button data-comm-action="action:phoneSystem.recording.download">⬇ Download</button>
+                </div>
+              </div>
+            </template></div>
+            <div class="list-empty" id="recEmpty" style="display:none;">No recordings match your search.</div>
           </div>
         </div>
 

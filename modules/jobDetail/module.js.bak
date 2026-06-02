@@ -42,10 +42,6 @@ async function load() {
     }
   } catch {}
 
-  // F#1378: derive per-item pin presentation fields + the pinned-strip model
-  // from the data the host already supplies (recordId + pinned on each item).
-  try { deriveTimelinePins(data.timeline); } catch {}
-
   window.S1.render.bind(document, data);
 
   // Seed the composer "To" fields when empty. The backend now provides
@@ -244,110 +240,16 @@ if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
   window.S1.bus.on('state:replaced', refreshFilesFilterCounts);
 }
 
-$$('.timeline-head .filter-chip').forEach((chip) => {
+$$('.timeline-head .filter-chip').forEach((chip, i) => {
   chip.addEventListener('click', () => {
     $$('.timeline-head .filter-chip').forEach(c => c.classList.toggle('active', c === chip));
-    // Order-independent: read the chip's declared filter kind (added on every
-    // chip in index.html) instead of relying on chip index. all|call|sms|mail|note|pinned
-    const kind = chip.getAttribute('data-jd-filter') || 'all';
+    const kind = ['all','call','sms','mail','note'][i] || 'all';
     $$('.tab-pane[data-pane="communication"] .tl-item, .tab-pane[data-pane="communication"] .tl-row').forEach(row => {
-      if (kind === 'all')    { row.style.display = ''; return; }
-      if (kind === 'pinned') { row.style.display = row.classList.contains('pinned') ? '' : 'none'; return; }
-      // Match the precise tl-<kind> class (not a substring) so descendant
-      // button classes can't cause a false match. Pinned-strip rows use
-      // .tl-pinned-item (not .tl-item), so they're never hidden here.
-      row.style.display = row.classList.contains('tl-' + kind) ? '' : 'none';
+      if (kind === 'all') { row.style.display = ''; return; }
+      row.style.display = row.className.toLowerCase().includes(kind) ? '' : 'none';
     });
   });
 });
-
-// ── F#1378: timeline pin surfacing (strip + count + optimistic model) ─────
-// The single source of truth is window.S1.fixtures.jobDetail.timeline — the
-// same object load() binds from and that the host re-emits with pinned:true
-// on a toggled item. Mutating it means optimistic state survives re-renders.
-function jdTimeline() {
-  const d = (window.S1.fixtures || {})["jobDetail"] || {};
-  return d.timeline || null;
-}
-function jdStripText(html) {
-  // Plain-text snippet without innerHTML (CLAUDE.md rule 2). body is blanked
-  // for mail rows (load() moves it to bodyHtml), so the strip falls back to
-  // the stripped bodyHtml for emails.
-  try { return new DOMParser().parseFromString(html || '', 'text/html').body.textContent || ''; }
-  catch { return ''; }
-}
-function jdComputeItem(it) {
-  it.pinnedClass = it.pinned ? 'pinned' : '';
-  it.preview = (it.body && it.body.trim()) ? it.body : jdStripText(it.bodyHtml);
-}
-function deriveTimelinePins(tl) {
-  if (!tl) return;
-  const sections = Array.isArray(tl.daySections) ? tl.daySections : [];
-  const pinned = [];
-  for (const sec of sections) {
-    for (const it of (sec.items || [])) {
-      jdComputeItem(it);
-      if (it.pinned) pinned.push(it);
-    }
-  }
-  tl.pinnedItems = pinned;
-  tl.pinnedCount = pinned.length ? String(pinned.length) : '';
-}
-// Update the in-memory model for one item, scoped by kind (note vs comm) so
-// numerically-colliding ids from different tables never cross-match.
-function setItemPinned(kind, recordId, pinned) {
-  const tl = jdTimeline();
-  if (!tl || !Array.isArray(tl.daySections)) return;
-  const wantNote = (kind === 'note');
-  for (const sec of tl.daySections) {
-    for (const it of (sec.items || [])) {
-      const itNote = (it.kind === 'note');
-      if (itNote === wantNote && String(it.recordId) === String(recordId)) {
-        it.pinned = !!pinned;
-        it.pinnedClass = pinned ? 'pinned' : '';
-      }
-    }
-  }
-}
-// Re-derive pinnedItems/pinnedCount and rebuild the strip DOM via
-// createElement/textContent only (no innerHTML, CLAUDE.md rule 2).
-function refreshPinned() {
-  const tl = jdTimeline();
-  if (!tl) return;
-  const sections = Array.isArray(tl.daySections) ? tl.daySections : [];
-  const pinned = [];
-  for (const sec of sections) {
-    for (const it of (sec.items || [])) {
-      jdComputeItem(it);
-      if (it.pinned) pinned.push(it);
-    }
-  }
-  tl.pinnedItems = pinned;
-  tl.pinnedCount = pinned.length ? String(pinned.length) : '';
-
-  const list = document.querySelector('.tl-pinned-strip .tl-pinned-list');
-  if (list) {
-    while (list.firstChild) list.removeChild(list.firstChild);
-    for (const it of pinned) {
-      const row = document.createElement('div');
-      row.className = 'tl-pinned-item tl-' + (it.kind || '');
-      row.setAttribute('data-jd-pinned-record', it.recordId == null ? '' : String(it.recordId));
-      row.setAttribute('data-jd-pinned-kind', it.kind || '');
-      const k = document.createElement('span'); k.className = 'tl-pinned-kind'; k.textContent = it.kindLabel || ''; row.appendChild(k);
-      const b = document.createElement('span'); b.className = 'tl-pinned-body'; b.textContent = it.preview || ''; row.appendChild(b);
-      const t = document.createElement('span'); t.className = 'tl-pinned-time'; t.textContent = it.time || ''; row.appendChild(t);
-      const x = document.createElement('button'); x.type = 'button'; x.className = 'tl-pinned-unpin';
-      x.setAttribute('data-jd-unpin', it.recordId == null ? '' : String(it.recordId));
-      x.setAttribute('data-jd-unpin-kind', it.kind || '');
-      x.title = 'Unpin'; x.textContent = '×'; row.appendChild(x);
-      list.appendChild(row);
-    }
-  }
-  $$('[data-bind-text="timeline.pinnedCount"]').forEach(el => { el.textContent = tl.pinnedCount; });
-  const strip = document.querySelector('.tl-pinned-strip');
-  if (strip) strip.style.display = pinned.length ? '' : 'none';
-}
-function jdCssAttrEsc(s) { return String(s).replace(/["\\]/g, '\\$&'); }
 
 // ── 9) Status select ────────────────────────────────────────────────────
 (function () {
@@ -384,6 +286,16 @@ function jdCssAttrEsc(s) { return String(s).replace(/["\\]/g, '\\$&'); }
   btn.addEventListener('click', (ev) => {
     ev.preventDefault();
     window.S1.modal.open('#jdContactDetailsModal');
+  });
+})();
+
+// ── 12) Set follow-up ───────────────────────────────────────────────────
+(function () {
+  const link = $$('.cust-header .link').find(a => /follow-up/i.test(a.textContent));
+  if (!link) return;
+  link.addEventListener('click', (ev) => {
+    ev.preventDefault();
+    flash('Set follow-up from the job details modal');
   });
 })();
 
@@ -477,7 +389,7 @@ $$('button').filter(b => /mark bad lead/i.test(b.textContent.trim())).forEach(b 
 })();
 
 // ── 18) Growth plan: + Add stop and Remove stop ─────────────────────────
-$$('.s-action').filter(b => /add stop/i.test(b.textContent)).forEach(btn => {
+$$('.s-action, .gp2-add-stop').filter(b => /add stop/i.test(b.textContent)).forEach(btn => {
   btn.setAttribute('data-comm-action', 'action:jobDetail.add-stop:');
   btn.__s1Wired = true;
   btn.addEventListener('click', (ev) => {
@@ -608,21 +520,7 @@ function renderQuickCharges() {
     Specialty: { bg: '#F1E8DD',           fg: '#8B6324' }
   };
   while (host.firstChild) host.removeChild(host.firstChild);
-
-  // F1322: organize presets into category groups so a long flat list of
-  // quick-add buttons becomes easier to scan. Category falls back to the
-  // charge type (and finally "Other") so every preset lands in some group.
-  // Group order is the first appearance order of the (already sorted) presets.
-  const groups = [];
-  const byCat = new Map();
   presets.forEach(p => {
-    const cat = (p.category || p.chargeType || 'Other').trim() || 'Other';
-    let bucket = byCat.get(cat);
-    if (!bucket) { bucket = []; byCat.set(cat, bucket); groups.push(cat); }
-    bucket.push(p);
-  });
-
-  function buildButton(p) {
     const node = tmpl.content.firstElementChild.cloneNode(true);
     const label = node.querySelector('[data-quick-label]');
     if (label) label.textContent = p.name || p.chargeType || 'Charge';
@@ -649,21 +547,7 @@ function renderQuickCharges() {
         flash('Added ' + (node.getAttribute('data-preset-name') || 'charge'));
       });
     });
-    return node;
-  }
-
-  groups.forEach(cat => {
-    const group = document.createElement('div');
-    group.className = 'gp2-quick-group';
-    const head = document.createElement('div');
-    head.className = 'gp2-quick-cat';
-    head.textContent = cat;
-    group.appendChild(head);
-    const row = document.createElement('div');
-    row.className = 'gp2-quick-row';
-    byCat.get(cat).forEach(p => row.appendChild(buildButton(p)));
-    group.appendChild(row);
-    host.appendChild(group);
+    host.appendChild(node);
   });
 }
 document.addEventListener('s1ui:ready', renderQuickCharges);
@@ -887,45 +771,8 @@ document.addEventListener('click', async (ev) => {
   await safe('Pin note', async () => {
     const r = await comm.action('jobDetail.pin-note', { noteId });
     if (r && r.ok === false) { flash(r.error || 'Pin failed', 'bad'); return; }
-    const nowPinned = btn.classList.toggle('pinned');
-    const row = btn.closest('.tl-item');
-    if (row) row.classList.toggle('pinned', nowPinned);
-    setItemPinned('note', noteId, nowPinned);
-    refreshPinned();
+    btn.classList.toggle('pinned');
     flash('Note pin toggled');
-  });
-});
-
-// ── 22b-2) F#1378: unpin control inside the pinned strip ───────────────────
-// The "×" on a strip item reuses the same toggle endpoints (pin-note /
-// pin-comm), which flip IsPinned, so a second toggle unpins. Kind-scoped so
-// note/comm ids from different tables can't cross-match.
-document.addEventListener('click', async function (ev) {
-  const x = ev.target.closest && ev.target.closest('[data-jd-unpin]');
-  if (!x) return;
-  ev.preventDefault();
-  ev.stopPropagation();
-  const recordId = x.getAttribute('data-jd-unpin');
-  const kind = x.getAttribute('data-jd-unpin-kind') || '';
-  if (!recordId) return;
-  const isNote = (kind === 'note');
-  await safe('Unpin', async function () {
-    const r = isNote
-      ? await comm.action('jobDetail.pin-note', { noteId: recordId })
-      : await comm.action('jobDetail.pin-comm', { commId: recordId });
-    if (r && r.ok === false) { flash(r.error || 'Unpin failed', 'bad'); return; }
-    const sel = isNote
-      ? '.tab-pane[data-pane="communication"] .tl-item.tl-note button.tl-pin[data-jd-pin="' + jdCssAttrEsc(recordId) + '"]'
-      : '.tab-pane[data-pane="communication"] .tl-item:not(.tl-note) button.tl-pin-comm[data-jd-pin-comm="' + jdCssAttrEsc(recordId) + '"]';
-    const btn = document.querySelector(sel);
-    if (btn) {
-      btn.classList.remove('pinned');
-      const row = btn.closest('.tl-item');
-      if (row) row.classList.remove('pinned');
-    }
-    setItemPinned(isNote ? 'note' : 'comm', recordId, false);
-    refreshPinned();
-    flash(isNote ? 'Note unpinned' : 'Communication unpinned');
   });
 });
 
@@ -1127,14 +974,6 @@ document.addEventListener('click', async (ev) => {
       var r = await comm.action('jobDetail.revert-two-day', {});
       if (r && r.ok === false) { flash(r.error || 'Revert failed', 'bad'); return; }
       flash('Reverted to single-day move');
-      // When reverting from the deleted Delivery child, the server returns a local
-      // path to the surviving anchor — navigate there so we don't sit on a dead page.
-      if (r && r.navigateTo) {
-        var dest = String(r.navigateTo);
-        var local = /^\/(?!\/)/.test(dest) ? dest : '/Jobs';
-        try { window.top.location.href = local; }
-        catch (_) { window.location.href = local; }
-      }
     });
   });
 })();
@@ -1203,11 +1042,7 @@ document.addEventListener('click', async function (ev) {
     await safe('Pin communication', async function () {
       var r = await comm.action('jobDetail.pin-comm', { commId: commId });
       if (r && r.ok === false) { flash(r.error || 'Pin failed', 'bad'); return; }
-      var nowPinned = pin.classList.toggle('pinned');
-      var row = pin.closest('.tl-item');
-      if (row) row.classList.toggle('pinned', nowPinned);
-      setItemPinned('comm', commId, nowPinned);
-      refreshPinned();
+      pin.classList.toggle('pinned');
       flash('Communication pin toggled');
     });
     return;
@@ -2369,8 +2204,6 @@ document.addEventListener('click', function (ev) {
     const notes = (window.__jobDetailEditors && window.__jobDetailEditors.get)
       ? await window.__jobDetailEditors.get('call')
       : '';
-    const follow = document.querySelector('.cmx-check[data-cmx-check="callFollow"]');
-    const fuDt = document.getElementById('cmxCallFuDt');
     return {
       composer:  'call',
       direction: readBind('call', 'direction') || 'Outbound',
@@ -2379,8 +2212,6 @@ document.addEventListener('click', function (ev) {
       notes:     notes || '',
       followUpEmailTemplateId: readBind('call', 'followUpEmailTemplateId'),
       followUpTextTemplateId:  readBind('call', 'followUpTextTemplateId'),
-      createFollowUp: !!(follow && follow.classList.contains('on')),
-      followUpDate: (fuDt && fuDt.value) ? new Date(fuDt.value).toISOString() : '',
       attachments: pendingAttachments.call.slice()
     };
   }
@@ -2516,20 +2347,6 @@ document.addEventListener('click', function (ev) {
       el.addEventListener('click', (ev) => {
         ev.preventDefault();
         el.classList.toggle('on');
-        // Call tab: reveal the date input and default it to tomorrow 9 AM.
-        if (el.getAttribute('data-cmx-check') === 'callFollow') {
-          const dt = document.getElementById('cmxCallFuDt');
-          if (dt) {
-            const on = el.classList.contains('on');
-            dt.style.display = on ? '' : 'none';
-            if (on && !dt.value) {
-              const d = new Date();
-              d.setDate(d.getDate() + 1);
-              d.setHours(9, 0, 0, 0);
-              dt.value = d.toISOString().slice(0, 16);
-            }
-          }
-        }
       });
     });
   }

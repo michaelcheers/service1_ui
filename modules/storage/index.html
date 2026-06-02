@@ -40,7 +40,7 @@
           <span class="muted">Customer storage accounts</span>
         </div>
         <div class="page-actions">
-          <button class="btn btn-primary" onclick="document.getElementById('newStorModal').classList.add('open')">+ New Storage Account</button>
+          <button class="btn btn-primary" data-st-open="newStorAccountModal" type="button">+ New Storage Account</button>
         </div>
       </div>
 
@@ -89,7 +89,7 @@
 .stm-input:focus, .stm-select:focus, .stm-textarea:focus { border-color:var(--terra); box-shadow:0 0 0 3px var(--terra-soft); }
 .stm-actions { display:flex; justify-content:flex-end; gap:8px; padding:14px 22px; border-top:var(--hair); }
 </style>
-<div class="stm-overlay" id="newStorModal">
+<div class="stm-overlay st-overlay" id="newStorAccountModal">
   <div class="stm-modal">
     <div class="stm-head"><div class="stm-title">New Storage Account</div><button data-modal-close class="stm-close">✕</button></div>
     <div class="stm-body">
@@ -123,7 +123,7 @@
       </div>
 
       <div class="stm-section-title">Notes</div>
-      <textarea name="autoChargeLateFeeAfter" class="stm-textarea" placeholder="Internal notes — access requirements, key location, etc."></textarea>
+      <textarea name="notes" class="stm-textarea" placeholder="Internal notes — access requirements, key location, etc."></textarea>
     </div>
     <div class="stm-actions">
       <button data-modal-close class="btn btn-secondary">Cancel</button>
@@ -133,12 +133,12 @@
 </div>
 <!-- v12: Storage toolbar -->
 <div style="display:flex;gap:8px;flex-wrap:wrap;padding:0 24px 16px;">
-  <button class="s1-btn pri" data-st-open="newStorModal" type="button">+ New unit</button>
+  <button class="s1-btn pri" data-st-open="newStorUnitModal" type="button">+ New unit</button>
   <button class="s1-btn sec" data-st-open="moveStorModal" type="button">Move to unit</button>
   <button class="s1-btn sec" data-st-open="releaseStorModal" type="button">Release</button>
   <button class="s1-btn sec" data-st-open="billCycleModal" type="button">Bill cycle</button>
 </div>
-<div class="s1-overlay st-overlay" id="newStorModal" role="dialog"><div class="s1-modal lg">
+<div class="s1-overlay st-overlay" id="newStorUnitModal" role="dialog"><div class="s1-modal lg">
   <div class="s1-mhead"><div><div class="s1-mkicker">Storage</div><h4>New storage unit</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
   <div class="s1-mgrid">
     <div class="full"><label class="s1-mlabel">Customer</label><select class="s1-select" name="customerId" data-bind-options="customers"><option value="">Choose…</option></select></div>
@@ -152,15 +152,17 @@
 </div></div>
 <div class="s1-overlay st-overlay" id="moveStorModal" role="dialog"><div class="s1-modal">
   <div class="s1-mhead"><div><div class="s1-mkicker">Storage</div><h4>Move to unit</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
-  <div class="s1-mgrid"><input type="hidden" name="unitId">
-    <div class="full"><label class="s1-mlabel">Target unit</label><select class="s1-select" name="targetUnitId" data-bind-options="availableUnits"><option value="">Choose…</option></select></div>
+  <div class="s1-mgrid">
+    <div class="full"><label class="s1-mlabel">Unit to move</label><select class="s1-select" name="unitId" data-bind-options="units2"><option value="">Choose…</option></select></div>
+    <div class="full"><label class="s1-mlabel">Target account</label><select class="s1-select" name="targetUnitId" data-bind-options="availableUnits"><option value="">Choose…</option></select></div>
     <div class="full"><label class="s1-mlabel">Move date</label><input class="s1-input" type="date" name="moveDate"></div>
   </div>
   <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Move</button></div>
 </div></div>
 <div class="s1-overlay st-overlay" id="releaseStorModal" role="dialog"><div class="s1-modal">
   <div class="s1-mhead"><div><div class="s1-mkicker">Storage</div><h4>Release unit</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
-  <div class="s1-mgrid"><input type="hidden" name="unitId">
+  <div class="s1-mgrid">
+    <div class="full"><label class="s1-mlabel">Unit to release</label><select class="s1-select" name="unitId" data-bind-options="units2"><option value="">Choose…</option></select></div>
     <div><label class="s1-mlabel">Release date</label><input class="s1-input" type="date" name="releaseDate"></div>
     <div><label class="s1-mlabel">Final charge</label><input class="s1-input" type="number" step="0.01" name="finalCharge"></div>
   </div>

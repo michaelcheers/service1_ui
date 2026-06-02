@@ -448,9 +448,15 @@ function syncTeamRowsToFixture() {
     const i = parseInt(cell.getAttribute('data-team-idx'), 10);
     const ok = i < teams.length && teams[i] != null;
     cell.style.display = ok ? '' : 'none';
+    // Carry the real Crew.Id onto the cell+lane so drops post the correct
+    // crew instead of a sequential lane index.
+    if (ok && teams[i].crewId != null) cell.setAttribute('data-crew-id', String(teams[i].crewId));
+    else cell.removeAttribute('data-crew-id');
     const lane = document.querySelector('.lane[data-lane="' + i + '"]');
     if (lane) {
       lane.style.display = ok ? '' : 'none';
+      if (ok && teams[i].crewId != null) lane.setAttribute('data-crew-id', String(teams[i].crewId));
+      else lane.removeAttribute('data-crew-id');
       // Drive each .job from fixture timeline.laneN[j]:
       //   { title, sub, color, leftHr, widthHr, confirmed }
       // — color drives the .job swatch class (terra/info/plum/teal/warn/gold/bad
@@ -806,7 +812,9 @@ if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
   function tagSources() {
     // Resources: every .r-list .r-row gets a kind + synthetic id by index.
     $$('.r-list .r-row').forEach((row, i) => {
-      if (row.hasAttribute('data-drag-id')) return;
+      // A real id rendered from state (data-drag-id="{{id}}") wins; only
+      // synthesise an index when the attribute is missing or empty.
+      if (row.getAttribute('data-drag-id')) return;
       const av = row.querySelector('.av');
       const cls = av ? av.className : '';
       let kind = 'employee';
@@ -1001,18 +1009,19 @@ if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
       cleanupDragVisuals();
       const raw  = e.dataTransfer.getData('application/x-sched-drag') || e.dataTransfer.getData('text/plain') || '';
       const info = parsePayload(raw); if (!info) return;
-      const crewId    = parseInt(lane.getAttribute('data-lane'), 10) + 1; // 1-based
+      const crewId    = parseInt(lane.getAttribute('data-crew-id'), 10);
       const date      = selectedDate();
       const startHour = calcHourFromX(lane, e.clientX);
+      if (!crewId) { flash('This lane has no crew yet'); activeDrag = null; return; }
       if (info.kind === 'employee') {
         await safe('Add member', async () => {
           const r = await comm.action('scheduling.add-member', { crewId, employeeId: Number(info.id), date });
-          if (r && r.ok) flash('Added to crew');
+          if (r && r.ok) { flash('Added to crew'); await load(); }
         });
       } else if (info.kind === 'vehicle') {
         await safe('Add vehicle', async () => {
           const r = await comm.action('scheduling.add-vehicle', { crewId, vehicleId: Number(info.id), date });
-          if (r && r.ok) flash('Vehicle added');
+          if (r && r.ok) { flash('Vehicle added'); await load(); }
         });
       } else if (info.kind === 'job' || info.kind === 'timeline-job') {
         const draggedEl = activeDrag && activeDrag.el;
@@ -1178,10 +1187,11 @@ if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
     const date = selectedDate();
     try {
       if (lane) {
-        const crewId    = parseInt(lane.getAttribute('data-lane'), 10) + 1;
+        const crewId    = parseInt(lane.getAttribute('data-crew-id'), 10);
         const startHour = calcHourFromX(lane, t.clientX);
-        if (touch.kind === 'employee')      await comm.action('scheduling.add-member', { crewId, employeeId: Number(touch.id), date });
-        else if (touch.kind === 'vehicle')  await comm.action('scheduling.add-vehicle', { crewId, vehicleId: Number(touch.id), date });
+        if (!crewId) { flash('This lane has no crew yet'); touch = null; return; }
+        if (touch.kind === 'employee')      { await comm.action('scheduling.add-member', { crewId, employeeId: Number(touch.id), date }); await load(); }
+        else if (touch.kind === 'vehicle')  { await comm.action('scheduling.add-vehicle', { crewId, vehicleId: Number(touch.id), date }); await load(); }
         else                                await comm.action('scheduling.assign-job', { jobId: Number(touch.id), crewId, date, startHour });
       } else if (jobsP && touch.kind === 'timeline-job') {
         await comm.action('scheduling.unassign-job', { jobId: Number(touch.id) });

@@ -275,6 +275,19 @@ document.addEventListener('click', (ev) => {
   if (menu && !menu.hidden && !ev.target.closest('.jc-popover-wrap')) menu.hidden = true;
 });
 
+// Highlight the active location row in the dropdown so the user always sees which
+// location is in scope. Re-applied after every re-render (the menu rows are rebound).
+function reflectActiveLocation() {
+  const fx = (window.S1 && window.S1.fixtures && window.S1.fixtures.jobCalendar) || {};
+  const cur = fx.locationId || 'all';
+  $$('.jc-loc-menu-item').forEach(it =>
+    it.classList.toggle('selected', (it.getAttribute('data-loc-id') || 'all') === cur));
+}
+document.addEventListener('s1ui:ready', reflectActiveLocation);
+if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
+  window.S1.bus.on('state:replaced', () => { reflectActiveLocation(); });
+}
+
 // Month picker.
 function buildMonthPicker(year) {
   const grid = document.getElementById('jcMonthPickerGrid');
@@ -344,8 +357,28 @@ document.addEventListener('click', (ev) => {
   if (menu && !menu.hidden && !ev.target.closest('.jc-popover-wrap')) menu.hidden = true;
 });
 
-// Click a job pill → open that job
+// Click a job pill OR a selected-day row → open / navigate
 document.addEventListener('click', async (ev) => {
+  // Selected-day panel rows.
+  const row = ev.target.closest('.jc-day-item');
+  if (row) {
+    const rid = row.getAttribute('data-record-id');
+    if (rid) {
+      ev.preventDefault();
+      await safe('Open job', async () => {
+        const r = await comm.action('jobCalendar.open', { id: rid });
+        if (r && r.navigateTo) window.location.href = r.navigateTo;
+      });
+      return;
+    }
+    const nav = row.getAttribute('data-nav');
+    if (nav && nav !== '#') {
+      ev.preventDefault();
+      try { window.parent.postMessage({ type: 's1ui:navigate', href: nav }, '*'); } catch (_) {}
+    }
+    return;
+  }
+  // Existing grid-pill convention (unchanged).
   const pill = ev.target.closest('.cal-pill, .cal-job, [data-record-id]');
   if (!pill) return;
   const id = pill.getAttribute('data-record-id');

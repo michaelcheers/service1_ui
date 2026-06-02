@@ -1473,6 +1473,28 @@
   roleOptions: [{"value": "Primary", "label": "Primary"}, {"value": "Secondary", "label": "Secondary"}, {"value": "Spouse / Partner", "label": "Spouse / Partner"}, {"value": "Referrer", "label": "Referrer"}, {"value": "Property manager", "label": "Property manager"}, {"value": "Other", "label": "Other"}],
   categoryOptions: [{"value": "Revenue", "label": "Revenue"}, {"value": "Discount", "label": "Discount"}, {"value": "Tax-exempt", "label": "Tax-exempt"}],
   chargeTypeOptions: [{"value": "Labor", "label": "Labor"}, {"value": "Travel", "label": "Travel"}, {"value": "Packing", "label": "Packing"}, {"value": "Material", "label": "Material"}, {"value": "Specialty", "label": "Specialty"}, {"value": "Other", "label": "Other"}],
+  chargePresets: [
+    { id: 1,  name: "Labor",                              chargeType: "Labor",     category: "Labor & Services", defaultRate: 119, defaultQty: 1, sortOrder: 0 },
+    { id: 2,  name: "Truck & Moving Essentials fee",      chargeType: "Labor",     category: "Labor & Services", defaultRate: 139, defaultQty: 1, sortOrder: 1 },
+    { id: 3,  name: "Heavy equipment",                    chargeType: "Specialty", category: "Specialty",        defaultRate: 75,  defaultQty: 1, sortOrder: 2 },
+    { id: 4,  name: "Small Boxes",                        chargeType: "Material",  category: "Boxes",            defaultRate: 3,   defaultQty: 1, sortOrder: 3 },
+    { id: 5,  name: "Medium Boxes",                       chargeType: "Material",  category: "Boxes",            defaultRate: 4,   defaultQty: 1, sortOrder: 4 },
+    { id: 6,  name: "Large Boxes",                        chargeType: "Material",  category: "Boxes",            defaultRate: 5,   defaultQty: 1, sortOrder: 5 },
+    { id: 7,  name: "XLarge Boxes",                       chargeType: "Material",  category: "Boxes",            defaultRate: 6,   defaultQty: 1, sortOrder: 6 },
+    { id: 8,  name: "TV Box Rental 46\"",                 chargeType: "Material",  category: "Boxes",            defaultRate: 15,  defaultQty: 1, sortOrder: 7 },
+    { id: 9,  name: "Wardrobe Box Rental",               chargeType: "Material",  category: "Boxes",            defaultRate: 12,  defaultQty: 1, sortOrder: 8 },
+    { id: 10, name: "Wardrobe Box Purchase",             chargeType: "Material",  category: "Boxes",            defaultRate: 20,  defaultQty: 1, sortOrder: 9 },
+    { id: 11, name: "Double Mattress Bag",               chargeType: "Material",  category: "Mattress Bags",    defaultRate: 8,   defaultQty: 1, sortOrder: 10 },
+    { id: 12, name: "Queen Mattress Bag",                chargeType: "Material",  category: "Mattress Bags",    defaultRate: 9,   defaultQty: 1, sortOrder: 11 },
+    { id: 13, name: "King Mattress Bag",                 chargeType: "Material",  category: "Mattress Bags",    defaultRate: 10,  defaultQty: 1, sortOrder: 12 },
+    { id: 14, name: "Single/Twin Mattress Bag",          chargeType: "Material",  category: "Mattress Bags",    defaultRate: 7,   defaultQty: 1, sortOrder: 13 },
+    { id: 15, name: "Blanket",                           chargeType: "Packing",   category: "Packing Supplies", defaultRate: 5,   defaultQty: 1, sortOrder: 14 },
+    { id: 16, name: "Tape",                              chargeType: "Packing",   category: "Packing Supplies", defaultRate: 3,   defaultQty: 1, sortOrder: 15 },
+    { id: 17, name: "Marker",                            chargeType: "Packing",   category: "Packing Supplies", defaultRate: 2,   defaultQty: 1, sortOrder: 16 },
+    { id: 18, name: "Large Bundle Packing Paper",        chargeType: "Packing",   category: "Packing Supplies", defaultRate: 25,  defaultQty: 1, sortOrder: 17 },
+    { id: 19, name: "Small Bundle Packing Paper",        chargeType: "Packing",   category: "Packing Supplies", defaultRate: 15,  defaultQty: 1, sortOrder: 18 },
+    { id: 20, name: "Rental Bin (VAN 1 Week)",           chargeType: "Material",  category: "Rentals",          defaultRate: 35,  defaultQty: 1, sortOrder: 19 }
+  ],
   presetOptions: [{"value": "Standard 2-Man Hourly \u00b7 $140 / hr", "label": "Standard 2-Man Hourly \u00b7 $140 / hr"}, {"value": "Standard 3-Man Hourly \u00b7 $185 / hr", "label": "Standard 3-Man Hourly \u00b7 $185 / hr"}, {"value": "Travel Fee \u2014 Local \u00b7 $95", "label": "Travel Fee \u2014 Local \u00b7 $95"}, {"value": "Stairs (per flight) \u00b7 $25", "label": "Stairs (per flight) \u00b7 $25"}, {"value": "Long walk (&gt; 75 ft) \u00b7 $40", "label": "Long walk (&gt; 75 ft) \u00b7 $40"}, {"value": "Heavy item \u00b7 $75", "label": "Heavy item \u00b7 $75"}, {"value": "Piano Move \u00b7 $180", "label": "Piano Move \u00b7 $180"}],
   longCarryOptions: [{"value": "No", "label": "No"}, {"value": "Yes", "label": "Yes"}],
   elevatorOptions: [{"value": "Yes \u00b7 reservation required", "label": "Yes \u00b7 reservation required"}, {"value": "Yes", "label": "Yes"}, {"value": "No \u2014 stairs only", "label": "No \u2014 stairs only"}],
@@ -1609,9 +1631,9 @@
         {
           label: "Today · Jan 8, 2026",
           items: [
-            { kind: "call",    kindLabel: "Outbound call", arrow: "→", by: "John Sales called Alice", body: "Confirmed Jan 12 7:00 AM window. Customer asked about packing add-on — sent her the box delivery FAQ. Will follow up Wednesday.", time: "9:43 AM" },
-            { kind: "sms",     kindLabel: "SMS",           arrow: "←", by: "Alice → John Sales",        body: "Sounds good. Tim said you guys were great with his move last fall — looking forward to it.", time: "9:38 AM" },
-            { kind: "sms",     kindLabel: "SMS",           arrow: "→", by: "John Sales → Alice",        body: "Hi Alice — just confirming your move for Jan 12 at 7 AM. Two movers, one truck.", time: "9:35 AM" }
+            { kind: "call",    kindLabel: "Outbound call", arrow: "→", by: "John Sales called Alice", body: "Confirmed Jan 12 7:00 AM window. Customer asked about packing add-on — sent her the box delivery FAQ. Will follow up Wednesday.", time: "9:43 AM", recordId: "c1", pinned: true },
+            { kind: "sms",     kindLabel: "SMS",           arrow: "←", by: "Alice → John Sales",        body: "Sounds good. Tim said you guys were great with his move last fall — looking forward to it.", time: "9:38 AM", recordId: "c2", pinned: false },
+            { kind: "sms",     kindLabel: "SMS",           arrow: "→", by: "John Sales → Alice",        body: "Hi Alice — just confirming your move for Jan 12 at 7 AM. Two movers, one truck.", time: "9:35 AM", recordId: "c3", pinned: false }
           ]
         },
         {
@@ -1627,8 +1649,8 @@
                 '<a href="#">Move-day checklist.pdf</a></p>' +
                 '<p>Reply to this email with any questions.</p>' +
                 '<p style="color:#64748b;font-size:12px;">— John Sales, Service1</p>',
-              time: "2:20 PM" },
-            { kind: "note", kindLabel: "Note",      arrow: "",  by: "John Sales",                   body: "Referred by Tim Walsh (job #16204). 3-bedroom downtown apartment.", time: "11:02 AM" }
+              time: "2:20 PM", recordId: "c4", pinned: true },
+            { kind: "note", kindLabel: "Note",      arrow: "",  by: "John Sales",                   body: "Referred by Tim Walsh (job #16204). 3-bedroom downtown apartment.", time: "11:02 AM", recordId: "n1", pinned: false }
           ]
         }
       ],
@@ -3485,25 +3507,25 @@
     },
     // ── Resources column (left panel) ──
     rLeaders: [
-      { initials: "AH", name: "Andrew Haylton", role: "Team Leader · Truck 1", assigned: " assigned",  badgeDisplay: "inline-flex" },
-      { initials: "DJ", name: "Donald James",   role: "Team Leader · Van 1",   assigned: " assigned",  badgeDisplay: "inline-flex" },
-      { initials: "FW", name: "Fred Waite",     role: "Team Leader",           assigned: "",            badgeDisplay: "none" },
-      { initials: "GS", name: "Gerald Sabados", role: "Team Leader",           assigned: "",            badgeDisplay: "none" },
-      { initials: "GS", name: "Gurstuik Sigh",  role: "Team Leader",           assigned: "",            badgeDisplay: "none" }
+      { id: "101", initials: "AH", name: "Andrew Haylton", role: "Team Leader · Truck 1", assigned: " assigned",  badgeDisplay: "inline-flex" },
+      { id: "102", initials: "DJ", name: "Donald James",   role: "Team Leader · Van 1",   assigned: " assigned",  badgeDisplay: "inline-flex" },
+      { id: "103", initials: "FW", name: "Fred Waite",     role: "Team Leader",           assigned: "",            badgeDisplay: "none" },
+      { id: "104", initials: "GS", name: "Gerald Sabados", role: "Team Leader",           assigned: "",            badgeDisplay: "none" },
+      { id: "105", initials: "GS", name: "Gurstuik Sigh",  role: "Team Leader",           assigned: "",            badgeDisplay: "none" }
     ],
     rMembers: [
-      { initials: "JM", name: "Jackson Mungai", role: "Mover · Truck 1", avCls: "mover",  assigned: " assigned", badgeDisplay: "inline-flex" },
-      { initials: "PR", name: "Paul Rai",       role: "Mover",           avCls: "mover",  assigned: "",            badgeDisplay: "none" },
-      { initials: "AZ", name: "Alex Zu",        role: "Driver",          avCls: "driver", assigned: "",            badgeDisplay: "none" },
-      { initials: "GA", name: "Gurtsik Ann",    role: "Helper",          avCls: "helper", assigned: "",            badgeDisplay: "none" }
+      { id: "201", initials: "JM", name: "Jackson Mungai", role: "Mover · Truck 1", avCls: "mover",  assigned: " assigned", badgeDisplay: "inline-flex" },
+      { id: "202", initials: "PR", name: "Paul Rai",       role: "Mover",           avCls: "mover",  assigned: "",            badgeDisplay: "none" },
+      { id: "203", initials: "AZ", name: "Alex Zu",        role: "Driver",          avCls: "driver", assigned: "",            badgeDisplay: "none" },
+      { id: "204", initials: "GA", name: "Gurtsik Ann",    role: "Helper",          avCls: "helper", assigned: "",            badgeDisplay: "none" }
     ],
     rFleet: [
-      { initials: "T1", name: "Truck 1",   sub: "Truck",   cap: "26 ft", assigned: " assigned" },
-      { initials: "T2", name: "Truck 2",   sub: "Truck",   cap: "22 ft", assigned: "" },
-      { initials: "T3", name: "Truck 3",   sub: "Truck",   cap: "26 ft", assigned: "" },
-      { initials: "V1", name: "Van 1",     sub: "Van",     cap: "14 ft", assigned: " assigned" },
-      { initials: "V2", name: "Van 2",     sub: "Van",     cap: "14 ft", assigned: "" },
-      { initials: "Tr", name: "Trailer 1", sub: "Trailer", cap: "16 ft", assigned: "" }
+      { id: "301", initials: "T1", name: "Truck 1",   sub: "Truck",   cap: "26 ft", assigned: " assigned" },
+      { id: "302", initials: "T2", name: "Truck 2",   sub: "Truck",   cap: "22 ft", assigned: "" },
+      { id: "303", initials: "T3", name: "Truck 3",   sub: "Truck",   cap: "26 ft", assigned: "" },
+      { id: "304", initials: "V1", name: "Van 1",     sub: "Van",     cap: "14 ft", assigned: " assigned" },
+      { id: "305", initials: "V2", name: "Van 2",     sub: "Van",     cap: "14 ft", assigned: "" },
+      { id: "306", initials: "Tr", name: "Trailer 1", sub: "Trailer", cap: "16 ft", assigned: "" }
     ],
     // ── Calendar tab cells (per resource × per day) ──
     // Each day uses two slots (label1/style1, label2/style2). Empty strings hide the chip.
@@ -3581,10 +3603,10 @@
     ],
     // ── Timeline teams (Daily view) ──
     teams: [
-      { name: "Team Alpha", dotColor: "var(--terra)", chip1: "2", chip2: "1", chipCap: "26 ft", chipCapBg: "var(--terra-soft)", chipCapColor: "var(--terra)", warnChip: "" },
-      { name: "Team Blue",  dotColor: "var(--info)",  chip1: "2", chip2: "1", chipCap: "14 ft", chipCapBg: "var(--info-bg)",    chipCapColor: "var(--info)",  warnChip: "" },
+      { crewId: "17", name: "Team Alpha", dotColor: "var(--terra)", chip1: "2", chip2: "1", chipCap: "26 ft", chipCapBg: "var(--terra-soft)", chipCapColor: "var(--terra)", warnChip: "" },
+      { crewId: "23", name: "Team Blue",  dotColor: "var(--info)",  chip1: "2", chip2: "1", chipCap: "14 ft", chipCapBg: "var(--info-bg)",    chipCapColor: "var(--info)",  warnChip: "" },
       { name: "Team Gray",  dotColor: "var(--slate)", chip1: "",  chip2: "",  chipCap: "",      chipCapBg: "",                  chipCapColor: "",             warnChip: "No team assigned" },
-      { name: "Team Teal",  dotColor: "var(--teal)",  chip1: "3", chip2: "1", chipCap: "26 ft", chipCapBg: "var(--teal-bg)",    chipCapColor: "var(--teal)",  warnChip: "" }
+      { crewId: "41", name: "Team Teal",  dotColor: "var(--teal)",  chip1: "3", chip2: "1", chipCap: "26 ft", chipCapBg: "var(--teal-bg)",    chipCapColor: "var(--teal)",  warnChip: "" }
     ],
     // ── Day-off request templated rows (recordId baked in) ──
     dayOffPending: [
@@ -4827,6 +4849,20 @@
     { id: 9006, name: "Unknown · +1 (212) 555-7821", meta: "Missed", time: "Yesterday", iconCls: "list-icon miss", iconGlyph: "✕" },
     { id: 9007, name: "Frances Knox", meta: "+1 (778) 318-2924 · Missed", time: "Yesterday", iconCls: "list-icon miss", iconGlyph: "✕" },
     { id: 9008, name: "Keera Roberts", meta: "+1 (672) 208-2675 · Missed", time: "Mon", iconCls: "list-icon miss", iconGlyph: "✕" }
+  ],
+  recordings: [
+    { id: 7001, name: "Johanna Kuyvenhoven", meta: "+1 (587) 920-4170 · Inbound",
+      phoneDigits: "15879204170", dur: "0:00 / 4:21", time: "2:14 PM",
+      iconCls: "list-icon in",  iconGlyph: "▼" },
+    { id: 7002, name: "Frances Knox", meta: "+1 (778) 318-2924 · Outbound",
+      phoneDigits: "17783182924", dur: "0:00 / 6:38", time: "Yesterday",
+      iconCls: "list-icon out", iconGlyph: "▲" },
+    { id: 7003, name: "Vicky Milosevic-Hill", meta: "+1 (905) 616-3324 · Inbound",
+      phoneDigits: "19056163324", dur: "0:00 / 2:05", time: "Yesterday",
+      iconCls: "list-icon in",  iconGlyph: "▼" },
+    { id: 7004, name: "Harman", meta: "+1 (778) 816-2400 · Outbound",
+      phoneDigits: "17788162400", dur: "0:00 / 1:12", time: "Mon",
+      iconCls: "list-icon out", iconGlyph: "▲" }
   ],
   headings: {
   "1": "Phone system",

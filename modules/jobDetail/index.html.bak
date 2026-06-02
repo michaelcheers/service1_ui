@@ -706,21 +706,6 @@ iframe.cmx-editor-frame { width: 100%; min-height: 160px; border: 0; display: bl
 .tl-item:not(.tl-note) .tl-del { display: none !important; }
 .tl-item.tl-note .tl-pin-comm,
 .tl-item.tl-note .tl-reassign { display: none !important; }
-/* F#1378: pinned strip surfacing pinned timeline items */
-.tl-pinned-strip { background: var(--surface-2, #f6f7f9); border: 1px solid var(--terra); border-radius: 10px; padding: 8px 10px; margin: 12px 16px 0; }
-.tl-pinned-hd { font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--terra); margin-bottom: 6px; }
-.tl-pinned-list { display: flex; flex-direction: column; gap: 6px; }
-.tl-pinned-item { display: flex; align-items: center; gap: 8px; background: #fff; border: 1px solid #b2dfdb; border-left: 3px solid var(--terra); border-radius: 8px; padding: 6px 10px; font-size: 12.5px; }
-.tl-pinned-kind { font-weight: 600; color: var(--ink-2); white-space: nowrap; }
-.tl-pinned-body { flex: 1; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.tl-pinned-time { color: var(--ink-3); white-space: nowrap; }
-.tl-pinned-unpin { border: 1px solid #b2dfdb; background: #fff; color: var(--terra); border-radius: 6px; width: 22px; height: 22px; cursor: pointer; line-height: 1; }
-.tl-pinned-unpin:hover { background: var(--terra); color: #fff; }
-/* row-level pinned indicator */
-.tl-item.pinned { border-left: 3px solid var(--terra); }
-/* the Pinned chip carries a terra accent at idle and a stronger fill when active */
-.filter-chip[data-jd-filter="pinned"] { border-color: var(--terra); color: var(--terra); }
-.filter-chip[data-jd-filter="pinned"].active { background: var(--terra); color: #fff; border-color: var(--terra); }
 .tl-icon {
   width: 28px; height: 28px; border-radius: 8px;
   display: flex; align-items: center; justify-content: center;
@@ -1075,6 +1060,14 @@ select.gp2-input {
 }
 .gp2-metric-u { color: var(--ink-3); font-size: 12px; font-weight: 500; }
 
+.gp2-add-stop {
+  width: 100%;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 14px;
+  color: var(--terra);
+  font-weight: 500; font-size: 13px;
+}
+.gp2-add-stop:hover { background: var(--terra-soft); }
 
 /* Charges empty */
 .gp2-charges-empty, .gp2-notes-empty {
@@ -1112,19 +1105,6 @@ select.gp2-input {
   border-radius: 999px;
   display: flex; align-items: center; justify-content: center;
 }
-
-/* F1322: charge presets grouped into categories instead of one flat list */
-.gp2-quick-groups {
-  display: flex; flex-direction: column; gap: 16px;
-  margin-top: 18px; text-align: left;
-}
-.gp2-quick-group { display: flex; flex-direction: column; gap: 8px; }
-.gp2-quick-cat {
-  font-size: 11px; font-weight: 700; letter-spacing: .06em;
-  text-transform: uppercase; color: var(--ink-3);
-  padding-bottom: 4px; border-bottom: var(--hair);
-}
-.gp2-quick-row { display: flex; gap: 8px; flex-wrap: wrap; }
 
 /* ═════ Growth Plan (line-item table — used by Accounting) ═════ */
 .gp-table {
@@ -1691,7 +1671,7 @@ select.gp2-input {
             </span>
             <span class="item">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              <a href="#" class="link" id="jdSetFollowupBtn" data-bind-text="header.followupCta">+ Set follow-up</a>
+              <a data-comm-action="action:jobDetail.set-follow-up" href="#" class="link" id="jdSetFollowupBtn" data-bind-text="header.followupCta">+ Set follow-up</a>
             </span>
           </div>
         </div>
@@ -2090,13 +2070,7 @@ select.gp2-input {
             </div>
 
             <div class="cmx-send-row">
-              <div class="left">
-                <span class="cmx-check" data-cmx-check="callFollow">
-                  <span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-11"/></svg></span>
-                  Create follow-up
-                </span>
-                <input type="datetime-local" id="cmxCallFuDt" class="jd-input" style="display:none;margin-left:8px;">
-              </div>
+              <div class="left"></div>
               <div class="right">
                 <button class="cmx-btn" data-comm-action="action:jobDetail.save-draft">Save Draft</button>
                 <button class="cmx-btn primary" data-comm-action="action:jobDetail.log-call-commit">
@@ -2157,27 +2131,12 @@ select.gp2-input {
 
         <!-- Timeline -->
         <section class="card" style="margin-top:16px;">
-          <div class="tl-pinned-strip" data-bind-hide-empty="timeline.pinnedItems">
-            <div class="tl-pinned-hd">📌 Pinned <span data-bind-text="timeline.pinnedCount"></span></div>
-            <div class="tl-pinned-list" data-bind="timeline.pinnedItems">
-              <template>
-                <div class="tl-pinned-item tl-{{kind}}" data-jd-pinned-record="{{recordId}}" data-jd-pinned-kind="{{kind}}">
-                  <span class="tl-pinned-kind">{{kindLabel}}</span>
-                  <span class="tl-pinned-body">{{preview}}</span>
-                  <span class="tl-pinned-time">{{time}}</span>
-                  <button type="button" class="tl-pinned-unpin" data-jd-unpin="{{recordId}}" data-jd-unpin-kind="{{kind}}" title="Unpin">×</button>
-                </div>
-              </template>
-            </div>
-          </div>
-
           <div class="timeline-head">
-            <button class="filter-chip active" data-jd-filter="all">All <span class="muted" style="margin-left:2px;color:rgba(255,255,255,0.5)" data-bind-text="mutedCounts.0">12</span></button>
-            <button class="filter-chip" data-jd-filter="call" data-bind-text="timeline.filterCalls">Calls 3</button>
-            <button class="filter-chip" data-jd-filter="sms" data-bind-text="timeline.filterSms">SMS 5</button>
-            <button class="filter-chip" data-jd-filter="mail" data-bind-text="timeline.filterEmail">Email 2</button>
-            <button class="filter-chip" data-jd-filter="note" data-bind-text="timeline.filterNotes">Notes 2</button>
-            <button class="filter-chip" data-jd-filter="pinned">Pinned <span class="cnt" data-bind-text="timeline.pinnedCount"></span></button>
+            <button class="filter-chip active">All <span class="muted" style="margin-left:2px;color:rgba(255,255,255,0.5)" data-bind-text="mutedCounts.0">12</span></button>
+            <button class="filter-chip" data-bind-text="timeline.filterCalls">Calls 3</button>
+            <button class="filter-chip" data-bind-text="timeline.filterSms">SMS 5</button>
+            <button class="filter-chip" data-bind-text="timeline.filterEmail">Email 2</button>
+            <button class="filter-chip" data-bind-text="timeline.filterNotes">Notes 2</button>
             <div class="right">Newest first</div>
           </div>
 
@@ -2187,7 +2146,7 @@ select.gp2-input {
                 <div class="tl-day">{{label}}</div>
                 <div class="tl-day-items" data-bind="items">
                   <template>
-                    <div class="tl-item tl-{{kind}} {{pinnedClass}}">
+                    <div class="tl-item tl-{{kind}}">
                       <div class="tl-icon {{kind}}"></div>
                       <div class="tl-body">
                         <div class="tl-top">
@@ -2199,12 +2158,12 @@ select.gp2-input {
                         <div class="tl-text tl-text-mail">{{bodyHtml|html}}</div>
                       </div>
                       <div class="tl-actions">
-                        <button type="button" class="tl-pin {{pinnedClass}}" data-jd-pin="{{recordId}}" title="Pin note">
+                        <button type="button" class="tl-pin" data-jd-pin="{{recordId}}" title="Pin note">
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4l6 6-4 1-3 7-3-3-6 6 6-6-3-3 7-3z"/></svg>
                         </button>
                         <button type="button" class="tl-edit" data-jd-edit-note="{{recordId}}" title="Edit note">Edit</button>
                         <button type="button" class="tl-del" data-jd-del-note="{{recordId}}" title="Delete note">Delete</button>
-                        <button type="button" class="tl-pin-comm {{pinnedClass}}" data-jd-pin-comm="{{recordId}}" title="Pin">📌</button>
+                        <button type="button" class="tl-pin-comm" data-jd-pin-comm="{{recordId}}" title="Pin">📌</button>
                         <button type="button" class="tl-reassign" data-jd-reassign="{{recordId}}" title="Reassign">Reassign</button>
                       </div>
                       <div class="tl-time">{{time}}</div>
@@ -2295,6 +2254,10 @@ select.gp2-input {
               <div class="gp2-metric"><div class="gp2-metric-l">Destination → Office</div><div class="gp2-metric-v" data-bind-text="route.destToOffice">—</div></div>
             </div>
 
+            <button type="button" data-jd-open="addStopModal" class="gp2-add-stop">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Add another location
+            </button>
           </section>
 
           <!-- F19: Multi-day / two-day move -->
@@ -2338,7 +2301,7 @@ select.gp2-input {
               </div>
               <div class="gp2-empty-title">No charges added yet</div>
               <div class="gp2-empty-sub">Pick a category to start, or add a custom charge.</div>
-              <div class="gp2-quick-groups" data-quick-host></div>
+              <div class="gp2-quick-add" data-quick-host></div>
               <template data-quick-template>
                 <button type="button" class="gp2-quick">
                   <span class="gp2-quick-ic" data-quick-icon></span>
@@ -2474,19 +2437,9 @@ select.gp2-input {
                     <td class="num" data-bind-text="financials2.taxAmount">$344.50</td>
                     <td colspan="2"></td>
                   </tr>
-                  <tr>
-                    <td colspan="4" style="text-align:right;font-weight:600;">Grand Total</td>
-                    <td class="num" colspan="2"><span data-bind-text="deal.totalPays">$2,768.50</span></td>
-                    <td colspan="2"></td>
-                  </tr>
-                  <tr>
-                    <td colspan="4" style="text-align:right;">Deposit Paid</td>
-                    <td class="num" colspan="2"><span data-bind-text="deal.depositPaid">$0.00</span></td>
-                    <td colspan="2"></td>
-                  </tr>
                   <tr class="gp-grand-row">
-                    <td colspan="4" style="text-align:right;">Balance Due</td>
-                    <td class="num" colspan="2"><span data-bind-text="deal.balanceDue">$2,768.50</span></td>
+                    <td colspan="4" style="text-align:right;">Customer pays</td>
+                    <td class="num" colspan="2"><span data-bind-text="deal.totalPays">$2,768.50</span></td>
                     <td colspan="2"></td>
                   </tr>
                 </tfoot>
@@ -2789,13 +2742,6 @@ select.gp2-input {
             <div class="row"><span class="l">Sq. footage</span><span class="v editable muted" style="font-weight:400;" data-bind-text="jobInfo.sqFootage">—</span></div>
             <div class="row"><span class="l">Type</span><span class="v editable" data-bind-text="jobInfo.type">Local</span></div>
             <div class="row"><span class="l">Branch</span><span class="v editable muted" style="font-weight:400;" data-bind-text="jobInfo.branch">Unassigned</span></div>
-            <!-- Feature #1329: branch cascade read-out — shows which dispatch/email-from/sms-from
-                 a job's branch is actually using so the cascade is visible. Each row hides when the
-                 corresponding branch value is empty (e.g. job Unassigned → reverts to defaults). -->
-            <div class="row" data-bind-hide-empty="jobInfo.branchAddress"><span class="l">Dispatch / portal</span><span class="v muted" style="font-weight:400;" data-bind-text="jobInfo.branchAddress"></span></div>
-            <div class="row" data-bind-hide-empty="jobInfo.branchDispatch"><span class="l">Dispatch contact</span><span class="v muted" style="font-weight:400;" data-bind-text="jobInfo.branchDispatch"></span></div>
-            <div class="row" data-bind-hide-empty="jobInfo.branchEmailFrom"><span class="l">Emails sent as</span><span class="v muted" style="font-weight:400;" data-bind-text="jobInfo.branchEmailFrom"></span></div>
-            <div class="row" data-bind-hide-empty="jobInfo.branchSmsFrom"><span class="l">SMS sent from</span><span class="v muted" style="font-weight:400;" data-bind-text="jobInfo.branchSmsFrom"></span></div>
             <div class="row"><span class="l">Assigned to</span><span class="v editable muted" style="font-weight:400;" data-bind-text="jobInfo.assignedTo">Unassigned</span></div>
           </div>
         </section>
@@ -3406,7 +3352,7 @@ select.gp2-input {
     <button data-comm-action="action:jobDetail.2-days" class="jd-fu-preset" data-fu="2d">+2 days</button>
     <button data-comm-action="action:jobDetail.1-week" class="jd-fu-preset" data-fu="1w">+1 week</button>
   </div>
-  <div class="jd-field" style="margin-bottom:0;"><label class="jd-label">Note</label><input class="jd-input" type="text" id="jdFuNote" placeholder="Optional reminder note…"></div>
+  <div class="jd-field" style="margin-bottom:0;"><label class="jd-label">Note</label><input class="jd-input" type="text" placeholder="Optional reminder note…"></div>
   <div class="jd-fu-foot">
     <button class="btn btn-secondary btn-sm" onclick="document.getElementById('jdFollowupPop').classList.remove('open')">Cancel</button>
     <button class="btn btn-primary btn-sm" onclick="jdSaveFollowup()">Save</button>
@@ -3866,11 +3812,9 @@ function jdSaveFollowup() {
     const d = new Date(v);
     const label = d.toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
     document.getElementById('jdSetFollowupBtn').textContent = '⏰ ' + label;
-    const note = (document.getElementById('jdFuNote')?.value || '').trim();
     if (window.S1 && window.S1.comm) {
-      window.S1.comm.save('jobDetail.follow-up', { followUp: d.toISOString(), note })
-        .then(() => window.S1.flash && window.S1.flash('Follow-up set'))
-        .catch(e => window.S1.flash && window.S1.flash('Follow-up failed: ' + (e.message || e), 'bad'));
+      window.S1.comm.save('jobDetail.follow-up', { followUp: d.toISOString() })
+        .catch(e => window.S1.flash && window.S1.flash('Follow-up failed: ' + (e.message || e)));
     }
   }
   document.getElementById('jdFollowupPop').classList.remove('open');

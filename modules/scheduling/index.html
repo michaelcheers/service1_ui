@@ -933,13 +933,13 @@ a { color: inherit; text-decoration: none; }
           <div class="r-list">
 
             <div class="r-section-title">Leaders <span style="font-weight:500;color:var(--ink-4);" data-bind-text="metrics.section_counts.0"></span></div>
-            <div data-bind="rLeaders"><template><div class="r-row{{assigned}}" draggable="true" data-drag-kind="employee"><span class="av lead">{{initials}}</span><div><div class="nm">{{name}}</div><div class="rl">{{role}}</div></div><span class="badge" style="display:{{badgeDisplay}};"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span></div></template></div>
+            <div data-bind="rLeaders"><template><div class="r-row{{assigned}}" draggable="true" data-drag-kind="employee" data-drag-id="{{id}}" data-drag-label="{{name}}"><span class="av lead">{{initials}}</span><div><div class="nm">{{name}}</div><div class="rl">{{role}}</div></div><span class="badge" style="display:{{badgeDisplay}};"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span></div></template></div>
 
             <div class="r-section-title">Members <span style="font-weight:500;color:var(--ink-4);" data-bind-text="metrics.section_counts.1"></span></div>
-            <div data-bind="rMembers"><template><div class="r-row{{assigned}}" draggable="true" data-drag-kind="employee"><span class="av {{avCls}}">{{initials}}</span><div><div class="nm">{{name}}</div><div class="rl">{{role}}</div></div><span class="badge" style="display:{{badgeDisplay}};"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span></div></template></div>
+            <div data-bind="rMembers"><template><div class="r-row{{assigned}}" draggable="true" data-drag-kind="employee" data-drag-id="{{id}}" data-drag-label="{{name}}"><span class="av {{avCls}}">{{initials}}</span><div><div class="nm">{{name}}</div><div class="rl">{{role}}</div></div><span class="badge" style="display:{{badgeDisplay}};"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span></div></template></div>
 
             <div class="r-section-title">Fleet <span style="font-weight:500;color:var(--ink-4);" data-bind-text="metrics.section_counts.2"></span></div>
-            <div data-bind="rFleet"><template><div class="r-row{{assigned}}" draggable="true" data-drag-kind="vehicle"><span class="av veh">{{initials}}</span><div><div class="nm">{{name}}</div><div class="rl">{{sub}}</div></div><span class="cap">{{cap}}</span></div></template></div>
+            <div data-bind="rFleet"><template><div class="r-row{{assigned}}" draggable="true" data-drag-kind="vehicle" data-drag-id="{{id}}" data-drag-label="{{name}}"><span class="av veh">{{initials}}</span><div><div class="nm">{{name}}</div><div class="rl">{{sub}}</div></div><span class="cap">{{cap}}</span></div></template></div>
           </div>
         </div>
 

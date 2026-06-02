@@ -36,7 +36,7 @@ $$('.page-actions .btn-secondary').filter(b => /floor plan/i.test(b.textContent)
 $$('.page-actions .btn-primary').filter(b => /book storage/i.test(b.textContent)).forEach(b => {
   b.addEventListener('click', (ev) => {
     ev.preventDefault();
-    window.S1.modal.open('#newStorModal');
+    window.S1.modal.open('#newStorAccountModal');
   });
 });
 
@@ -87,7 +87,8 @@ document.addEventListener('click', async (ev) => {
 (function(){
   const $$=(s,r)=>Array.from((r||document).querySelectorAll(s));
   $$('[data-st-open]').forEach(b=>b.addEventListener('click',(e)=>{e.preventDefault();window.S1.modal.open('#'+b.getAttribute('data-st-open'));}));
-  window.S1.modal.bindForm('#newStorModal','storage.unit.create',{label:'Create unit'});
+  window.S1.modal.bindForm('#newStorAccountModal','storage.account.create',{label:'Create account',successMsg:'Storage account created'});
+  window.S1.modal.bindForm('#newStorUnitModal','storage.unit.create',{label:'Create unit',successMsg:'Unit added'});
   window.S1.modal.bindForm('#moveStorModal','storage.move',{label:'Move'});
   window.S1.modal.bindForm('#releaseStorModal','storage.release',{label:'Release'});
   window.S1.modal.bindForm('#billCycleModal','storage.bill',{label:'Bill cycle'});
