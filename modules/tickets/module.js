@@ -31,21 +31,9 @@ $$('.subtabs .subtab').forEach((b, i) => {
 
 // Filters button — use the filter chips below; no popup.
 
-// "+ New ticket" — v12 modal
-$$('.page-actions .btn-primary').filter(b => /new ticket/i.test(b.textContent)).forEach(b => {
-  b.addEventListener('click', (ev) => { ev.preventDefault(); window.S1.modal.open('#newTicketModal'); });
-});
-window.S1.modal.bindForm('#newTicketModal', 'tickets.new', {
-  label: 'Create ticket',
-  successMsg: 'Ticket created',
-  validate: (p) => p.title ? null : 'Subject is required',
-  transform: (p) => {
-    if (p.customerId === '') p.customerId = null;
-    if (p.jobId === '') p.jobId = null;
-    return p;
-  },
-  onSuccess: () => load()
-});
+// "+ New ticket" opener and the create-ticket modal Save handler are now owned
+// by the inline script in index.html (openTicketForm + mode-aware Save), so the
+// same modal serves New / View / Edit. Binding them here would double-fire.
 window.S1.modal.bindForm('#replyTicketModal', 'tickets.reply', { label: 'Reply', onSuccess: () => load() });
 window.S1.modal.bindForm('#reassignTicketModal', 'tickets.reassign', { label: 'Reassign', onSuccess: () => load() });
 window.S1.modal.bindForm('#escalateTicketModal', 'tickets.escalate', { label: 'Escalate', onSuccess: () => load() });
@@ -71,17 +59,10 @@ $$('input.search-input').forEach(inp => {
 
 // Sort button — visual only; use the segmented controls for actual sort.
 
-// Ticket row click → open ticket detail page
-document.addEventListener('click', async (ev) => {
-  const row = ev.target.closest('tbody[data-bind="tickets"] tr');
-  if (!row) return;
-  const id = row.getAttribute('data-record-id');
-  if (!id) return;
-  await safe('Open ticket', async () => {
-    const r = await comm.action('tickets.open', { id });
-    if (r && r.navigateTo) window.location.href = r.navigateTo;
-  });
-});
+// Ticket row click is handled by the inline script in index.html
+// (openTicketForm view modal). The old tickets.open → navigateTo handler is
+// removed: its selector never matched the real #tixBody rows and the
+// /Tickets/Details page it targeted does not exist.
 
 // AI fab
 

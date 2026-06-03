@@ -217,44 +217,97 @@ document.addEventListener('click', (ev) => {
   if (ev.target.closest('[data-ptab="recent"]')) renderRecentPager();
 });
 
-// --- Recordings phone-number search (feature #1430) ------------------------
-// Real client-side filter over the rendered recording rows: hides rows whose
-// digit-normalized phone (or contact name) doesn't contain the term, and
-// toggles the empty state. Re-runs on every keystroke, after each bind
-// (s1ui:ready / state:replaced), and when the Recordings tab is opened.
-function filterRecordings() {
-  const input = document.querySelector('[data-rec-filter]');
+// --- Generic per-tab list search (feature #1376) ---------------------------
+// Generalized from the Recordings filter (feature #1430): a single client-side
+// filter that works on every Phone tab. For a given panel it hides rows whose
+// digit-normalized phone (data-phone, if present) and visible text
+// (.list-num + .list-meta) don't contain the term, and toggles that panel's
+// empty state. Re-runs on every keystroke, after each bind
+// (s1ui:ready / state:replaced), and when a tab is opened.
+const PHONE_SEARCH_PANELS = ['recent', 'voicemails', 'recordings', 'texts', 'contacts']; // 'missed' is server-side (#1434), CLAUDE rule #11
+
+function filterList(panel) {
+  if (panel === 'missed') return; // #1434: Missed Calls searches server-side over the full paginated history
+  const input = document.querySelector('[data-list-filter="' + panel + '"]');
   if (!input) return;
   const raw    = (input.value || '').trim().toLowerCase();
   const digits = raw.replace(/\D/g, '');                 // "555-1234" -> "5551234"
   // National form (drop a leading "1") so a 10-digit search matches an 11-digit
   // stored value and vice-versa — same normalization as the ASP.NET side.
   const national = (digits.length === 11 && digits[0] === '1') ? digits.slice(1) : digits;
-  const panel  = document.querySelector('[data-ppanel="recordings"]');
-  const rows   = panel ? panel.querySelectorAll('.list-row[data-record-id]') : [];
+  const panelEl = document.querySelector('[data-ppanel="' + panel + '"]');
+  const rows    = panelEl ? panelEl.querySelectorAll('.list-row') : [];
   let shown = 0;
   rows.forEach((row) => {
-    const phone = row.getAttribute('data-phone') || '';
-    const name  = (row.getAttribute('data-name') || '').toLowerCase();
+    // Recordings rows carry a normalized data-phone; other tabs fall back to the
+    // visible number/name text shown in .list-num + .list-meta.
+    const dataPhone = (row.getAttribute('data-phone') || '');
+    const numEl  = row.querySelector('.list-num');
+    const metaEl = row.querySelector('.list-meta');
+    const text   = ((numEl ? numEl.textContent : '') + ' ' + (metaEl ? metaEl.textContent : '')).toLowerCase();
+    const textDigits = text.replace(/\D/g, '');
+    const phone  = dataPhone + ' ' + textDigits;
     let match;
     if (!raw)          match = true;
-    else if (digits)   match = phone.indexOf(digits) !== -1 || phone.indexOf(national) !== -1 || name.indexOf(raw) !== -1;
-    else               match = name.indexOf(raw) !== -1;   // letters-only term -> name search
+    else if (digits)   match = phone.indexOf(digits) !== -1 || phone.indexOf(national) !== -1 || text.indexOf(raw) !== -1;
+    else               match = text.indexOf(raw) !== -1;   // letters-only term -> text search
     row.style.display = match ? '' : 'none';
     if (match) shown++;
   });
-  const empty = document.getElementById('recEmpty');
+  const empty = document.getElementById(panel + 'Empty');
   if (empty) empty.style.display = (rows.length > 0 && shown === 0) ? '' : 'none';
 }
-document.addEventListener('input', (ev) => {
-  if (ev.target.closest('[data-rec-filter]')) filterRecordings();
-});
-document.addEventListener('s1ui:ready', filterRecordings);
-if (window.S1.bus && typeof window.S1.bus.on === 'function') {
-  window.S1.bus.on('state:replaced', filterRecordings);
+
+function filterAll() { PHONE_SEARCH_PANELS.forEach(filterList); }
+
+// --- Missed Calls server-side search (feature #1434) -----------------------
+// The Missed Calls list is server-paginated (8/page), so a purely client-side
+// filter would only see the rendered page. Instead the existing
+// data-list-filter="missed" input posts the term to the server, which filters
+// the FULL history, resets to page 1 and returns fresh state.
+const PHONE_MISSED_SEARCH_DEBOUNCE_MS = 250; // CLAUDE rule #11
+let missedSearchTimer = null;
+
+async function submitMissedSearch(q) {
+  try {
+    await comm.save('phone.missedCalls.search', { q: q });
+    await load();
+  } catch (e) { flash('Search failed: ' + (e.message || e)); }
 }
+
+// Re-seed the Missed input from server state after each hydrate/refresh. The
+// input lives in the static toolbar (outside the data-bind template), so it
+// survives re-bind; this covers fresh load and term-survives-paging. Never
+// clobber the box while the user is actively typing in it.
+function restoreMissedSearch() {
+  const inp = document.querySelector('[data-list-filter="missed"]');
+  if (!inp || document.activeElement === inp) return;
+  const st = (window.S1.fixtures || {}).phoneSystem || {};
+  inp.value = st.missedSearch || '';
+}
+
+document.addEventListener('input', (ev) => {
+  const el = ev.target.closest('[data-list-filter]');
+  if (!el) return;
+  const panel = el.getAttribute('data-list-filter');
+  if (panel === 'missed') {
+    clearTimeout(missedSearchTimer);
+    const q = el.value;
+    missedSearchTimer = setTimeout(() => submitMissedSearch(q), PHONE_MISSED_SEARCH_DEBOUNCE_MS);
+    return;
+  }
+  filterList(panel);
+});
+document.addEventListener('s1ui:ready', filterAll);
+document.addEventListener('s1ui:ready', restoreMissedSearch);
+if (window.S1.bus && typeof window.S1.bus.on === 'function') {
+  window.S1.bus.on('state:replaced', filterAll);
+  window.S1.bus.on('state:replaced', restoreMissedSearch);
+}
+// Re-apply a tab's active filter when that tab becomes visible.
 document.addEventListener('click', (ev) => {
-  if (ev.target.closest('[data-ptab="recordings"]')) filterRecordings();
+  const tab = ev.target.closest('[data-ptab]');
+  if (tab) filterList(tab.getAttribute('data-ptab'));
 });
 
 // Dialer keypad — local UI state. Each [data-dialer] press appends a digit

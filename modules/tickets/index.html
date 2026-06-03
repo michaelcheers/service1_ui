@@ -59,7 +59,7 @@
           <span class="muted" data-bind-text="subtitle">Ad campaign change requests &amp; account work</span>
         </div>
         <div class="page-actions">
-          <button class="btn btn-primary" onclick="document.getElementById('newTicketModal').classList.add('open')">+ New ticket</button>
+          <button class="btn btn-primary" id="tixNewBtn">+ New ticket</button>
         </div>
       </div>
 
@@ -88,7 +88,7 @@
           <select id="tixType" data-bind-options="typeOptions"><option value="">All Types</option></select>
         </div>
         <div class="tix-fg"><label>Assigned to</label>
-          <select id="tixAssignee" data-bind-options="assignedToOptions"><option value="">Everyone</option></select>
+          <select id="tixAssignee" data-bind-options="assignees"><option value="">Everyone</option></select>
         </div>
         <button class="btn btn-secondary" style="height:34px;">Reset</button>
       </div>
@@ -131,16 +131,18 @@
     <div class="tk-head"><div class="tk-title">New Ticket</div><div class="tk-close" onclick="document.getElementById('newTicketModal').classList.remove('open')">✕</div></div>
     <div class="tk-body">
       <div class="tk-grid">
+        <input name="id" type="hidden">
+        <input name="jobId" type="hidden">
         <div class="tk-field full"><label class="tk-label">Title <span class="req">*</span></label><input name="title" class="tk-input" type="text" placeholder="e.g. Pause Google Ads campaign"></div>
-        <div class="tk-field"><label class="tk-label">Customer <span class="req">*</span></label><select name="customer" class="tk-select" data-bind-options="optionsOptions"><option value="Select customer…">Select customer…</option></select></div>
+        <div class="tk-field"><label class="tk-label">Customer <span class="req">*</span></label><select name="customerId" class="tk-select" data-bind-options="customers"><option value="">Select customer…</option></select></div>
         <div class="tk-field"><label class="tk-label">Client ID</label><input name="clientId" class="tk-input" type="text" placeholder="e.g. CL-2419"></div>
-        <div class="tk-field"><label class="tk-label">Type <span class="req">*</span></label><select name="type" class="tk-select" data-bind-options="optionsOptions2"></select></div>
+        <div class="tk-field"><label class="tk-label">Type <span class="req">*</span></label><select name="type" class="tk-select" data-bind-options="typeOptions"></select></div>
         <div class="tk-field"><label class="tk-label">Priority</label><select name="priority" class="tk-select" data-bind-options="priorityOptions"></select></div>
-        <div class="tk-field"><label class="tk-label">Status</label><select name="status" class="tk-select" data-bind-options="statusOptions2"></select></div>
-        <div class="tk-field"><label class="tk-label">Assigned to</label><select name="assignedTo" class="tk-select" data-bind-options="assignedToOptions2"><option value="Unassigned">Unassigned</option></select></div>
+        <div class="tk-field"><label class="tk-label">Status</label><select name="status" class="tk-select" data-bind-options="statusOptions"></select></div>
+        <div class="tk-field"><label class="tk-label">Assigned to</label><select name="assignedToUserId" class="tk-select" data-bind-options="assignees"><option value="">Unassigned</option></select></div>
         <div class="tk-field"><label class="tk-label">Follow-up date</label><input name="followUpDate" class="tk-input" type="date"></div>
         <div class="tk-field"><label class="tk-label">Follow-up time</label><input name="followUpTime" class="tk-input" type="time"></div>
-        <div class="tk-field full"><label class="tk-label">Description / Notes</label><textarea name="descriptionNotes" class="tk-textarea" placeholder="What's the request, account details, context…"></textarea></div>
+        <div class="tk-field full"><label class="tk-label">Description / Notes</label><textarea name="notes" class="tk-textarea" placeholder="What's the request, account details, context…"></textarea></div>
         <div class="tk-field full">
           <label class="tk-label">Attachments</label>
           <div style="padding:14px;border:2px dashed var(--line-2);border-radius:6px;text-align:center;color:var(--ink-3);font-size:12.5px;">📎 Drag files here or <span style="color:var(--terra);font-weight:600;cursor:pointer;">browse…</span></div>
@@ -199,7 +201,10 @@ function getTickets() {
   return raw.map(t => {
     const status = t.status || '';
     return {
-      id:       t.id       || t.ref      || '',
+      // Display id for the "Client ID" column (e.g. "#TKT-28 · Deal 17826-2").
+      displayId: t.ref || (t.id != null ? String(t.id) : ''),
+      // Numeric record id used to identify the row for View/Edit/update.
+      recordId: t.id != null ? t.id : (t.ref || ''),
       customer: t.customer || '',
       priority: t.priority || '',
       type:     t.type     || t.category || '',
@@ -212,7 +217,17 @@ function getTickets() {
       bucket:   t.bucket || (/closed/i.test(status) ? 'inactive'
                          : /resolved/i.test(status) ? 'completed'
                          : 'active'),
-      st:       t.st || t.statusClass || ''
+      st:       t.st || t.statusClass || '',
+      // Raw editable values for pre-filling the View/Edit modal.
+      title:            t.title != null ? t.title : (t.subject || ''),
+      customerId:       t.customerId != null ? t.customerId : '',
+      jobId:            t.jobId != null ? t.jobId : '',
+      typeValue:        t.typeValue != null ? t.typeValue : (t.type || t.category || ''),
+      assignedToUserId: t.assignedToUserId != null ? t.assignedToUserId : '',
+      followUpDate:     t.followUpDate || '',
+      followUpTime:     t.followUpTime || '',
+      notes:            t.notes || '',
+      priorityValue:    t.priority || ''
     };
   });
 }
@@ -238,10 +253,10 @@ function render() {
   const as = document.getElementById('tixAssignee').value;
   const shown = getTickets().filter(t => {
     if (t.bucket !== tab) return false;
-    if (q && !(t.customer + ' ' + t.id + ' ' + t.type).toLowerCase().includes(q)) return false;
+    if (q && !(t.customer + ' ' + t.displayId + ' ' + t.type).toLowerCase().includes(q)) return false;
     if (st && t.status !== st) return false;
     if (ty && t.type !== ty) return false;
-    if (as && t.assignee !== as) return false;
+    if (as && String(t.assignedToUserId) !== as) return false;
     return true;
   });
   clear(tb);
@@ -253,8 +268,8 @@ function render() {
     return;
   }
   shown.forEach(t => {
-    const tr = el('tr', { style:'cursor:pointer;', attrs:{'data-id':t.id} });
-    tr.appendChild(el('td', { className:'cell-light', text:t.id }));
+    const tr = el('tr', { style:'cursor:pointer;', attrs:{'data-id':t.recordId} });
+    tr.appendChild(el('td', { className:'cell-light', text:t.displayId }));
     const tdC = el('td');
     const b = el('b', { text:t.customer });
     tdC.appendChild(b);
@@ -272,13 +287,130 @@ function render() {
     const tdA = el('td');
     tdA.addEventListener('click', e => e.stopPropagation());
     const wrap = el('div', { style:'display:flex;gap:4px;justify-content:flex-end;' });
-    wrap.appendChild(el('button', { className:'btn btn-ghost', style:'padding:4px 8px;font-size:11.5px;', text:'View' }));
-    wrap.appendChild(el('button', { className:'btn btn-ghost', style:'padding:4px 8px;font-size:11.5px;', text:'Edit' }));
+    const viewBtn = el('button', { className:'btn btn-ghost', style:'padding:4px 8px;font-size:11.5px;', text:'View', attrs:{'data-id':t.recordId, 'data-mode':'view'} });
+    const editBtn = el('button', { className:'btn btn-ghost', style:'padding:4px 8px;font-size:11.5px;', text:'Edit', attrs:{'data-id':t.recordId, 'data-mode':'edit'} });
+    viewBtn.addEventListener('click', () => openTicketForm(t, 'view'));
+    editBtn.addEventListener('click', () => openTicketForm(t, 'edit'));
+    wrap.appendChild(viewBtn);
+    wrap.appendChild(editBtn);
     tdA.appendChild(wrap);
     tr.appendChild(tdA);
     tb.appendChild(tr);
   });
 }
+
+// Open the create-ticket modal pre-filled from a ticket row.
+// mode: 'view' (read-only), 'edit' (editable + Save), 'new' (empty + Save).
+function openTicketForm(ticket, mode) {
+  const modal = document.getElementById('newTicketModal');
+  if (!modal) return;
+  ticket = ticket || {};
+  const setVal = (name, val) => {
+    const f = modal.querySelector('[name="' + name + '"]');
+    if (f) f.value = (val == null ? '' : String(val));
+  };
+  // For type/status: if the stored value isn't among the rendered options,
+  // append one so a pre-filled select is never blank.
+  const ensureOption = (name, val) => {
+    if (val == null || val === '') return;
+    const sel = modal.querySelector('select[name="' + name + '"]');
+    if (!sel) return;
+    const exists = Array.prototype.some.call(sel.options, o => o.value === String(val));
+    if (!exists) {
+      const opt = document.createElement('option');
+      opt.value = String(val);
+      opt.textContent = String(val);
+      sel.appendChild(opt);
+    }
+  };
+
+  if (mode === 'new') {
+    setVal('id', '');
+    setVal('jobId', '');
+    setVal('title', '');
+    setVal('clientId', '');
+    setVal('customerId', '');
+    setVal('type', '');
+    setVal('priority', '');
+    setVal('status', '');
+    setVal('assignedToUserId', '');
+    setVal('followUpDate', '');
+    setVal('followUpTime', '');
+    setVal('notes', '');
+  } else {
+    setVal('id', ticket.recordId);
+    setVal('jobId', ticket.jobId);
+    setVal('title', ticket.title);
+    setVal('clientId', ticket.displayId);
+    setVal('customerId', ticket.customerId);
+    ensureOption('type', ticket.typeValue);
+    setVal('type', ticket.typeValue);
+    setVal('priority', ticket.priorityValue);
+    ensureOption('status', ticket.status);
+    setVal('status', ticket.status);
+    setVal('assignedToUserId', ticket.assignedToUserId);
+    setVal('followUpDate', ticket.followUpDate);
+    setVal('followUpTime', ticket.followUpTime);
+    setVal('notes', ticket.notes);
+  }
+
+  // Header label + read-only / editable toggling.
+  const titleEl = modal.querySelector('.tk-title');
+  if (titleEl) titleEl.textContent = mode === 'view' ? 'View Ticket' : mode === 'edit' ? 'Edit Ticket' : 'New Ticket';
+  const readOnly = mode === 'view';
+  modal.querySelectorAll('input, select, textarea').forEach(f => { f.disabled = readOnly; });
+  const saveBtn = modal.querySelector('[data-modal-save]');
+  if (saveBtn) {
+    saveBtn.style.display = readOnly ? 'none' : '';
+    saveBtn.textContent = mode === 'edit' ? 'Save Changes' : 'Create Ticket';
+  }
+  const cancelBtn = modal.querySelector('[data-modal-close]');
+  if (cancelBtn) cancelBtn.textContent = readOnly ? 'Close' : 'Cancel';
+
+  modal.dataset.mode = mode;
+  if (window.S1 && window.S1.modal && typeof window.S1.modal.open === 'function') {
+    window.S1.modal.open('#newTicketModal');
+  } else {
+    modal.classList.add('open');
+  }
+}
+
+// Mode-aware Save: edit → tickets.update, otherwise tickets.new.
+(function wireTicketSave() {
+  const modal = document.getElementById('newTicketModal');
+  if (!modal) return;
+  const saveBtn = modal.querySelector('[data-modal-save]');
+  if (!saveBtn) return;
+  saveBtn.addEventListener('click', async () => {
+    const collect = (window.S1 && window.S1.modal && window.S1.modal.collect)
+      ? window.S1.modal.collect(modal)
+      : (() => { const o = {}; modal.querySelectorAll('input[name],select[name],textarea[name]').forEach(f => { o[f.name] = f.type === 'checkbox' ? f.checked : f.value; }); return o; })();
+    const payload = collect;
+    if (payload.customerId === '') payload.customerId = null;
+    if (payload.jobId === '') payload.jobId = null;
+    if (payload.assignedToUserId === '') payload.assignedToUserId = null;
+    if (!payload.title || !String(payload.title).trim()) {
+      (window.S1.flash || alert)('Title is required');
+      return;
+    }
+    const action = modal.dataset.mode === 'edit' ? 'tickets.update' : 'tickets.new';
+    try {
+      const r = await comm.action(action, payload);
+      if (r && r.ok === false) { (window.S1.flash || alert)(r.error || (action + ' failed')); return; }
+      if (window.S1 && window.S1.modal) window.S1.modal.close('#newTicketModal');
+      else modal.classList.remove('open');
+      (window.S1.flash || function(){})('Saved');
+    } catch (e) {
+      (window.S1.flash || alert)('Save failed: ' + (e.message || e));
+    }
+  });
+})();
+
+// "+ New ticket" — single opener that resets the form.
+(function wireNewBtn() {
+  const btn = document.getElementById('tixNewBtn');
+  if (btn) btn.addEventListener('click', e => { e.preventDefault(); openTicketForm(null, 'new'); });
+})();
 
 document.querySelectorAll('#tixTabs .tix-tab').forEach(t => t.addEventListener('click', () => {
   document.querySelectorAll('#tixTabs .tix-tab').forEach(x => x.classList.toggle('active', x === t));
@@ -294,58 +426,11 @@ document.querySelector('.tix-filters .btn').addEventListener('click', () => {
   render();
 });
 
-// Row click → ticket modal
+// Row click → open the pre-filled View modal (same as the View button).
 document.getElementById('tixBody').addEventListener('click', e => {
   const tr = e.target.closest('tr[data-id]'); if (!tr) return;
-  const t = getTickets().find(x => x.id === tr.dataset.id); if (!t) return;
-  const m = document.createElement('div');
-  m.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:center;justify-content:center;z-index:1000;padding:24px;';
-  const card = el('div', { style:'background:#fff;border-radius:12px;max-width:680px;width:100%;max-height:84vh;overflow:auto;box-shadow:0 24px 60px -16px rgba(15,23,42,.4);' });
-  const head = el('div', { style:'padding:22px 26px 16px;border-bottom:var(--hair);display:flex;justify-content:space-between;align-items:flex-start;gap:12px;' });
-  const hLeft = el('div');
-  hLeft.appendChild(el('div', { style:'font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;', text: t.id + ' · ' + t.type }));
-  hLeft.appendChild(el('h2', { style:'margin:6px 0 8px;font-size:20px;font-weight:700;letter-spacing:-0.01em;', text:t.customer }));
-  const pills = el('div', { style:'display:flex;gap:6px;flex-wrap:wrap;' });
-  pills.appendChild(el('span', { className:'tix-pri ' + priCls(t.priority), text:t.priority }));
-  pills.appendChild(el('span', { className:'tix-st ' + t.st, text:t.status }));
-  hLeft.appendChild(pills);
-  head.appendChild(hLeft);
-  head.appendChild(el('button', { className:'x', style:'border:0;background:transparent;font-size:24px;color:var(--ink-3);cursor:pointer;line-height:1;', text:'×' }));
-  card.appendChild(head);
-  const body = el('div', { style:'padding:18px 26px;' });
-  const grid = el('div', { style:'display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:18px;' });
-  function infoBox(label, val, extraStyle){
-    const box = el('div', { style:'padding:10px 14px;border:var(--hair);border-radius:8px;' + (extraStyle||'') });
-    box.appendChild(el('div', { style:'font-size:11px;color:var(--ink-3);', text:label }));
-    box.appendChild(el('div', { style:'font-weight:600;margin-top:4px;', text:val }));
-    return box;
-  }
-  grid.appendChild(infoBox('Created', t.created));
-  grid.appendChild(infoBox('Last activity', t.last));
-  grid.appendChild(infoBox('Assigned to', t.assignee, 'grid-column:span 2;'));
-  body.appendChild(grid);
-  body.appendChild(el('div', { style:'font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:6px;', text:'Activity' }));
-  const act = el('div', { style:'background:var(--surface-2);border:var(--hair);border-radius:8px;padding:12px 14px;margin-bottom:18px;font-size:13px;line-height:1.5;' });
-  act.appendChild(el('b', { text:'Client request' }));
-  act.appendChild(document.createTextNode(' · ' + t.created));
-  act.appendChild(el('br'));
-  act.appendChild(document.createTextNode('Hi team, opening this ticket to follow up on the change. Let me know what info you need.'));
-  body.appendChild(act);
-  body.appendChild(el('textarea', { style:'width:100%;min-height:80px;padding:12px;border:var(--hair);border-radius:8px;font-size:13px;outline:none;resize:vertical;font-family:inherit;', attrs:{placeholder:'Add a reply…'} }));
-  const footer = el('div', { style:'display:flex;justify-content:space-between;align-items:center;margin-top:14px;' });
-  footer.appendChild(el('button', { className:'btn btn-secondary', text:'Reassign…', attrs:{'data-comm-action':'action:tickets.reassign'} }));
-  const right = el('div', { style:'display:flex;gap:8px;' });
-  right.appendChild(el('button', { className:'btn btn-secondary x', text:'Cancel' }));
-  right.appendChild(el('button', { className:'btn btn-secondary', text:'Save draft', attrs:{'data-comm-action':'action:tickets.reply.draft'} }));
-  right.appendChild(el('button', { className:'btn btn-primary', text:'Send reply', attrs:{'data-comm-action':'action:tickets.reply.send'} }));
-  footer.appendChild(right);
-  body.appendChild(footer);
-  card.appendChild(body);
-  m.appendChild(card);
-  document.body.appendChild(m);
-  const close = () => m.remove();
-  m.addEventListener('click', e2 => { if (e2.target === m) close(); });
-  m.querySelectorAll('.x').forEach(b => b.addEventListener('click', close));
+  const t = getTickets().find(x => String(x.recordId) === tr.dataset.id); if (!t) return;
+  openTicketForm(t, 'view');
 });
 
 render();

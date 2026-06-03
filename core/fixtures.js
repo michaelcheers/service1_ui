@@ -1611,7 +1611,15 @@
       amount: "$10,850.00"
     },
     payments: [
-      { method: "Credit card", kind: "Deposit", sub: "May 1, 2026 · 3:23 AM · ch_1234567890abcdef", amount: 10850 }
+      { id: "5001", method: "Credit card", kind: "Deposit",
+        sub: "May 1, 2026 · 3:23 AM · ch_1234567890abcdef", amount: 10850,
+        category: "Deposit", reference: "ch_1234567890abcdef", notes: "",
+        date: "2026-05-01", canEdit: true, canDelete: false,
+        blockedReason: "Stripe-collected payment — refund in Stripe" },
+      { id: "5002", method: "etransfer", kind: "Deposit",
+        sub: "May 23, 2026 · 10:25 AM", amount: 541.33,
+        category: "Deposit", reference: "", notes: "",
+        date: "2026-05-23", canEdit: true, canDelete: true, blockedReason: "" }
     ],
     paymentsEmpty: "No payments yet.",
     timeline: {

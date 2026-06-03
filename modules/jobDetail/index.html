@@ -539,6 +539,37 @@ select.field {
 .cmx-editable::placeholder { color: var(--ink-4); }
 iframe.cmx-editor-frame { width: 100%; min-height: 160px; border: 0; display: block; background: #fff; }
 .cmx-tb-btn.on { background: #dff0eb; color: #004D40; }
+
+/* #1385: 5-tab Job Notes module (scoped to .notes-mod so its tab/desc/dot
+   styles never collide with the page's global .tab rules). The editor surface
+   reuses the global .cmx-editor / .cmx-tb / iframe.cmx-editor-frame styles. */
+.notes-mod .nm-head { display: flex; align-items: center; padding: 14px 20px 0; gap: 10px; }
+.notes-mod .nm-head .s-title { font-size: 16px; font-weight: 600; }
+.notes-mod .nm-head .nm-spacer { flex: 1; }
+.notes-mod .nm-savestate { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--ink-3); padding: 4px 8px; border-radius: 6px; transition: color .2s ease; }
+.notes-mod .nm-savestate svg { width: 12px; height: 12px; }
+.notes-mod .nm-savestate.saving { color: var(--ink-4); }
+.notes-mod .nm-savestate.saved { color: #1f8a5b; }
+.notes-mod .nm-savestate.failed { color: var(--bad); cursor: pointer; }
+.notes-mod .nm-tabs { display: flex; align-items: center; padding: 6px 20px 0; border-bottom: 1px solid var(--line-2); gap: 4px; overflow-x: auto; scrollbar-width: none; }
+.notes-mod .nm-tabs::-webkit-scrollbar { display: none; }
+.notes-mod .nm-tab { display: inline-flex; align-items: center; gap: 7px; padding: 10px 4px 12px; font-size: 13.5px; font-weight: 500; color: var(--ink-3); background: none; border: 0; border-bottom: 2px solid transparent; cursor: pointer; user-select: none; margin: 0 14px -1px 0; white-space: nowrap; transition: color .12s ease, border-color .12s ease; }
+.notes-mod .nm-tab:first-child { margin-left: 0; }
+.notes-mod .nm-tab:hover { color: var(--ink); }
+.notes-mod .nm-tab.active { color: var(--ink); font-weight: 600; border-bottom-color: #0a3a30; }
+.notes-mod .nm-dot { width: 6px; height: 6px; border-radius: 50%; background: #e5a823; visibility: hidden; }
+.notes-mod .nm-tab.has-content .nm-dot { visibility: visible; background: #1c6655; }
+.notes-mod .nm-tab.active.has-content .nm-dot { background: #e5a823; }
+.notes-mod .nm-body { display: none; }
+.notes-mod .nm-body.active { display: block; }
+.notes-mod .nm-desc { display: flex; align-items: center; gap: 8px; padding: 10px 20px; font-size: 12.5px; color: var(--ink-3); background: #fbfcfb; border-bottom: 1px solid var(--line-2); }
+.notes-mod .nm-desc svg { width: 13px; height: 13px; flex: 0 0 13px; color: var(--ink-4); }
+.notes-mod .nm-desc strong { color: var(--ink-2); font-weight: 600; }
+.notes-mod .nm-editor { padding: 16px 20px 14px; }
+.notes-mod .nm-meta { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; font-size: 11.5px; color: var(--ink-4); }
+.notes-mod .nm-meta .lhs { display: flex; align-items: center; gap: 10px; }
+.notes-mod .nm-meta .lhs strong { color: var(--ink-2); font-weight: 600; }
+.notes-mod .nm-meta code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--line-2); color: var(--ink-2); padding: 1px 5px; border-radius: 4px; font-size: 11px; }
 .cmx-link-pop {
   position: absolute; z-index: 1000; background: #fff; border: 1px solid var(--line);
   border-radius: 10px; box-shadow: 0 12px 28px rgba(13,31,27,.10); padding: 10px 12px; width: 280px;
@@ -890,6 +921,17 @@ iframe.cmx-editor-frame { width: 100%; min-height: 160px; border: 0; display: bl
 .pay-top { display: flex; gap: 6px; align-items: center; font-size: 12px; font-weight: 500; }
 .pay-sub { font-size: 11px; color: var(--ink-3); margin-top: 2px; }
 .pay-amt { font-variant-numeric: tabular-nums; font-weight: 600; }
+.pay-actions { display: flex; gap: 6px; margin-left: 8px; }
+.pay-edit, .pay-del {
+  padding: 4px 11px; background: #fff; border-radius: 6px;
+  font-size: 11px; font-weight: 600; cursor: pointer; line-height: 1;
+}
+.pay-edit { border: 1px solid var(--terra); color: var(--terra); }
+.pay-edit:hover { background: var(--terra-soft); }
+.pay-del { border: 1px solid #c2410c; color: #c2410c; }
+.pay-del:hover { background: #fef2f2; }
+.pay-item[data-can-edit="false"] .pay-edit { display: none; }
+.pay-item[data-can-delete="false"] .pay-del { opacity: .4; pointer-events: none; border-color: #d6cfc8; color: #b4aca4; }
 .pay-list:has(.pay-item) ~ .pay-empty { display: none; }
 
 /* Location chip stack */
@@ -1125,6 +1167,11 @@ select.gp2-input {
   padding-bottom: 4px; border-bottom: var(--hair);
 }
 .gp2-quick-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.gp2-quick-hint {
+  margin-top: 16px; font-size: 13px; color: var(--ink-2);
+  background: var(--surface-2); border: 1px dashed var(--line);
+  border-radius: 10px; padding: 12px 16px; text-align: center;
+}
 
 /* ═════ Growth Plan (line-item table — used by Accounting) ═════ */
 .gp-table {
@@ -2348,18 +2395,182 @@ select.gp2-input {
             </div>
           </section>
 
-          <!-- Notes -->
-          <section class="card" style="margin-top:16px;">
-            <div class="s-head">
-              <div class="s-title">Notes</div>
-              <button data-jd-open="addNoteModal" class="s-action">+ Add note</button>
+          <!-- #1385: Job Notes module — five always-on editor tabs, each backed by
+               an editor.service1.app rich-text iframe + the existing EditorBridge. -->
+          <section class="card notes-mod" style="margin-top:16px;">
+            <div class="nm-head">
+              <div class="s-title">Job Notes</div>
+              <span class="nm-spacer"></span>
+              <span class="nm-savestate saved" data-notes-savestate>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4 10-12"/></svg>
+                <span data-notes-savelabel>Saved</span>
+              </span>
             </div>
-            <div class="gp2-notes-empty">
-              <div class="gp2-empty-icon">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
+
+            <div class="nm-tabs">
+              <button type="button" class="nm-tab active" data-notes-tab="internal">Internal <span class="nm-dot"></span></button>
+              <button type="button" class="nm-tab" data-notes-tab="customer">Customer <span class="nm-dot"></span></button>
+              <button type="button" class="nm-tab" data-notes-tab="crew">Crew Notes <span class="nm-dot"></span></button>
+              <button type="button" class="nm-tab" data-notes-tab="feedback">Crew Feedback <span class="nm-dot"></span></button>
+              <button type="button" class="nm-tab" data-notes-tab="dispatch">Dispatcher Notes <span class="nm-dot"></span></button>
+            </div>
+
+            <!-- INTERNAL -->
+            <div class="nm-body active" data-notes-tab="internal">
+              <div class="nm-desc">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6v6c0 5 4 8 8 9 4-1 8-4 8-9V6z"/></svg>
+                <span><strong>Internal</strong> · Visible to team only — never sent to the customer.</span>
               </div>
-              <div class="gp2-empty-title">No notes yet</div>
-              <div class="gp2-empty-sub">Add internal context, crew instructions, or anything the office should know.</div>
+              <div class="nm-editor">
+                <div class="cmx-editor">
+                  <div class="cmx-tb" data-cmx-editor-id="notesInternal">
+                    <span class="cmx-tb-btn" data-cmx-exec="bold" title="Bold"><span class="glyph b">B</span></span>
+                    <span class="cmx-tb-btn" data-cmx-exec="italic" title="Italic"><span class="glyph i">I</span></span>
+                    <span class="cmx-tb-btn" data-cmx-exec="strike" title="Strikethrough"><span class="glyph s">S</span></span>
+                    <span class="cmx-tb-btn" data-cmx-exec="link" title="Link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 13.5a3.5 3.5 0 0 0 5 0l3-3a3.5 3.5 0 0 0-5-5l-1 1"/><path d="M13.5 10.5a3.5 3.5 0 0 0-5 0l-3 3a3.5 3.5 0 0 0 5 5l1-1"/></svg></span>
+                    <span class="cmx-tb-sep"></span>
+                    <span class="cmx-tb-btn" data-cmx-exec="bullet-list" title="Bullet list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4" cy="6" r="1.2" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1.2" fill="currentColor" stroke="none"/></svg></span>
+                    <span class="cmx-tb-btn" data-cmx-exec="numbered-list" title="Numbered list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10 6h11M10 12h11M10 18h11"/><path d="M4 6h2M5 6V4M3 18h3M3 12h3l-3 3h3"/></svg></span>
+                    <span class="cmx-tb-btn" data-notes-mention title="Mention teammate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 5 0v-1a9 9 0 1 0-3.6 7.2"/></svg></span>
+                    <span class="cmx-tb-btn" data-cmx-exec="attach" title="Attach"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11.5 12 19a4.5 4.5 0 0 1-6.4-6.4L13 5.2a3 3 0 0 1 4.2 4.2l-7.4 7.4a1.5 1.5 0 0 1-2.1-2.1L14 8.5"/></svg></span>
+                    <span class="cmx-tb-spacer"></span>
+                    <span class="cmx-tb-btn" data-cmx-exec="undo" title="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></span>
+                    <span class="cmx-tb-btn" data-cmx-exec="redo" title="Redo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg></span>
+                  </div>
+                  <iframe class="cmx-editable cmx-editor-frame" data-cmx-editor-id="notesInternal" data-bind-value="notes.internal.content" data-placeholder="Add internal notes…  use @teammate to mention someone." src="https://editor.service1.app/" sandbox="allow-scripts allow-same-origin" title="Internal notes editor"></iframe>
+                </div>
+                <div class="nm-meta">
+                  <div class="lhs">
+                    <span data-notes-meta="internal">No edits yet</span>
+                    <span>Type <code>@</code> to mention a teammate</span>
+                  </div>
+                  <span>Autosaves as you type</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- CUSTOMER -->
+            <div class="nm-body" data-notes-tab="customer">
+              <div class="nm-desc">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 5-6 8-6s6.5 2 8 6"/></svg>
+                <span><strong>Customer</strong> · Preferences, history, and sensitivities to remember about this customer.</span>
+              </div>
+              <div class="nm-editor">
+                <div class="cmx-editor">
+                  <div class="cmx-tb" data-cmx-editor-id="notesCustomer">
+                    <span class="cmx-tb-btn" data-cmx-exec="bold" title="Bold"><span class="glyph b">B</span></span>
+                    <span class="cmx-tb-btn" data-cmx-exec="italic" title="Italic"><span class="glyph i">I</span></span>
+                    <span class="cmx-tb-btn" data-cmx-exec="strike" title="Strikethrough"><span class="glyph s">S</span></span>
+                    <span class="cmx-tb-btn" data-cmx-exec="link" title="Link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 13.5a3.5 3.5 0 0 0 5 0l3-3a3.5 3.5 0 0 0-5-5l-1 1"/><path d="M13.5 10.5a3.5 3.5 0 0 0-5 0l-3 3a3.5 3.5 0 0 0 5 5l1-1"/></svg></span>
+                    <span class="cmx-tb-sep"></span>
+                    <span class="cmx-tb-btn" data-cmx-exec="bullet-list" title="Bullet list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4" cy="6" r="1.2" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1.2" fill="currentColor" stroke="none"/></svg></span>
+                    <span class="cmx-tb-btn" data-cmx-exec="numbered-list" title="Numbered list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10 6h11M10 12h11M10 18h11"/><path d="M4 6h2M5 6V4M3 18h3M3 12h3l-3 3h3"/></svg></span>
+                    <span class="cmx-tb-btn" data-notes-mention title="Mention teammate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 5 0v-1a9 9 0 1 0-3.6 7.2"/></svg></span>
+                    <span class="cmx-tb-btn" data-cmx-exec="attach" title="Attach"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11.5 12 19a4.5 4.5 0 0 1-6.4-6.4L13 5.2a3 3 0 0 1 4.2 4.2l-7.4 7.4a1.5 1.5 0 0 1-2.1-2.1L14 8.5"/></svg></span>
+                    <span class="cmx-tb-spacer"></span>
+                    <span class="cmx-tb-btn" data-cmx-exec="undo" title="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></span>
+                    <span class="cmx-tb-btn" data-cmx-exec="redo" title="Redo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg></span>
+                  </div>
+                  <iframe class="cmx-editable cmx-editor-frame" data-cmx-editor-id="notesCustomer" data-bind-value="notes.customer.content" data-placeholder="What should every rep know about this customer?" src="https://editor.service1.app/" sandbox="allow-scripts allow-same-origin" title="Customer notes editor"></iframe>
+                </div>
+                <div class="nm-meta">
+                  <div class="lhs"><span data-notes-meta="customer">No edits yet</span></div>
+                  <span>Autosaves as you type</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- CREW NOTES -->
+            <div class="nm-body" data-notes-tab="crew">
+              <div class="nm-desc">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h11v9H3z"/><path d="M14 10h4l3 3v3h-7"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg>
+                <span><strong>Crew Notes</strong> · Operational details for the crew on the truck. Shown in the crew app.</span>
+              </div>
+              <div class="nm-editor">
+                <div class="cmx-editor">
+                  <div class="cmx-tb" data-cmx-editor-id="notesCrew">
+                    <span class="cmx-tb-btn" data-cmx-exec="bold" title="Bold"><span class="glyph b">B</span></span>
+                    <span class="cmx-tb-btn" data-cmx-exec="italic" title="Italic"><span class="glyph i">I</span></span>
+                    <span class="cmx-tb-btn" data-cmx-exec="strike" title="Strikethrough"><span class="glyph s">S</span></span>
+                    <span class="cmx-tb-btn" data-cmx-exec="link" title="Link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 13.5a3.5 3.5 0 0 0 5 0l3-3a3.5 3.5 0 0 0-5-5l-1 1"/><path d="M13.5 10.5a3.5 3.5 0 0 0-5 0l-3 3a3.5 3.5 0 0 0 5 5l1-1"/></svg></span>
+                    <span class="cmx-tb-sep"></span>
+                    <span class="cmx-tb-btn" data-cmx-exec="bullet-list" title="Bullet list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4" cy="6" r="1.2" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1.2" fill="currentColor" stroke="none"/></svg></span>
+                    <span class="cmx-tb-btn" data-cmx-exec="numbered-list" title="Numbered list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10 6h11M10 12h11M10 18h11"/><path d="M4 6h2M5 6V4M3 18h3M3 12h3l-3 3h3"/></svg></span>
+                    <span class="cmx-tb-btn" data-notes-mention title="Mention teammate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 5 0v-1a9 9 0 1 0-3.6 7.2"/></svg></span>
+                    <span class="cmx-tb-btn" data-cmx-exec="attach" title="Attach"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11.5 12 19a4.5 4.5 0 0 1-6.4-6.4L13 5.2a3 3 0 0 1 4.2 4.2l-7.4 7.4a1.5 1.5 0 0 1-2.1-2.1L14 8.5"/></svg></span>
+                    <span class="cmx-tb-spacer"></span>
+                    <span class="cmx-tb-btn" data-cmx-exec="undo" title="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></span>
+                    <span class="cmx-tb-btn" data-cmx-exec="redo" title="Redo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg></span>
+                  </div>
+                  <iframe class="cmx-editable cmx-editor-frame" data-cmx-editor-id="notesCrew" data-bind-value="notes.crew.content" data-placeholder="Heads-up for the crew — heavy items, parking, access, anything they should know." src="https://editor.service1.app/" sandbox="allow-scripts allow-same-origin" title="Crew notes editor"></iframe>
+                </div>
+                <div class="nm-meta">
+                  <div class="lhs"><span data-notes-meta="crew">No edits yet</span></div>
+                  <span>Autosaves as you type</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- CREW FEEDBACK -->
+            <div class="nm-body" data-notes-tab="feedback">
+              <div class="nm-desc">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 21l1.8-5.3A8 8 0 1 1 21 12z"/></svg>
+                <span><strong>Crew Feedback</strong> · After-job notes from the foreman. Crew can add or you can write what they reported.</span>
+              </div>
+              <div class="nm-editor">
+                <div class="cmx-editor">
+                  <div class="cmx-tb" data-cmx-editor-id="notesFeedback">
+                    <span class="cmx-tb-btn" data-cmx-exec="bold" title="Bold"><span class="glyph b">B</span></span>
+                    <span class="cmx-tb-btn" data-cmx-exec="italic" title="Italic"><span class="glyph i">I</span></span>
+                    <span class="cmx-tb-btn" data-cmx-exec="strike" title="Strikethrough"><span class="glyph s">S</span></span>
+                    <span class="cmx-tb-btn" data-cmx-exec="link" title="Link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 13.5a3.5 3.5 0 0 0 5 0l3-3a3.5 3.5 0 0 0-5-5l-1 1"/><path d="M13.5 10.5a3.5 3.5 0 0 0-5 0l-3 3a3.5 3.5 0 0 0 5 5l1-1"/></svg></span>
+                    <span class="cmx-tb-sep"></span>
+                    <span class="cmx-tb-btn" data-cmx-exec="bullet-list" title="Bullet list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4" cy="6" r="1.2" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1.2" fill="currentColor" stroke="none"/></svg></span>
+                    <span class="cmx-tb-btn" data-cmx-exec="numbered-list" title="Numbered list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10 6h11M10 12h11M10 18h11"/><path d="M4 6h2M5 6V4M3 18h3M3 12h3l-3 3h3"/></svg></span>
+                    <span class="cmx-tb-btn" data-notes-mention title="Mention teammate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 5 0v-1a9 9 0 1 0-3.6 7.2"/></svg></span>
+                    <span class="cmx-tb-btn" data-cmx-exec="attach" title="Attach"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11.5 12 19a4.5 4.5 0 0 1-6.4-6.4L13 5.2a3 3 0 0 1 4.2 4.2l-7.4 7.4a1.5 1.5 0 0 1-2.1-2.1L14 8.5"/></svg></span>
+                    <span class="cmx-tb-spacer"></span>
+                    <span class="cmx-tb-btn" data-cmx-exec="undo" title="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></span>
+                    <span class="cmx-tb-btn" data-cmx-exec="redo" title="Redo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg></span>
+                  </div>
+                  <iframe class="cmx-editable cmx-editor-frame" data-cmx-editor-id="notesFeedback" data-bind-value="notes.feedback.content" data-placeholder="What did the crew flag after the job? Damage, surprises, customer issues…" src="https://editor.service1.app/" sandbox="allow-scripts allow-same-origin" title="Crew feedback editor"></iframe>
+                </div>
+                <div class="nm-meta">
+                  <div class="lhs"><span data-notes-meta="feedback">No edits yet</span></div>
+                  <span>Autosaves as you type</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- DISPATCHER NOTES -->
+            <div class="nm-body" data-notes-tab="dispatch">
+              <div class="nm-desc">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                <span><strong>Dispatcher Notes</strong> · Routing, scheduling, and conflicts — seen by dispatch first.</span>
+              </div>
+              <div class="nm-editor">
+                <div class="cmx-editor">
+                  <div class="cmx-tb" data-cmx-editor-id="notesDispatch">
+                    <span class="cmx-tb-btn" data-cmx-exec="bold" title="Bold"><span class="glyph b">B</span></span>
+                    <span class="cmx-tb-btn" data-cmx-exec="italic" title="Italic"><span class="glyph i">I</span></span>
+                    <span class="cmx-tb-btn" data-cmx-exec="strike" title="Strikethrough"><span class="glyph s">S</span></span>
+                    <span class="cmx-tb-btn" data-cmx-exec="link" title="Link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 13.5a3.5 3.5 0 0 0 5 0l3-3a3.5 3.5 0 0 0-5-5l-1 1"/><path d="M13.5 10.5a3.5 3.5 0 0 0-5 0l-3 3a3.5 3.5 0 0 0 5 5l1-1"/></svg></span>
+                    <span class="cmx-tb-sep"></span>
+                    <span class="cmx-tb-btn" data-cmx-exec="bullet-list" title="Bullet list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4" cy="6" r="1.2" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1.2" fill="currentColor" stroke="none"/></svg></span>
+                    <span class="cmx-tb-btn" data-cmx-exec="numbered-list" title="Numbered list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10 6h11M10 12h11M10 18h11"/><path d="M4 6h2M5 6V4M3 18h3M3 12h3l-3 3h3"/></svg></span>
+                    <span class="cmx-tb-btn" data-notes-mention title="Mention teammate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 5 0v-1a9 9 0 1 0-3.6 7.2"/></svg></span>
+                    <span class="cmx-tb-btn" data-cmx-exec="attach" title="Attach"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11.5 12 19a4.5 4.5 0 0 1-6.4-6.4L13 5.2a3 3 0 0 1 4.2 4.2l-7.4 7.4a1.5 1.5 0 0 1-2.1-2.1L14 8.5"/></svg></span>
+                    <span class="cmx-tb-spacer"></span>
+                    <span class="cmx-tb-btn" data-cmx-exec="undo" title="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></span>
+                    <span class="cmx-tb-btn" data-cmx-exec="redo" title="Redo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg></span>
+                  </div>
+                  <iframe class="cmx-editable cmx-editor-frame" data-cmx-editor-id="notesDispatch" data-bind-value="notes.dispatch.content" data-placeholder="Routing tips, scheduling caveats, conflicts to watch for…" src="https://editor.service1.app/" sandbox="allow-scripts allow-same-origin" title="Dispatcher notes editor"></iframe>
+                </div>
+                <div class="nm-meta">
+                  <div class="lhs"><span data-notes-meta="dispatch">No edits yet</span></div>
+                  <span>Autosaves as you type</span>
+                </div>
+              </div>
             </div>
           </section>
 
@@ -2474,6 +2685,11 @@ select.gp2-input {
                     <td class="num" data-bind-text="financials2.taxAmount">$344.50</td>
                     <td colspan="2"></td>
                   </tr>
+                  <tr data-bind-hide-empty="accountingTotals.surcharge">
+                    <td colspan="4" style="text-align:right;">Surcharge</td>
+                    <td class="num" colspan="2"><span data-bind-text="deal.surchargeTotal">$0.00</span></td>
+                    <td colspan="2"></td>
+                  </tr>
                   <tr>
                     <td colspan="4" style="text-align:right;font-weight:600;">Grand Total</td>
                     <td class="num" colspan="2"><span data-bind-text="deal.totalPays">$2,768.50</span></td>
@@ -2550,29 +2766,20 @@ select.gp2-input {
           </section>
         </div><!-- /Accounting pane -->
 
-        <!-- Finalize Job Modal -->
+        <!-- Finalize Job Modal — #1382: rebuilt to mirror the old "Final charges" flow -->
         <div id="finalizeModal" class="jd-overlay" style="display:none;">
           <div class="jd-modal" style="width:680px;">
-            <div class="jd-modal-head"><div class="jd-modal-title">Finalize Job</div><button data-modal-close class="jd-close">✕</button></div>
+            <div class="jd-modal-head"><div class="jd-modal-title">Final charges</div><button data-modal-close class="jd-close">✕</button></div>
             <div class="jd-modal-body">
-              <p style="font-size:13px;color:var(--ink-2);margin:0 0 16px;">Once finalized, the job is locked for editing. Revenue, expenses, wages, and tax are posted to the GL and the customer receives their final invoice.</p>
+              <p style="font-size:13px;color:var(--ink-2);margin:0 0 16px;">Once finalized, the job is locked. Revenue, expenses, wages and tax post to the P&amp;L; status changes to Closed.</p>
 
-              <div class="jd-section-title">Revenue summary</div>
-              <table class="jd-mini-table">
-                <tr><td>Quote total</td><td class="num"><span data-bind-text="deal.quoteTotal">$2,450.00</span></td></tr>
-                <tr><td>Discounts applied</td><td class="num" data-bind-text="finalize.discountsApplied">−$200.00</td></tr>
-                <tr><td data-bind-text="finalize.taxLabel">Tax (HST 13%)</td><td class="num" data-bind-text="finalize.taxAmount">$344.50</td></tr>
-                <tr style="font-weight:700;border-top:var(--hair);"><td>Total customer pays</td><td class="num"><span data-bind-text="deal.totalPays">$2,768.50</span></td></tr>
-              </table>
+              <!-- Already-finalized banner (shown by the controller when finalize.isFinalized) -->
+              <div id="finFinalizedBanner" style="display:none;background:#f3f4f6;border:1px solid #d1d5db;border-radius:8px;padding:12px 14px;margin-bottom:14px;">
+                <span style="display:inline-block;padding:2px 9px;border-radius:999px;background:#d1d5db;color:#374151;font-size:11px;font-weight:700;" id="finClosedPill">CLOSED · COMPLETED</span>
+                <div style="margin-top:6px;font-size:13px;color:#374151;" id="finFinalizedLine"></div>
+              </div>
 
-              <div class="jd-section-title" style="margin-top:18px;">Payments received</div>
-              <table class="jd-mini-table">
-                <tr data-bind-hide-empty="deal.deposit"><td data-bind-text="finalize.depositLabel">Deposit (Jan 7)</td><td class="num"><span data-bind-text="deal.deposit">$200.00</span></td></tr>
-                <tr><td data-bind-text="finalize.balanceLabel">Balance at job (Jan 12)</td><td class="num"><span data-bind-text="deal.balanceAtJob">$2,568.50</span></td></tr>
-                <tr style="font-weight:700;border-top:var(--hair);color:var(--ok);"><td>Total received</td><td class="num"><span data-bind-text="deal.totalPays">$2,768.50</span></td></tr>
-              </table>
-
-              <div class="jd-section-title" style="margin-top:18px;">Job costs (auto-pulled)</div>
+              <div class="jd-section-title">Job costs (auto-pulled)</div>
               <table class="jd-mini-table">
                 <tr><td>Materials</td><td class="num" data-bind-text="finalize.materials">$250.00</td></tr>
                 <tr><td>Fuel</td><td class="num" data-bind-text="finalize.fuel">$98.00</td></tr>
@@ -2581,22 +2788,97 @@ select.gp2-input {
                 <tr style="font-weight:700;color:var(--ok);"><td>Net margin</td><td class="num" data-bind-text="finalize.netMargin">$1,708.50 (61.7%)</td></tr>
               </table>
 
-              <div class="jd-section-title" style="margin-top:18px;">Final checks</div>
-              <label class="jd-check"><input name="allPhotosUploaded" type="checkbox" checked> <span data-bind-text="finalize.photosCheck">All photos uploaded (12 of 12)</span></label>
-              <label class="jd-check"><input name="customerSignedBillOfLading" type="checkbox" checked> Customer signed bill of lading</label>
-              <label class="jd-check"><input name="finalWalkThroughCompleted" type="checkbox" checked> Final walk-through completed</label>
-              <label class="jd-check"><input name="noDamageClaimFiled" type="checkbox"> No damage claim filed</label>
-              <label class="jd-check"><input name="triggerReviewRequestEmail" type="checkbox" checked> Trigger review request email (24h delay)</label>
-              <label class="jd-check"><input name="postInvoiceToQuickbooks" type="checkbox" checked> Post invoice to QuickBooks</label>
-              <label class="jd-check"><input name="sendCustomerTheirPdfReceipt" type="checkbox" checked> Send customer their PDF receipt</label>
+              <!-- ── Billable time ── -->
+              <div class="jd-section-title" style="margin-top:18px;">Billable time</div>
+              <div id="finModeToggle" style="display:inline-flex;border:1px solid var(--accent,#004D40);border-radius:8px;overflow:hidden;margin-bottom:12px;">
+                <button type="button" id="finModeDuration" class="fin-mode-btn" data-mode="duration" style="padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;border:0;background:var(--accent,#004D40);color:#fff;">Duration</button>
+                <button type="button" id="finModeStartEnd" class="fin-mode-btn" data-mode="startend" style="padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;border:0;background:#fff;color:var(--accent,#004D40);">Start &amp; end time</button>
+              </div>
 
-              <div class="jd-section-title" style="margin-top:18px;">Internal notes</div>
-              <textarea name="notes" class="jd-textarea" placeholder="Anything ops should know about this completed job…"></textarea>
+              <!-- Duration mode -->
+              <div id="finDurationFields" style="display:grid;grid-template-columns:110px 1fr 1fr;gap:8px;align-items:center;">
+                <div></div>
+                <div style="background:var(--accent,#004D40);color:#fff;font-size:11px;font-weight:600;padding:5px 8px;border-radius:5px;text-align:center;">Hours</div>
+                <div style="background:var(--accent,#004D40);color:#fff;font-size:11px;font-weight:600;padding:5px 8px;border-radius:5px;text-align:center;">Minutes</div>
+                <div style="font-size:13px;color:#374151;">Labour</div>
+                <select id="finLabourH" class="jd-input"></select>
+                <select id="finLabourM" class="jd-input"></select>
+                <div style="font-size:13px;color:#374151;">Travel time</div>
+                <select id="finTravelH" class="jd-input"></select>
+                <select id="finTravelM" class="jd-input"></select>
+                <div style="font-size:13px;color:#374151;">Breaks</div>
+                <select id="finBreaksH" class="jd-input"></select>
+                <select id="finBreaksM" class="jd-input"></select>
+              </div>
+
+              <!-- Start & end mode -->
+              <div id="finStartEndFields" style="display:none;">
+                <div style="display:flex;gap:12px;">
+                  <div class="jd-field" style="flex:1;"><label class="jd-label">Start time</label><input type="time" id="finStartTime" class="jd-input"></div>
+                  <div class="jd-field" style="flex:1;"><label class="jd-label">End time</label><input type="time" id="finEndTime" class="jd-input"></div>
+                  <div class="jd-field" style="flex:1;"><label class="jd-label">Breaks</label>
+                    <div style="display:flex;gap:4px;">
+                      <select id="finBreaksH2" class="jd-input" style="width:50%;"></select>
+                      <select id="finBreaksM2" class="jd-input" style="width:50%;"></select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div style="display:flex;justify-content:space-between;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:8px 12px;margin-top:10px;font-size:13px;font-weight:600;">
+                <span>Total billable time</span><span id="finTotalDisplay">0 hours 0 minutes</span>
+              </div>
+
+              <!-- ── Custom billing ── -->
+              <div class="jd-section-title" style="margin-top:18px;display:flex;gap:12px;align-items:baseline;">Custom billing
+                <label style="font-weight:400;color:var(--ink-2,#6b7280);font-size:12px;display:inline-flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="finOverrideCheck"> Override</label>
+              </div>
+              <div id="finOverrideFields" style="display:none;">
+                <table class="jd-mini-table" id="finCustomTable">
+                  <thead><tr><th style="text-align:left;">Name</th><th style="text-align:left;">Amount</th><th style="text-align:left;">Quantity</th><th class="num">Total</th></tr></thead>
+                  <tbody id="finCustomRows"></tbody>
+                </table>
+                <button type="button" id="finAddCustomRow" class="btn btn-secondary btn-sm" style="margin-top:6px;">+ add new row</button>
+              </div>
+
+              <!-- ── Rate & notes ── -->
+              <div class="jd-section-title" style="margin-top:18px;">Rate &amp; notes</div>
+              <div class="jd-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div class="jd-field"><label class="jd-label">Hourly rate ($)</label><input type="number" step="0.01" min="0" id="finRateInput" class="jd-input" placeholder="0.00"></div>
+                <div class="jd-field"><label class="jd-label">Notes (optional)</label><input type="text" id="finNotesInput" class="jd-input" placeholder="e.g. repeat customer"></div>
+              </div>
+
+              <!-- ── Revenue breakdown ── -->
+              <div class="jd-section-title" style="margin-top:18px;">Revenue breakdown</div>
+              <p style="font-size:12px;color:var(--ink-2,#6b7280);margin:0 0 10px;">Break the finalized amount into categories. These sync to the P&amp;L as revenue; taxes sync to the Tax tab.</p>
+              <div id="finRevCatContainer"></div>
+              <button type="button" id="finAddRevCatRow" style="background:none;border:none;color:var(--accent,#004D40);font-size:13px;font-weight:600;cursor:pointer;padding:4px 0;">+ Add category</button>
+              <div style="display:flex;justify-content:flex-end;gap:20px;margin-top:8px;font-size:13px;font-weight:600;">
+                <span>Subtotal: $<span id="finRevCatSubtotal">0.00</span></span>
+                <span>Tax: $<span id="finRevCatTaxTotal">0.00</span></span>
+                <span>Total: $<span id="finRevCatGrandTotal">0.00</span></span>
+              </div>
+
+              <!-- ── Live total ── -->
+              <div id="finLiveTotalBox" style="background:#f0fdf4;border:2px solid #16a34a;border-radius:8px;padding:14px;margin-top:14px;display:none;">
+                <div style="font-size:12px;color:#666;">
+                  <div id="finSummaryLabor" style="display:flex;justify-content:space-between;margin-bottom:4px;"></div>
+                  <div id="finSummaryTravel" style="display:flex;justify-content:space-between;margin-bottom:4px;color:#0d47a1;font-weight:600;"></div>
+                  <div id="finSummaryBreaks" style="display:flex;justify-content:space-between;margin-bottom:4px;color:#555;"></div>
+                  <div id="finSummaryDiscount" style="display:flex;justify-content:space-between;margin-bottom:4px;color:#b71c1c;font-weight:600;"></div>
+                  <div id="finSummaryOther" style="display:flex;justify-content:space-between;margin-bottom:4px;"></div>
+                  <div id="finSummarySubtotal" style="display:flex;justify-content:space-between;margin-bottom:4px;border-top:1px solid #d1fae5;padding-top:4px;"></div>
+                  <div id="finSummaryTax" style="display:flex;justify-content:space-between;margin-bottom:4px;"></div>
+                </div>
+                <div id="finSummaryTotal" style="display:flex;justify-content:space-between;font-size:17px;font-weight:700;color:var(--accent,#004D40);border-top:2px solid #16a34a;padding-top:6px;"></div>
+              </div>
             </div>
             <div class="jd-modal-actions">
               <button data-modal-close class="btn btn-secondary">Cancel</button>
-              <button data-comm-action="action:jobDetail.save-as-draft" class="btn btn-secondary">Save as Draft</button>
-              <button data-modal-save class="btn btn-primary">✓ Finalize &amp; Send Invoice</button>
+              <!-- Re-sync (shown by controller when already finalized) -->
+              <button id="finResyncBtn" data-comm-action="action:job.resync-pnl" class="btn btn-secondary" style="display:none;">Re-sync to PNL</button>
+              <!-- Finalize (hidden by controller when already finalized) -->
+              <button id="finFinalizeBtn" data-modal-save class="btn btn-primary">Finalize</button>
             </div>
           </div>
         </div>
@@ -2765,6 +3047,7 @@ select.gp2-input {
             </div>
             <div class="opp-links">
               <a data-jd-open="jdAddDiscountModal" href="#" id="jdAddDiscountBtn">+ Add discount</a>
+              <a data-jd-open="jdAddSurchargeModal" href="#" id="jdAddSurchargeBtn">+ Add surcharge</a>
               <a data-jd-open="jdNteModal" href="#" id="jdSetNteBtn">Set not-to-exceed</a>
             </div>
           </div>
@@ -2873,13 +3156,17 @@ select.gp2-input {
           <div class="s-body">
             <div class="pay-list" data-bind="payments">
               <template>
-                <div class="pay-item">
+                <div class="pay-item" data-record-id="{{id}}" data-can-edit="{{canEdit}}" data-can-delete="{{canDelete}}" data-blocked="{{blockedReason}}">
                   <span class="pay-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></span>
                   <div class="pay-body">
                     <div class="pay-top">{{method}} <span class="pill" style="background:var(--terra-soft);color:var(--terra);border-color:transparent;">{{kind}}</span></div>
                     <div class="pay-sub">{{sub}}</div>
                   </div>
                   <div class="pay-amt">{{amount|usd}}</div>
+                  <div class="pay-actions">
+                    <button type="button" class="pay-edit" title="Edit payment" aria-label="Edit payment">Edit</button>
+                    <button type="button" class="pay-del" title="{{blockedReason}}" aria-label="Delete payment">Delete</button>
+                  </div>
                 </div>
               </template>
             </div>
@@ -3162,7 +3449,43 @@ select.gp2-input {
     <div class="jd-modal-head"><div class="jd-modal-title">Add Payment</div><button data-modal-close class="jd-close">✕</button></div>
     <div class="jd-modal-body">
       <div class="jd-grid">
-        <div class="jd-field full"><label class="jd-label">Amount <span class="req">*</span></label><input name="amount" class="jd-input" type="number" step="0.01" min="0" placeholder="0.00"></div>
+        <div class="jd-field full"><label class="jd-label">Payment Amount <span class="req">*</span></label><input name="amount" class="jd-input" type="number" step="0.01" min="0" placeholder="0.00"></div>
+        <div class="jd-field"><label class="jd-label">Payment Type</label>
+          <select name="type" id="jdPayTypeSelect" class="jd-input"></select>
+        </div>
+        <div class="jd-field"><label class="jd-label">Payment Category</label>
+          <select name="category" class="jd-input">
+            <option value="Deposit">Deposit</option>
+            <option value="Balance">Balance</option>
+            <option value="Final">Final payment</option>
+          </select>
+        </div>
+        <!-- Feature #1341: card picker — shown only when Payment Type is a card
+             method. Charges the selected saved card via Stripe. -->
+        <div class="jd-field full" id="jdPayCardSection" style="display:none;">
+          <label class="jd-label">Card to charge</label>
+          <div id="jdPayCardList"></div>
+          <div id="jdPayCardEmpty" style="display:none;font-size:12px;color:var(--ink-3);font-style:italic;margin:4px 0;">No card on file for this customer.</div>
+          <button type="button" id="jdPayAddCardBtn" class="btn btn-secondary btn-sm">+ Add card</button>
+        </div>
+        <div class="jd-field full"><label class="jd-label">Reference Number (optional)</label><input name="reference" class="jd-input" type="text" placeholder="e.g., Transaction ID"></div>
+        <div class="jd-field full"><label class="jd-label">Notes (optional)</label><textarea name="notes" class="jd-textarea" placeholder="Payment notes…"></textarea></div>
+      </div>
+    </div>
+    <div class="jd-modal-actions">
+      <button data-modal-close class="btn btn-secondary">Cancel</button>
+      <button data-modal-save id="jdPaySubmitBtn" class="btn btn-primary">Record Payment</button>
+    </div>
+  </div>
+</div>
+
+<div id="jdEditPaymentModal" class="jd-overlay" style="display:none;">
+  <div class="jd-modal" style="width:520px;">
+    <div class="jd-modal-head"><div class="jd-modal-title">Edit Payment</div><button data-modal-close class="jd-close">✕</button></div>
+    <div class="jd-modal-body">
+      <input type="hidden" name="id">
+      <div class="jd-grid">
+        <div class="jd-field"><label class="jd-label">Amount</label><input name="amount" class="jd-input" type="number" step="0.01" min="0" placeholder="0.00"></div>
         <div class="jd-field"><label class="jd-label">Method</label>
           <select name="type" class="jd-input">
             <option value="Cash">Cash</option>
@@ -3172,6 +3495,7 @@ select.gp2-input {
             <option value="Other">Other</option>
           </select>
         </div>
+        <div class="jd-field"><label class="jd-label">Date</label><input name="date" class="jd-input" type="date"></div>
         <div class="jd-field"><label class="jd-label">Category</label>
           <select name="category" class="jd-input">
             <option value="Deposit">Deposit</option>
@@ -3179,14 +3503,14 @@ select.gp2-input {
             <option value="Final">Final payment</option>
           </select>
         </div>
-        <div class="jd-field full"><label class="jd-label">Reference #</label><input name="reference" class="jd-input" type="text" placeholder="Optional (check #, txn id)"></div>
+        <div class="jd-field full"><label class="jd-label">Reference #</label><input name="reference" class="jd-input" type="text" placeholder="check #, txn id"></div>
         <div class="jd-field full"><label class="jd-label">Notes</label><textarea name="notes" class="jd-textarea" placeholder=""></textarea></div>
       </div>
+      <div id="jdEditPayLocked" class="jd-hint" style="display:none;font-size:12px;color:var(--ink-3);font-style:italic;margin-top:8px;">Stripe-collected payment — only Notes can be edited.</div>
     </div>
     <div class="jd-modal-actions">
       <button data-modal-close class="btn btn-secondary">Cancel</button>
-      <button type="button" id="jdChargeCardBtn" class="btn btn-secondary" title="Charge the customer's saved card via Stripe">Charge card on file</button>
-      <button data-modal-save class="btn btn-primary">Record Payment</button>
+      <button data-modal-save class="btn btn-primary">Save changes</button>
     </div>
   </div>
 </div>
@@ -3461,6 +3785,35 @@ select.gp2-input {
   </div>
 </div>
 
+<!-- #1340: Add / Edit Surcharge (additive mirror of Add Discount) -->
+<div class="jd-overlay" id="jdAddSurchargeModal">
+  <div class="jd-modal" style="width:460px;">
+    <div class="jd-modal-head"><div class="jd-modal-title" id="jdSurchargeTitle">Add Surcharge</div><button class="jd-modal-close" onclick="jdCloseModal('jdAddSurchargeModal')">✕</button></div>
+    <div class="jd-modal-body">
+      <input type="hidden" name="chargeId" id="jdSurchargeChargeId" value="">
+      <div class="jd-field"><label class="jd-label">Description</label><input name="description" id="jdSurchargeDesc" class="jd-input" type="text" placeholder="e.g., Credit Card Fee"></div>
+      <div class="jd-field">
+        <label class="jd-label">Surcharge type</label>
+        <div style="display:flex;gap:8px;margin-top:4px;">
+          <label class="jd-pick"><input type="radio" name="surcharge-type" value="percent" checked> Percent of total</label>
+          <label class="jd-pick"><input type="radio" name="surcharge-type" value="fixed"> Fixed amount</label>
+        </div>
+      </div>
+      <div class="jd-field"><label class="jd-label" id="jdSurchargeAmtLabel">Amount (%) *</label>
+        <div style="display:flex;align-items:center;">
+          <span id="jdSurchargeAmtPrefix" style="padding:10px 12px;background:var(--surface-2);border:var(--hair);border-right:0;border-radius:8px 0 0 8px;font-weight:600;color:var(--ink-3);font-size:13px;">%</span>
+          <input id="jdSurchargeAmtInput" name="amount" class="jd-input" type="number" step="0.1" max="100" placeholder="0" style="border-radius:0 8px 8px 0;">
+        </div>
+      </div>
+      <p style="font-size:12px;color:var(--ink-3);margin:6px 0 0;line-height:1.5;">A percentage surcharge applies to the total charge (subtotal + tax) and is not itself taxed.</p>
+    </div>
+    <div class="jd-modal-foot">
+      <button data-modal-close class="btn btn-secondary" onclick="jdCloseModal('jdAddSurchargeModal')">Cancel</button>
+      <button id="jdSurchargeSaveBtn" class="btn btn-primary">Add Surcharge</button>
+    </div>
+  </div>
+</div>
+
 <!-- Not-to-Exceed -->
 <div class="jd-overlay" id="jdNteModal">
   <div class="jd-modal" style="width:440px;">
@@ -3566,6 +3919,7 @@ select.gp2-input {
   <button class="s1-btn sec" data-jd-open="addWagesModal" type="button">+ Wages</button>
   <button class="s1-btn sec" data-jd-open="addChargeModal" type="button">+ Charge</button>
   <button class="s1-btn sec" data-jd-open="jdAddDiscountModal" type="button">+ Discount</button>
+  <button class="s1-btn sec" data-jd-open="jdAddSurchargeModal" type="button">+ Surcharge</button>
   <button class="s1-btn sec" data-jd-open="jdAddContactModal" type="button">+ Contact</button>
   <button class="s1-btn sec" data-jd-open="jdInventoryModal" type="button">Inventory</button>
   <button class="s1-btn sec" data-jd-open="jdJobDetailsModal" type="button">Job details</button>
@@ -3880,6 +4234,7 @@ function jdSaveFollowup() {
 document.addEventListener('DOMContentLoaded', () => {
   const wire = (id, modalId) => document.getElementById(id)?.addEventListener('click', e => { e.preventDefault(); jdOpenModal(modalId); });
   wire('jdAddDiscountBtn', 'jdAddDiscountModal');
+  wire('jdAddSurchargeBtn', 'jdAddSurchargeModal');
   wire('jdSetNteBtn', 'jdNteModal');
   wire('jdEditJobDetailsBtn', 'jdJobDetailsModal');
   wire('jdEditContactDetailsBtn', 'jdContactDetailsModal');

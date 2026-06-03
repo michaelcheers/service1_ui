@@ -175,6 +175,10 @@
     document.addEventListener('click', (ev) => {
       const t = ev.target.closest('[data-comm-action]'); if (!t) return;
       if (t.__s1Wired) return;
+      // Anchors use href="#"; without this the iframe scrolls to the top and
+      // the action looks dead. Buttons are unaffected (their default click is
+      // a no-op).
+      if (t.closest('a[href]')) ev.preventDefault();
       const [kind, resource, id] = t.getAttribute('data-comm-action').split(':');
       const payload = (window.S1.collectPayload || (() => ({})))(t);
       if (kind === 'save') comm.save(resource, payload);
@@ -367,6 +371,36 @@
       }
     });
   }
+
+  // ─ Cross-area navigation. Module pages live in separate folders
+  // (modules/<name>/index.html), so naive sibling-relative links like
+  // "Documents.html" 404 against the static host. Links that jump between
+  // top-level app areas carry data-s1-host-href="/HostRoute".
+  //   embedded by the Service1 host  -> postMessage s1ui:navigate (host
+  //                                     drives the TOP window to /HostRoute)
+  //   standalone service1_ui site    -> fall through to the anchor's real
+  //                                     href (a correct ../<module>/ path)
+  document.addEventListener('click', function (ev) {
+    var a = ev.target.closest('[data-s1-host-href]');
+    if (!a) return;
+    var hostHref = a.getAttribute('data-s1-host-href');
+    if (!hostHref) return;
+    var embedded = false;
+    try { embedded = (window.parent && window.parent !== window); }
+    catch (_) { embedded = true; }       // cross-origin parent access throws => embedded
+    if (!embedded) return;               // standalone: let the real href navigate
+    ev.preventDefault();
+    // targetOrigin: reuse the host-origin pin if one is present, else '*'.
+    // '*' is safe here because the host does NOT rely on targetOrigin — it
+    // validates the SENDER's origin and source before acting on the message.
+    var origin = '*';
+    try {
+      var m = document.querySelector('meta[name="s1ui-host-origin"]');
+      if (m && m.getAttribute('content')) origin = m.getAttribute('content');
+    } catch (_) {}
+    try { window.parent.postMessage({ type: 's1ui:navigate', href: hostHref }, origin); }
+    catch (_) {}
+  });
 
   window.S1 = window.S1 || {};
   window.S1.wireStandardPage = wire;

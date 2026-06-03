@@ -138,6 +138,90 @@ $$('.tab[data-tab]').forEach(btn => {
   syncDiscType();
 })();
 
+// #1340 Add/Edit Surcharge modal: surcharge type radio (Percent of total / Fixed
+// amount) swaps the amount field's prefix, label, placeholder, and step — mirrors
+// the discount toggle above.
+(function () {
+  const radios = $$('input[name="surcharge-type"]');
+  const label  = document.getElementById('jdSurchargeAmtLabel');
+  const prefix = document.getElementById('jdSurchargeAmtPrefix');
+  const input  = document.getElementById('jdSurchargeAmtInput');
+  if (!radios.length || !label || !prefix || !input) return;
+  function syncSurType() {
+    const sel = radios.find(r => r.checked);
+    const kind = sel ? sel.value : 'percent';
+    if (kind === 'fixed') {
+      label.textContent  = 'Amount *';
+      prefix.textContent = '$';
+      input.setAttribute('placeholder', '0.00');
+      input.setAttribute('step', '0.01');
+      input.removeAttribute('max');
+    } else {
+      label.textContent  = 'Amount (%) *';
+      prefix.textContent = '%';
+      input.setAttribute('placeholder', '0');
+      input.setAttribute('step', '0.1');
+      input.setAttribute('max', '100');
+    }
+  }
+  radios.forEach(r => r.addEventListener('change', syncSurType));
+  window.jdSyncSurchargeType = syncSurType;
+  syncSurType();
+})();
+
+// #1340 Add/Edit Surcharge save: fires job.surcharge.add (no chargeId) or
+// job.surcharge.edit (chargeId present); the server computes the dollar amount
+// (percent of the total charge, or flat) and the post-action state re-push
+// re-renders the charges table + footer. Custom handler (not bindForm) so the
+// same modal serves both add and edit with a dynamic action key.
+(function () {
+  const btn = document.getElementById('jdSurchargeSaveBtn');
+  if (!btn) return;
+  // Reset the modal to "Add" state (clear edit id/title/prefill, default Percent).
+  function resetSurchargeModal() {
+    const sm = document.getElementById('jdAddSurchargeModal');
+    if (!sm) return;
+    const idEl = sm.querySelector('[name="chargeId"]'); if (idEl) idEl.value = '';
+    const descEl = sm.querySelector('[name="description"]'); if (descEl) descEl.value = '';
+    const amtEl = sm.querySelector('[name="amount"]'); if (amtEl) amtEl.value = '';
+    const pctRadio = sm.querySelector('input[name="surcharge-type"][value="percent"]');
+    if (pctRadio) pctRadio.checked = true;
+    if (window.jdSyncSurchargeType) window.jdSyncSurchargeType();
+    const title = document.getElementById('jdSurchargeTitle'); if (title) title.textContent = 'Add Surcharge';
+    btn.textContent = 'Add Surcharge';
+  }
+  window.jdResetSurchargeModal = resetSurchargeModal;
+  // Any "+ Add surcharge" trigger resets the modal before it opens.
+  document.addEventListener('click', function (ev) {
+    const t = ev.target.closest && ev.target.closest('[data-jd-open="jdAddSurchargeModal"], #jdAddSurchargeBtn');
+    if (t) resetSurchargeModal();
+  });
+  btn.addEventListener('click', async function (ev) {
+    ev.preventDefault();
+    const modal = document.getElementById('jdAddSurchargeModal');
+    if (!modal) return;
+    const descEl = modal.querySelector('[name="description"]');
+    const amtEl  = modal.querySelector('[name="amount"]');
+    const idEl   = modal.querySelector('[name="chargeId"]');
+    const typeEl = modal.querySelector('input[name="surcharge-type"]:checked');
+    const desc = (descEl && descEl.value || '').trim();
+    const amt  = amtEl ? amtEl.value : '';
+    const surType = typeEl ? typeEl.value : 'percent';
+    const chargeId = (idEl && idEl.value || '').trim();
+    if (!desc) { flash('Description is required', 'bad'); return; }
+    if (!(Number(amt) > 0)) { flash('Amount must be greater than 0', 'bad'); return; }
+    const action = chargeId ? 'job.surcharge.edit' : 'job.surcharge.add';
+    const payload = { description: desc, 'surcharge-type': surType, amount: amt };
+    if (chargeId) payload.chargeId = chargeId;
+    await safe('Save surcharge', async function () {
+      const r = await comm.action(action, payload);
+      if (r && r.ok === false) { flash(r.error || 'Surcharge failed', 'bad'); return; }
+      flash(chargeId ? 'Surcharge updated' : 'Surcharge added');
+      try { window.jdCloseModal && window.jdCloseModal('jdAddSurchargeModal'); } catch (_) {}
+    });
+  });
+})();
+
 // Add Charge modal: preset → rate, rate × quantity → live Line total.
 (function () {
   const modal = document.getElementById('addChargeModal');
@@ -400,6 +484,38 @@ $$('button').filter(b => /claim lead/i.test(b.textContent.trim())).forEach(b => 
   });
 });
 
+// ── 13b) Quick-action & payment-link buttons (right rail) ───────────────
+// These <a href="#" data-comm-action="action:jobDetail.X"> links previously
+// fell through to the generic dispatcher: no preventDefault (page jumped to
+// top) and no success/error toast. Wire each one explicitly so it matches the
+// old UI's visible confirmation. Backend handlers exist (JobDetail.S1Ui.cs
+// :126-130). __s1Wired = true stops the standard-page fallback double-firing.
+[
+  ['jobDetail.send-discovery-call-confirmation', 'Discovery call confirmation sent'],
+  ['jobDetail.send-portal-link',                 'Portal link sent'],
+  ['jobDetail.send-growth-plan',                 'Growth plan sent'],
+  ['jobDetail.request-a-card-on-file',           'Card request sent'],
+  ['jobDetail.send-link-to-customer',            'Payment link sent to customer'],
+].forEach(([action, okMsg]) => {
+  $$('[data-comm-action="action:' + action + '"]').forEach(el => {
+    if (el.__s1Wired) return;
+    el.__s1Wired = true;
+    el.addEventListener('click', async (ev) => {
+      ev.preventDefault();
+      if (el.getAttribute('aria-busy') === 'true') return;   // guard double-click
+      el.setAttribute('aria-busy', 'true');
+      try {
+        await safe(okMsg, async () => {
+          const r = await comm.action(action, {});
+          flash((r && (r.message || r.toast)) || okMsg);
+        });
+      } finally {
+        el.removeAttribute('aria-busy');
+      }
+    });
+  });
+});
+
 // ── 14) Add contact ─────────────────────────────────────────────────────
 (function () {
   const btn = $('.add-contact');
@@ -579,6 +695,60 @@ document.addEventListener('click', (ev) => {
   window.S1.modal.open('#editStopModal');
 });
 
+// #1342: delete a recorded payment. Delegated (rows render from state.payments
+// via a <template> repeat), confirm first, then fire the delete-payment RPC with
+// the real Payment id (data-record-id="{{id}}").
+document.addEventListener('click', async (ev) => {
+  const btn = ev.target.closest && ev.target.closest('.pay-del');
+  if (!btn) return;
+  ev.preventDefault();
+  const row = btn.closest('[data-record-id]');
+  const id  = row ? row.getAttribute('data-record-id') : null;
+  if (!id) { flash('Cannot delete (missing id)', 'bad'); return; }
+  if (!window.confirm('Delete this payment? The invoice paid total will be reduced.')) return;
+  await safe('Delete payment', async () => {
+    const r = await comm.action('jobDetail.delete-payment', { id });
+    if (r && r.ok === false) { flash(r.error || 'Delete failed', 'bad'); return; }
+    if (row) row.remove();
+    flash('Payment deleted');
+  });
+});
+
+// #1342: edit a recorded payment — open #jdEditPaymentModal prefilled from the
+// payment's raw state fields (state.payments). Stripe-collected rows lock the
+// amount/method/date/category/reference fields so only Notes can change.
+document.addEventListener('click', (ev) => {
+  const btn = ev.target.closest && ev.target.closest('.pay-edit');
+  if (!btn) return;
+  ev.preventDefault();
+  const row = btn.closest('[data-record-id]');
+  const id  = row ? row.getAttribute('data-record-id') : null;
+  const modal = document.getElementById('jdEditPaymentModal');
+  if (!id || !modal) { flash('Cannot edit (missing id)', 'bad'); return; }
+  const state = (window.S1.fixtures || {}).jobDetail || {};
+  const list  = Array.isArray(state.payments) ? state.payments : [];
+  const data  = list.find(p => String(p.id) === String(id)) || {};
+  const set = (n, v) => { const el = modal.querySelector('[name="' + n + '"]'); if (el) el.value = (v == null ? '' : v); };
+  // Method is a bound <select>; inject the stored value as an option if it isn't
+  // one of the presets so an out-of-list value (e.g. "etransfer") isn't dropped.
+  const method = data.method || '';
+  const mSel = modal.querySelector('[name="type"]');
+  if (mSel && method) {
+    const has = Array.prototype.some.call(mSel.options, o => o.value === method);
+    if (!has) { const opt = document.createElement('option'); opt.value = method; opt.textContent = method; mSel.insertBefore(opt, mSel.firstChild); }
+  }
+  set('id', id); set('amount', data.amount); set('type', method);
+  set('category', data.category); set('reference', data.reference);
+  set('notes', data.notes); set('date', data.date);          // ISO yyyy-MM-dd
+  const stripeLocked = String(row.getAttribute('data-blocked') || '').indexOf('Stripe') !== -1;
+  ['amount', 'type', 'date', 'category', 'reference'].forEach(n => {
+    const el = modal.querySelector('[name="' + n + '"]'); if (el) el.disabled = stripeLocked;
+  });
+  const lock = modal.querySelector('#jdEditPayLocked');
+  if (lock) lock.style.display = stripeLocked ? '' : 'none';
+  window.S1.modal.open('#jdEditPaymentModal');
+});
+
 // ── 19) Growth plan + Accounting: charges ───────────────────────────────
 function addCharge(ev) {
   ev.preventDefault();
@@ -609,6 +779,16 @@ function renderQuickCharges() {
   };
   while (host.firstChild) host.removeChild(host.firstChild);
 
+  // No active Settings → Charge presets: render no buttons (the four canonical
+  // categories are NOT hardcoded). Guide the user to where categories come from.
+  if (presets.length === 0) {
+    const hint = document.createElement('div');
+    hint.className = 'gp2-quick-hint';
+    hint.textContent = 'No charge categories yet \u2014 add them in Settings \u2192 Charge Presets.';
+    host.appendChild(hint);
+    return;
+  }
+
   // F1322: organize presets into category groups so a long flat list of
   // quick-add buttons becomes easier to scan. Category falls back to the
   // charge type (and finally "Other") so every preset lands in some group.
@@ -629,24 +809,19 @@ function renderQuickCharges() {
     const ic = node.querySelector('[data-quick-icon]');
     const c  = PALETTE[p.name] || PALETTE[p.chargeType] || { bg: 'var(--surface-2)', fg: 'var(--ink-2)' };
     if (ic) { ic.style.background = c.bg; ic.style.color = c.fg; ic.textContent = (p.name || p.chargeType || '?').charAt(0); }
-    if (p.id != null) node.setAttribute('data-preset-id', String(p.id));
-    node.setAttribute('data-preset-name',       p.name || '');
-    node.setAttribute('data-preset-chargetype', p.chargeType || p.name || '');
-    node.setAttribute('data-preset-rate',       String(p.defaultRate != null ? p.defaultRate : 0));
-    node.setAttribute('data-preset-qty',        String(p.defaultQty  != null ? p.defaultQty  : 1));
+    // Every button maps to a real Settings preset row, so it always carries the
+    // preset id. The click ships only the id — never a client-side rate — and the
+    // server resolves type/name/rate/qty/crew/vehicle from the DB.
+    node.setAttribute('data-preset-id',   String(p.id));
+    node.setAttribute('data-preset-name', p.name || '');
     node.__s1Wired = true;
     node.addEventListener('click', async (ev) => {
       ev.preventDefault();
-      const pid = node.getAttribute('data-preset-id');
-      const payload = pid
-        ? { presetId: Number(pid) }
-        : { chargeType: node.getAttribute('data-preset-chargetype'),
-            itemName:   node.getAttribute('data-preset-name'),
-            rate:       parseFloat(node.getAttribute('data-preset-rate')),
-            quantity:   parseFloat(node.getAttribute('data-preset-qty')) };
+      const presetId = Number(node.getAttribute('data-preset-id'));
       await safe('Quick charge', async () => {
-        await comm.action('jobDetail.add-quick-charge', payload);
-        flash('Added ' + (node.getAttribute('data-preset-name') || 'charge'));
+        const res = await comm.action('jobDetail.add-quick-charge', { presetId });
+        if (res && res.ok) flash('Added ' + (node.getAttribute('data-preset-name') || 'charge'));
+        else flash('Set up this category in Settings \u2192 Charge Presets', 'bad');
       });
     });
     return node;
@@ -702,8 +877,30 @@ document.addEventListener('click', (ev) => {
   if (!pen) return;
   ev.preventDefault();
   const row = pen.closest('tr[data-record-id]');
+  if (!row) return;
+  // #1340: a Surcharge row routes to the dedicated surcharge modal (so it can be
+  // edited as a percent-of-total or fixed amount), not the generic charge modal.
+  if ((row.getAttribute('data-edit-type') || '') === 'Surcharge') {
+    const sm = document.getElementById('jdAddSurchargeModal');
+    if (!sm) return;
+    const setS = (name, val) => { const el = sm.querySelector('[name="' + name + '"]'); if (el) el.value = val == null ? '' : val; };
+    // The stored Rate is the snapshotted dollar amount; default the modal to Fixed
+    // amount prefilled with it. The user can switch to Percent of total to re-derive.
+    setS('chargeId', row.getAttribute('data-record-id'));
+    // Strip any "(3%)" suffix from the label for a clean description.
+    var rawName = (row.getAttribute('data-edit-name') || '').replace(/\s*\([^)]*%\)\s*$/, '').trim();
+    setS('description', rawName);
+    setS('amount', row.getAttribute('data-edit-rate') || '');
+    var fixedRadio = sm.querySelector('input[name="surcharge-type"][value="fixed"]');
+    if (fixedRadio) fixedRadio.checked = true;
+    if (window.jdSyncSurchargeType) window.jdSyncSurchargeType();
+    var title = document.getElementById('jdSurchargeTitle'); if (title) title.textContent = 'Edit Surcharge';
+    var saveBtn = document.getElementById('jdSurchargeSaveBtn'); if (saveBtn) saveBtn.textContent = 'Save Surcharge';
+    window.jdOpenModal ? window.jdOpenModal('jdAddSurchargeModal') : window.S1.modal.open('#jdAddSurchargeModal');
+    return;
+  }
   const modal = document.getElementById('editChargeModal');
-  if (!row || !modal) return;
+  if (!modal) return;
   const set = (name, val, isCheck) => {
     const el = modal.querySelector('[name="' + name + '"]');
     if (!el) return;
@@ -1373,6 +1570,302 @@ document.addEventListener('click', async function (ev) {
   });
 })();
 
+// ── #1382: Finalize "Final charges" modal controller ───────────────────────
+// Ports the old JobDetail.cshtml finalize flow into the S1 iframe: a
+// Duration / Start-&-end-time toggle, a custom-billing override table, a
+// revenue breakdown with live total, and pre-fill / already-finalized state.
+// Rows are built with createElement/textContent only (CLAUDE rule 2).
+(function () {
+  var modal = document.getElementById('finalizeModal');
+  if (!modal) return;
+
+  var REVCATS = ['Labor', 'Travel', 'Materials', 'Equipment', 'Supplies', 'Packing', 'Storage', 'Disposal', 'Discount', 'Other'];
+  var _mode = 'duration';
+  var _override = false;
+
+  function $(id) { return document.getElementById(id); }
+  function finState() { return (((window.S1.fixtures || {}).jobDetail) || {}).finalize || {}; }
+  function num(v) { var n = parseFloat(v); return isNaN(n) ? 0 : n; }
+
+  function opt(sel, val, label) { var o = document.createElement('option'); o.value = String(val); o.textContent = label; sel.appendChild(o); }
+  function fillSelect(sel, maxH, isMinutes) {
+    if (!sel) return;
+    while (sel.firstChild) sel.removeChild(sel.firstChild);
+    if (isMinutes) { [0, 15, 30, 45].forEach(function (m) { opt(sel, m, m + 'm'); }); }
+    else { for (var h = 0; h <= maxH; h++) opt(sel, h, h + 'h'); }
+  }
+  fillSelect($('finLabourH'), 24, false); fillSelect($('finLabourM'), 0, true);
+  fillSelect($('finTravelH'), 12, false); fillSelect($('finTravelM'), 0, true);
+  fillSelect($('finBreaksH'), 8, false);  fillSelect($('finBreaksM'), 0, true);
+  fillSelect($('finBreaksH2'), 8, false); fillSelect($('finBreaksM2'), 0, true);
+
+  function setHM(hSel, mSel, hours) {
+    if (!hSel || !mSel) return;
+    var total = Math.max(0, Math.round(hours * 60));
+    var h = Math.floor(total / 60), m = Math.round((total % 60) / 15) * 15;
+    if (m === 60) { h += 1; m = 0; }
+    var maxOpt = parseInt(hSel.options[hSel.options.length - 1].value, 10) || 0;
+    hSel.value = String(Math.min(h, maxOpt));
+    mSel.value = String(m);
+  }
+
+  // ── mode toggle ──
+  function setMode(mode) {
+    _mode = mode;
+    var dur = $('finModeDuration'), se = $('finModeStartEnd');
+    if (dur) { dur.style.background = mode === 'duration' ? 'var(--accent,#004D40)' : '#fff'; dur.style.color = mode === 'duration' ? '#fff' : 'var(--accent,#004D40)'; }
+    if (se) { se.style.background = mode === 'startend' ? 'var(--accent,#004D40)' : '#fff'; se.style.color = mode === 'startend' ? '#fff' : 'var(--accent,#004D40)'; }
+    var df = $('finDurationFields'), sf = $('finStartEndFields');
+    if (df) df.style.display = mode === 'duration' ? '' : 'none';
+    if (sf) sf.style.display = mode === 'startend' ? '' : 'none';
+    updateTotal();
+  }
+  if ($('finModeDuration')) $('finModeDuration').addEventListener('click', function () { setMode('duration'); });
+  if ($('finModeStartEnd')) $('finModeStartEnd').addEventListener('click', function () { setMode('startend'); });
+
+  // ── billable / travel / break minutes ──
+  function billableMinutes() {
+    if (_mode === 'duration') {
+      var lab = num($('finLabourH').value) * 60 + num($('finLabourM').value);
+      var tra = num($('finTravelH').value) * 60 + num($('finTravelM').value);
+      var brk = num($('finBreaksH').value) * 60 + num($('finBreaksM').value);
+      return Math.max(0, lab + tra - brk);
+    }
+    var s = $('finStartTime').value, e = $('finEndTime').value;
+    if (!s || !e) return 0;
+    var sp = s.split(':'), ep = e.split(':');
+    var sm = num(sp[0]) * 60 + num(sp[1]), em = num(ep[0]) * 60 + num(ep[1]);
+    if (em < sm) em += 24 * 60;
+    var brk2 = num($('finBreaksH2').value) * 60 + num($('finBreaksM2').value);
+    return Math.max(0, em - sm - brk2);
+  }
+  function travelMinutes() { return _mode === 'duration' ? num($('finTravelH').value) * 60 + num($('finTravelM').value) : 0; }
+  function breakMinutes() {
+    return _mode === 'duration'
+      ? num($('finBreaksH').value) * 60 + num($('finBreaksM').value)
+      : num($('finBreaksH2').value) * 60 + num($('finBreaksM2').value);
+  }
+
+  function updateTotal() {
+    var t = billableMinutes();
+    var h = Math.floor(t / 60), m = t % 60;
+    var d = $('finTotalDisplay');
+    if (d) d.textContent = h + ' hour' + (h !== 1 ? 's' : '') + ' ' + m + ' minute' + (m !== 1 ? 's' : '');
+    updateLiveTotal();
+  }
+  ['finLabourH', 'finLabourM', 'finTravelH', 'finTravelM', 'finBreaksH', 'finBreaksM', 'finBreaksH2', 'finBreaksM2', 'finStartTime', 'finEndTime'].forEach(function (id) {
+    var el = $(id); if (el) el.addEventListener('change', updateTotal);
+  });
+  if ($('finRateInput')) $('finRateInput').addEventListener('input', updateLiveTotal);
+
+  // ── custom-billing override ──
+  if ($('finOverrideCheck')) $('finOverrideCheck').addEventListener('change', function () {
+    _override = this.checked;
+    var f = $('finOverrideFields'); if (f) f.style.display = _override ? '' : 'none';
+    if (_override && $('finCustomRows') && !$('finCustomRows').children.length) addCustomRow();
+  });
+  function recalcCustomRow(row) {
+    var amt = num(row.querySelector('.fin-cust-amt').value);
+    var qty = num(row.querySelector('.fin-cust-qty').value);
+    var tot = row.querySelector('.fin-cust-tot');
+    if (tot) tot.textContent = '$' + (amt * (qty || 1)).toFixed(2);
+  }
+  function addCustomRow() {
+    var tbody = $('finCustomRows'); if (!tbody) return;
+    var tr = document.createElement('tr');
+    function cell(input) { var td = document.createElement('td'); td.appendChild(input); return td; }
+    var name = document.createElement('input'); name.type = 'text'; name.className = 'jd-input fin-cust-name'; name.placeholder = 'Item name';
+    var amt = document.createElement('input'); amt.type = 'number'; amt.step = '0.01'; amt.className = 'jd-input fin-cust-amt'; amt.placeholder = '0.00';
+    var qty = document.createElement('input'); qty.type = 'number'; qty.step = '1'; qty.className = 'jd-input fin-cust-qty'; qty.placeholder = '1';
+    var tot = document.createElement('td'); tot.className = 'num fin-cust-tot';
+    amt.addEventListener('input', function () { recalcCustomRow(tr); });
+    qty.addEventListener('input', function () { recalcCustomRow(tr); });
+    tr.appendChild(cell(name)); tr.appendChild(cell(amt)); tr.appendChild(cell(qty)); tr.appendChild(tot);
+    tbody.appendChild(tr);
+  }
+  if ($('finAddCustomRow')) $('finAddCustomRow').addEventListener('click', addCustomRow);
+
+  // ── revenue breakdown rows ──
+  function addRevCatRow(category, amount, tax) {
+    var c = $('finRevCatContainer'); if (!c) return;
+    var row = document.createElement('div');
+    row.className = 'fin-revcat-row';
+    row.style.cssText = 'display:grid;grid-template-columns:2fr 1fr 1fr 28px;gap:8px;align-items:end;margin-bottom:8px;';
+    var catWrap = document.createElement('div');
+    var lblC = document.createElement('label'); lblC.className = 'jd-label'; lblC.textContent = 'Category';
+    var sel = document.createElement('select'); sel.className = 'jd-input fin-revcat-name';
+    REVCATS.forEach(function (cat) { var o = document.createElement('option'); o.value = cat; o.textContent = cat; if (cat === category) o.selected = true; sel.appendChild(o); });
+    catWrap.appendChild(lblC); catWrap.appendChild(sel);
+    var amtWrap = document.createElement('div');
+    var lblA = document.createElement('label'); lblA.className = 'jd-label'; lblA.textContent = 'Amount ($)';
+    var amt = document.createElement('input'); amt.type = 'number'; amt.step = '0.01'; amt.className = 'jd-input fin-revcat-amount'; amt.placeholder = '0.00';
+    var auto = (category === 'Labor' || category === 'Travel' || category === 'Discount');
+    if (category === 'Labor') { amt.readOnly = true; amt.dataset.laborRow = 'true'; amt.style.background = '#e8f5e9'; amt.style.fontWeight = '600'; }
+    else if (category === 'Travel') { amt.readOnly = true; amt.dataset.travelRow = 'true'; amt.style.background = '#e3f2fd'; amt.style.fontWeight = '600'; }
+    else if (category === 'Discount') { amt.readOnly = true; amt.dataset.discountRow = 'true'; amt.style.background = '#ffebee'; amt.style.fontWeight = '600'; }
+    if (amount && !isNaN(amount)) amt.value = Number(amount).toFixed(2);
+    amt.addEventListener('input', function () { updateRevCatTotals(); updateLiveTotal(); });
+    amtWrap.appendChild(lblA); amtWrap.appendChild(amt);
+    var taxWrap = document.createElement('div');
+    var lblT = document.createElement('label'); lblT.className = 'jd-label'; lblT.textContent = 'Tax ($)';
+    var tx = document.createElement('input'); tx.type = 'number'; tx.step = '0.01'; tx.className = 'jd-input fin-revcat-tax'; tx.placeholder = '0.00';
+    if (tax && tax > 0) tx.value = Number(tax).toFixed(2);
+    tx.addEventListener('input', function () { updateRevCatTotals(); updateLiveTotal(); });
+    taxWrap.appendChild(lblT); taxWrap.appendChild(tx);
+    var del = document.createElement('div');
+    if (!auto) {
+      var btn = document.createElement('button'); btn.type = 'button'; btn.textContent = '×';
+      btn.style.cssText = 'background:none;border:none;cursor:pointer;color:#9ca3af;font-size:18px;padding:6px;';
+      btn.addEventListener('click', function () { row.remove(); updateRevCatTotals(); updateLiveTotal(); });
+      del.appendChild(btn);
+    }
+    row.appendChild(catWrap); row.appendChild(amtWrap); row.appendChild(taxWrap); row.appendChild(del);
+    c.appendChild(row);
+  }
+  if ($('finAddRevCatRow')) $('finAddRevCatRow').addEventListener('click', function () { addRevCatRow('Other', 0, 0); updateRevCatTotals(); });
+
+  function updateRevCatTotals() {
+    var sub = 0, tax = 0;
+    modal.querySelectorAll('.fin-revcat-amount').forEach(function (el) { sub += num(el.value); });
+    modal.querySelectorAll('.fin-revcat-tax').forEach(function (el) { tax += num(el.value); });
+    if ($('finRevCatSubtotal')) $('finRevCatSubtotal').textContent = sub.toFixed(2);
+    if ($('finRevCatTaxTotal')) $('finRevCatTaxTotal').textContent = tax.toFixed(2);
+    if ($('finRevCatGrandTotal')) $('finRevCatGrandTotal').textContent = (sub + tax).toFixed(2);
+  }
+
+  function setRow(el, left, right) {
+    if (!el) return;
+    el.textContent = '';
+    var l = document.createElement('span'); l.textContent = left;
+    var r = document.createElement('span'); r.textContent = right;
+    el.appendChild(l); el.appendChild(r); el.style.display = '';
+  }
+  function hideRow(el) { if (el) el.style.display = 'none'; }
+
+  function updateLiveTotal() {
+    var billable = billableMinutes() / 60;
+    var hourly = num($('finRateInput').value);
+    var travelH = travelMinutes() / 60, breakH = breakMinutes() / 60;
+    var labourH = Math.max(0, billable - travelH);
+    var laborAmt = labourH * hourly, travelAmt = travelH * hourly;
+    var laborInput = modal.querySelector('[data-labor-row="true"]'); if (laborInput) laborInput.value = laborAmt > 0 ? laborAmt.toFixed(2) : '';
+    var travelInput = modal.querySelector('[data-travel-row="true"]'); if (travelInput) travelInput.value = travelAmt > 0 ? travelAmt.toFixed(2) : '';
+    var otherTotal = 0, discountTotal = 0;
+    modal.querySelectorAll('.fin-revcat-row').forEach(function (r) {
+      var a = r.querySelector('.fin-revcat-amount'); if (!a) return;
+      if (a.dataset.laborRow || a.dataset.travelRow) return;
+      var v = num(a.value);
+      if (a.dataset.discountRow) { discountTotal += v; return; }
+      otherTotal += v;
+    });
+    var subtotal = laborAmt + travelAmt + otherTotal + discountTotal;
+    var taxRate = num(finState().taxRatePercent);
+    var taxable = laborAmt + travelAmt + otherTotal;
+    var taxAmount = Math.max(0, taxable) * taxRate / 100;
+    // Auto-fill per-row tax proportionally across positive taxable rows.
+    modal.querySelectorAll('.fin-revcat-row').forEach(function (r) {
+      var a = r.querySelector('.fin-revcat-amount'), t = r.querySelector('.fin-revcat-tax'); if (!a || !t) return;
+      if (a.dataset.discountRow) { t.value = ''; return; }
+      if (taxable > 0) { var ra = num(a.value); if (ra <= 0) { t.value = ''; return; } var rt = (ra / taxable) * taxAmount; t.value = rt > 0 ? rt.toFixed(2) : ''; }
+    });
+    updateRevCatTotals();
+    modal.dataset.clientSubtotal = subtotal.toFixed(2);
+    modal.dataset.clientTaxTotal = taxAmount.toFixed(2);
+    var box = $('finLiveTotalBox'); if (!box) return;
+    if (subtotal !== 0 || laborAmt > 0 || travelAmt > 0) {
+      box.style.display = '';
+      setRow($('finSummaryLabor'), 'Labor: ' + labourH.toFixed(2) + ' hrs × $' + hourly.toFixed(2) + '/hr', '$' + laborAmt.toFixed(2));
+      if (travelH > 0) setRow($('finSummaryTravel'), 'Travel: ' + travelH.toFixed(2) + ' hrs × $' + hourly.toFixed(2) + '/hr', '$' + travelAmt.toFixed(2)); else hideRow($('finSummaryTravel'));
+      if (breakH > 0) setRow($('finSummaryBreaks'), 'Breaks deducted: ' + breakH.toFixed(2) + ' hrs', ''); else hideRow($('finSummaryBreaks'));
+      if (discountTotal !== 0) setRow($('finSummaryDiscount'), 'Discount', '$' + discountTotal.toFixed(2)); else hideRow($('finSummaryDiscount'));
+      if (otherTotal > 0) setRow($('finSummaryOther'), 'Other categories', '$' + otherTotal.toFixed(2)); else hideRow($('finSummaryOther'));
+      setRow($('finSummarySubtotal'), 'Subtotal', '$' + subtotal.toFixed(2));
+      setRow($('finSummaryTax'), 'Tax', '$' + taxAmount.toFixed(2));
+      setRow($('finSummaryTotal'), 'Total', '$' + (subtotal + taxAmount).toFixed(2));
+    } else { box.style.display = 'none'; }
+  }
+
+  // ── seed the modal from server state each time it opens ──
+  function seed() {
+    var s = finState();
+    if ($('finRateInput')) $('finRateInput').value = num(s.defaultActualRate) ? num(s.defaultActualRate).toFixed(2) : '';
+    if ($('finNotesInput')) $('finNotesInput').value = s.defaultNotes || '';
+    var travelH = num(s.defaultTravelHours), breakH = num(s.defaultBreakHours), billable = num(s.defaultBillableHours);
+    var labourH = Math.max(0, billable - travelH + breakH);
+    setMode('duration');
+    setHM($('finLabourH'), $('finLabourM'), labourH);
+    setHM($('finTravelH'), $('finTravelM'), travelH);
+    setHM($('finBreaksH'), $('finBreaksM'), breakH);
+    var c = $('finRevCatContainer'); if (c) { while (c.firstChild) c.removeChild(c.firstChild); }
+    var seedRows = s.revCatSeed || [];
+    if (seedRows.length) seedRows.forEach(function (r) { addRevCatRow(r.name, num(r.amount), num(r.tax)); });
+    else { addRevCatRow('Labor', 0, 0); addRevCatRow('Travel', 0, 0); }
+    var cr = $('finCustomRows'); if (cr) { while (cr.firstChild) cr.removeChild(cr.firstChild); }
+    if ($('finOverrideCheck')) $('finOverrideCheck').checked = false;
+    _override = false;
+    var of = $('finOverrideFields'); if (of) of.style.display = 'none';
+    var finalized = !!s.isFinalized;
+    var banner = $('finFinalizedBanner'); if (banner) banner.style.display = finalized ? '' : 'none';
+    if (finalized) {
+      var pill = $('finClosedPill'); if (pill) pill.textContent = ((s.status || 'Closed') + ' · ' + (s.closedReason || 'Completed')).toUpperCase();
+      var line = $('finFinalizedLine');
+      if (line) {
+        var by = s.finalizedByName ? (' by ' + s.finalizedByName) : '';
+        var at = s.finalizedAtLabel ? (' on ' + s.finalizedAtLabel) : '';
+        line.textContent = 'Finalized' + by + at + '.';
+      }
+    }
+    if ($('finFinalizeBtn')) $('finFinalizeBtn').style.display = finalized ? 'none' : '';
+    if ($('finResyncBtn')) $('finResyncBtn').style.display = finalized ? '' : 'none';
+    updateTotal();
+  }
+
+  // ── gather the payload the backend's FinalizeData expects ──
+  function gather() {
+    updateLiveTotal();
+    var billable = billableMinutes() / 60;
+    var names = [], amts = [], taxes = [];
+    modal.querySelectorAll('.fin-revcat-row').forEach(function (r) {
+      var n = r.querySelector('.fin-revcat-name'), a = r.querySelector('.fin-revcat-amount'), t = r.querySelector('.fin-revcat-tax');
+      if (!n || !a) return;
+      var amt = num(a.value), tax = num(t ? t.value : 0);
+      if (amt === 0 && tax === 0) return;
+      names.push(n.value); amts.push(amt); taxes.push(tax);
+    });
+    if (_override) {
+      modal.querySelectorAll('#finCustomRows tr').forEach(function (r) {
+        var nm = r.querySelector('.fin-cust-name'), am = r.querySelector('.fin-cust-amt'), q = r.querySelector('.fin-cust-qty');
+        var amount = num(am && am.value) * (num(q && q.value) || 1);
+        if (amount > 0) { names.push((nm && nm.value) || 'Other'); amts.push(amount); taxes.push(0); }
+      });
+    }
+    var p = {
+      billableHours: billable.toFixed(3),
+      travelHours: (travelMinutes() / 60).toFixed(3),
+      breakHours: (breakMinutes() / 60).toFixed(3),
+      actualRate: $('finRateInput').value || '',
+      notes: $('finNotesInput').value || '',
+      revCatNames: names, revCatAmounts: amts, revCatTaxes: taxes,
+      clientSubtotal: modal.dataset.clientSubtotal || '',
+      clientTaxTotal: modal.dataset.clientTaxTotal || ''
+    };
+    if (_mode === 'startend') {
+      if ($('finStartTime').value) p.billableStartTime = $('finStartTime').value + ':00';
+      if ($('finEndTime').value) p.billableEndTime = $('finEndTime').value + ':00';
+    }
+    var discRow = modal.querySelector('[data-discount-row="true"]');
+    if (discRow) { var d = Math.abs(num(discRow.value)); if (d > 0) p.discountAmount = d; }
+    return p;
+  }
+
+  window.__finalizeCtl = { seed: seed, gather: gather };
+
+  // Seed whenever a Finalize trigger opens the modal.
+  Array.prototype.forEach.call(document.querySelectorAll('[data-jd-open="finalizeModal"]'), function (b) {
+    b.addEventListener('click', function () { setTimeout(seed, 0); });
+  });
+})();
+
 // v12: open & wire all JobDetail modals.
 (function () {
   const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
@@ -1384,7 +1877,17 @@ document.addEventListener('click', async function (ev) {
   });
   const jobId = () => ((window.S1.fixtures || {}).jobDetail && window.S1.fixtures.jobDetail.deal && window.S1.fixtures.jobDetail.deal.id) || '';
   const bindings = [
-    ['#finalizeModal',          'job.finalize',           {}],
+    // #1382: emit the full billing payload the rebuilt "Final charges" modal computes.
+    ['#finalizeModal',          'job.finalize', {
+      transform: function (p, el) { return (window.__finalizeCtl && window.__finalizeCtl.gather()) || p; },
+      validate: function (p) {
+        var hasTime = Number(p.billableHours) > 0;
+        var hasAmt = Array.isArray(p.revCatAmounts) && p.revCatAmounts.some(function (a) { return Number(a) > 0; });
+        if (!hasTime && !hasAmt) return 'Enter billable time or a revenue amount before finalizing';
+        return null;
+      },
+      successMsg: 'Job finalized'
+    }],
     ['#addStopModal',           'job.stop.add', {
       transform: function (p) {
         if (!p.stopType) p.stopType = 'Pickup';
@@ -1515,6 +2018,18 @@ document.addEventListener('click', async function (ev) {
       },
       successMsg: 'Payment recorded'
     }],
+    // #1342: edit an existing payment (hidden id carries the Payment row). For
+    // Stripe-collected payments the amount/method/date fields are disabled so
+    // they aren't collected — only require amount > 0 when it is present.
+    ['#jdEditPaymentModal',     'jobDetail.edit-payment', {
+      validate: function (p) {
+        if (!p.id) return 'Missing payment id';
+        if (p.amount !== undefined && p.amount !== '' && !(Number(p.amount) > 0))
+          return 'Amount must be greater than 0';
+        return null;
+      },
+      successMsg: 'Payment updated'
+    }],
     ['#jdScheduleModal',        'jobDetail.schedule', {
       transform: function (p) {
         return {
@@ -1542,27 +2057,193 @@ document.addEventListener('click', async function (ev) {
   });
 })();
 
-// B1: charge the customer's saved card on file (Stripe) from the payment modal.
+// Feature #1341: make the Add Payment modal method-aware. Picking "Credit card"
+// (or any card slug) reveals a saved-card picker and turns the primary button
+// into "Charge $X", which performs a REAL Stripe charge via jobDetail.charge-card
+// (writes a Payment + Transaction, rolls up the invoice). Non-card methods keep
+// the record-only jobDetail.add-payment binding. Card rows are built with
+// createElement/textContent only (CLAUDE rule 2 — never innerHTML).
 (function () {
-  var btn = document.getElementById('jdChargeCardBtn');
-  if (!btn) return;
-  btn.addEventListener('click', async function (ev) {
-    ev.preventDefault();
-    var modal = btn.closest('.jd-overlay');
-    var amtEl = modal && modal.querySelector('[name="amount"]');
-    var notesEl = modal && modal.querySelector('[name="notes"]');
-    var amount = amtEl ? amtEl.value : '';
-    if (!(Number(amount) > 0)) { flash('Enter an amount first', 'bad'); return; }
-    await safe('Charge card', async function () {
-      var r = await comm.action('jobDetail.charge-customer', {
-        amount: amount,
-        description: (notesEl && notesEl.value) || 'Job payment'
+  var modal = document.getElementById('jdPaymentModal');
+  if (!modal) return;
+  var typeSel    = modal.querySelector('#jdPayTypeSelect');
+  var cardSection = modal.querySelector('#jdPayCardSection');
+  var cardListEl = modal.querySelector('#jdPayCardList');
+  var cardEmpty  = modal.querySelector('#jdPayCardEmpty');
+  var addCardBtn = modal.querySelector('#jdPayAddCardBtn');
+  var submitBtn  = modal.querySelector('#jdPaySubmitBtn');
+  var amountEl   = modal.querySelector('[name="amount"]');
+  var categoryEl = modal.querySelector('[name="category"]');
+  var referenceEl = modal.querySelector('[name="reference"]');
+  var notesEl    = modal.querySelector('[name="notes"]');
+  if (!typeSel || !submitBtn) return;
+
+  var selectedPm = null;
+
+  function clear(el) { while (el && el.firstChild) el.removeChild(el.firstChild); }
+
+  function isCardSlug(slug) {
+    var s = (slug || '').toLowerCase();
+    return s === 'credit' || s === 'stripe';
+  }
+
+  // Populate the Payment Type dropdown from the company's enabled methods.
+  function populateTypes() {
+    var data = (window.S1.fixtures || {}).jobDetail || {};
+    var methods = data.enabledPaymentMethods || [];
+    var prev = typeSel.value;
+    clear(typeSel);
+    if (!methods.length) {
+      // Defensive fallback so the select is never empty.
+      methods = [{ slug: 'cash', label: 'Cash' }, { slug: 'credit', label: 'Credit card' }];
+    }
+    methods.forEach(function (m) {
+      var opt = document.createElement('option');
+      opt.value = m.slug || '';
+      opt.textContent = m.label || m.slug || '';
+      typeSel.appendChild(opt);
+    });
+    // Restore previous selection if still present.
+    if (prev) {
+      var match = Array.prototype.some.call(typeSel.options, function (o) { return o.value === prev; });
+      if (match) typeSel.value = prev;
+    }
+  }
+
+  function renderPayCards(cards) {
+    clear(cardListEl);
+    selectedPm = null;
+    if (!cards || !cards.length) {
+      if (cardEmpty) cardEmpty.style.display = '';
+      return;
+    }
+    if (cardEmpty) cardEmpty.style.display = 'none';
+    var def = cards.find(function (c) { return c.isDefault; });
+    selectedPm = (def && def.paymentMethodId) || cards[0].paymentMethodId;
+
+    cards.forEach(function (card) {
+      var row = document.createElement('div');
+      row.className = 'jd-cardrow' + (card.paymentMethodId === selectedPm ? ' sel' : '');
+      row.setAttribute('data-pm', card.paymentMethodId || '');
+
+      var meta = document.createElement('label');
+      meta.className = 'jd-card-meta';
+      meta.style.cursor = 'pointer';
+      var radio = document.createElement('input');
+      radio.type = 'radio';
+      radio.name = 'jdPayCardSelect';
+      radio.value = card.paymentMethodId || '';
+      radio.checked = card.paymentMethodId === selectedPm;
+      radio.addEventListener('change', function () {
+        selectedPm = card.paymentMethodId;
+        Array.prototype.forEach.call(cardListEl.querySelectorAll('.jd-cardrow'), function (r) {
+          r.classList.toggle('sel', r.getAttribute('data-pm') === selectedPm);
+        });
       });
-      if (r && r.ok === false) { flash(r.error || 'Charge failed', 'bad'); return; }
-      flash('Card charged');
-      try { window.S1.modal.close ? window.S1.modal.close('#jdPaymentModal') : (window.jdCloseModal && window.jdCloseModal('jdPaymentModal')); } catch (_) {}
+      meta.appendChild(radio);
+
+      var brand = document.createElement('b');
+      brand.textContent = card.brand || 'Card';
+      meta.appendChild(brand);
+
+      var num = document.createElement('span');
+      num.textContent = '•••• ' + (card.last4 || '----');
+      meta.appendChild(num);
+
+      var exp = document.createElement('span');
+      exp.style.color = 'var(--ink-3)';
+      var mm = card.expMonth != null ? ('0' + card.expMonth).slice(-2) : '--';
+      var yy = card.expYear != null ? String(card.expYear).slice(-2) : '--';
+      exp.textContent = 'exp ' + mm + '/' + yy;
+      meta.appendChild(exp);
+
+      if (card.isDefault) {
+        var badge = document.createElement('span');
+        badge.className = 'jd-card-badge';
+        badge.textContent = 'Default';
+        meta.appendChild(badge);
+      }
+      row.appendChild(meta);
+      cardListEl.appendChild(row);
+    });
+  }
+
+  async function loadPayCards() {
+    clear(cardListEl);
+    if (cardEmpty) cardEmpty.style.display = 'none';
+    await safe('Load cards', async function () {
+      var r = await comm.action('jobDetail.list-cards', {});
+      renderPayCards((r && r.cards) || []);
+    });
+  }
+
+  function chargeLabel() {
+    var amt = Number(amountEl && amountEl.value);
+    return amt > 0 ? 'Charge $' + amt.toFixed(2) : 'Charge card';
+  }
+
+  function syncMode() {
+    var card = isCardSlug(typeSel.value);
+    if (cardSection) cardSection.style.display = card ? '' : 'none';
+    submitBtn.textContent = card ? chargeLabel() : 'Record Payment';
+    if (card) loadPayCards();
+  }
+
+  typeSel.addEventListener('change', syncMode);
+  if (amountEl) amountEl.addEventListener('input', function () {
+    if (isCardSlug(typeSel.value)) submitBtn.textContent = chargeLabel();
+  });
+
+  // Re-populate + reset the mode each time the modal is opened.
+  Array.prototype.forEach.call(document.querySelectorAll('[data-jd-open="jdPaymentModal"]'), function (b) {
+    b.addEventListener('click', function () {
+      populateTypes();
+      // Defer so the open click settles before we read/charge.
+      setTimeout(syncMode, 0);
     });
   });
+  // Initial population (and again whenever the module re-renders state).
+  populateTypes();
+  document.addEventListener('s1ui:ready', function (e) {
+    if (e && e.detail && e.detail.module === 'jobDetail') populateTypes();
+  });
+
+  // + Add card → Stripe Checkout setup in a new tab, then refresh the list.
+  if (addCardBtn) addCardBtn.addEventListener('click', async function () {
+    await safe('Add card', async function () {
+      var r = await comm.action('jobDetail.add-card', {});
+      if (r && r.ok === false) { flash(r.error || 'Failed', 'bad'); return; }
+      if (r && r.url) {
+        try { window.parent.postMessage({ type: 's1ui:open-url', url: r.url }, '*'); } catch (_) {}
+        flash('Opening secure card form…');
+      }
+    });
+  });
+
+  // Intercept the primary button for card mode (capture phase, so it runs before
+  // the generic bindForm 'add-payment' handler and can cancel it). Non-card
+  // methods fall through to the existing record-only binding.
+  submitBtn.addEventListener('click', function (ev) {
+    if (!isCardSlug(typeSel.value)) return;     // let bindForm handle record-only
+    ev.preventDefault();
+    ev.stopImmediatePropagation();
+    var amount = amountEl ? amountEl.value : '';
+    if (!(Number(amount) > 0)) { flash('Amount must be greater than 0', 'bad'); return; }
+    if (!selectedPm) { flash('Add or select a card to charge', 'bad'); return; }
+    safe('Charge card', async function () {
+      var r = await comm.action('jobDetail.charge-card', {
+        paymentMethodId: selectedPm,
+        amount:      amount,
+        category:    (categoryEl && categoryEl.value) || '',
+        reference:   (referenceEl && referenceEl.value) || '',
+        description: (notesEl && notesEl.value) || (categoryEl && categoryEl.value) || 'Card payment'
+      });
+      if (r && r.ok === false) { flash(r.error || 'Card declined', 'bad'); return; } // keep modal open
+      flash('Charged $' + Number(amount).toFixed(2) + ' to card');
+      try { window.S1.modal.close('#jdPaymentModal'); } catch (_) {}
+      try { (window.S1.fixtures || {}).jobDetail && window.S1.render.bind(document, window.S1.fixtures.jobDetail); } catch (_) {}
+    });
+  }, true);
 })();
 
 // F29: Saved-card management panel. Lists the customer's Stripe cards and lets
@@ -2621,6 +3302,160 @@ document.addEventListener('click', function (ev) {
   document.addEventListener('s1ui:ready', wireAll);
   const mo = new MutationObserver(wireAll);
   mo.observe(document.body, { childList: true, subtree: true });
+})();
+
+// ── #1385: 5-tab Job Notes module (Growth Plan tab) ─────────────────────
+// Tab switching + content dots + "Saving…/Saved" pill + autosave for the five
+// editor.service1.app iframes. Formatting toolbar buttons are handled by the
+// existing EditorBridge (every .cmx-tb[data-cmx-exec] is wired there); this IIFE
+// only adds tab UX and persistence. The editor pushes content ONLY in reply to
+// `get-content`, so autosave polls the focused notes editor on an interval and
+// flushes when focus leaves it — no spontaneous "content" message is emitted on
+// typing. DOM is built with createElement/textContent only (CLAUDE rule #2).
+(function () {
+  const EDITOR_ORIGIN = 'https://editor.service1.app';
+  const SVGNS = 'http://www.w3.org/2000/svg';
+  const ROLE_TO_TAB = { notesInternal: 'internal', notesCustomer: 'customer', notesCrew: 'crew', notesFeedback: 'feedback', notesDispatch: 'dispatch' };
+  const TAB_TO_ROLE = { internal: 'notesInternal', customer: 'notesCustomer', crew: 'notesCrew', feedback: 'notesFeedback', dispatch: 'notesDispatch' };
+  const TABS = ['internal', 'customer', 'crew', 'feedback', 'dispatch'];
+
+  const lastSaved = {};   // tab -> last persisted HTML
+  const primed = {};      // role -> have we captured the editor's baseline yet
+  let lastActiveRole = null;
+  let lastFailed = null;  // { tab, role } for retry
+
+  function notesRoot() { return document.querySelector('.notes-mod'); }
+  function stripTags(html) {
+    return String(html || '').replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').trim();
+  }
+  function fixturesNotes() {
+    return (((window.S1 && window.S1.fixtures && window.S1.fixtures.jobDetail) || {}).notes) || {};
+  }
+
+  // ── save-state pill ──
+  function setPill(state) {
+    const root = notesRoot(); if (!root) return;
+    const pill = root.querySelector('[data-notes-savestate]'); if (!pill) return;
+    pill.classList.remove('saving', 'saved', 'failed');
+    pill.classList.add(state);
+    const label = pill.querySelector('[data-notes-savelabel]');
+    if (label) label.textContent = state === 'saving' ? 'Saving…' : state === 'failed' ? 'Failed to save — click to retry' : 'Saved';
+    const svg = pill.querySelector('svg');
+    if (svg) {
+      while (svg.firstChild) svg.removeChild(svg.firstChild);
+      if (state === 'saving') {
+        const c = document.createElementNS(SVGNS, 'circle'); c.setAttribute('cx', '12'); c.setAttribute('cy', '12'); c.setAttribute('r', '9');
+        const p = document.createElementNS(SVGNS, 'path'); p.setAttribute('d', 'M12 7v5l3 2');
+        svg.appendChild(c); svg.appendChild(p);
+      } else if (state === 'failed') {
+        const c = document.createElementNS(SVGNS, 'circle'); c.setAttribute('cx', '12'); c.setAttribute('cy', '12'); c.setAttribute('r', '9');
+        const p1 = document.createElementNS(SVGNS, 'path'); p1.setAttribute('d', 'M12 8v4');
+        const p2 = document.createElementNS(SVGNS, 'path'); p2.setAttribute('d', 'M12 16h.01');
+        svg.appendChild(c); svg.appendChild(p1); svg.appendChild(p2);
+      } else {
+        const p = document.createElementNS(SVGNS, 'path'); p.setAttribute('d', 'm5 13 4 4 10-12');
+        svg.appendChild(p);
+      }
+    }
+  }
+
+  function setDot(tab, has) {
+    const root = notesRoot(); if (!root) return;
+    const t = root.querySelector('.nm-tab[data-notes-tab="' + tab + '"]');
+    if (t) t.classList.toggle('has-content', !!has);
+  }
+  function setMetaLine(tab, line) {
+    const root = notesRoot(); if (!root) return;
+    const m = root.querySelector('[data-notes-meta="' + tab + '"]');
+    if (m && typeof line === 'string') m.textContent = line;
+  }
+
+  // ── persistence ──
+  async function maybeSave(role) {
+    const tab = ROLE_TO_TAB[role]; if (!tab) return;
+    if (!window.__jobDetailEditors || typeof window.__jobDetailEditors.get !== 'function') return;
+    let html;
+    try { html = await window.__jobDetailEditors.get(role); } catch (_) { return; }
+    html = String(html == null ? '' : html);
+    // First read for this editor only establishes the baseline (the editor may
+    // normalise the seeded HTML) — never persist on it, so focusing a tab
+    // without typing does NOT fabricate a "Last edit" row.
+    if (!primed[role]) { primed[role] = true; lastSaved[tab] = html; setDot(tab, stripTags(html).length > 0); return; }
+    if (html === lastSaved[tab]) return;
+    lastSaved[tab] = html;
+    setDot(tab, stripTags(html).length > 0);
+    setPill('saving');
+    try {
+      const r = await comm.save('jobDetail.notes', { tab: tab, content: html });
+      if (r && r.ok === false) { lastFailed = { tab: tab, role: role }; setPill('failed'); return; }
+      lastFailed = null;
+      setPill('saved');
+      if (r && typeof r.lastEditLine === 'string') setMetaLine(tab, r.lastEditLine);
+    } catch (e) {
+      lastFailed = { tab: tab, role: role };
+      setPill('failed');
+    }
+  }
+
+  // Poll the focused notes editor (autosave-as-you-type) and flush on blur.
+  function pollActive() {
+    if (!notesRoot()) return;
+    const ae = document.activeElement;
+    const role = (ae && ae.tagName === 'IFRAME') ? ae.getAttribute('data-cmx-editor-id') : null;
+    const active = (role && ROLE_TO_TAB[role]) ? role : null;
+    if (lastActiveRole && lastActiveRole !== active) maybeSave(lastActiveRole); // focus left → flush
+    if (active) maybeSave(active);
+    lastActiveRole = active;
+  }
+  setInterval(pollActive, 1000);
+
+  // ── tab switching (+ flush the editor we are leaving) ──
+  document.addEventListener('click', function (ev) {
+    const btn = ev.target.closest && ev.target.closest('.notes-mod .nm-tab[data-notes-tab]');
+    if (!btn) return;
+    const name = btn.getAttribute('data-notes-tab');
+    if (lastActiveRole) maybeSave(lastActiveRole);
+    const root = notesRoot(); if (!root) return;
+    root.querySelectorAll('.nm-tab[data-notes-tab]').forEach(function (x) { x.classList.toggle('active', x.getAttribute('data-notes-tab') === name); });
+    root.querySelectorAll('.nm-body[data-notes-tab]').forEach(function (b) { b.classList.toggle('active', b.getAttribute('data-notes-tab') === name); });
+  });
+
+  // ── Mention button → insert "@" so the editor's mention affordance opens ──
+  document.addEventListener('click', function (ev) {
+    const m = ev.target.closest && ev.target.closest('.notes-mod [data-notes-mention]');
+    if (!m) return;
+    ev.preventDefault();
+    const tb = m.closest('.cmx-tb[data-cmx-editor-id]');
+    if (!tb) return;
+    const role = tb.getAttribute('data-cmx-editor-id');
+    if (window.__jobDetailEditors) { window.__jobDetailEditors.focus(role); window.__jobDetailEditors.insertText(role, '@'); }
+  });
+
+  // ── Retry a failed save by clicking the pill ──
+  document.addEventListener('click', function (ev) {
+    const pill = ev.target.closest && ev.target.closest('.notes-mod [data-notes-savestate].failed');
+    if (!pill || !lastFailed) return;
+    const f = lastFailed;
+    // Force a re-send: drop the cached value so the next read diffs.
+    lastSaved[f.tab] = '\u0000';
+    primed[f.role] = true;
+    maybeSave(f.role);
+  });
+
+  // ── State refresh: re-seed dots + meta lines from the server fixtures ──
+  function refreshFromFixtures() {
+    if (!notesRoot()) return;
+    const notes = fixturesNotes();
+    TABS.forEach(function (tab) {
+      const t = notes[tab] || {};
+      if (lastSaved[tab] === undefined) lastSaved[tab] = String(t.content == null ? '' : t.content);
+      setDot(tab, !!t.hasContent);
+      if (typeof t.lastEditLine === 'string') setMetaLine(tab, t.lastEditLine);
+    });
+  }
+  document.addEventListener('s1ui:ready', refreshFromFixtures);
+  try { window.S1.bus.on('state:replaced', function () { setTimeout(refreshFromFixtures, 0); }); } catch (_) {}
+  setTimeout(refreshFromFixtures, 0);
 })();
 
 // Install document-level click handlers ([data-comm-action] dispatcher,
