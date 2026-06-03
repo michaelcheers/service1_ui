@@ -114,8 +114,8 @@ a { color: inherit; text-decoration: none; }
 /* ───── App shell ───── */
 .app {
   display: grid;
-  grid-template-columns: 56px 1fr;
-  grid-template-rows: 56px 1fr;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
   min-height: 100vh;
 }
 .search {
@@ -161,8 +161,8 @@ a { color: inherit; text-decoration: none; }
 
 /* ───── Page ───── */
 .page {
-  grid-row: 2; grid-column: 2;
-  padding: 16px 24px 32px;
+  grid-row: 1; grid-column: 1;
+  padding: 24px 24px 32px;
   min-width: 0;
 }
 
@@ -207,6 +207,14 @@ a { color: inherit; text-decoration: none; }
 .h-meta .item { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
 .h-meta .item svg { color: var(--ink-4); }
 .h-meta .item .v { color: var(--ink-2); font-weight: 500; }
+.jd-resched {
+  display: inline-flex; align-items: center; gap: 6px;
+  text-decoration: none; color: var(--ink-2); font-weight: 500;
+  border-bottom: 1px dashed transparent; transition: border-color .15s, color .15s;
+}
+.jd-resched:hover { color: var(--brand, #004D40); border-bottom-color: #80cbc4; }
+.jd-resched .resched-pencil { color: var(--ink-4); opacity: 0; transition: opacity .15s; }
+.jd-resched:hover .resched-pencil { opacity: 1; }
 .h-meta a.link { color: var(--terra); font-weight: 500; }
 .h-meta a.link:hover { color: var(--terra-hover); }
 
@@ -1061,6 +1069,17 @@ select.gp2-input {
 }
 .gp2-stop:hover .gp2-stop-x { opacity: 1; }
 .gp2-stop-x:hover { background: var(--bad-bg); color: var(--bad); }
+/* #1447 — greyed, read-only office bookend row (no remove/edit). */
+.gp2-stop.is-office { background: var(--surface-2); border-style: dashed; }
+.gp2-stop.is-office .gp2-stop-tag { background: #E5E7EB; color: #9CA3AF; }
+.gp2-stop.is-office .gp2-stop-kind,
+.gp2-stop.is-office .gp2-stop-addr { color: #9CA3AF; }
+.gp2-office-pill {
+  display: inline-block; margin-left: 6px;
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+  padding: 1px 7px; border-radius: 10px; background: #E5E7EB; color: #6B7280;
+  vertical-align: middle;
+}
 .gp2-stop-actions { display: flex; gap: 2px; }
 .gp2-stop-edit {
   width: 28px; height: 28px;
@@ -1734,7 +1753,10 @@ select.gp2-input {
             </span>
             <span class="item">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-              <span class="v" data-bind-text="header.serviceDateTime">Mon, Jan 12, 2026 · 7:00 AM EST</span>
+              <a href="#" class="jd-resched" data-jd-open="jdScheduleModal" title="Reschedule">
+                <span class="v" data-bind-text="header.serviceDateTime">Mon, Jan 12, 2026 · 7:00 AM EST</span>
+                <svg class="resched-pencil" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </a>
             </span>
             <span class="item">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -2301,6 +2323,25 @@ select.gp2-input {
               <button class="s-action" type="button" data-jd-open="addStopModal">+ Add stop</button>
             </div>
 
+            <!-- #1447: greyed office bookend (branch office) before the first stop.
+                 Renders only when route.officeStart is present (branch has an address).
+                 Read-only: grey ⌂ badge, no edit/remove controls. -->
+            <div data-bind="route.officeStart" style="display:contents;">
+              <template>
+                <div class="gp2-stop is-office">
+                  <span class="gp2-stop-tag">⌂</span>
+                  <div class="gp2-stop-body">
+                    <div class="gp2-stop-top">
+                      <div>
+                        <div class="gp2-stop-kind">{{heading}}<span class="gp2-office-pill">office</span></div>
+                        <div class="gp2-stop-addr">{{addrFull}}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </div>
+
             <!-- Defects A4/A8/A9: repeat over every stop (real JobLocation id for
                  the remove action, street address, and any 3rd+ stop). -->
             <div data-bind="route.stops" style="display:contents;">
@@ -2333,13 +2374,31 @@ select.gp2-input {
               </template>
             </div>
 
+            <!-- #1447: greyed office bookend (return to branch office) after the last
+                 stop. Renders only when route.officeEnd is present. -->
+            <div data-bind="route.officeEnd" style="display:contents;">
+              <template>
+                <div class="gp2-stop is-office">
+                  <span class="gp2-stop-tag">⌂</span>
+                  <div class="gp2-stop-body">
+                    <div class="gp2-stop-top">
+                      <div>
+                        <div class="gp2-stop-kind">{{heading}}<span class="gp2-office-pill">office</span></div>
+                        <div class="gp2-stop-addr">{{addrFull}}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </div>
+
             <!-- Route metrics -->
             <div class="gp2-metrics">
-              <div class="gp2-metric"><div class="gp2-metric-l">Total route</div><div class="gp2-metric-v" data-bind-text="route.totalDistance">—</div></div>
-              <div class="gp2-metric"><div class="gp2-metric-l">Travel</div><div class="gp2-metric-v" data-bind-text="route.travelHours">—</div></div>
-              <div class="gp2-metric"><div class="gp2-metric-l">Office → Origin</div><div class="gp2-metric-v" data-bind-text="route.officeToOrigin">—</div></div>
-              <div class="gp2-metric"><div class="gp2-metric-l">Origin → Destination</div><div class="gp2-metric-v" data-bind-text="route.originToDest">—</div></div>
-              <div class="gp2-metric"><div class="gp2-metric-l">Destination → Office</div><div class="gp2-metric-v" data-bind-text="route.destToOffice">—</div></div>
+              <div class="gp2-metric"><div class="gp2-metric-l">Total route</div><div class="gp2-metric-v" data-bind-text="route.totalDistance">Calculating…</div></div>
+              <div class="gp2-metric"><div class="gp2-metric-l">Travel</div><div class="gp2-metric-v" data-bind-text="route.travelHours">Calculating…</div></div>
+              <div class="gp2-metric"><div class="gp2-metric-l">Office → Origin</div><div class="gp2-metric-v" data-bind-text="route.officeToOrigin">Calculating…</div></div>
+              <div class="gp2-metric"><div class="gp2-metric-l">Origin → Destination</div><div class="gp2-metric-v" data-bind-text="route.originToDest">Calculating…</div></div>
+              <div class="gp2-metric"><div class="gp2-metric-l">Destination → Office</div><div class="gp2-metric-v" data-bind-text="route.destToOffice">Calculating…</div></div>
             </div>
 
           </section>
@@ -3022,7 +3081,7 @@ select.gp2-input {
 
         <!-- Job actions -->
         <section class="card actions-card">
-          <button type="button" class="btn btn-primary" data-jd-open="jdBookModal">
+          <button type="button" class="btn btn-primary" id="jdBookLeadBtn">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
             Book this lead
           </button>
@@ -3039,11 +3098,11 @@ select.gp2-input {
             <a data-jd-tab="growth-plan" class="s-action" href="#">Open growth plan</a>
           </div>
           <div class="s-body">
-            <div class="row"><span class="l">Subtotal</span><span class="v muted" style="font-weight:400;">$0.00</span></div>
+            <div class="row"><span class="l">Subtotal</span><span class="v muted" style="font-weight:400;" data-bind-text="finalize.subtotal">$0.00</span></div>
             <div class="row"><span class="l" data-bind-text="finalize.taxLabel">Tax (HST 13%)</span><span class="v muted" style="font-weight:400;" data-bind-text="finalize.taxAmount">$0.00</span></div>
             <div class="total">
-              <span class="l">Estimated total</span>
-              <span class="v">$0.00</span>
+              <span class="l" data-bind-text="finalize.totalLabel">Estimated total</span>
+              <span class="v" data-bind-text="finalize.opportunityTotal">$0.00</span>
             </div>
             <div class="opp-links">
               <a data-jd-open="jdAddDiscountModal" href="#" id="jdAddDiscountBtn">+ Add discount</a>
@@ -3685,22 +3744,6 @@ select.gp2-input {
     <div class="jd-modal-foot">
       <button data-modal-close class="btn btn-secondary" onclick="jdCloseModal('jdMarkLostModal')">Cancel</button>
       <button data-modal-save class="btn btn-danger" style="background:#DC2626;color:#fff;border:0;" onclick="jdCloseModal('jdMarkLostModal')">Mark as Lost</button>
-    </div>
-  </div>
-</div>
-
-<!-- Book this lead Modal (C1: was a dead button defaulting to +7 days) -->
-<div class="jd-overlay" id="jdBookModal">
-  <div class="jd-modal" style="width:420px;">
-    <div class="jd-modal-head"><div class="jd-modal-title">Book this lead</div><button class="jd-modal-close" onclick="jdCloseModal('jdBookModal')">✕</button></div>
-    <div class="jd-modal-body">
-      <p style="color:var(--ink-3);font-size:13px;margin:0 0 12px;">Converts the quote request into a scheduled booking.</p>
-      <div class="jd-field"><label class="jd-label">Scheduled date <span class="req">*</span></label><input name="scheduledDate" class="jd-input" type="date"></div>
-      <div class="jd-field"><label class="jd-label">Start time (optional)</label><input name="scheduledTime" class="jd-input" type="time"></div>
-    </div>
-    <div class="jd-modal-foot">
-      <button data-modal-close class="btn btn-secondary" onclick="jdCloseModal('jdBookModal')">Cancel</button>
-      <button data-modal-save class="btn btn-primary" onclick="jdCloseModal('jdBookModal')">Book</button>
     </div>
   </div>
 </div>

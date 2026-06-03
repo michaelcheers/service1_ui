@@ -42,16 +42,23 @@ $$('.page-actions .btn-primary').filter(b => /new template/i.test(b.textContent)
   });
 });
 
-// Template card click → open detail (rename/delete via row controls).
+// Row actions: Edit → navigate to the template editor (host performs the
+// same-origin navigation when the reply carries navigateTo); Delete →
+// soft-deactivate, then host auto-refreshes state and the row drops off.
 document.addEventListener('click', async (ev) => {
-  const card = ev.target.closest('[data-bind="templates"] > div, [data-bind] > div[data-record-id]');
-  if (!card) return;
-  const id = card.getAttribute('data-record-id');
+  const wrap = ev.target.closest('.pofc-actions');
+  if (!wrap) return;
+  const id = wrap.getAttribute('data-record-id');
   if (!id) return;
-  await safe('Open template', async () => {
-    const r = await comm.action('preOfficeTemplates.open', { id });
-    if (r && r.navigateTo) window.location.href = r.navigateTo;
-  });
+
+  if (ev.target.closest('[data-pofc-edit]')) {
+    ev.preventDefault();
+    await safe('Open', () => comm.action('preOfficeTemplates.open', { id }));
+  } else if (ev.target.closest('[data-pofc-delete]')) {
+    ev.preventDefault();
+    if (!confirm('Archive this template?')) return;
+    await safe('Delete', () => comm.action('preOfficeTemplates.delete', { id }));
+  }
 });
 
 // AI fab

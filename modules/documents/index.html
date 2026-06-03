@@ -302,11 +302,35 @@ function buildRow(d) {
   viewWrap.appendChild(btn);
 
   const dd = el('div', { className: 'di-dropdown', attrs: { 'data-doc-id': String(d.id) } });
-  dd.appendChild(el('a', { attrs: { href: '#' }, text: 'Open' }));
-  dd.appendChild(el('a', { attrs: { 'data-comm-action': 'action:documents.download', href: '#' }, text: 'Download' }));
-  dd.appendChild(el('a', { attrs: { 'data-comm-action': 'action:documents.send-copy', href: '#' }, text: 'Send copy' }));
-  dd.appendChild(el('a', { attrs: { 'data-comm-action': 'action:documents.rename', href: '#' }, text: 'Rename' }));
-  dd.appendChild(el('a', { className: 'danger', attrs: { 'data-comm-action': 'action:documents.delete', href: '#' }, text: 'Delete' }));
+  // Each item fires a single comm.action explicitly (preventDefault +
+  // stopPropagation) instead of relying on a data-comm-action attribute: this
+  // module installs two generic [data-comm-action] dispatchers, so an
+  // attribute-driven item would fire twice (e.g. two signature emails on
+  // "Send copy"). Explicit handlers also let "Open" consume the reply and
+  // "Rename" collect a new name.
+  const C = (window.S1 && window.S1.comm) ? window.S1.comm : null;
+  function ddItem(label, run, danger) {
+    const a = el('a', danger
+      ? { className: 'danger', attrs: { href: '#' }, text: label }
+      : { attrs: { href: '#' }, text: label });
+    a.addEventListener('click', (ev) => { ev.preventDefault(); ev.stopPropagation(); run(); });
+    return a;
+  }
+  dd.appendChild(ddItem('Open', async () => {
+    if (!C) return;
+    const r = await C.action('documents.open', { id: d.id });
+    if (r && r.viewUrl) window.open(r.viewUrl, '_blank');
+  }));
+  dd.appendChild(ddItem('Download', () => { if (C) C.action('documents.download', { id: d.id }); }));
+  dd.appendChild(ddItem('Send copy', () => { if (C) C.action('documents.send-copy', { id: d.id }); }));
+  dd.appendChild(ddItem('Rename', () => {
+    if (!C) return;
+    const name = window.prompt('New document name', d.title);
+    if (name && name.trim()) C.action('documents.rename', { id: d.id, name: name.trim() });
+  }));
+  dd.appendChild(ddItem('Delete', () => {
+    if (C && window.confirm('Delete this document?')) C.action('documents.delete', { id: d.id });
+  }, true));
   viewWrap.appendChild(dd);
   row.appendChild(viewWrap);
   return row;

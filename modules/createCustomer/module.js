@@ -8,8 +8,49 @@ async function load() {
   const data = (window.S1.fixtures || {})["createCustomer"] || {};
 
   window.S1.render.bind(document, data);
+  renderOfficeRows();
   document.dispatchEvent(new CustomEvent('s1ui:ready', { detail: { module: 'createCustomer' } }));
 }
+
+// #1447: paint the greyed office bookend rows from the selected branch's address.
+// The branch <select name="LocationId"> drives which office address shows; rows
+// hide when the chosen branch has no address (or no branchOffices data).
+function renderOfficeRows() {
+  const data = (window.S1.fixtures || {})["createCustomer"] || {};
+  const offices = Array.isArray(data.branchOffices) ? data.branchOffices : [];
+  const sel = document.querySelector('select[name="LocationId"]');
+  const startRow = document.getElementById('cc-office-start');
+  const endRow = document.getElementById('cc-office-end');
+  if (!startRow || !endRow) return;
+  const chosen = sel ? String(sel.value || '') : '';
+  const office = offices.find(o => String(o.id) === chosen);
+  const addr = office && office.address ? String(office.address).trim() : '';
+  function paint(row, headingSuffix) {
+    if (!addr) { row.style.display = 'none'; return; }
+    row.style.display = '';
+    const head = row.querySelector('.cc-office-head');
+    const addrEl = row.querySelector('.cc-office-addr');
+    // textContent only — no innerHTML (CLAUDE.md rule 2). Keep the office pill node.
+    const name = (office.name ? String(office.name) + ' Office' : 'Office') + headingSuffix;
+    if (head) {
+      head.textContent = name + ' ';
+      const pill = document.createElement('span');
+      pill.className = 'cc-office-pill';
+      pill.textContent = 'office';
+      head.appendChild(pill);
+    }
+    if (addrEl) addrEl.textContent = addr;
+  }
+  paint(startRow, '');
+  paint(endRow, ' (return)');
+}
+
+// Re-paint the office rows when the branch dropdown changes.
+document.addEventListener('change', (ev) => {
+  if (ev.target && ev.target.matches && ev.target.matches('select[name="LocationId"]')) {
+    renderOfficeRows();
+  }
+});
 load().catch(e => console.warn('[createCustomer] init error', e));
 window.__module_manifest.reads.forEach(r => { try { comm.subscribe(r, load); } catch {} });
 

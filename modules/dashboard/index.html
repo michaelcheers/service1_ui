@@ -393,16 +393,21 @@ a { color: inherit; text-decoration: none; }
    ════════════════════════════════════════════════ */
 .live-strip {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
   margin-bottom: 32px;
 }
 .live-cell {
-  padding: 0 24px;
-  border-left: var(--hair);
+  background: var(--surface);
+  border: var(--hair);
+  border-radius: 12px;
+  padding: 16px 18px;
+  min-height: 104px;
   display: flex; flex-direction: column; gap: 8px;
+  justify-content: flex-start;
 }
-.live-cell:first-child { padding-left: 0; border-left: 0; }
+@media (max-width: 1100px) { .live-strip { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px)  { .live-strip { grid-template-columns: 1fr; } }
 
 .live-table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .live-table thead th {
@@ -736,7 +741,7 @@ a { color: inherit; text-decoration: none; }
           </div>
           <div class="live-cell">
             <div class="stat-eyebrow" data-bind-text="metrics.stat_eyebrow.3">Talk time today</div>
-            <div class="stat-number" data-bind-text="kpis.7.value">14h <span class="small">28m</span></div>
+            <div class="stat-number" data-bind-text="live.talkTimeToday">—</div>
             <div class="stat-delta" data-bind-text="metrics.stat_delta.1">Avg per agent · 2h 04m</div>
           </div>
           <div class="live-cell">

@@ -538,8 +538,10 @@ $$('button').filter(b => /book this lead/i.test(b.textContent.trim())).forEach(b
     const id = ((window.S1.fixtures || {}).jobDetail && window.S1.fixtures.jobDetail.deal && window.S1.fixtures.jobDetail.deal.id) || '';
     await safe('Book lead', async () => {
       const r = await comm.action('jobDetail.book-lead', { id });
-      flash('Booking…');
+      if (r && r.ok === false) { flash(r.error || 'Could not book this lead', 'bad'); return; }
+      flash('Lead booked — confirmation sent to customer');
       if (r && r.navigateTo) window.location.href = r.navigateTo;
+      else window.location.reload();
     });
   });
 });
@@ -604,7 +606,9 @@ $$('.s-action').filter(b => /add stop/i.test(b.textContent)).forEach(btn => {
 function relabelStops() {
   const letters = ['A','B','C','D','E','F','G','H','I','J'];
   const cls     = ['a','b','c','d','e','f','g','h','i','j'];
-  $$('.gp2-stop').forEach((stop, i) => {
+  // #1447: skip greyed office bookend rows — they keep their ⌂ badge and must
+  // not consume a letter slot, so real stops stay A/B/C…
+  $$('.gp2-stop:not(.is-office)').forEach((stop, i) => {
     const tag = stop.querySelector('.gp2-stop-tag');
     if (!tag) return;
     tag.textContent = letters[i] || (i + 1);
@@ -1616,7 +1620,7 @@ document.addEventListener('click', async function (ev) {
     if (dur) { dur.style.background = mode === 'duration' ? 'var(--accent,#004D40)' : '#fff'; dur.style.color = mode === 'duration' ? '#fff' : 'var(--accent,#004D40)'; }
     if (se) { se.style.background = mode === 'startend' ? 'var(--accent,#004D40)' : '#fff'; se.style.color = mode === 'startend' ? '#fff' : 'var(--accent,#004D40)'; }
     var df = $('finDurationFields'), sf = $('finStartEndFields');
-    if (df) df.style.display = mode === 'duration' ? '' : 'none';
+    if (df) df.style.display = mode === 'duration' ? 'grid' : 'none';
     if (sf) sf.style.display = mode === 'startend' ? '' : 'none';
     updateTotal();
   }
@@ -1982,10 +1986,6 @@ document.addEventListener('click', async function (ev) {
     ['#jdVideoModal',           'job.video.request',      {}],
     ['#jdMarkLostModal',        'job.markLost',           {}],
     ['#jdMarkBadModal',         'jobDetail.mark-bad-lead', { successMsg: 'Marked as bad lead' }],
-    ['#jdBookModal',            'jobDetail.book-lead', {
-      validate: function (p) { if (!p.scheduledDate) return 'Scheduled date is required'; return null; },
-      successMsg: 'Lead booked'
-    }],
     ['#jdAddDiscountModal',     'job.discount.add',       {}],
     ['#jdNteModal',             'job.nte.set',            {}],
     ['#jdJobDetailsModal',      'job.details.update',     {}],
@@ -2054,6 +2054,37 @@ document.addEventListener('click', async function (ev) {
       onSuccess: () => { try { (window.S1.fixtures||{}).jobDetail && window.S1.render.bind(document, window.S1.fixtures.jobDetail); } catch {} }
     }, extra || {});
     window.S1.modal.bindForm(sel, rpc, opts);
+  });
+})();
+
+// #1451: prefill the reschedule modal (#jdScheduleModal) with the job's current
+// date/time/type whenever a header or sidebar "schedule" trigger opens it, so it
+// behaves as a true reschedule instead of "set from scratch".
+(function () {
+  var modal = document.getElementById('jdScheduleModal');
+  if (!modal) return;
+  function seed() {
+    var h = (((window.S1 || {}).fixtures || {}).jobDetail || {}).header || {};
+    var d = modal.querySelector('[name="date"]');
+    var t = modal.querySelector('[name="time"]');
+    var ty = modal.querySelector('[name="meetingType"]');
+    if (d) d.value = h.scheduledDateRaw || '';
+    if (t) t.value = h.scheduledTimeRaw || '';
+    if (ty) {
+      if (h.meetingTypeRaw) {
+        var found = Array.prototype.some.call(ty.options, function (o) { return o.value === h.meetingTypeRaw; });
+        if (!found) {
+          var o = document.createElement('option');
+          o.value = h.meetingTypeRaw;
+          o.textContent = h.meetingTypeRaw;
+          ty.appendChild(o);
+        }
+        ty.value = h.meetingTypeRaw;
+      }
+    }
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('[data-jd-open="jdScheduleModal"]'), function (b) {
+    b.addEventListener('click', function () { setTimeout(seed, 0); });
   });
 })();
 

@@ -65,7 +65,7 @@
             <th></th>
           </tr>
         </thead>
-        <tbody data-bind="rows"><template><tr><td><strong>{{c0_name}}</strong><div class="pofc-muted">{{c0_sub}}</div></td><td>{{c1_text}}</td><td>{{c2_text}}</td><td>{{c3_text}}</td><td>{{c4_text}}</td><td>{{c5_text}}</td><td>{{c6_text}}</td><td><div class="pofc-actions"><a>Edit</a><button class="pofc-link-danger">Delete</button></div></td></tr></template></tbody>
+        <tbody data-bind="rows"><template><tr><td><strong>{{c0_name}}</strong><div class="pofc-muted">{{c0_sub}}</div></td><td>{{c1_text}}</td><td>{{c2_text}}</td><td>{{c3_text}}</td><td>{{c4_text}}</td><td>{{c5_text}}</td><td>{{c6_text}}</td><td><div class="pofc-actions" data-record-id="{{id}}"><a data-pofc-edit>Edit</a><button class="pofc-link-danger" data-pofc-delete type="button">Delete</button></div></td></tr></template></tbody>
       </table>
     </div>
   </main>
@@ -80,7 +80,13 @@
   <div class="s1-mhead"><div><div class="s1-mkicker">Pre-office templates</div><h4>New template</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
   <div class="s1-mgrid">
     <div><label class="s1-mlabel">Template name</label><input class="s1-input" type="text" name="name"></div>
-    <div><label class="s1-mlabel">Type</label><input class="s1-input" type="text" name="type"></div>
+    <div><label class="s1-mlabel">Description</label><input class="s1-input" type="text" name="description"></div>
+  </div>
+  <div class="s1-mgrid">
+    <label><input type="checkbox" name="isActive" checked> Active</label>
+    <label><input type="checkbox" name="isDefault"> Set as default</label>
+    <label><input type="checkbox" name="requireGps"> Require GPS at office</label>
+    <label><input type="checkbox" name="blocksClockOut"> Blocks clock-out</label>
   </div>
   <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Create</button></div>
 </div></div>

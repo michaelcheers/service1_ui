@@ -348,7 +348,8 @@
     live: {
       onlineNow: "7", onlineTotal: "/12", onCalls: "5",
       callsLastHour: "38", avgDuration: "3m 42s",
-      inQueue: "3", longestWait: "42s"
+      inQueue: "3", longestWait: "42s",
+      talkTimeToday: "14h 28m"
     },
     agents: [
       { rowStyle: "", color: "var(--terra)", initials: "JS", name: "John Sales",       dotClass: "call",   statusText: "On a call · 2m 14s", calls: "12", connectedClass: "val-good", connected: "8 · 67%", talkTime: "34m", deals: "2" },

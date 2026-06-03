@@ -36,6 +36,12 @@
 .cc-btn-primary:hover { background: var(--terra-hover); }
 .cc-btn-secondary { padding: 10px 18px; background: #fff; color: var(--ink); border: var(--hair); border-radius: 7px; font-size: 13px; font-weight: 600; cursor: pointer; }
 .cc-input.error, .cc-select.error { border-color: #DC2626; box-shadow: 0 0 0 3px rgba(220,38,38,.15); }
+/* #1447 — greyed, read-only office bookend row (branch office from Settings). */
+.cc-office-row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px dashed var(--hair-color, #E5E7EB); border-radius: 7px; background: var(--surface-2, #F8F8F7); grid-column: 1 / -1; }
+.cc-office-badge { width: 26px; height: 26px; border-radius: 999px; display: flex; align-items: center; justify-content: center; font-size: 14px; background: #E5E7EB; color: #9CA3AF; flex: 0 0 auto; }
+.cc-office-head { font-size: 13px; font-weight: 600; color: #9CA3AF; }
+.cc-office-addr { font-size: 12px; color: #9CA3AF; margin-top: 2px; }
+.cc-office-pill { display: inline-block; margin-left: 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 1px 7px; border-radius: 10px; background: #E5E7EB; color: #6B7280; vertical-align: middle; }
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -74,8 +80,18 @@
         <div class="cc-card">
           <div class="cc-section-title">Location Details</div>
           <div class="cc-grid full">
+            <!-- #1447: greyed office bookend (branch office from Settings) above pickup. -->
+            <div class="cc-office-row" id="cc-office-start" style="display:none;">
+              <span class="cc-office-badge">⌂</span>
+              <div><div class="cc-office-head"></div><div class="cc-office-addr"></div></div>
+            </div>
             <div class="cc-field"><label class="cc-label">Service location</label><input class="cc-input" type="text" name="Address" placeholder="Enter service location" data-places-autocomplete></div>
             <div class="cc-field"><label class="cc-label">Delivery location</label><input class="cc-input" type="text" name="DeliveryAddress" placeholder="Enter delivery location" data-places-autocomplete></div>
+            <!-- #1447: greyed office bookend (return to branch office) below drop-off. -->
+            <div class="cc-office-row" id="cc-office-end" style="display:none;">
+              <span class="cc-office-badge">⌂</span>
+              <div><div class="cc-office-head"></div><div class="cc-office-addr"></div></div>
+            </div>
             <div class="cc-field"><label class="cc-label">Additional Stops <span style="color:var(--ink-3);font-weight:400;">(Optional)</span></label><div id="cc-stops" style="display:flex;flex-direction:column;gap:8px;"></div><button type="button" class="cc-stop-btn" data-cc-add-stop>+ Add Stop</button></div>
             <div class="cc-field"><label class="cc-label">Job size</label><select class="cc-select" name="JobSize" data-bind-options="jobSizeOptions"><option value="-- Select Size --">-- Select Size --</option></select></div>
           </div>
