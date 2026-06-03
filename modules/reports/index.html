@@ -11,6 +11,45 @@
 <template id="__bundler_thumbnail" data-bg-color="#FFFFFF"><svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg"><rect width="1200" height="800" fill="#FFFFFF"/><rect x="60" y="60" width="80" height="80" rx="12" fill="#004D40"/><text x="100" y="115" text-anchor="middle" font-family="Inter" font-weight="800" font-size="28" fill="#D4960A">S</text><rect x="200" y="80" width="260" height="22" rx="3" fill="#0A2540"/><rect x="200" y="160" width="940" height="580" rx="6" fill="#FAFBFC" stroke="#EFF2F5"/><text x="600" y="790" text-anchor="middle" font-family="Inter" font-weight="500" font-size="14" fill="#697386">Reports · Loading…</text></svg></template>
 
 <style>
+/* ── Header freshness ── */
+.rep-freshness { font-size:11px; color:var(--ink-3); margin-left:auto; }
+.rep-freshness strong { color:var(--ink); }
+.rep-refresh { color:var(--terra); text-decoration:none; font-weight:600; cursor:pointer; }
+.rep-refresh:hover { text-decoration:underline; }
+
+/* ── Today's Update banner ── */
+.rep-update-banner {
+  background:#fff; border:var(--hair); border-left:4px solid var(--terra);
+  border-radius:var(--r-card, 12px); padding:14px 18px; margin-bottom:14px;
+  display:flex; justify-content:space-between; align-items:center; gap:12px;
+}
+.rep-update-banner-label { font-size:13px; font-weight:700; color:var(--terra); margin-bottom:2px; }
+.rep-update-banner-detail { font-size:12px; color:var(--ink-3); }
+.rep-update-link { color:var(--info); text-decoration:none; cursor:pointer; }
+.rep-update-link:hover { text-decoration:underline; }
+.rep-update-pill { display:inline-block; padding:2px 9px; border-radius:999px; font-size:10px; font-weight:700; background:var(--ok-soft); color:var(--ok); white-space:nowrap; }
+
+/* ── Recent updates feed ── */
+.rep-updates-card { background:#fff; border:var(--hair); border-radius:var(--r-card, 12px); overflow:hidden; margin-bottom:16px; }
+.rep-updates-hdr { padding:10px 16px; border-bottom:var(--hair); font-size:12px; font-weight:700; color:var(--ink); }
+.rep-update-row { display:flex; justify-content:space-between; align-items:center; padding:11px 16px; border-bottom:1px solid var(--surface-2); font-size:12.5px; }
+.rep-update-row:last-child { border-bottom:0; }
+.rep-update-title { color:var(--ink); font-weight:600; }
+.rep-update-when { color:var(--ink-3); }
+.rep-updates-empty { background:#fff; border:var(--hair); border-radius:var(--r-card, 12px); padding:26px 16px; text-align:center; font-size:12.5px; color:var(--ink-3); margin-bottom:16px; }
+
+/* ── Custom reports ── */
+.rep-custom-card { background:#fff; border:var(--hair); border-radius:var(--r-card, 12px); margin-top:14px; padding:12px 16px; }
+.rep-custom-hdr { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+.rep-custom-hdr strong { font-size:13px; color:var(--ink); }
+.rep-custom-draft { background:var(--terra); color:#fff; border:none; border-radius:6px; padding:5px 12px; font-size:11px; font-weight:600; cursor:pointer; }
+.rep-custom-row { display:flex; justify-content:space-between; align-items:center; font-size:12.5px; padding:6px 0; border-top:1px solid var(--surface-2); }
+.rep-custom-row:first-child { border-top:0; }
+.rep-custom-name { color:var(--ink); font-weight:600; }
+.rep-custom-meta { color:var(--ink-3); font-weight:400; }
+.rep-custom-view { color:var(--ok); text-decoration:none; margin-right:10px; cursor:pointer; }
+.rep-custom-del { color:var(--bad); text-decoration:none; cursor:pointer; }
+
 .rep-filter-bar { display:flex; gap:6px; margin-bottom:18px; flex-wrap:wrap; }
 .rep-filter {
   padding:8px 18px; font-size:13px; font-weight:500; color:var(--ink-3);
@@ -69,15 +108,34 @@
           <div class="page-title"><span data-bind-text="summary">Reports</span></div>
           <span class="muted" data-bind-text="subtitle">27 reports across Sales · Operations · Accounting · Marketing</span>
         </div>
+        <div class="rep-freshness">Last updated <strong data-bind-text="lastUpdated">just now</strong> · <a id="repRefresh" class="rep-refresh">&#x21bb; Refresh</a></div>
       </div>
+
+      <!-- Today's Update banner -->
+      <div class="rep-update-banner">
+        <div>
+          <div class="rep-update-banner-label" data-bind-text="dailyUpdate.label">Today's update</div>
+          <div class="rep-update-banner-detail"><span data-bind-text="dailyUpdate.detail">Latest morning briefing</span> · <a class="rep-update-link" data-comm-action="action:reports.view-update">View briefing</a></div>
+        </div>
+        <span class="rep-update-pill" data-bind-text="dailyUpdate.statusText">SENT</span>
+      </div>
+
+      <!-- Recent updates feed -->
+      <div class="rep-updates-card" data-bind-hide-empty="updates">
+        <div class="rep-updates-hdr">Recent updates</div>
+        <div data-bind="updates"><template>
+          <div class="rep-update-row"><span class="rep-update-title">{{title}}</span><span class="rep-update-when">{{when}}</span></div>
+        </template></div>
+      </div>
+      <div class="rep-updates-empty" data-empty-unless="updates">No updates yet today.</div>
 
       <!-- Filter bar — match original 5 buttons -->
       <nav class="rep-filter-bar" id="repFilters">
-        <a data-comm-action="action:reports.all-reports" class="rep-filter active" data-cat="all">All Reports</a>
-        <a data-comm-action="action:reports.sales" class="rep-filter" data-cat="sales">Sales</a>
-        <a data-comm-action="action:reports.operations" class="rep-filter" data-cat="operations">Operations</a>
-        <a data-comm-action="action:reports.accounting" class="rep-filter" data-cat="accounting">Accounting</a>
-        <a data-comm-action="action:reports.marketing" class="rep-filter" data-cat="marketing">Marketing</a>
+        <a class="rep-filter active" data-cat="all">All Reports</a>
+        <a class="rep-filter" data-cat="sales">Sales</a>
+        <a class="rep-filter" data-cat="operations">Operations</a>
+        <a class="rep-filter" data-cat="accounting">Accounting</a>
+        <a class="rep-filter" data-cat="marketing">Marketing</a>
       </nav>
 
       <!-- Reports grid — 4 category cards -->
@@ -92,16 +150,16 @@
             <span class="rep-badge">10</span>
           </div>
           <div class="rep-list">
-            <a class="rep-row" href="ReportDetail.html"><div><div class="rep-name">Account Manager Performance</div><div class="rep-desc">An overview of how your account managers are performing</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
-            <a data-comm-action="action:reports.lost-leadsleads-marked-lost-with-reasons-and-recov" class="rep-row"><div><div class="rep-name">Lost Leads</div><div class="rep-desc">Leads marked lost with reasons and recovery candidates</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
-            <a data-comm-action="action:reports.booked-deals-by-dateconfirmed-bookings-grouped-by-" class="rep-row"><div><div class="rep-name">Booked Deals by Date</div><div class="rep-desc">Confirmed bookings grouped by booking date</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
-            <a data-comm-action="action:reports.booked-deals-by-service-dateconfirmed-bookings-gro" class="rep-row"><div><div class="rep-name">Booked Deals by Service Date</div><div class="rep-desc">Confirmed bookings grouped by the move date</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
-            <a class="rep-row"><div><div class="rep-name">Lost Leads &amp; Opportunity Details</div><div class="rep-desc">Detailed breakdown of why opportunities were lost</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
-            <a class="rep-row"><div><div class="rep-name">New Leads</div><div class="rep-desc">New leads received over a date range</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
-            <a data-comm-action="action:reports.account-manager-activitycalls-quotes-follow-ups-by" class="rep-row"><div><div class="rep-name">Account Manager Activity</div><div class="rep-desc">Calls, quotes, follow-ups by rep</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
-            <a data-comm-action="action:reports.cancellation-summarycancellations-and-refund-amoun" class="rep-row"><div><div class="rep-name">Cancellation Summary</div><div class="rep-desc">Cancellations and refund amounts by period</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
-            <a data-comm-action="action:reports.open-opportunities-by-deal-datepipeline-view-group" class="rep-row"><div><div class="rep-name">Open Opportunities by Deal Date</div><div class="rep-desc">Pipeline view grouped by when opportunity opened</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
-            <a data-comm-action="action:reports.lead-activityactivity-log-per-lead-calls-emails-st" class="rep-row"><div><div class="rep-name">Lead Activity</div><div class="rep-desc">Activity log per lead — calls, emails, status changes</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a class="rep-row" data-comm-action="action:reports.open" data-payload='{"report":"SalesPersonPerformance"}'><div><div class="rep-name">Account Manager Performance</div><div class="rep-desc">An overview of how your account managers are performing</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a class="rep-row" data-comm-action="action:reports.open" data-payload='{"report":"BadLeads"}'><div><div class="rep-name">Lost Leads</div><div class="rep-desc">Leads marked lost with reasons and recovery candidates</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a class="rep-row" data-comm-action="action:reports.open" data-payload='{"report":"BookedJobsByDate"}'><div><div class="rep-name">Booked Deals by Date</div><div class="rep-desc">Confirmed bookings grouped by booking date</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a class="rep-row" data-comm-action="action:reports.open" data-payload='{"report":"BookedThisWeek"}'><div><div class="rep-name">Booked Deals by Service Date</div><div class="rep-desc">Confirmed bookings grouped by the move date</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a class="rep-row" data-comm-action="action:reports.open" data-payload='{"report":"LostLeads"}'><div><div class="rep-name">Lost Leads &amp; Opportunity Details</div><div class="rep-desc">Detailed breakdown of why opportunities were lost</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a class="rep-row" data-comm-action="action:reports.open" data-payload='{"report":"LeadsToday"}'><div><div class="rep-name">New Leads</div><div class="rep-desc">New leads received over a date range</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a class="rep-row" data-comm-action="action:reports.open" data-payload='{"report":"SalesPersonActivity"}'><div><div class="rep-name">Account Manager Activity</div><div class="rep-desc">Calls, quotes, follow-ups by rep</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a class="rep-row" data-comm-action="action:reports.open" data-payload='{"report":"CancellationSummary"}'><div><div class="rep-name">Cancellation Summary</div><div class="rep-desc">Cancellations and refund amounts by period</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a class="rep-row" data-comm-action="action:reports.open" data-payload='{"report":"OpenOpportunities"}'><div><div class="rep-name">Open Opportunities by Deal Date</div><div class="rep-desc">Pipeline view grouped by when opportunity opened</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a class="rep-row" data-comm-action="action:reports.open" data-payload='{"report":"LeadActivityReport"}'><div><div class="rep-name">Lead Activity</div><div class="rep-desc">Activity log per lead — calls, emails, status changes</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
           </div>
         </div>
 
@@ -114,11 +172,11 @@
             <span class="rep-badge">5</span>
           </div>
           <div class="rep-list">
-            <a data-comm-action="action:reports.login-historyuser-sign-in-history-across-the-team" class="rep-row"><div><div class="rep-name">Login history</div><div class="rep-desc">User sign-in history across the team</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
-            <a data-comm-action="action:reports.crew-utilizationhours-scheduled-vs-available-by-te" class="rep-row"><div><div class="rep-name">Crew Utilization</div><div class="rep-desc">Hours scheduled vs. available, by team and date</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
-            <a data-comm-action="action:reports.job-status-summarycount-of-jobs-in-each-status-ove" class="rep-row"><div><div class="rep-name">Job Status Summary</div><div class="rep-desc">Count of jobs in each status over time</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
-            <a data-comm-action="action:reports.closed-jobs-reportall-jobs-marked-closed-in-the-pe" class="rep-row"><div><div class="rep-name">Closed Jobs Report</div><div class="rep-desc">All jobs marked closed in the period, with revenue</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
-            <a data-comm-action="action:reports.follow-up-activityfollow-up-completion-and-overdue" class="rep-row"><div><div class="rep-name">Follow-Up Activity</div><div class="rep-desc">Follow-up completion and overdue counts</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a class="rep-row" data-comm-action="action:reports.open" data-payload='{"report":"LoginHistory"}'><div><div class="rep-name">Login history</div><div class="rep-desc">User sign-in history across the team</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a class="rep-row" data-comm-action="action:reports.open" data-payload='{"report":"CrewUtilization"}'><div><div class="rep-name">Crew Utilization</div><div class="rep-desc">Hours scheduled vs. available, by team and date</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a class="rep-row" data-comm-action="action:reports.open" data-payload='{"report":"JobStatusSummary"}'><div><div class="rep-name">Job Status Summary</div><div class="rep-desc">Count of jobs in each status over time</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a class="rep-row" data-comm-action="action:reports.open" data-payload='{"report":"ClosedJobs"}'><div><div class="rep-name">Closed Jobs Report</div><div class="rep-desc">All jobs marked closed in the period, with revenue</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a class="rep-row" data-comm-action="action:reports.open" data-payload='{"report":"FollowUpActivity"}'><div><div class="rep-name">Follow-Up Activity</div><div class="rep-desc">Follow-up completion and overdue counts</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
           </div>
         </div>
 
@@ -131,16 +189,16 @@
             <span class="rep-badge">10</span>
           </div>
           <div class="rep-list">
-            <a data-comm-action="action:reports.customer-service-ticketsall-tickets-opened-amp-res" class="rep-row"><div><div class="rep-name">Customer service tickets</div><div class="rep-desc">All tickets opened &amp; resolved in the period</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
-            <a data-comm-action="action:reports.invoice-aging-summaryoutstanding-receivables-by-0-" class="rep-row"><div><div class="rep-name">Invoice Aging Summary</div><div class="rep-desc">Outstanding receivables by 0–30, 31–60, 61–90, 90+</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
-            <a data-comm-action="action:reports.expense-breakdownexpenses-by-category-account-vend" class="rep-row"><div><div class="rep-name">Expense Breakdown</div><div class="rep-desc">Expenses by category, account, vendor</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
-            <a data-comm-action="action:reports.payroll-summarywages-overtime-and-reimbursements-p" class="rep-row"><div><div class="rep-name">Payroll Summary</div><div class="rep-desc">Wages, overtime, and reimbursements per pay period</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
-            <a data-comm-action="action:reports.job-revenue-breakdownrevenue-per-job-with-type-sou" class="rep-row"><div><div class="rep-name">Job Revenue Breakdown</div><div class="rep-desc">Revenue per job with type, source, crew</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
-            <a data-comm-action="action:reports.payment-ratio-of-jobs-collected-on-time-vs-late" class="rep-row"><div><div class="rep-name">Payment Ratio</div><div class="rep-desc">% of jobs collected on time vs. late</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
-            <a data-comm-action="action:reports.payment-summaryall-payments-received-refunds-issue" class="rep-row"><div><div class="rep-name">Payment Summary</div><div class="rep-desc">All payments received, refunds issued</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
-            <a data-comm-action="action:reports.refundsrefund-history-with-reasons-and-approvals" class="rep-row"><div><div class="rep-name">Refunds</div><div class="rep-desc">Refund history with reasons and approvals</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
-            <a data-comm-action="action:reports.expense-reportingsubmitted-expense-reports-with-re" class="rep-row"><div><div class="rep-name">Expense Reporting</div><div class="rep-desc">Submitted expense reports with receipts</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
-            <a data-comm-action="action:reports.tax-reporthst-collected-and-remitted-by-quarter" class="rep-row"><div><div class="rep-name">Tax Report</div><div class="rep-desc">HST collected and remitted by quarter</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a class="rep-row" data-comm-action="action:reports.open" data-payload='{"report":"CustomerServiceTickets"}'><div><div class="rep-name">Customer service tickets</div><div class="rep-desc">All tickets opened &amp; resolved in the period</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a class="rep-row" data-comm-action="action:reports.open" data-payload='{"report":"InvoiceAgingSummary"}'><div><div class="rep-name">Invoice Aging Summary</div><div class="rep-desc">Outstanding receivables by 0–30, 31–60, 61–90, 90+</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a class="rep-row" data-comm-action="action:reports.open" data-payload='{"report":"ExpenseBreakdown"}'><div><div class="rep-name">Expense Breakdown</div><div class="rep-desc">Expenses by category, account, vendor</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a class="rep-row" data-comm-action="action:reports.open" data-payload='{"report":"PayrollSummary"}'><div><div class="rep-name">Payroll Summary</div><div class="rep-desc">Wages, overtime, and reimbursements per pay period</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a class="rep-row" data-comm-action="action:reports.open" data-payload='{"report":"JobRevenue"}'><div><div class="rep-name">Job Revenue Breakdown</div><div class="rep-desc">Revenue per job with type, source, crew</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a class="rep-row" data-comm-action="action:reports.open" data-payload='{"report":"PaymentRatio"}'><div><div class="rep-name">Payment Ratio</div><div class="rep-desc">% of jobs collected on time vs. late</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a class="rep-row" data-comm-action="action:reports.open" data-payload='{"report":"PaymentSummary"}'><div><div class="rep-name">Payment Summary</div><div class="rep-desc">All payments received, refunds issued</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a class="rep-row" data-comm-action="action:reports.open" data-payload='{"report":"Refunds"}'><div><div class="rep-name">Refunds</div><div class="rep-desc">Refund history with reasons and approvals</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a class="rep-row" data-comm-action="action:reports.open" data-payload='{"report":"ExpenseReport"}'><div><div class="rep-name">Expense Reporting</div><div class="rep-desc">Submitted expense reports with receipts</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a class="rep-row" data-comm-action="action:reports.open" data-payload='{"report":"SalesTax"}'><div><div class="rep-name">Tax Report</div><div class="rep-desc">HST collected and remitted by quarter</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
           </div>
         </div>
 
@@ -153,11 +211,28 @@
             <span class="rep-badge">2</span>
           </div>
           <div class="rep-list">
-            <a data-comm-action="action:reports.revenue-by-sourcerevenue-grouped-by-lead-source-we" class="rep-row"><div><div class="rep-name">Revenue by Source</div><div class="rep-desc">Revenue grouped by lead source (Website, Referral, Ads, etc.)</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
-            <a data-comm-action="action:reports.google-reviews-summarynew-reviews-average-rating-r" class="rep-row"><div><div class="rep-name">Google Reviews Summary</div><div class="rep-desc">New reviews, average rating, response rate</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a class="rep-row" data-comm-action="action:reports.open" data-payload='{"report":"RevenueBySource"}'><div><div class="rep-name">Revenue by Source</div><div class="rep-desc">Revenue grouped by lead source (Website, Referral, Ads, etc.)</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+            <a class="rep-row" data-comm-action="action:reports.open" data-payload='{"report":"GoogleReviewsSummary"}'><div><div class="rep-name">Google Reviews Summary</div><div class="rep-desc">New reviews, average rating, response rate</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
           </div>
         </div>
 
+      </div>
+
+      <!-- Custom Reports -->
+      <div class="rep-custom-card" data-bind-hide-empty="hasCustomReports">
+        <div class="rep-custom-hdr">
+          <strong>Custom Reports</strong>
+          <button class="rep-custom-draft" type="button" data-comm-action="action:reports.custom.draft" data-bind-hide-empty="canDraftReport">+ Ask AI to Draft Report</button>
+        </div>
+        <div data-bind="customReports"><template>
+          <div class="rep-custom-row" data-record-id="{{id}}">
+            <span class="rep-custom-name">{{name}} <span class="rep-custom-meta">· {{createdLabel}}</span></span>
+            <span class="rep-custom-actions">
+              <a class="rep-custom-view" data-comm-action="action:reports.custom.view">View</a>
+              <a class="rep-custom-del" data-comm-action="action:reports.custom.delete">Delete</a>
+            </span>
+          </div>
+        </template></div>
       </div>
     </div>
   </main>
@@ -213,63 +288,13 @@
 <script src="../../core/google-places.js"></script>
 <script src="./module.js"></script>
 <script>
-// Filter by category
+// Filter by category (client-side show/hide only).
 document.querySelectorAll('#repFilters .rep-filter').forEach(b => b.addEventListener('click', () => {
   document.querySelectorAll('#repFilters .rep-filter').forEach(x => x.classList.toggle('active', x === b));
   const cat = b.dataset.cat;
   document.querySelectorAll('#repGrid .rep-card').forEach(c => {
     c.style.display = (cat === 'all' || c.dataset.cat === cat) ? '' : 'none';
   });
-}));
-
-// Row click → preview modal
-document.querySelectorAll('.rep-row').forEach(r => r.addEventListener('click', e => {
-  e.preventDefault();
-  const name = r.querySelector('.rep-name').textContent;
-  const desc = r.querySelector('.rep-desc').textContent;
-  const cat = r.closest('.rep-card').dataset.cat;
-  const m = document.createElement('div');
-  m.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:center;justify-content:center;z-index:1000;padding:24px;';
-  const SVG_NS = 'http://www.w3.org/2000/svg';
-  function el(tag, opts){
-    const e = document.createElement(tag);
-    if (opts){
-      if (opts.className) e.className = opts.className;
-      if (opts.text != null) e.textContent = opts.text;
-      if (opts.style) e.style.cssText = opts.style;
-      if (opts.attrs) for (const k in opts.attrs) e.setAttribute(k, opts.attrs[k]);
-    }
-    return e;
-  }
-  const card = el('div', { style:'background:#fff;border-radius:12px;max-width:680px;width:100%;max-height:84vh;overflow:auto;padding:24px 26px;box-shadow:0 24px 60px -16px rgba(15,23,42,.4);' });
-  const head = el('div', { style:'display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;' });
-  const hLeft = el('div');
-  hLeft.appendChild(el('div', { style:'font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;', text: cat + ' report' }));
-  hLeft.appendChild(el('h2', { style:'margin:6px 0 8px;font-size:22px;font-weight:700;letter-spacing:-0.01em;', text:name }));
-  hLeft.appendChild(el('div', { style:'font-size:13px;color:var(--ink-2);line-height:1.5;', text:desc }));
-  head.appendChild(hLeft);
-  head.appendChild(el('button', { className:'x', style:'border:0;background:transparent;font-size:24px;color:var(--ink-3);cursor:pointer;line-height:1;', text:'×' }));
-  card.appendChild(head);
-  const placeholder = el('div', { style:'background:var(--surface-2);border:1px dashed var(--line);border-radius:8px;padding:60px 20px;text-align:center;color:var(--ink-3);font-size:13px;margin-bottom:18px;' });
-  const svg = document.createElementNS(SVG_NS, 'svg');
-  svg.setAttribute('width','48'); svg.setAttribute('height','48'); svg.setAttribute('viewBox','0 0 24 24');
-  svg.setAttribute('fill','none'); svg.setAttribute('stroke','currentColor'); svg.setAttribute('stroke-width','1.5');
-  svg.style.cssText = 'opacity:.4;margin-bottom:10px;';
-  const p1 = document.createElementNS(SVG_NS, 'path'); p1.setAttribute('d','M3 3v18h18'); svg.appendChild(p1);
-  const p2 = document.createElementNS(SVG_NS, 'path'); p2.setAttribute('d','m9 17 3-5 3 4 4-7'); svg.appendChild(p2);
-  placeholder.appendChild(svg);
-  placeholder.appendChild(el('div', { text:'Choose a date range and run the report' }));
-  card.appendChild(placeholder);
-  const actions = el('div', { style:'display:flex;justify-content:flex-end;gap:8px;' });
-  actions.appendChild(el('button', { className:'btn btn-secondary x', text:'Close' }));
-  actions.appendChild(el('button', { className:'btn btn-secondary', text:'Schedule', attrs:{'data-comm-action':'action:reports.schedule'} }));
-  actions.appendChild(el('button', { className:'btn btn-primary', text:'Run report', attrs:{'data-comm-action':'action:reports.run-report'} }));
-  card.appendChild(actions);
-  m.appendChild(card);
-  document.body.appendChild(m);
-  const close = () => m.remove();
-  m.addEventListener('click', e2 => { if (e2.target === m) close(); });
-  m.querySelectorAll('.x').forEach(b => b.addEventListener('click', close));
 }));
 </script>
 </body>

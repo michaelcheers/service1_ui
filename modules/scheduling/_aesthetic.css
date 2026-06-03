@@ -166,3 +166,47 @@ body {
 .stat-group .stat-col { padding: 0 24px; }
 .stat-group .stat-col:first-child { padding-left: 0; }
 .stat-group .stat-col:last-child { padding-right: 0; }
+
+/* ── Job-level scheduling: assigned member/vehicle chips on a job tile ──
+   Blue = assigned team member, green = assigned vehicle. Drag a chip to the
+   Deals panel (or click ×) to unschedule them from that job. */
+.tj-roster {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed rgba(0,0,0,0.10);
+}
+.tj-member-chip,
+.tj-vehicle-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 12px;
+  padding: 1px 7px;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+  cursor: grab;
+}
+.tj-member-chip { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
+.tj-member-chip.confirmed { background: #dcfce7; color: #166534; border-color: #86efac; }
+.tj-vehicle-chip { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+.tj-chip-x {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1;
+  padding: 0 0 0 1px;
+  opacity: 0.7;
+}
+.tj-chip-x:hover { opacity: 1; }
+.job.drag-over-job {
+  outline: 2px dashed var(--terra, #d97757);
+  outline-offset: -2px;
+  box-shadow: 0 0 0 2px var(--terra, #d97757) inset;
+}

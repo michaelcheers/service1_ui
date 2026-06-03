@@ -224,6 +224,12 @@ function applyWeekResponse(r) {
   if (r.locations) fx.locations = r.locations;
   if (r.counts && fx.metrics) fx.metrics.count = r.counts;
   if (r.countCls && fx.metrics) fx.metrics.countCls = r.countCls;
+  // Date navigation also refreshes the timeline jobs + Team Confirmations so
+  // the lanes/tab reflect the day being viewed.
+  if (r.timeline) fx.timeline = r.timeline;
+  if (r.teamConfirmations) fx.teamConfirmations = r.teamConfirmations;
+  if (r.teamConfirmationsKpis) fx.teamConfirmationsKpis = r.teamConfirmationsKpis;
+  if (r.metrics) fx.metrics = r.metrics;
   window.S1.render.bind(document, fx);
   renderTimes();
   recomputeCounts();
@@ -457,31 +463,9 @@ function syncTeamRowsToFixture() {
       lane.style.display = ok ? '' : 'none';
       if (ok && teams[i].crewId != null) lane.setAttribute('data-crew-id', String(teams[i].crewId));
       else lane.removeAttribute('data-crew-id');
-      // Drive each .job from fixture timeline.laneN[j]:
-      //   { title, sub, color, leftHr, widthHr, confirmed }
-      // — color drives the .job swatch class (terra/info/plum/teal/warn/gold/bad
-      //   /rose); use 'bad' for conflict and the .conf check vanishes.
-      const laneFix = tl['lane' + i];
-      const swatches = ['terra','info','plum','teal','warn','gold','bad','rose'];
-      const jobs = Array.from(lane.querySelectorAll(':scope > .job'));
-      jobs.forEach((job, j) => {
-        const slot = laneFix && laneFix[j];
-        if (!ok || !slot) { job.style.display = 'none'; return; }
-        job.style.display = '';
-        if (slot.color) {
-          swatches.forEach(s => job.classList.remove(s));
-          job.classList.add(String(slot.color));
-        }
-        const leftHr  = slot.leftHr  != null ? slot.leftHr  : slot.left;
-        const widthHr = slot.widthHr != null ? slot.widthHr : slot.width;
-        if (leftHr  != null) job.style.left  = 'calc(var(--hr-w) * ' + leftHr + ')';
-        if (widthHr != null) job.style.width = 'calc(var(--hr-w) * ' + widthHr + ')';
-        const conf = job.querySelector(':scope > .conf');
-        if (conf) {
-          const hideConf = slot.confirmed === false || slot.color === 'bad' || slot.color === 'warn' || slot.confDisplay === 'none';
-          conf.style.display = hideConf ? 'none' : '';
-        }
-      });
+      // The .job tiles themselves (with real jobIds + assigned member/vehicle
+      // chips) are rebuilt from state.timeline.laneN by renderTimelineLanes()
+      // in the drag IIFE — it runs on s1ui:ready and on every state:replaced.
     }
   });
 }
@@ -880,6 +864,11 @@ if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
     if (!raw) return null;
     const m = raw.split(':');
     if (m.length < 2) return null;
+    // 3-part chip-removal payloads: "job-member:JOBID:USERID" /
+    // "job-vehicle:JOBID:VEHICLEID" — carry both the job and the resource id.
+    if (m.length >= 3 && (m[0] === 'job-member' || m[0] === 'job-vehicle')) {
+      return { kind: m[0], jobId: m[1], id: m[2] };
+    }
     return { kind: m[0], id: m[1] };
   }
 
@@ -1090,6 +1079,165 @@ if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
   $$('.lane[data-lane]').forEach(wireLane);
   document.addEventListener('s1ui:ready', () => $$('.lane[data-lane]').forEach(wireLane));
 
+  // ── Job tiles as drop targets: drop a person/vehicle onto a particular
+  //    job to schedule them to that job (adds them to the job's crew). ──
+  function jobIdOf(el) {
+    return el.getAttribute('data-job-id') || el.getAttribute('data-record-id') || '';
+  }
+  function wireJob(jobEl) {
+    if (jobEl.__s1JobWired) return; jobEl.__s1JobWired = true;
+    jobEl.addEventListener('dragover', (e) => {
+      if (!activeDrag) return;
+      if (activeDrag.kind !== 'employee' && activeDrag.kind !== 'vehicle') return;
+      e.preventDefault();
+      e.stopPropagation();
+      e.dataTransfer.dropEffect = 'copy';
+      jobEl.classList.add('drag-over-job');
+    });
+    jobEl.addEventListener('dragleave', (e) => {
+      if (!jobEl.contains(e.relatedTarget)) jobEl.classList.remove('drag-over-job');
+    });
+    jobEl.addEventListener('drop', async (e) => {
+      const raw  = e.dataTransfer.getData('application/x-sched-drag') || e.dataTransfer.getData('text/plain') || '';
+      const info = parsePayload(raw);
+      jobEl.classList.remove('drag-over-job');
+      if (!info || (info.kind !== 'employee' && info.kind !== 'vehicle')) return; // jobs bubble to the lane
+      e.preventDefault();
+      e.stopPropagation();
+      cleanupDragVisuals();
+      const jobId = Number(jobIdOf(jobEl));
+      if (!jobId) { flash('This job has no id yet'); activeDrag = null; return; }
+      if (info.kind === 'employee') {
+        await safe('Schedule member', async () => {
+          const r = await comm.action('scheduling.assign-member-to-job', { jobId, employeeId: Number(info.id) });
+          if (r && r.ok) { flash('Scheduled to job'); await load(); }
+        });
+      } else {
+        await safe('Schedule vehicle', async () => {
+          const r = await comm.action('scheduling.assign-vehicle-to-job', { jobId, vehicleId: Number(info.id) });
+          if (r && r.ok) { flash('Vehicle scheduled to job'); await load(); }
+        });
+      }
+      activeDrag = null;
+    });
+  }
+
+  // Remove a person/vehicle from a job (chip "×" click or drop on the rail).
+  async function removeFromJob(kind, jobId, id) {
+    if (!jobId || !id) return;
+    if (kind === 'job-member') {
+      await safe('Remove member', async () => {
+        const r = await comm.action('scheduling.remove-member-from-job', { jobId: Number(jobId), employeeId: Number(id) });
+        if (r && r.ok) { flash('Removed from job'); await load(); }
+      });
+    } else if (kind === 'job-vehicle') {
+      await safe('Remove vehicle', async () => {
+        const r = await comm.action('scheduling.remove-vehicle-from-job', { jobId: Number(jobId), vehicleId: Number(id) });
+        if (r && r.ok) { flash('Vehicle removed from job'); await load(); }
+      });
+    }
+  }
+
+  // ── Render timeline job tiles + assigned chips from state ───────────
+  // Each .lane[data-lane=N] is rebuilt from state.timeline.laneN[] so every
+  // tile carries the REAL jobId (drag/assign target) and shows the people +
+  // trucks actually assigned to that job's crew. Built with createElement +
+  // textContent only (no innerHTML — security rule 2).
+  const SWATCH_LIST = ['terra','info','plum','teal','warn','gold','bad','rose'];
+  function makeChip(kind, jobId, id, label, swatchClass) {
+    const chip = document.createElement('span');
+    chip.className = swatchClass;
+    chip.setAttribute('draggable', 'true');
+    chip.setAttribute('data-drag-kind', kind);
+    chip.setAttribute('data-drag-id', jobId + ':' + id);
+    chip.setAttribute('data-drag-label', label);
+    chip.style.cursor = 'grab';
+    const txt = document.createElement('span');
+    txt.textContent = label;
+    chip.appendChild(txt);
+    const x = document.createElement('button');
+    x.type = 'button';
+    x.className = 'tj-chip-x';
+    x.textContent = '×';
+    x.setAttribute('draggable', 'false');
+    x.addEventListener('click', (ev) => {
+      ev.preventDefault(); ev.stopPropagation();
+      removeFromJob(kind, jobId, id);
+    });
+    chip.appendChild(x);
+    return chip;
+  }
+  function renderTimelineLanes() {
+    const state = (window.S1.fixtures || {})['scheduling'] || {};
+    const tl = state.timeline || {};
+    $$('.lane[data-lane]').forEach((lane) => {
+      const idx = lane.getAttribute('data-lane');
+      const items = (tl['lane' + idx] || []);
+      // Clear existing tiles (rebuild from state).
+      Array.from(lane.querySelectorAll(':scope > .job')).forEach(j => j.remove());
+      items.forEach((slot) => {
+        if (!slot) return;
+        const job = document.createElement('div');
+        const color = SWATCH_LIST.indexOf(String(slot.color)) >= 0 ? String(slot.color) : 'terra';
+        job.className = 'job ' + color;
+        job.setAttribute('data-orig-color', color);
+        const left  = (slot.left  != null ? slot.left  : (slot.leftHr  != null ? slot.leftHr  : 8));
+        const width = (slot.width != null ? slot.width : (slot.widthHr != null ? slot.widthHr : 3));
+        job.style.left  = 'calc(var(--hr-w) * ' + left + ')';
+        job.style.width = 'calc(var(--hr-w) * ' + width + ')';
+        // Real job id → drag source + assign target.
+        if (slot.jobId != null) {
+          job.setAttribute('data-job-id', String(slot.jobId));
+          job.setAttribute('data-drag-id', String(slot.jobId));
+        }
+        job.setAttribute('data-drag-kind', 'timeline-job');
+        job.setAttribute('data-drag-label', String(slot.title || 'Job'));
+        job.setAttribute('draggable', 'true');
+        job.style.cursor = 'grab';
+
+        const jt = document.createElement('div'); jt.className = 'jt';
+        jt.textContent = String(slot.title || 'Job');
+        job.appendChild(jt);
+        const js = document.createElement('div'); js.className = 'js';
+        js.textContent = String(slot.sub || '');
+        job.appendChild(js);
+
+        const conf = document.createElement('span');
+        conf.className = 'conf';
+        conf.textContent = '✓';
+        conf.style.color = slot.confStroke || ('var(--' + color + ')');
+        conf.style.display = (slot.confDisplay === 'none') ? 'none' : '';
+        job.appendChild(conf);
+
+        // Assigned member + vehicle chips.
+        const members  = Array.isArray(slot.members)  ? slot.members  : [];
+        const vehicles = Array.isArray(slot.vehicles) ? slot.vehicles : [];
+        if (members.length || vehicles.length) {
+          const roster = document.createElement('div');
+          roster.className = 'tj-roster';
+          members.forEach(m => {
+            roster.appendChild(makeChip('job-member', slot.jobId, m.id, m.name || m.initials || ('#' + m.id), 'tj-member-chip' + (m.confirmed ? ' confirmed' : '')));
+          });
+          vehicles.forEach(v => {
+            roster.appendChild(makeChip('job-vehicle', slot.jobId, v.id, '🚚 ' + (v.name || ('#' + v.id)), 'tj-vehicle-chip'));
+          });
+          job.appendChild(roster);
+        }
+
+        lane.appendChild(job);
+        wireJob(job);
+      });
+      recomputeConflicts(lane);
+    });
+    // Deal-panel job cards are also drop targets for scheduling onto a job.
+    $$('.jobs-list .job-card').forEach(wireJob);
+  }
+  window.__sched_renderTimeline = renderTimelineLanes;
+  document.addEventListener('s1ui:ready', renderTimelineLanes);
+  if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
+    window.S1.bus.on('state:replaced', renderTimelineLanes);
+  }
+
   // ── Jobs panel as removal drop zone (drag a placed job back) ────────
   const jobsPanel = document.querySelector('.jobs');
   if (jobsPanel) {
@@ -1107,7 +1255,15 @@ if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
       cleanupDragVisuals();
       const raw  = e.dataTransfer.getData('application/x-sched-drag') || e.dataTransfer.getData('text/plain') || '';
       const info = parsePayload(raw);
-      if (!info || info.kind !== 'timeline-job') return;
+      if (!info) return;
+      // Dragging an assigned chip onto the panel unschedules that person/truck
+      // from the job (but keeps them in the crew pool — separate action).
+      if (info.kind === 'job-member' || info.kind === 'job-vehicle') {
+        await removeFromJob(info.kind, info.jobId, info.id);
+        activeDrag = null;
+        return;
+      }
+      if (info.kind !== 'timeline-job') return;
       const draggedEl = activeDrag && activeDrag.el;
       const sourceLane = draggedEl && draggedEl.closest('.lane[data-lane]');
       await safe('Unassign job', async () => {
@@ -1185,14 +1341,25 @@ if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
     $$('.lane.drag-over').forEach(x => x.classList.remove('drag-over'));
     killGhost();
     const date = selectedDate();
+    const jobEl  = overEl && overEl.closest && overEl.closest('.lane .job, .jobs-list .job-card');
     try {
-      if (lane) {
+      // Drop a person/vehicle directly onto a job → schedule them to that job.
+      if (jobEl && (touch.kind === 'employee' || touch.kind === 'vehicle')) {
+        const jobId = Number(jobIdOf(jobEl));
+        if (touch.kind === 'employee') await comm.action('scheduling.assign-member-to-job', { jobId, employeeId: Number(touch.id) });
+        else                           await comm.action('scheduling.assign-vehicle-to-job', { jobId, vehicleId: Number(touch.id) });
+        await load();
+      } else if (lane) {
         const crewId    = parseInt(lane.getAttribute('data-crew-id'), 10);
         const startHour = calcHourFromX(lane, t.clientX);
         if (!crewId) { flash('This lane has no crew yet'); touch = null; return; }
         if (touch.kind === 'employee')      { await comm.action('scheduling.add-member', { crewId, employeeId: Number(touch.id), date }); await load(); }
         else if (touch.kind === 'vehicle')  { await comm.action('scheduling.add-vehicle', { crewId, vehicleId: Number(touch.id), date }); await load(); }
-        else                                await comm.action('scheduling.assign-job', { jobId: Number(touch.id), crewId, date, startHour });
+        else if (touch.kind === 'timeline-job' || touch.kind === 'job') await comm.action('scheduling.assign-job', { jobId: Number(touch.id), crewId, date, startHour });
+      } else if (jobsP && (touch.kind === 'job-member' || touch.kind === 'job-vehicle')) {
+        // touch.id is the composite "JOBID:RESOURCEID" for assigned chips.
+        const seg = String(touch.id).split(':');
+        await removeFromJob(touch.kind, seg[0], seg[1]);
       } else if (jobsP && touch.kind === 'timeline-job') {
         await comm.action('scheduling.unassign-job', { jobId: Number(touch.id) });
       } else if (cdrop && touch.kind === 'employee') {
@@ -1201,6 +1368,32 @@ if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
     } catch (err) { flash('Drop failed: ' + (err.message || err)); }
     touch = null;
   });
+
+  // ── Publish: confirm jobs + send each assigned member their schedule ──
+  // The button carries data-comm-action="action:scheduling.publish"; take
+  // ownership (mark __s1Wired) so the generic dispatcher skips it, then post
+  // with the explicit selected date and surface a real summary.
+  function wirePublish() {
+    $$('[data-comm-action="action:scheduling.publish"]').forEach((btn) => {
+      if (btn.__s1PublishWired) return;
+      btn.__s1PublishWired = true;
+      btn.__s1Wired = true; // tell the generic [data-comm-action] dispatcher to skip
+      btn.addEventListener('click', async (ev) => {
+        ev.preventDefault();
+        await safe('Publish', async () => {
+          const r = await comm.action('scheduling.publish', { date: selectedDate() });
+          if (r && r.ok) {
+            const jc = r.jobsConfirmed != null ? r.jobsConfirmed : 0;
+            const mn = r.membersNotified != null ? r.membersNotified : 0;
+            flash('Published · ' + jc + ' job' + (jc === 1 ? '' : 's') + ' confirmed · ' + mn + ' notified');
+            await load();
+          }
+        });
+      });
+    });
+  }
+  wirePublish();
+  document.addEventListener('s1ui:ready', wirePublish);
 
   // ── Visual-feedback CSS ─────────────────────────────────────────────
   const dragCss = document.createElement('style');

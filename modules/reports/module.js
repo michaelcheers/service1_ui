@@ -62,18 +62,21 @@ $$('input.search-input').forEach(inp => {
   });
 });
 
-// Report card click
-document.addEventListener('click', async (ev) => {
-  const card = ev.target.closest('[data-bind] a, [data-bind] [data-record-id]');
-  if (!card) return;
-  ev.preventDefault();
-  const id = (card.closest('[data-record-id]') || {}).getAttribute && (card.closest('[data-record-id]')).getAttribute('data-record-id');
-  if (!id) return;
-  await safe('Open report', async () => {
-    const r = await comm.action('reports.open', { id });
-    if (r && r.navigateTo) window.location.href = r.navigateTo;
+// Report row + custom-report actions are dispatched by the document-level
+// [data-comm-action] handler installed via wireStandardPage('reports') below.
+// The host RPC returns { navigateTo }, which s1ui-host.js navigates same-origin.
+
+// Header "Refresh" — re-pull live state. comm.action triggers the host to
+// re-run OnGetS1StateAsync and push fresh state (embedded); load() re-binds the
+// fixture in mock/file:// preview.
+const repRefreshLink = document.getElementById('repRefresh');
+if (repRefreshLink) {
+  repRefreshLink.addEventListener('click', async (ev) => {
+    ev.preventDefault();
+    try { await comm.action('reports.refresh', {}); } catch {}
+    load();
   });
-});
+}
 
 // AI fab
 

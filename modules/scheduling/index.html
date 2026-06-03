@@ -986,18 +986,10 @@ a { color: inherit; text-decoration: none; }
                   <span class="chip" style="background:var(--terra-soft);color:var(--terra);" data-bind-text="teams.0.chipCap">26 ft</span>
                 </div>
               </div>
-              <div class="lane" data-lane="0">
-                <!-- 24 cells (alternating shaded for 6am-8pm) -->
-                <div class="job terra" data-location="Toronto" data-starts-at="2026-05-16T11:00:00Z" data-duration="4.5">
-                  <div class="jt" data-bind-text="timeline.lane0.0.title">Alice Johnson · 3BR move</div>
-                  <div class="js" data-bind-text="timeline.lane0.0.sub">Toronto → Hamilton · 4h · $2,768</div>
-                  <span class="conf"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="var(--terra)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
-                </div>
-                <div class="job warn" data-location="Toronto" data-starts-at="2026-05-16T17:00:00Z" data-duration="3">
-                  <div class="jt" data-bind-text="timeline.lane0.1.title">Survey · J. Lopez</div>
-                  <div class="js" data-bind-text="timeline.lane0.1.sub">North York · 1h estimate</div>
-                </div>
-              </div>
+              <!-- Job tiles are rendered dynamically from state.timeline.laneN
+                   by module.js (renderTimelineLanes) so each tile carries the
+                   real jobId and its assigned member/vehicle chips. -->
+              <div class="lane" data-lane="0"></div>
 
               <!-- ── Team 2 (formerly Van 1) ── -->
               <div class="crew-cell" data-team-idx="1">
@@ -1008,17 +1000,7 @@ a { color: inherit; text-decoration: none; }
                   <span class="chip" style="background:var(--info-bg);color:var(--info);" data-bind-text="teams.1.chipCap">14 ft</span>
                 </div>
               </div>
-              <div class="lane" data-lane="1">
-                <div class="job info" data-location="Mississauga" data-starts-at="2026-05-16T12:00:00Z" data-duration="2.5">
-                  <div class="jt" data-bind-text="timeline.lane1.0.title">Box delivery · Patel</div>
-                  <div class="js" data-bind-text="timeline.lane1.0.sub">Mississauga · 30 boxes</div>
-                  <span class="conf"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="var(--info)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
-                </div>
-                <div class="job plum" data-location="Etobicoke" data-starts-at="2026-05-16T18:00:00Z" data-duration="2">
-                  <div class="jt" data-bind-text="timeline.lane1.1.title">Packing only · M. Lee</div>
-                  <div class="js" data-bind-text="timeline.lane1.1.sub">Etobicoke · 2 packers</div>
-                </div>
-              </div>
+              <div class="lane" data-lane="1"></div>
 
               <!-- ── Team 3 (formerly Truck 2 — unassigned today) ── -->
               <div class="crew-cell" data-team-idx="2">
@@ -1027,12 +1009,7 @@ a { color: inherit; text-decoration: none; }
                   <span class="chip warn" data-bind-text="teams.2.warnChip">No team assigned</span>
                 </div>
               </div>
-              <div class="lane" data-lane="2">
-                <div class="job gold" data-location="Vancouver" data-starts-at="2026-05-16T14:00:00Z" data-duration="5">
-                  <div class="jt" data-bind-text="timeline.lane2.0.title">Tentative · R. Chen</div>
-                  <div class="js" data-bind-text="timeline.lane2.0.sub">Long distance · Toronto → Ottawa</div>
-                </div>
-              </div>
+              <div class="lane" data-lane="2"></div>
 
               <!-- ── Team 4 (formerly Truck 3) ── -->
               <div class="crew-cell" data-team-idx="3">
@@ -1043,13 +1020,7 @@ a { color: inherit; text-decoration: none; }
                   <span class="chip" style="background:var(--teal-bg);color:var(--teal);" data-bind-text="teams.3.chipCap">26 ft</span>
                 </div>
               </div>
-              <div class="lane" data-lane="3">
-                <div class="job teal" data-location="Toronto" data-starts-at="2026-05-16T13:00:00Z" data-duration="6">
-                  <div class="jt" data-bind-text="timeline.lane3.0.title">Commercial · Northside Co.</div>
-                  <div class="js" data-bind-text="timeline.lane3.0.sub">Downtown · office relocation · 6h</div>
-                  <span class="conf"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
-                </div>
-              </div>
+              <div class="lane" data-lane="3"></div>
 
               <!-- Drop placeholder -->
               <div class="crew-drop">

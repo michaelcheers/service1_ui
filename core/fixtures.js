@@ -2221,6 +2221,18 @@
   F["reports"] = {
   formatOptions: [],
   subtitle: "27 reports across Sales \u00b7 Operations \u00b7 Accounting \u00b7 Marketing",
+  lastUpdated: "just now",
+  dailyUpdate: { "label": "Today's update sent 6:02 AM", "detail": "3 new items \u00b7 revenue, 2 unconfirmed jobs", "statusText": "SENT", "hasUpdate": true },
+  updates: [
+    { "title": "Daily revenue summary", "when": "6:02 AM" },
+    { "title": "Crew utilization refreshed", "when": "6:00 AM" },
+    { "title": "3 jobs still unconfirmed", "when": "5:58 AM" }
+  ],
+  customReports: [
+    { "id": "1", "name": "Q2 churn drivers", "createdLabel": "Created May 4 \u00b7 AI-drafted" }
+  ],
+  hasCustomReports: "1",
+  canDraftReport: "1",
   rows: [
   {
     "name": "Daily revenue summary \u00b7 30d \u00b7 last run 9:00 AM"
@@ -3500,18 +3512,25 @@
     },
     timeline: {
       lane0: [
-        { color: "terra", left: "7",  width: "4.5", title: "Alice Johnson · 3BR move", sub: "Toronto → Hamilton · 4h · $2,768", confDisplay: "inline-flex", confStroke: "var(--terra)" },
-        { color: "warn",  left: "13", width: "3",   title: "Survey · J. Lopez",        sub: "North York · 1h estimate",         confDisplay: "none",        confStroke: "var(--warn)"  }
+        { jobId: "5101", color: "terra", left: "7",  width: "4.5", title: "Alice Johnson · 3BR move", sub: "Toronto → Hamilton · 4h · $2,768", confDisplay: "inline-flex", confStroke: "var(--terra)",
+          members: [ { id: "201", name: "Jackson Mungai", initials: "JM", confirmed: true }, { id: "202", name: "Paul Rai", initials: "PR", confirmed: false } ],
+          vehicles: [ { id: "301", name: "Truck 1" } ] },
+        { jobId: "5102", color: "warn",  left: "13", width: "3",   title: "Survey · J. Lopez",        sub: "North York · 1h estimate",         confDisplay: "none",        confStroke: "var(--warn)",
+          members: [], vehicles: [] }
       ],
       lane1: [
-        { color: "info",  left: "8",  width: "2.5", title: "Box delivery · Patel",     sub: "Mississauga · 30 boxes",           confDisplay: "inline-flex", confStroke: "var(--info)" },
-        { color: "plum",  left: "14", width: "2",   title: "Packing only · M. Lee",    sub: "Etobicoke · 2 packers",            confDisplay: "none",        confStroke: "var(--plum)" }
+        { jobId: "5103", color: "info",  left: "8",  width: "2.5", title: "Box delivery · Patel",     sub: "Mississauga · 30 boxes",           confDisplay: "inline-flex", confStroke: "var(--info)",
+          members: [ { id: "203", name: "Alex Zu", initials: "AZ", confirmed: true } ], vehicles: [ { id: "304", name: "Van 1" } ] },
+        { jobId: "5104", color: "plum",  left: "14", width: "2",   title: "Packing only · M. Lee",    sub: "Etobicoke · 2 packers",            confDisplay: "none",        confStroke: "var(--plum)",
+          members: [], vehicles: [] }
       ],
       lane2: [
-        { color: "gold",  left: "10", width: "5",   title: "Long distance · D. Wong",  sub: "Vancouver → Burnaby · 5h · $4,200", confDisplay: "none",        confStroke: "var(--gold)" }
+        { jobId: "5105", color: "gold",  left: "10", width: "5",   title: "Long distance · D. Wong",  sub: "Vancouver → Burnaby · 5h · $4,200", confDisplay: "none",        confStroke: "var(--gold)",
+          members: [], vehicles: [] }
       ],
       lane3: [
-        { color: "teal",  left: "9",  width: "6",   title: "Commercial · Northside Co.", sub: "Downtown · office relocation · 6h", confDisplay: "inline-flex", confStroke: "var(--teal)" }
+        { jobId: "5106", color: "teal",  left: "9",  width: "6",   title: "Commercial · Northside Co.", sub: "Downtown · office relocation · 6h", confDisplay: "inline-flex", confStroke: "var(--teal)",
+          members: [ { id: "204", name: "Gurtsik Ann", initials: "GA", confirmed: false } ], vehicles: [ { id: "303", name: "Truck 3" } ] }
       ]
     },
     // ── Resources column (left panel) ──
