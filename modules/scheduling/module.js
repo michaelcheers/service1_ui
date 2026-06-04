@@ -227,6 +227,9 @@ function applyWeekResponse(r) {
   // Date navigation also refreshes the timeline jobs + Team Confirmations so
   // the lanes/tab reflect the day being viewed.
   if (r.timeline) fx.timeline = r.timeline;
+  // Re-render each team card's truck chips for the newly-selected day
+  // (CrewVehicles are date-scoped via AssignedDate).
+  if (r.teams) fx.teams = r.teams;
   if (r.teamConfirmations) fx.teamConfirmations = r.teamConfirmations;
   if (r.teamConfirmationsKpis) fx.teamConfirmationsKpis = r.teamConfirmationsKpis;
   if (r.metrics) fx.metrics = r.metrics;
@@ -911,7 +914,7 @@ if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
   });
   function cleanupDragVisuals() {
     $$('.dragging').forEach(x => x.classList.remove('dragging'));
-    $$('.lane.drag-over, .crew-drop.drag-over, .jobs.drop-remove-highlight, .resources.drop-remove-highlight')
+    $$('.lane.drag-over, .crew-cell.drag-over, .crew-drop.drag-over, .jobs.drop-remove-highlight, .resources.drop-remove-highlight')
       .forEach(x => { x.classList.remove('drag-over'); x.classList.remove('drop-remove-highlight'); });
     const cd = document.querySelector('.crew-drop'); if (cd) cd.classList.remove('visible');
     killGhost();
@@ -925,7 +928,7 @@ if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
   document.addEventListener('dragover', (e) => {
     if (!activeDrag) return;
     const t = e.target;
-    const el = (t && t.nodeType === 1) ? t.closest('.lane[data-lane], .jobs, .crew-drop') : null;
+    const el = (t && t.nodeType === 1) ? t.closest('.lane[data-lane], .crew-cell[data-crew-id], .jobs, .crew-drop') : null;
     if (el) { e.preventDefault(); e.dataTransfer.dropEffect = (activeDrag.kind === 'timeline-job' ? 'move' : 'copy'); }
     if (ghost && (e.clientX || e.clientY)) moveGhost(e.clientX, e.clientY);
   });
@@ -1078,6 +1081,104 @@ if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
   }
   $$('.lane[data-lane]').forEach(wireLane);
   document.addEventListener('s1ui:ready', () => $$('.lane[data-lane]').forEach(wireLane));
+
+  // ── Drop target: the team card itself (.crew-cell). Mirrors wireLane but
+  //    accepts a fleet truck (→ scheduling.add-vehicle) or a person
+  //    (→ scheduling.add-member) dropped directly on the card. ───────────
+  function wireCrewCell(cell) {
+    if (cell.__s1CellWired) return; cell.__s1CellWired = true;
+    cell.addEventListener('dragover', (e) => {
+      if (!activeDrag) return;
+      if (activeDrag.kind !== 'vehicle' && activeDrag.kind !== 'employee') return;
+      e.preventDefault();
+      e.stopPropagation();
+      e.dataTransfer.dropEffect = 'copy';
+      cell.classList.add('drag-over');
+      moveGhost(e.clientX, e.clientY);
+    });
+    cell.addEventListener('dragenter', (e) => {
+      if (!activeDrag || (activeDrag.kind !== 'vehicle' && activeDrag.kind !== 'employee')) return;
+      e.preventDefault(); cell.classList.add('drag-over');
+    });
+    cell.addEventListener('dragleave', (e) => {
+      if (!cell.contains(e.relatedTarget)) cell.classList.remove('drag-over');
+    });
+    cell.addEventListener('drop', async (e) => {
+      const raw  = e.dataTransfer.getData('application/x-sched-drag') || e.dataTransfer.getData('text/plain') || '';
+      const info = parsePayload(raw);
+      cell.classList.remove('drag-over');
+      if (!info || (info.kind !== 'vehicle' && info.kind !== 'employee')) return;
+      e.preventDefault();
+      e.stopPropagation();
+      cleanupDragVisuals();
+      const crewId = parseInt(cell.getAttribute('data-crew-id'), 10);
+      const date   = selectedDate();
+      if (!crewId) { flash('This team has no crew yet'); activeDrag = null; return; }
+      if (info.kind === 'vehicle') {
+        await safe('Add truck', async () => {
+          const r = await comm.action('scheduling.add-vehicle', { crewId, vehicleId: Number(info.id), date });
+          if (r && r.ok) { flash('Truck added'); await load(); }
+        });
+      } else {
+        await safe('Add member', async () => {
+          const r = await comm.action('scheduling.add-member', { crewId, employeeId: Number(info.id), date });
+          if (r && r.ok) { flash('Added to crew'); await load(); }
+        });
+      }
+      activeDrag = null;
+    });
+  }
+  $$('.crew-cell[data-crew-id]').forEach(wireCrewCell);
+  document.addEventListener('s1ui:ready', () => $$('.crew-cell[data-crew-id]').forEach(wireCrewCell));
+
+  // ── Render assigned-truck chips on every team card (static + cloned). ──
+  // Built from state.teams[idx].trucks with createElement/textContent only
+  // (no innerHTML — security rule 2), so it works for cloned cells too.
+  function renderCrewTrucks() {
+    const state = (window.S1.fixtures || {})['scheduling'] || {};
+    const teams = Array.isArray(state.teams) ? state.teams : [];
+    $$('.crew-cell[data-team-idx]').forEach((cell) => {
+      const host = cell.querySelector('[data-crew-trucks]');
+      if (!host) return;
+      while (host.firstChild) host.removeChild(host.firstChild);
+      const idx = parseInt(cell.getAttribute('data-team-idx'), 10);
+      const team = teams[idx];
+      const trucks = (team && Array.isArray(team.trucks)) ? team.trucks : [];
+      const crewId = cell.getAttribute('data-crew-id');
+      trucks.forEach((tk) => {
+        if (!tk) return;
+        const chip = document.createElement('span');
+        chip.className = 'truck-chip';
+        if (tk.vehicleId != null) chip.setAttribute('data-veh-id', String(tk.vehicleId));
+        const txt = document.createElement('span');
+        txt.textContent = '🚚 ' + String(tk.name || ('#' + tk.vehicleId));
+        chip.appendChild(txt);
+        const x = document.createElement('button');
+        x.type = 'button';
+        x.className = 'truck-x';
+        x.setAttribute('draggable', 'false');
+        x.setAttribute('title', 'Remove truck');
+        x.textContent = '×';
+        x.addEventListener('click', async (ev) => {
+          ev.preventDefault(); ev.stopPropagation();
+          const cid = parseInt(crewId, 10);
+          const vid = Number(tk.vehicleId);
+          if (!cid || !vid) return;
+          await safe('Remove truck', async () => {
+            const r = await comm.action('scheduling.remove-vehicle', { crewId: cid, vehicleId: vid, date: selectedDate() });
+            if (r && r.ok) { flash('Truck removed'); await load(); }
+          });
+        });
+        chip.appendChild(x);
+        host.appendChild(chip);
+      });
+    });
+  }
+  window.__sched_renderCrewTrucks = renderCrewTrucks;
+  document.addEventListener('s1ui:ready', renderCrewTrucks);
+  if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
+    window.S1.bus.on('state:replaced', renderCrewTrucks);
+  }
 
   // ── Job tiles as drop targets: drop a person/vehicle onto a particular
   //    job to schedule them to that job (adds them to the job's crew). ──
@@ -1325,20 +1426,25 @@ if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
     }
     e.preventDefault();
     moveGhost(t.clientX, t.clientY);
-    $$('.lane.drag-over').forEach(x => x.classList.remove('drag-over'));
+    $$('.lane.drag-over, .crew-cell.drag-over').forEach(x => x.classList.remove('drag-over'));
     const overEl = pointerEl(t.clientX, t.clientY);
     const lane = overEl && overEl.closest && overEl.closest('.lane[data-lane]');
     if (lane) lane.classList.add('drag-over');
+    else {
+      const cellOver = overEl && overEl.closest && overEl.closest('.crew-cell[data-crew-id]');
+      if (cellOver && (touch.kind === 'vehicle' || touch.kind === 'employee')) cellOver.classList.add('drag-over');
+    }
   }, { passive: false });
   document.addEventListener('touchend', async (e) => {
     if (!touch || !touch.started) { touch = null; return; }
     const t  = e.changedTouches[0];
     const overEl = pointerEl(t.clientX, t.clientY);
     const lane   = overEl && overEl.closest && overEl.closest('.lane[data-lane]');
+    const cell   = overEl && overEl.closest && overEl.closest('.crew-cell[data-crew-id]');
     const jobsP  = overEl && overEl.closest && overEl.closest('.jobs');
     const cdrop  = overEl && overEl.closest && overEl.closest('.crew-drop');
     $$('.dragging').forEach(x => x.classList.remove('dragging'));
-    $$('.lane.drag-over').forEach(x => x.classList.remove('drag-over'));
+    $$('.lane.drag-over, .crew-cell.drag-over').forEach(x => x.classList.remove('drag-over'));
     killGhost();
     const date = selectedDate();
     const jobEl  = overEl && overEl.closest && overEl.closest('.lane .job, .jobs-list .job-card');
@@ -1349,6 +1455,12 @@ if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
         if (touch.kind === 'employee') await comm.action('scheduling.assign-member-to-job', { jobId, employeeId: Number(touch.id) });
         else                           await comm.action('scheduling.assign-vehicle-to-job', { jobId, vehicleId: Number(touch.id) });
         await load();
+      } else if (cell && (touch.kind === 'employee' || touch.kind === 'vehicle')) {
+        // Drop a truck/person directly on the team card.
+        const crewId = parseInt(cell.getAttribute('data-crew-id'), 10);
+        if (!crewId) { flash('This team has no crew yet'); touch = null; return; }
+        if (touch.kind === 'vehicle') { await comm.action('scheduling.add-vehicle', { crewId, vehicleId: Number(touch.id), date }); await load(); }
+        else                          { await comm.action('scheduling.add-member', { crewId, employeeId: Number(touch.id), date }); await load(); }
       } else if (lane) {
         const crewId    = parseInt(lane.getAttribute('data-crew-id'), 10);
         const startHour = calcHourFromX(lane, t.clientX);

@@ -34,40 +34,95 @@ $$('.subtab[data-tab]').forEach(b => {
 // Chart range buttons (1D/7D/30D/90D/12M/YTD). standard-page.js fires the
 // save; here we toggle .active and re-render the chart from the fixture's
 // per-range data (chart.ranges[key]).
-function buildPath(vals, yMax) {
-  if (!vals || !vals.length) return '';
+const SVGNS = 'http://www.w3.org/2000/svg';
+// Hide the floating revenue tooltip.
+function hideChartTip() {
+  const tip = document.querySelector('.chart .chart-tip');
+  if (tip) tip.hidden = true;
+}
+// Position + fill the tooltip above the given bar for value index `i`.
+function showChartTip(r, i, x, barTopY) {
+  const chart = document.querySelector('.chart');
+  const tip = chart && chart.querySelector('.chart-tip');
+  if (!chart || !tip) return;
+  const monthEl = tip.querySelector('.chart-tip-month');
+  const valEl = tip.querySelector('.chart-tip-val');
+  if (monthEl) monthEl.textContent = (r.xLabels && r.xLabels[i]) || '';
+  // Prefer the exact server-formatted dollar string; fall back to the
+  // thousands-scaled value when running standalone against a mock fixture.
+  let val = (r.tooltips && r.tooltips[i] != null) ? r.tooltips[i] : null;
+  if (val == null) {
+    const raw = (r.values && r.values[i] != null) ? r.values[i] : 0;
+    val = '$' + Math.round(raw * 1000).toLocaleString();
+  }
+  if (valEl) valEl.textContent = val;
+  // SVG uses a 1200x260 viewBox stretched across the chart's pixel box, so
+  // convert chart coordinates to the chart element's pixel space.
   const W = 1200, H = 260;
+  const px = (x / W) * chart.clientWidth;
+  // Leave 28px for the x-axis area at the bottom (chart-y bottom inset).
+  const plotH = chart.clientHeight;
+  const py = (barTopY / H) * plotH - 8;
+  tip.style.left = px + 'px';
+  tip.style.top = py + 'px';
+  tip.hidden = false;
+}
+function renderBars(svg, r) {
+  const g = svg.querySelector('.chart-bars');
+  if (!g) return;
+  while (g.firstChild) g.removeChild(g.firstChild);
+  const W = 1200, H = 260;
+  const vals = r.values || [];
+  const prev = r.prev || [];
   const n = vals.length;
-  // Center each point within its column so points line up with the x-axis
-  // labels (which are centered in a CSS grid of n columns).
-  return vals.map((v, i) => {
-    const x = (((i + 0.5) / n) * W).toFixed(1);
-    const y = (H * (1 - v / yMax)).toFixed(1);
-    return (i === 0 ? 'M ' : 'L ') + x + ',' + y;
-  }).join(' ');
+  if (!n) return;
+  const yMax = r.yMax || 1;
+  const colW = W / n;
+  const barW = colW * 0.56;
+  const prevW = barW * 0.5;
+  for (let i = 0; i < n; i++) {
+    const cx = (i + 0.5) * colW;
+    // Ghost previous-period bar (slimmer, behind/left).
+    if (prev[i] != null) {
+      const ph = Math.max(0, (prev[i] / yMax) * H);
+      const pRect = document.createElementNS(SVGNS, 'rect');
+      pRect.setAttribute('class', 'chart-bar prev');
+      pRect.setAttribute('x', (cx - prevW / 2).toFixed(1));
+      pRect.setAttribute('y', (H - ph).toFixed(1));
+      pRect.setAttribute('width', prevW.toFixed(1));
+      pRect.setAttribute('height', ph.toFixed(1));
+      pRect.setAttribute('rx', '2');
+      g.appendChild(pRect);
+    }
+    const v = vals[i] || 0;
+    const h = Math.max(0, (v / yMax) * H);
+    const barX = cx - barW / 2;
+    const barY = H - h;
+    const rect = document.createElementNS(SVGNS, 'rect');
+    rect.setAttribute('class', 'chart-bar');
+    rect.setAttribute('x', barX.toFixed(1));
+    rect.setAttribute('y', barY.toFixed(1));
+    rect.setAttribute('width', barW.toFixed(1));
+    rect.setAttribute('height', h.toFixed(1));
+    rect.setAttribute('rx', '3');
+    rect.setAttribute('tabindex', '0');
+    const enter = () => { rect.classList.add('is-active'); showChartTip(r, i, cx, barY); };
+    const leave = () => { rect.classList.remove('is-active'); hideChartTip(); };
+    rect.addEventListener('mouseenter', enter);
+    rect.addEventListener('mousemove', enter);
+    rect.addEventListener('mouseleave', leave);
+    rect.addEventListener('focus', enter);
+    rect.addEventListener('blur', leave);
+    g.appendChild(rect);
+  }
 }
 function renderChart(key) {
   const fx = (window.S1.fixtures || {}).dashboard || {};
   const r = fx.chart && fx.chart.ranges && fx.chart.ranges[key];
   if (!r) return;
-  const W = 1200, H = 260;
-  const n = r.values.length;
-  const colX = (i) => ((i + 0.5) / n) * W;
-  const linePath = buildPath(r.values, r.yMax);
-  const prevPath = buildPath(r.prev, r.yMax);
-  const firstX = colX(0).toFixed(1);
-  const lastX  = colX(n - 1).toFixed(1);
-  const areaPath = linePath + ' L ' + lastX + ',' + H + ' L ' + firstX + ',' + H + ' Z';
   const svg = document.querySelector('.chart svg'); if (!svg) return;
-  const setD = (sel, d) => { const el = svg.querySelector(sel); if (el) el.setAttribute('d', d); };
-  setD('.chart-line', linePath);
-  setD('.chart-area', areaPath);
-  setD('.chart-prev', prevPath);
-  const dot = svg.querySelector('.chart-end');
-  if (dot) {
-    dot.setAttribute('cx', lastX);
-    dot.setAttribute('cy', (H * (1 - r.values[n - 1] / r.yMax)).toFixed(1));
-  }
+  hideChartTip();
+  renderBars(svg, r);
   const xWrap = document.querySelector('.chart-x');
   if (xWrap) {
     while (xWrap.firstChild) xWrap.removeChild(xWrap.firstChild);

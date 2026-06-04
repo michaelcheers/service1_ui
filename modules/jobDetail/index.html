@@ -781,6 +781,20 @@ iframe.cmx-editor-frame { width: 100%; min-height: 160px; border: 0; display: bl
 .tl-kind { font-weight: 600; color: var(--ink); white-space: nowrap; }
 .tl-by { color: var(--ink-3); }
 .tl-arrow { color: var(--ink-4); }
+/* F#1483: email subject line + delivery/read status badge. */
+.tl-subj { font-weight: 600; color: var(--ink); margin-top: 4px; font-size: 13px; }
+.tl-subj:empty { display: none; }
+.s1badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  height: 18px; padding: 0 8px; border-radius: 999px;
+  font-size: 11px; font-weight: 600; white-space: nowrap;
+}
+.s1badge:empty { display: none; }
+.s1badge.sent      { background: #eef0f2; color: #4b5563; }
+.s1badge.delivered { background: #e6f0fb; color: #2563eb; }
+.s1badge.opened    { background: #dcfce7; color: #16a34a; }
+.s1badge.failed    { background: #fee2e2; color: #dc2626; }
+.s1badge.unread    { background: #fef9c3; color: #92400e; }
 .tl-text {
   margin-top: 4px;
   color: var(--ink-2);
@@ -788,6 +802,20 @@ iframe.cmx-editor-frame { width: 100%; min-height: 160px; border: 0; display: bl
   line-height: 1.5;
   text-wrap: pretty;
 }
+/* F#1483: clamp long bodies to ~3 lines; "Show more" removes the clamp. The
+   iframe email body auto-sizes, so its container is clamped here too. */
+.tl-text-text { max-height: 4.5em; overflow: hidden; }
+.tl-item.expanded .tl-text-text { max-height: none; }
+.tl-mail .tl-text-mail { max-height: 4.5em; }
+.tl-item.expanded .tl-text-mail { max-height: none; }
+.tl-more {
+  display: none;
+  margin-top: 2px;
+  color: var(--info, #2563eb);
+  font-size: 12px;
+  cursor: pointer;
+}
+.tl-item.has-overflow .tl-more { display: inline-block; }
 .tl-item:not(.tl-mail) .tl-text-mail { display: none; }
 .tl-mail .tl-text-text { display: none; }
 .tl-mail .tl-text-mail {
@@ -1110,6 +1138,19 @@ select.gp2-input {
 .gp2-attr-v { color: var(--ink); font-weight: 500; }
 
 /* Route metrics */
+.gp2-route-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 12px 16px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  font-size: 13px;
+}
 .gp2-metrics {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -1803,7 +1844,7 @@ select.gp2-input {
       <!-- Tabs -->
       <nav class="tabs" id="jdTabs">
         <button class="tab active" data-tab="communication">Communication <span class="count" data-bind-text="metrics.count.0">12</span></button>
-        <button class="tab" data-tab="growth-plan">Growth Plan</button>
+        <button class="tab" data-tab="growth-plan"><span data-bind-text="_terms.estimate">Estimate</span></button>
         <button class="tab" data-tab="files">Files &amp; photos <span class="count" data-bind-text="metrics.count.1">7</span></button>
         <button class="tab" data-tab="accounting">Accounting</button>
         <button class="tab" data-tab="customer">Customer</button>
@@ -2263,9 +2304,12 @@ select.gp2-input {
                           <span class="tl-kind">{{kindLabel}}</span>
                           <span class="tl-arrow">{{arrow}}</span>
                           <span class="tl-by">{{by}}</span>
+                          <span class="s1badge {{statusClass}}" title="{{statusTitle}}">{{statusLabel}}</span>
                         </div>
+                        <div class="tl-subj">{{subject}}</div>
                         <div class="tl-text tl-text-text">{{body}}</div>
                         <div class="tl-text tl-text-mail">{{bodyHtml|html}}</div>
+                        <span class="tl-more">Show more</span>
                       </div>
                       <div class="tl-actions">
                         <button type="button" class="tl-pin {{pinnedClass}}" data-jd-pin="{{recordId}}" title="Pin note">
@@ -2320,7 +2364,10 @@ select.gp2-input {
           <section class="card" style="margin-top:16px;">
             <div class="s-head">
               <div class="s-title">Locations &amp; route</div>
-              <button class="s-action" type="button" data-jd-open="addStopModal">+ Add stop</button>
+              <div>
+                <button class="s-action" type="button" data-jd-recalc-route>↻ Recalculate</button>
+                <button class="s-action" type="button" data-jd-open="addStopModal">+ Add stop</button>
+              </div>
             </div>
 
             <!-- #1447: greyed office bookend (branch office) before the first stop.
@@ -2392,13 +2439,20 @@ select.gp2-input {
               </template>
             </div>
 
+            <!-- #1463: explains why travel can't be computed (missing key, no branch
+                 address, API error). Hidden when route.status is empty (legs present). -->
+            <div class="gp2-route-status" data-bind-hide-empty="route.status">
+              <span data-bind-text="route.status"></span>
+              <button class="s-action" type="button" data-jd-recalc-route>Recalculate</button>
+            </div>
+
             <!-- Route metrics -->
             <div class="gp2-metrics">
-              <div class="gp2-metric"><div class="gp2-metric-l">Total route</div><div class="gp2-metric-v" data-bind-text="route.totalDistance">Calculating…</div></div>
-              <div class="gp2-metric"><div class="gp2-metric-l">Travel</div><div class="gp2-metric-v" data-bind-text="route.travelHours">Calculating…</div></div>
-              <div class="gp2-metric"><div class="gp2-metric-l">Office → Origin</div><div class="gp2-metric-v" data-bind-text="route.officeToOrigin">Calculating…</div></div>
-              <div class="gp2-metric"><div class="gp2-metric-l">Origin → Destination</div><div class="gp2-metric-v" data-bind-text="route.originToDest">Calculating…</div></div>
-              <div class="gp2-metric"><div class="gp2-metric-l">Destination → Office</div><div class="gp2-metric-v" data-bind-text="route.destToOffice">Calculating…</div></div>
+              <div class="gp2-metric"><div class="gp2-metric-l">Total route</div><div class="gp2-metric-v" data-bind-text="route.totalDistance">—</div></div>
+              <div class="gp2-metric"><div class="gp2-metric-l">Travel</div><div class="gp2-metric-v" data-bind-text="route.travelHours">—</div></div>
+              <div class="gp2-metric"><div class="gp2-metric-l">Office → Origin</div><div class="gp2-metric-v" data-bind-text="route.officeToOrigin">—</div></div>
+              <div class="gp2-metric"><div class="gp2-metric-l">Origin → Destination</div><div class="gp2-metric-v" data-bind-text="route.originToDest">—</div></div>
+              <div class="gp2-metric"><div class="gp2-metric-l">Destination → Office</div><div class="gp2-metric-v" data-bind-text="route.destToOffice">—</div></div>
             </div>
 
           </section>
@@ -2438,7 +2492,7 @@ select.gp2-input {
               <button class="btn btn-secondary btn-sm" type="button" data-jd-open="addChargeModal">+ Add charge</button>
             </div>
 
-            <div class="gp2-charges-empty">
+            <div class="gp2-charges-empty" data-empty-unless="rows">
               <div class="gp2-empty-icon">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
               </div>
@@ -2451,6 +2505,27 @@ select.gp2-input {
                   <span data-quick-label></span>
                 </button>
               </template>
+            </div>
+
+            <div data-empty-if="rows">
+              <table class="acct-table" id="gpChargesTable">
+                <thead>
+                  <tr><th>Category</th><th>Description</th><th class="num">Amount</th><th></th><th></th></tr>
+                </thead>
+                <tbody data-bind="rows"><template><tr class="{{rowClass}}" data-record-id="{{id}}" data-edit-type="{{rawChargeType}}" data-edit-name="{{rawItemName}}" data-edit-desc="{{rawDescription}}" data-edit-rate="{{rawRate}}" data-edit-qty="{{rawQuantity}}" data-edit-crew="{{rawCrewCount}}" data-edit-vehicle="{{rawVehicleCount}}" data-edit-tax="{{rawTaxable}}"><td><span class="cat-dot" style="background:{{catColor}};"></span> {{category}}</td><td>{{description}}</td><td class="num">{{amount}}</td><td><button class="gp-row-edit" title="Edit charge">✎</button></td><td><button class="gp-row-x" title="Delete charge">×</button></td></tr></template></tbody>
+                <tfoot>
+                  <tr>
+                    <td colspan="2" style="text-align:right;font-weight:600;">Subtotal · Tax</td>
+                    <td class="num"><span data-bind-text="deal.quoteTotal">$0.00</span></td>
+                    <td colspan="2" data-bind-text="financials2.taxAmount">$0.00</td>
+                  </tr>
+                  <tr class="gp-grand-row">
+                    <td colspan="2" style="text-align:right;font-weight:600;">Grand Total</td>
+                    <td class="num"><span data-bind-text="deal.totalPays">$0.00</span></td>
+                    <td colspan="2"></td>
+                  </tr>
+                </tfoot>
+              </table>
             </div>
           </section>
 
@@ -3095,7 +3170,7 @@ select.gp2-input {
         <section class="card opp">
           <div class="s-head">
             <div class="s-title">Opportunity</div>
-            <a data-jd-tab="growth-plan" class="s-action" href="#">Open growth plan</a>
+            <a data-jd-tab="growth-plan" class="s-action" href="#">Open <span data-bind-text="_terms.estimate">Estimate</span></a>
           </div>
           <div class="s-body">
             <div class="row"><span class="l">Subtotal</span><span class="v muted" style="font-weight:400;" data-bind-text="finalize.subtotal">$0.00</span></div>
@@ -3191,7 +3266,7 @@ select.gp2-input {
               </a>
               <a data-comm-action="action:jobDetail.send-growth-plan" class="qa-item" href="#">
                 <span class="ic"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
-                Send growth plan
+                Send <span data-bind-text="_terms.estimate">Estimate</span>
                 <span class="arr">→</span>
               </a>
               <a data-comm-action="action:jobDetail.request-a-card-on-file" class="qa-item" href="#">
@@ -3580,7 +3655,11 @@ select.gp2-input {
     <div class="jd-modal-body">
       <div class="jd-grid">
         <div class="jd-field"><label class="jd-label">Date <span class="req">*</span></label><input name="date" class="jd-input" type="date"></div>
-        <div class="jd-field"><label class="jd-label">Time</label><input name="time" class="jd-input" type="time"></div>
+        <div class="jd-field"><label class="jd-label">Arrival window</label>
+          <select name="timeSlot" class="jd-input" data-bind-options="arrivalWindows">
+            <option value="">No window / TBD</option>
+          </select>
+        </div>
         <div class="jd-field full"><label class="jd-label">Type</label>
           <select name="meetingType" class="jd-input">
             <option value="Survey">Survey</option>

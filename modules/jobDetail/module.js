@@ -345,6 +345,34 @@ $$('.timeline-head .filter-chip').forEach((chip) => {
   });
 });
 
+// ── F#1483: "Show more" expand toggle for clamped timeline bodies ─────────
+// Mark rows whose body overflows the CSS clamp so the "Show more" link shows,
+// then toggle .expanded on click. classList/textContent only (CLAUDE.md rule 2).
+function jdMarkOverflowingRows() {
+  $$('.tab-pane[data-pane="communication"] .tl-item').forEach((row) => {
+    if (row.classList.contains('expanded')) return;
+    const isMail = row.classList.contains('tl-mail');
+    const el = row.querySelector(isMail ? '.tl-text-mail' : '.tl-text-text');
+    if (!el) { row.classList.remove('has-overflow'); return; }
+    // Mail bodies render in an auto-sizing iframe; use the iframe's own height.
+    let contentH = el.scrollHeight;
+    if (isMail) {
+      const fr = el.querySelector('iframe');
+      if (fr) contentH = Math.max(contentH, parseInt(fr.style.height, 10) || fr.offsetHeight || 0);
+    }
+    row.classList.toggle('has-overflow', contentH - el.clientHeight > 4);
+  });
+}
+document.addEventListener('s1ui:ready', () => setTimeout(jdMarkOverflowingRows, 60));
+document.addEventListener('click', (e) => {
+  const more = e.target.closest && e.target.closest('.tl-more');
+  if (!more) return;
+  const row = more.closest('.tl-item');
+  if (!row) return;
+  const expanded = row.classList.toggle('expanded');
+  more.textContent = expanded ? 'Show less' : 'Show more';
+});
+
 // ── F#1378: timeline pin surfacing (strip + count + optimistic model) ─────
 // The single source of truth is window.S1.fixtures.jobDetail.timeline — the
 // same object load() binds from and that the host re-emits with pinned:true
@@ -493,7 +521,7 @@ $$('button').filter(b => /claim lead/i.test(b.textContent.trim())).forEach(b => 
 [
   ['jobDetail.send-discovery-call-confirmation', 'Discovery call confirmation sent'],
   ['jobDetail.send-portal-link',                 'Portal link sent'],
-  ['jobDetail.send-growth-plan',                 'Growth plan sent'],
+  ['jobDetail.send-growth-plan',                 'Estimate sent'],
   ['jobDetail.request-a-card-on-file',           'Card request sent'],
   ['jobDetail.send-link-to-customer',            'Payment link sent to customer'],
 ].forEach(([action, okMsg]) => {
@@ -651,6 +679,29 @@ document.addEventListener('click', async (ev) => {
     relabelStops();
     flash('Stop removed');
   });
+});
+
+// #1463: Recalculate travel — force a fresh Google route compute (bypassing the 24h
+// freshness gate) and repaint the five metric cells. Delegated so both the panel-header
+// button and the inline error-banner button (rendered from route.status) are covered.
+// On success the host's post-action refreshState pushes new route.* values via
+// state:replaced, so the cells update with no full reload.
+document.addEventListener('click', async (ev) => {
+  const btn = ev.target.closest && ev.target.closest('[data-jd-recalc-route]');
+  if (!btn) return;
+  ev.preventDefault();
+  if (btn.disabled) return;
+  btn.disabled = true;
+  flash('Recalculating travel…');
+  try {
+    await safe('Recalculate travel', async () => {
+      const r = await comm.action('jobDetail.recalc-route', {});
+      if (r && r.ok === false) { flash(r.error || 'Travel could not be calculated', 'bad'); return; }
+      flash('Travel recalculated');
+    });
+  } finally {
+    btn.disabled = false;
+  }
 });
 
 // #1423: edit an existing stop/location — open #editStopModal prefilled from the
@@ -2034,7 +2085,7 @@ document.addEventListener('click', async function (ev) {
       transform: function (p) {
         return {
           scheduledDate: p.date || '',
-          time:          p.time || '',
+          timeSlot:      p.timeSlot || '',
           meetingType:   p.meetingType || ''
         };
       },
@@ -2066,10 +2117,25 @@ document.addEventListener('click', async function (ev) {
   function seed() {
     var h = (((window.S1 || {}).fixtures || {}).jobDetail || {}).header || {};
     var d = modal.querySelector('[name="date"]');
-    var t = modal.querySelector('[name="time"]');
+    var t = modal.querySelector('[name="timeSlot"]');
     var ty = modal.querySelector('[name="meetingType"]');
     if (d) d.value = h.scheduledDateRaw || '';
-    if (t) t.value = h.scheduledTimeRaw || '';
+    // #1466: re-select the job's current arrival window (adding the option if the
+    // configured list no longer contains it), mirroring the meetingType seed below.
+    if (t) {
+      if (h.timeSlotRaw) {
+        var foundSlot = Array.prototype.some.call(t.options, function (o) { return o.value === h.timeSlotRaw; });
+        if (!foundSlot) {
+          var so = document.createElement('option');
+          so.value = h.timeSlotRaw;
+          so.textContent = h.timeSlotRaw;
+          t.appendChild(so);
+        }
+        t.value = h.timeSlotRaw;
+      } else {
+        t.value = '';
+      }
+    }
     if (ty) {
       if (h.meetingTypeRaw) {
         var found = Array.prototype.some.call(ty.options, function (o) { return o.value === h.meetingTypeRaw; });

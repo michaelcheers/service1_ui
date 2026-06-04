@@ -35,7 +35,7 @@
 <style>
 /* ════════════════════════════════════════════════════
    Dashboard — clean enterprise SaaS aesthetic
-   Strong type hierarchy · minimal chrome · line charts
+   Strong type hierarchy · minimal chrome · bar charts
    ════════════════════════════════════════════════════ */
 :root {
   /* Brand */
@@ -292,6 +292,46 @@ a { color: inherit; text-decoration: none; }
   text-align: center;
 }
 .chart-x .cur { color: var(--terra); font-weight: 600; }
+
+/* ── Bar chart ── */
+.chart-bar {
+  fill: var(--terra);
+  transition: opacity 0.12s ease;
+  cursor: pointer;
+}
+.chart-bar.prev {
+  fill: var(--ink-4);
+  opacity: 0.35;
+}
+.chart-bar:hover, .chart-bar.is-active { opacity: 0.82; }
+.chart-bar.prev:hover, .chart-bar.prev.is-active { opacity: 0.55; }
+
+/* ── Hover tooltip ── */
+.chart-tip {
+  position: absolute;
+  z-index: 5;
+  transform: translate(-50%, -100%);
+  background: #fff;
+  border: 1px solid var(--line-2);
+  border-radius: 6px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+  padding: 7px 10px;
+  text-align: center;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.chart-tip[hidden] { display: none; }
+.chart-tip-month {
+  font-size: 10px;
+  color: var(--ink-3);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.chart-tip-val {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
 
 /* ════════════════════════════════════════════════
    SECTION
@@ -597,24 +637,16 @@ a { color: inherit; text-decoration: none; }
               <line x1="0" y1="195" x2="1200" y2="195" stroke="var(--line)" stroke-dasharray="2 4"/>
               <line x1="0" y1="260" x2="1200" y2="260" stroke="var(--line-2)"/>
 
-              <!-- Previous period (ghost line) -->
-              <path class="chart-prev" d=""
-                    fill="none" stroke="var(--ink-4)" stroke-width="1.5" stroke-dasharray="4 4" opacity="0.5"/>
-
-              <!-- Current period area -->
-              <path class="chart-area" d=""
-                    fill="var(--terra)" opacity="0.06"/>
-
-              <!-- Current period line -->
-              <path class="chart-line" d=""
-                    fill="none" stroke="var(--terra)" stroke-width="2.5"/>
-
-              <!-- End-point dot -->
-              <circle class="chart-end" cx="0" cy="0" r="5" fill="#fff" stroke="var(--terra)" stroke-width="2.5"/>
+              <!-- Per-month bars (current + ghost previous period) injected by JS -->
+              <g class="chart-bars"></g>
 
               <!-- Now line -->
               <line x1="1200" y1="0" x2="1200" y2="260" stroke="var(--terra)" stroke-width="1" stroke-dasharray="3 3" opacity="0.4"/>
             </svg>
+            <div class="chart-tip" hidden>
+              <div class="chart-tip-month"></div>
+              <div class="chart-tip-val"></div>
+            </div>
             <div class="chart-y">
               <span>$200k</span>
               <span>$150k</span>

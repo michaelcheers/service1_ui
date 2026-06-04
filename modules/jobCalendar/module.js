@@ -29,6 +29,24 @@ const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
 const flash = window.S1.flash || ((t) => { const e = document.createElement('div'); e.textContent = t; e.style.cssText = 'position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#0A2540;color:#fff;padding:10px 16px;border-radius:6px;font-size:13px;z-index:9999;'; document.body.appendChild(e); setTimeout(() => e.remove(), 2000); });
 const safe = window.S1.safe || (async (l, fn) => { try { return await fn(); } catch (e) { flash(l + ' failed: ' + (e.message || e)); throw e; } });
 
+// Navigate to a host-provided, same-origin URL (e.g. "/JobDetail/123").
+// When embedded in any parent frame (the ASP.NET host in production, or the
+// Lab during development), the path must NOT be assigned to the iframe's own
+// window.location: the iframe is served from https://ui.service1.app, so the
+// relative path would resolve against that origin and hit service1_ui's 404
+// page. In production the host bridge already navigates the TOP window on
+// `navigateTo` (see s1ui-host.js dispatchRpc:236), so we simply stand aside.
+// (`window.parent !== window` is the same canonical embed check used in
+// core/communication.js:20.) Only when truly standalone — the module's
+// index.html opened directly, where window.parent === window — do we
+// self-navigate; in that case comm runs in mock mode and `navigateTo` is
+// absent anyway, so this is effectively a no-op off-host.
+function openNavTarget(href) {
+  if (!href) return;
+  if (window.parent && window.parent !== window) return; // host handles it
+  window.location.href = href;
+}
+
 // View segmented (Day / Month / Week / Agenda) — top of calendar
 $$('.cal-toolbar button, .page-bar .seg button').forEach(b => {
   const t = (b.textContent || '').trim();
@@ -367,7 +385,7 @@ document.addEventListener('click', async (ev) => {
       ev.preventDefault();
       await safe('Open job', async () => {
         const r = await comm.action('jobCalendar.open', { id: rid });
-        if (r && r.navigateTo) window.location.href = r.navigateTo;
+        if (r && r.navigateTo) openNavTarget(r.navigateTo);
       });
       return;
     }
@@ -385,7 +403,7 @@ document.addEventListener('click', async (ev) => {
   if (!id) return;
   await safe('Open job', async () => {
     const r = await comm.action('jobCalendar.open', { id });
-    if (r && r.navigateTo) window.location.href = r.navigateTo;
+    if (r && r.navigateTo) openNavTarget(r.navigateTo);
   });
 });
 

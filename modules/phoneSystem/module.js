@@ -311,8 +311,9 @@ document.addEventListener('click', (ev) => {
 });
 
 // Dialer keypad — local UI state. Each [data-dialer] press appends a digit
-// to the in-progress number; ⌫ pops; Call opens the Place-call modal
-// pre-filled with the dialed number (the real RPC fires from the modal's Save).
+// to the in-progress number; ⌫ pops; Call places a real outbound call by
+// posting s1ui:dial up to the shell's Twilio engine (same pipeline as
+// salesMyLeads). The number is normalised to E.164 (+1 + 10 digits).
 (function () {
   const disp = document.querySelector('.dialer-disp');
   if (!disp) return;
@@ -329,9 +330,14 @@ document.addEventListener('click', (ev) => {
     if (del) { ev.preventDefault(); buf = buf.slice(0,-1); render(); return; }
     const call = ev.target.closest('.dialer-call .call');
     if (call) {
-      const numField = document.querySelector('#placeCallModal [name="number"]');
-      if (numField) numField.value = buf;
-      if (window.S1.modal) window.S1.modal.open('#placeCallModal');
+      ev.preventDefault();
+      if (buf.length !== 10) {
+        if (window.S1 && window.S1.flash) window.S1.flash('Enter a 10-digit number to call.');
+        return;
+      }
+      window.parent.postMessage({ type: 's1ui:dial', number: '+1' + buf, autoDial: true }, '*');
+      buf = '';
+      render();
     }
   });
   render();

@@ -328,10 +328,10 @@
   <div class="cp-modal">
     <div class="cp-head"><div class="cp-title">Create New Process</div><div class="cp-close" onclick="document.getElementById('newProcModal').classList.remove('open')">✕</div></div>
     <div class="cp-body">
-      <div class="cp-field"><label class="cp-label">Process Name <span class="req">*</span></label><input name="processName" class="cp-input" type="text" placeholder="e.g. Local Move - Standard"></div>
+      <div class="cp-field"><label class="cp-label">Process Name <span class="req">*</span></label><input name="name" class="cp-input" type="text" placeholder="e.g. Local Move - Standard"></div>
       <div class="cp-field"><label class="cp-label">Description</label><textarea name="description" class="cp-textarea" placeholder="What this process covers…"></textarea></div>
-      <label class="cp-check-row"><input name="description" type="checkbox" checked style="accent-color:var(--terra);"><div><div class="l">Active</div><div class="h">Inactive processes are hidden from crew assignment dropdowns.</div></div></label>
-      <label class="cp-check-row"><input name="activeinactiveProcessesAreHiddenFromCrewAssignmentDropdowns" type="checkbox" style="accent-color:var(--terra);"><div><div class="l">Use as default for new jobs</div><div class="h">When a new job is created without a specified process, this one is applied.</div></div></label>
+      <label class="cp-check-row"><input name="isActive" type="checkbox" checked style="accent-color:var(--terra);"><div><div class="l">Active</div><div class="h">Inactive processes are hidden from crew assignment dropdowns.</div></div></label>
+      <label class="cp-check-row"><input name="isDefault" type="checkbox" style="accent-color:var(--terra);"><div><div class="l">Use as default for new jobs</div><div class="h">When a new job is created without a specified process, this one is applied.</div></div></label>
     </div>
     <div class="cp-actions">
       <button data-modal-close class="btn btn-secondary">Cancel</button>

@@ -90,8 +90,8 @@ a { color: inherit; text-decoration: none; }
 /* ── App shell ── */
 .app {
   display: grid;
-  grid-template-columns: 56px 1fr;
-  grid-template-rows: 56px 1fr;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
   min-height: 100vh;
   min-width: 0;
 }
@@ -131,7 +131,7 @@ a { color: inherit; text-decoration: none; }
 }
 
 /* ── Page ── */
-.page { grid-row: 2; grid-column: 2; min-width: 0; display: flex; flex-direction: column; }
+.page { grid-row: 1; grid-column: 1; min-width: 0; display: flex; flex-direction: column; }
 
 /* ── Buttons (shared) ── */
 .btn {
@@ -444,6 +444,36 @@ a { color: inherit; text-decoration: none; }
 }
 .chip svg { color: var(--ink-3); }
 .chip.warn { background: var(--warn-bg); color: var(--warn); }
+
+/* Assigned trucks on a team card (drag a fleet row onto the card). */
+.crew-trucks {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  margin-top: 2px;
+}
+.crew-trucks:empty { display: none; }
+.truck-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 2px 4px 2px 8px;
+  background: var(--terra-soft);
+  color: var(--terra);
+  border: 1px solid var(--terra);
+  border-radius: 10px;
+  font-size: 11px; font-weight: 600;
+}
+.truck-x {
+  cursor: pointer;
+  border: 0; padding: 0;
+  width: 14px; height: 14px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--terra); color: #fff;
+  border-radius: 999px;
+  font-size: 11px; line-height: 1;
+}
+.crew-cell.drag-over {
+  outline: 2px dashed var(--terra);
+  outline-offset: -2px;
+  background: var(--terra-soft);
+}
 
 .lane {
   position: relative;
@@ -985,6 +1015,7 @@ a { color: inherit; text-decoration: none; }
                   <span class="chip"><span class="chip-ico"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="14" height="11" rx="2"/><path d="M16 10h4l2 3v4h-6z"/></svg></span><span data-bind-text="teams.0.chip2">1</span></span>
                   <span class="chip" style="background:var(--terra-soft);color:var(--terra);" data-bind-text="teams.0.chipCap">26 ft</span>
                 </div>
+                <div class="crew-trucks" data-crew-trucks></div>
               </div>
               <!-- Job tiles are rendered dynamically from state.timeline.laneN
                    by module.js (renderTimelineLanes) so each tile carries the
@@ -999,6 +1030,7 @@ a { color: inherit; text-decoration: none; }
                   <span class="chip"><span class="chip-ico"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="14" height="11" rx="2"/><path d="M16 10h4l2 3v4h-6z"/></svg></span><span data-bind-text="teams.1.chip2">1</span></span>
                   <span class="chip" style="background:var(--info-bg);color:var(--info);" data-bind-text="teams.1.chipCap">14 ft</span>
                 </div>
+                <div class="crew-trucks" data-crew-trucks></div>
               </div>
               <div class="lane" data-lane="1"></div>
 
@@ -1008,6 +1040,7 @@ a { color: inherit; text-decoration: none; }
                 <div class="crew-meta">
                   <span class="chip warn" data-bind-text="teams.2.warnChip">No team assigned</span>
                 </div>
+                <div class="crew-trucks" data-crew-trucks></div>
               </div>
               <div class="lane" data-lane="2"></div>
 
@@ -1019,6 +1052,7 @@ a { color: inherit; text-decoration: none; }
                   <span class="chip"><span class="chip-ico"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="14" height="11" rx="2"/><path d="M16 10h4l2 3v4h-6z"/></svg></span><span data-bind-text="teams.3.chip2">1</span></span>
                   <span class="chip" style="background:var(--teal-bg);color:var(--teal);" data-bind-text="teams.3.chipCap">26 ft</span>
                 </div>
+                <div class="crew-trucks" data-crew-trucks></div>
               </div>
               <div class="lane" data-lane="3"></div>
 
