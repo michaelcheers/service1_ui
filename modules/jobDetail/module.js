@@ -94,6 +94,24 @@ async function safe(label, fn) {
   catch (e) { flash((label || 'Action') + ' failed: ' + (e && e.message || e), 'bad'); throw e; }
 }
 
+// #1496: flip the "Book this lead" button to its booked state in place (DOM-only,
+// no innerHTML per platform rule 2). The host's post-mutation s1ui:state push then
+// reconciles this via the declarative bindings.
+function markBookedUi() {
+  const btn = document.getElementById('jdBookLeadBtn');
+  if (btn) {
+    const lbl = btn.querySelector('.jd-book-label');
+    if (lbl) lbl.textContent = 'Booked';
+    btn.classList.add('is-booked');
+    btn.setAttribute('disabled', 'disabled');
+    btn.setAttribute('aria-disabled', 'true');
+  }
+  ['jdMarkLostBtn', 'jdMarkBadBtn'].forEach(id => {
+    const e = document.getElementById(id);
+    if (e) { e.setAttribute('disabled', 'disabled'); e.setAttribute('aria-disabled', 'true'); }
+  });
+}
+
 // ── 1) Top-level tabs ───────────────────────────────────────────────────
 $$('.tab[data-tab]').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -563,13 +581,15 @@ $$('button').filter(b => /book this lead/i.test(b.textContent.trim())).forEach(b
   b.__s1Wired = true;
   b.addEventListener('click', async (ev) => {
     ev.preventDefault();
+    if (b.disabled || b.classList.contains('is-booked')) return;   // #1496 re-click guard
     const id = ((window.S1.fixtures || {}).jobDetail && window.S1.fixtures.jobDetail.deal && window.S1.fixtures.jobDetail.deal.id) || '';
     await safe('Book lead', async () => {
       const r = await comm.action('jobDetail.book-lead', { id });
       if (r && r.ok === false) { flash(r.error || 'Could not book this lead', 'bad'); return; }
       flash('Lead booked — confirmation sent to customer');
+      markBookedUi();   // immediate in-place feedback; host state push reconciles via bindings
       if (r && r.navigateTo) window.location.href = r.navigateTo;
-      else window.location.reload();
+      // no window.location.reload(): declarative binding keeps it "Booked" on the next state push
     });
   });
 });

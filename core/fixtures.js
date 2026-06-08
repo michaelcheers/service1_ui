@@ -1544,6 +1544,11 @@
     "_terms": {"job":"Job","jobs":"Jobs","lead":"Lead","leads":"Leads","estimate":"Estimate","estimates":"Estimates","booked":"Booked","crew":"Crew","crewMember":"Crew member","customer":"Customer","customers":"Customers","meeting":"Meeting","jobSize":"Job size","serviceLocation":"Service location","deliveryLocation":"Delivery location","campaign":"Campaign","campaigns":"Campaigns","modeCode":"default","modeName":"Default"}, deal: {
   "customer": "Alice Johnson",
   "id": "17826-1",
+  "status": "New Lead",
+  "bookLeadLabel": "Book this lead",
+  "bookLeadBtnClass": "btn btn-primary",
+  "bookLeadDisabled": null,
+  "secMarkDisabled": null,
   "sub": "Created Jan 4 \u00b7 Jan 12, 2026",
   "totalPays": "$2,768.50",
   "totalShort": "$2,768",

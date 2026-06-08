@@ -471,6 +471,11 @@ function syncTeamRowsToFixture() {
       // in the drag IIFE — it runs on s1ui:ready and on every state:replaced.
     }
   });
+  // Freshly-cloned lanes (index > 3) need their truck/member chips painted on
+  // the same tick. These renderers live inside the drag IIFE, so reach them
+  // through their global bridges (bare names would be a ReferenceError here).
+  if (typeof window.__sched_renderCrewTrucks  === 'function') window.__sched_renderCrewTrucks();
+  if (typeof window.__sched_renderCrewMembers === 'function') window.__sched_renderCrewMembers();
 }
 document.addEventListener('s1ui:ready', syncTeamRowsToFixture);
 
@@ -1180,6 +1185,73 @@ if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
     window.S1.bus.on('state:replaced', renderCrewTrucks);
   }
 
+  // ── Member name chips: list every person scheduled on the crew for the
+  //    viewed day (avatar + full name + remove button). Mirrors
+  //    renderCrewTrucks. Beyond MAX_VISIBLE_MEMBERS, collapse behind a
+  //    "+N more" chip that expands in place so tall crews stay compact. ──
+  const MAX_VISIBLE_MEMBERS = 6;
+  function renderCrewMembers() {
+    const state = (window.S1.fixtures || {})['scheduling'] || {};
+    const teams = Array.isArray(state.teams) ? state.teams : [];
+    $$('.crew-cell[data-team-idx]').forEach((cell) => {
+      const host = cell.querySelector('[data-crew-members]');
+      if (!host) return;
+      while (host.firstChild) host.removeChild(host.firstChild);
+      const idx = parseInt(cell.getAttribute('data-team-idx'), 10);
+      const team = teams[idx];
+      const members = (team && Array.isArray(team.members)) ? team.members : [];
+      const crewId = cell.getAttribute('data-crew-id');
+      let expanded = false;
+      function paint() {
+        while (host.firstChild) host.removeChild(host.firstChild);
+        const limit = expanded ? members.length : Math.min(members.length, MAX_VISIBLE_MEMBERS);
+        members.slice(0, limit).forEach((m) => {
+          if (!m) return;
+          const chip = document.createElement('span');
+          chip.className = 'member-chip';
+          if (m.employeeId != null) chip.setAttribute('data-emp-id', String(m.employeeId));
+          const av = document.createElement('span');
+          av.className = 'member-av';
+          av.textContent = String(m.initials || '');
+          const nm = document.createElement('span');
+          nm.className = 'm-name';
+          nm.textContent = String(m.name || ('#' + m.employeeId));
+          const x = document.createElement('button');
+          x.type = 'button';
+          x.className = 'member-x';
+          x.setAttribute('draggable', 'false');
+          x.setAttribute('title', 'Remove member');
+          x.textContent = '×';
+          x.addEventListener('click', async (ev) => {
+            ev.preventDefault(); ev.stopPropagation();
+            const cid = parseInt(crewId, 10);
+            const eid = Number(m.employeeId);
+            if (!cid || !eid) return;
+            await safe('Remove member', async () => {
+              const r = await comm.action('scheduling.remove-member', { crewId: cid, employeeId: eid, date: selectedDate() });
+              if (r && r.ok) { flash('Member removed'); await load(); }
+            });
+          });
+          chip.appendChild(av); chip.appendChild(nm); chip.appendChild(x);
+          host.appendChild(chip);
+        });
+        if (!expanded && members.length > MAX_VISIBLE_MEMBERS) {
+          const more = document.createElement('span');
+          more.className = 'member-more';
+          more.textContent = '+' + (members.length - MAX_VISIBLE_MEMBERS) + ' more';
+          more.addEventListener('click', (ev) => { ev.preventDefault(); ev.stopPropagation(); expanded = true; paint(); });
+          host.appendChild(more);
+        }
+      }
+      paint();
+    });
+  }
+  window.__sched_renderCrewMembers = renderCrewMembers;
+  document.addEventListener('s1ui:ready', renderCrewMembers);
+  if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
+    window.S1.bus.on('state:replaced', renderCrewMembers);
+  }
+
   // ── Job tiles as drop targets: drop a person/vehicle onto a particular
   //    job to schedule them to that job (adds them to the job's crew). ──
   function jobIdOf(el) {
@@ -1780,3 +1852,223 @@ if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
 // Install document-level click handlers ([data-comm-action] dispatcher,
 // tab/panel switcher, etc.) provided by core/standard-page.js.
 if (window.S1 && window.S1.wireStandardPage) window.S1.wireStandardPage('scheduling');
+
+// ─────────────────────────────────────────────────────────────────────────
+// Job Efficiency tab — a daily "where should sales book this?" board.
+// Ops sets a per-slot small-job limit (and can block a slot); sales reads
+// which slot still has room, guided by a recommendation banner. Built with
+// createElement/textContent only (no innerHTML — security rule 2).
+// ─────────────────────────────────────────────────────────────────────────
+(function () {
+  const root = document.getElementById('jeRoot');
+  if (!root) return;
+
+  // "small" = 1 bedroom or less (the limit keys off this).
+  const SIZE = {
+    studio: { short: 'Studio', cls: 'sm', small: true },
+    br1:    { short: '1 BR',   cls: 'sm', small: true },
+    br2:    { short: '2 BR',   cls: 'md', small: false },
+    br3:    { short: '3 BR',   cls: 'lg', small: false },
+    br4:    { short: '4 BR+',  cls: 'xl', small: false },
+  };
+  const DOW_FULL = { Mon:'Monday', Tue:'Tuesday', Wed:'Wednesday', Thu:'Thursday', Fri:'Friday', Sat:'Saturday', Sun:'Sunday' };
+  const SLOT_META = {
+    am: { label: 'Morning',   time: '8:00 – 12:00', ico: '☀' },
+    pm: { label: 'Afternoon', time: '1:00 – 5:00',  ico: '☾' },
+  };
+  const WEEK = [
+    { id: '2026-05-25', dow: 'Mon', day: 25 },
+    { id: '2026-05-26', dow: 'Tue', day: 26 },
+    { id: '2026-05-27', dow: 'Wed', day: 27 },
+    { id: '2026-05-28', dow: 'Thu', day: 28 },
+    { id: '2026-05-29', dow: 'Fri', day: 29 },
+    { id: '2026-05-30', dow: 'Sat', day: 30 },
+    { id: '2026-05-31', dow: 'Sun', day: 31 },
+  ];
+  const JOBS = [
+    { id: 'j1', date: '2026-05-30', slot: 'am', order: 1, cust: 'Maya Hernandez', size: 'br1' },
+    { id: 'j2', date: '2026-05-30', slot: 'am', order: 2, cust: 'David Kim',      size: 'studio' },
+    { id: 'j3', date: '2026-05-30', slot: 'am', order: 3, cust: 'Okafor Family',  size: 'br3' },
+    { id: 'j4', date: '2026-05-30', slot: 'am', order: 7, cust: 'Priya Nair',     size: 'br1' },
+    { id: 'j5', date: '2026-05-30', slot: 'pm', order: 4, cust: 'Sandra Lee',     size: 'br2' },
+    { id: 'j6', date: '2026-05-30', slot: 'pm', order: 5, cust: 'Marcus Bell',    size: 'studio' },
+    { id: 'j7', date: '2026-05-29', slot: 'am', order: 1, cust: 'Tomás Rivera',   size: 'br2' },
+    { id: 'j8', date: '2026-05-29', slot: 'am', order: 2, cust: 'Jen Walsh',      size: 'studio' },
+    { id: 'j9', date: '2026-05-29', slot: 'pm', order: 3, cust: 'Hughes & Co.',   size: 'br4' },
+    { id: 'j10', date: '2026-05-31', slot: 'am', order: 1, cust: 'Aisha Banks',   size: 'br1' },
+  ];
+  const DEFAULTS = { capAM: 2, capPM: 3 };
+
+  // mutable state
+  let sel = '2026-05-30';
+  const caps = {};    // `${date}-${slot}` -> override limit
+  const blocks = {};  // `${date}-${slot}` -> true
+
+  const key = (d, s) => d + '-' + s;
+  const isSmall = (j) => !!(SIZE[j.size] && SIZE[j.size].small);
+  const capOf = (d, s) => (key(d, s) in caps) ? caps[key(d, s)] : (s === 'am' ? DEFAULTS.capAM : DEFAULTS.capPM);
+  const blockedOf = (d, s) => !!blocks[key(d, s)];
+  const setCap = (d, s, v) => { caps[key(d, s)] = v; render(); };
+  const toggleBlock = (d, s) => { blocks[key(d, s)] = !blocks[key(d, s)]; render(); };
+
+  function el(tag, cls, text) {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  }
+
+  function slotTile(slot, jobs, cap, blocked, recommended) {
+    const meta = SLOT_META[slot];
+    const small = jobs.filter(isSmall);
+    const remain = blocked ? 0 : Math.max(0, cap - small.length);
+    const full = !blocked && small.length >= cap;
+
+    let state = 'open', label = 'Open to book';
+    if (blocked)          { state = 'blocked'; label = 'Blocked by Ops'; }
+    else if (full)        { state = 'full';    label = 'Full for small jobs'; }
+    else if (recommended) { state = 'best';    label = 'Book here'; }
+    else if (remain === 1){ state = 'low';     label = '1 spot left'; }
+
+    const card = el('div', 'slot ' + state);
+
+    // header
+    const hd = el('div', 'slot-hd');
+    hd.appendChild(el('span', 'slot-ico ' + slot, meta.ico));
+    const ht = el('div', 'slot-head-txt');
+    ht.appendChild(el('div', 'slot-name', meta.label));
+    ht.appendChild(el('div', 'slot-time', meta.time));
+    hd.appendChild(ht);
+    hd.appendChild(el('span', 'slot-badge ' + state, (state === 'best' ? '✓ ' : '') + label));
+    card.appendChild(hd);
+
+    // capacity meter
+    const capRow = el('div', 'slot-cap');
+    const dots = el('div', 'cap-dots');
+    const dotCount = Math.max(cap, small.length);
+    for (let i = 0; i < dotCount; i++) {
+      const c = (i < small.length) ? (i < cap ? 'on' : 'over') : '';
+      dots.appendChild(el('span', ('cap-dot ' + c).trim()));
+    }
+    capRow.appendChild(dots);
+    capRow.appendChild(el('span', 'cap-text',
+      blocked ? 'Not taking small jobs'
+              : small.length + ' of ' + cap + ' small-job ' + (cap === 1 ? 'spot' : 'spots') + ' used'));
+    card.appendChild(capRow);
+
+    // booked jobs
+    const jobWrap = el('div', 'slot-jobs');
+    if (jobs.length === 0) {
+      jobWrap.appendChild(el('span', 'slot-empty', 'Nothing booked yet'));
+    } else {
+      jobs.forEach(j => {
+        const meta2 = SIZE[j.size] || { short: j.size, cls: 'md' };
+        const chip = el('span', 'jchip ' + (isSmall(j) ? 'small' : 'big'));
+        chip.appendChild(el('span', 'jchip-sz ' + meta2.cls, meta2.short));
+        chip.appendChild(document.createTextNode(j.cust));
+        jobWrap.appendChild(chip);
+      });
+    }
+    card.appendChild(jobWrap);
+
+    // ops controls
+    const ops = el('div', 'slot-ops');
+    ops.appendChild(el('span', 'ops-tag', 'Ops'));
+    ops.appendChild(el('span', 'ops-lbl', 'Small-job limit'));
+    const stepper = el('div', 'stepper');
+    const minus = el('button', null, '−'); minus.type = 'button';
+    minus.addEventListener('click', () => setCap(sel, slot, Math.max(0, cap - 1)));
+    const plus = el('button', null, '+'); plus.type = 'button';
+    plus.addEventListener('click', () => setCap(sel, slot, Math.min(8, cap + 1)));
+    stepper.appendChild(minus);
+    stepper.appendChild(el('span', null, String(cap)));
+    stepper.appendChild(plus);
+    ops.appendChild(stepper);
+    const blockBtn = el('button', 'block-btn ' + (blocked ? 'on' : ''), blocked ? 'Unblock' : 'Block slot');
+    blockBtn.type = 'button';
+    blockBtn.addEventListener('click', () => toggleBlock(sel, slot));
+    ops.appendChild(blockBtn);
+    card.appendChild(ops);
+
+    return card;
+  }
+
+  function render() {
+    while (root.firstChild) root.removeChild(root.firstChild);
+
+    const dayMeta = WEEK.find(w => w.id === sel) || WEEK[0];
+    const dayJobs = JOBS.filter(j => j.date === sel);
+    const amJobs = dayJobs.filter(j => j.slot === 'am').sort((a, b) => a.order - b.order);
+    const pmJobs = dayJobs.filter(j => j.slot === 'pm').sort((a, b) => a.order - b.order);
+
+    const room = (s, list) => blockedOf(sel, s) ? 0 : Math.max(0, capOf(sel, s) - list.filter(isSmall).length);
+    const amRoom = room('am', amJobs);
+    const pmRoom = room('pm', pmJobs);
+
+    let rec = null;
+    if (amRoom > 0) rec = 'am';
+    else if (pmRoom > 0) rec = 'pm';
+
+    // header
+    const head = el('div', 'je-head');
+    const crumb = el('div', 'je-crumb');
+    crumb.appendChild(document.createTextNode('Field Ops '));
+    crumb.appendChild(el('span', 'sep', '/'));
+    crumb.appendChild(document.createTextNode(' Job Efficiency'));
+    head.appendChild(crumb);
+    head.appendChild(el('h1', null, 'Where to book — ' + DOW_FULL[dayMeta.dow] + ', May ' + dayMeta.day));
+    head.appendChild(el('div', 'je-sub', 'Sales sees the open spots. Operations sets the limits.'));
+    root.appendChild(head);
+
+    // week strip
+    const strip = el('div', 'week-strip');
+    WEEK.forEach(w => {
+      const wam = JOBS.filter(j => j.date === w.id && j.slot === 'am');
+      const wpm = JOBS.filter(j => j.date === w.id && j.slot === 'pm');
+      const r = (blockedOf(w.id, 'am') ? 0 : capOf(w.id, 'am') - wam.filter(isSmall).length)
+              + (blockedOf(w.id, 'pm') ? 0 : capOf(w.id, 'pm') - wpm.filter(isSmall).length);
+      const tone = r <= 0 ? 'full' : r <= 1 ? 'low' : 'open';
+      const chip = el('button', 'day-chip' + (w.id === sel ? ' active' : ''));
+      chip.type = 'button';
+      chip.appendChild(el('span', 'dc-dow', w.dow));
+      chip.appendChild(el('span', 'dc-day', String(w.day)));
+      chip.appendChild(el('span', 'dc-dot ' + tone));
+      chip.addEventListener('click', () => { sel = w.id; render(); });
+      strip.appendChild(chip);
+    });
+    root.appendChild(strip);
+
+    // recommendation banner
+    const banner = el('div', 'rec-banner ' + (rec ? '' : 'none'));
+    banner.appendChild(el('span', 'rb-ico', rec ? '✓' : '✦'));
+    const rbText = el('div', 'rb-text');
+    if (rec === 'am') {
+      const t = el('div', 'rb-title');
+      t.appendChild(document.createTextNode('Book a 1 BR-or-less job in the '));
+      t.appendChild(el('b', null, 'Morning'));
+      t.appendChild(document.createTextNode('.'));
+      rbText.appendChild(t);
+      rbText.appendChild(el('div', 'rb-sub', amRoom + ' small-job ' + (amRoom === 1 ? 'spot' : 'spots') + ' still open before it fills.'));
+    } else if (rec === 'pm') {
+      const t = el('div', 'rb-title');
+      t.appendChild(document.createTextNode('Morning is full — book small jobs in the '));
+      t.appendChild(el('b', null, 'Afternoon'));
+      t.appendChild(document.createTextNode('.'));
+      rbText.appendChild(t);
+      rbText.appendChild(el('div', 'rb-sub', pmRoom + ' small-job ' + (pmRoom === 1 ? 'spot' : 'spots') + ' open this afternoon.'));
+    } else {
+      rbText.appendChild(el('div', 'rb-title', 'Both slots are full for small jobs today.'));
+      rbText.appendChild(el('div', 'rb-sub', 'Pick another day, or have Ops raise a limit below.'));
+    }
+    banner.appendChild(rbText);
+    root.appendChild(banner);
+
+    // the two slots
+    const slots = el('div', 'slots');
+    slots.appendChild(slotTile('am', amJobs, capOf(sel, 'am'), blockedOf(sel, 'am'), rec === 'am'));
+    slots.appendChild(slotTile('pm', pmJobs, capOf(sel, 'pm'), blockedOf(sel, 'pm'), rec === 'pm'));
+    root.appendChild(slots);
+  }
+
+  render();
+})();

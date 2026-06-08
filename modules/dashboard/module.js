@@ -59,9 +59,13 @@ function showChartTip(r, i, x, barTopY) {
   // SVG uses a 1200x260 viewBox stretched across the chart's pixel box, so
   // convert chart coordinates to the chart element's pixel space.
   const W = 1200, H = 260;
-  const px = (x / W) * chart.clientWidth;
+  // Map against the SVG's rendered box, not the chart element's, so the right
+  // axis gutter (padding) is excluded and the tip stays centred over the bar.
+  const svg = chart.querySelector('svg');
+  const plotW = svg ? svg.clientWidth : chart.clientWidth;
+  const px = (x / W) * plotW;
   // Leave 28px for the x-axis area at the bottom (chart-y bottom inset).
-  const plotH = chart.clientHeight;
+  const plotH = svg ? svg.clientHeight : chart.clientHeight;
   const py = (barTopY / H) * plotH - 8;
   tip.style.left = px + 'px';
   tip.style.top = py + 'px';

@@ -89,7 +89,12 @@ document.addEventListener('click', (ev) => {
   const $$=(s,r)=>Array.from((r||document).querySelectorAll(s));
   $$('[data-cp-open]').forEach(b=>b.addEventListener('click',(e)=>{e.preventDefault();window.S1.modal.open('#'+b.getAttribute('data-cp-open'));}));
   window.S1.modal.bindForm('#newProcModal','crewProcesses.create',{label:'Create process'});
-  window.S1.modal.bindForm('#editProcModal','crewProcesses.update',{label:'Save process'});
+  window.S1.modal.bindForm('#editProcModal','crewProcesses.update',{
+    label:'Save process',
+    validate:(pl)=>(!pl.id||!/^\d+$/.test(String(pl.id)))
+      ? 'Open a process from its card to edit it.'
+      : (!pl.name||!pl.name.trim()) ? 'Process name is required.' : null
+  });
 })();
 
 // Install document-level click handlers ([data-comm-action] dispatcher,

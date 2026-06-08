@@ -469,6 +469,38 @@ a { color: inherit; text-decoration: none; }
   border-radius: 999px;
   font-size: 11px; line-height: 1;
 }
+.crew-members { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+.crew-members:empty { display: none; }
+.member-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 2px 8px 2px 2px;
+  background: var(--surface-2); color: var(--ink);
+  border: 1px solid var(--line-2);
+  border-radius: 12px;
+  font-size: 11px; font-weight: 600;
+  max-width: 160px;
+}
+.member-chip .m-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.member-av {
+  width: 16px; height: 16px; border-radius: 999px; flex: 0 0 auto;
+  background: var(--terra); color: #fff;
+  font-size: 8px; font-weight: 700;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.member-x {
+  cursor: pointer; border: 0; padding: 0;
+  width: 14px; height: 14px; flex: 0 0 auto;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--ink-3); color: #fff;
+  border-radius: 999px;
+  font-size: 11px; line-height: 1;
+}
+.member-more {
+  display: inline-flex; align-items: center;
+  padding: 2px 8px;
+  background: var(--surface-2); color: var(--ink-2);
+  border-radius: 12px; font-size: 11px; font-weight: 600; cursor: pointer;
+}
 .crew-cell.drag-over {
   outline: 2px dashed var(--terra);
   outline-offset: -2px;
@@ -938,6 +970,7 @@ a { color: inherit; text-decoration: none; }
 
       <nav class="sched-tabs" id="schedTabs">
         <button class="sched-tab" data-tab="resource-calendar">Resource Calendar</button>
+        <button class="sched-tab" data-tab="job-efficiency">Job Efficiency</button>
         <button class="sched-tab active" data-tab="scheduling">Scheduling <span data-bind-attr="class:metrics.countCls.0" data-bind-text="metrics.count.0"></span></button>
         <button class="sched-tab" data-tab="customer-confirmations">Customer Confirmations <span data-bind-attr="class:metrics.countCls.1" data-bind-text="metrics.count.1"></span></button>
         <button class="sched-tab" data-tab="team-confirmations">Team Confirmations <span data-bind-attr="class:metrics.countCls.2" data-bind-text="metrics.count.2"></span></button>
@@ -1016,6 +1049,7 @@ a { color: inherit; text-decoration: none; }
                   <span class="chip" style="background:var(--terra-soft);color:var(--terra);" data-bind-text="teams.0.chipCap">26 ft</span>
                 </div>
                 <div class="crew-trucks" data-crew-trucks></div>
+                <div class="crew-members" data-crew-members></div>
               </div>
               <!-- Job tiles are rendered dynamically from state.timeline.laneN
                    by module.js (renderTimelineLanes) so each tile carries the
@@ -1031,6 +1065,7 @@ a { color: inherit; text-decoration: none; }
                   <span class="chip" style="background:var(--info-bg);color:var(--info);" data-bind-text="teams.1.chipCap">14 ft</span>
                 </div>
                 <div class="crew-trucks" data-crew-trucks></div>
+                <div class="crew-members" data-crew-members></div>
               </div>
               <div class="lane" data-lane="1"></div>
 
@@ -1041,6 +1076,7 @@ a { color: inherit; text-decoration: none; }
                   <span class="chip warn" data-bind-text="teams.2.warnChip">No team assigned</span>
                 </div>
                 <div class="crew-trucks" data-crew-trucks></div>
+                <div class="crew-members" data-crew-members></div>
               </div>
               <div class="lane" data-lane="2"></div>
 
@@ -1053,6 +1089,7 @@ a { color: inherit; text-decoration: none; }
                   <span class="chip" style="background:var(--teal-bg);color:var(--teal);" data-bind-text="teams.3.chipCap">26 ft</span>
                 </div>
                 <div class="crew-trucks" data-crew-trucks></div>
+                <div class="crew-members" data-crew-members></div>
               </div>
               <div class="lane" data-lane="3"></div>
 
@@ -1211,6 +1248,83 @@ a { color: inherit; text-decoration: none; }
           <div class="cal-rows" data-bind="calRows"><template><div class="cal-row" data-location="{{location}}" data-kind="{{kind}}"><div class="cal-resource"><span style="width:28px;height:28px;border-radius:{{avRadius}};background:{{avBg}};color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;">{{initials}}</span><div><div style="font-weight:500;">{{name}}</div><div class="muted" style="font-size:11px;">{{role}}</div></div></div><div class="cal-day"><div class="cal-job" style="display:{{d0a_disp}};{{d0a_style}}">{{d0a_lbl}}</div><div class="cal-job" style="display:{{d0b_disp}};{{d0b_style}}">{{d0b_lbl}}</div><div class="cal-day-off" style="display:{{d0off_disp}};">{{d0off_lbl}}</div></div><div class="cal-day"><div class="cal-job" style="display:{{d1a_disp}};{{d1a_style}}">{{d1a_lbl}}</div><div class="cal-job" style="display:{{d1b_disp}};{{d1b_style}}">{{d1b_lbl}}</div><div class="cal-day-off" style="display:{{d1off_disp}};">{{d1off_lbl}}</div></div><div class="cal-day"><div class="cal-job" style="display:{{d2a_disp}};{{d2a_style}}">{{d2a_lbl}}</div><div class="cal-job" style="display:{{d2b_disp}};{{d2b_style}}">{{d2b_lbl}}</div><div class="cal-day-off" style="display:{{d2off_disp}};">{{d2off_lbl}}</div></div><div class="cal-day"><div class="cal-job" style="display:{{d3a_disp}};{{d3a_style}}">{{d3a_lbl}}</div><div class="cal-job" style="display:{{d3b_disp}};{{d3b_style}}">{{d3b_lbl}}</div><div class="cal-day-off" style="display:{{d3off_disp}};">{{d3off_lbl}}</div></div><div class="cal-day"><div class="cal-job" style="display:{{d4a_disp}};{{d4a_style}}">{{d4a_lbl}}</div><div class="cal-job" style="display:{{d4b_disp}};{{d4b_style}}">{{d4b_lbl}}</div><div class="cal-day-off" style="display:{{d4off_disp}};">{{d4off_lbl}}</div></div><div class="cal-day weekend"><div class="cal-job" style="display:{{d5a_disp}};{{d5a_style}}">{{d5a_lbl}}</div><div class="cal-job" style="display:{{d5b_disp}};{{d5b_style}}">{{d5b_lbl}}</div><div class="cal-day-off" style="display:{{d5off_disp}};">{{d5off_lbl}}</div></div><div class="cal-day weekend"><div class="cal-job" style="display:{{d6a_disp}};{{d6a_style}}">{{d6a_lbl}}</div><div class="cal-job" style="display:{{d6b_disp}};{{d6b_style}}">{{d6b_lbl}}</div><div class="cal-day-off" style="display:{{d6off_disp}};">{{d6off_lbl}}</div></div></div></template></div>
         </div>
       </div>
+    </section>
+
+    <!-- ╔═══════════════ JOB EFFICIENCY ═══════════════╗ -->
+    <section class="tab-pane" data-pane="job-efficiency">
+      <style>
+        .je{ --je-green-700:#0e4538; --je-green-600:#125042; --je-green-500:#1c6655;
+             --je-green-300:#7fbfae; --je-green-200:#b9dcd2; --je-green-50:#e6f1ed;
+             --je-ink:#0d1f1b; --je-ink-2:#314744; --je-muted:#6c7d79; --je-muted-2:#9aa6a3;
+             --je-line:#e3e8e6; --je-accent:#e5a823; --je-accent-soft:#fbe8b3; --je-accent-ink:#7a5400;
+             --je-danger:#b3261e; --je-danger-soft:#f6dedb;
+             font-family:inherit; color:var(--je-ink); }
+        .je .je-head{ background:#fff; border:1px solid var(--je-line); border-radius:12px; padding:18px 22px 16px; margin-bottom:14px; }
+        .je .je-crumb{ font-size:12.5px; color:var(--je-muted); font-weight:500; }
+        .je .je-crumb .sep{ opacity:.4; margin:0 6px; }
+        .je .je-head h1{ margin:5px 0 4px; font-size:21px; font-weight:800; letter-spacing:-0.02em; color:var(--je-ink); }
+        .je .je-sub{ font-size:13px; color:var(--je-muted); }
+        .je .week-strip{ display:flex; gap:8px; overflow-x:auto; margin-bottom:14px; }
+        .je .day-chip{ flex:0 0 auto; width:66px; display:flex; flex-direction:column; align-items:center; gap:4px; padding:9px 0 8px;
+             border:1px solid var(--je-line); border-radius:11px; background:#fff; cursor:pointer; font-family:inherit; transition:border-color .12s,background .12s; }
+        .je .day-chip:hover{ border-color:var(--je-green-300); }
+        .je .day-chip.active{ border-color:var(--je-green-700); background:var(--je-green-50); box-shadow:0 0 0 1px var(--je-green-700) inset; }
+        .je .dc-dow{ font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--je-muted); }
+        .je .dc-day{ font-size:17px; font-weight:800; color:var(--je-ink); letter-spacing:-0.02em; line-height:1; }
+        .je .day-chip.active .dc-day{ color:var(--je-green-700); }
+        .je .dc-dot{ width:7px; height:7px; border-radius:50%; margin-top:2px; }
+        .je .dc-dot.open{ background:#1f8a5b; } .je .dc-dot.low{ background:var(--je-accent); } .je .dc-dot.full{ background:var(--je-danger); }
+        .je .rec-banner{ display:flex; align-items:center; gap:14px; padding:15px 18px; border-radius:14px; margin-bottom:16px;
+             background:linear-gradient(180deg,#eef7f1,#e2f0e8); border:1px solid var(--je-green-300); box-shadow:0 2px 10px rgba(31,138,91,.10); }
+        .je .rec-banner.none{ background:#f3f4f3; border-color:var(--je-line); box-shadow:none; }
+        .je .rb-ico{ width:38px; height:38px; flex:0 0 38px; border-radius:11px; background:var(--je-green-600); color:#fff; display:flex; align-items:center; justify-content:center; font-size:19px; font-weight:800; }
+        .je .rec-banner.none .rb-ico{ background:var(--je-muted-2); }
+        .je .rb-text{ flex:1; min-width:0; }
+        .je .rb-title{ font-size:15px; font-weight:700; color:var(--je-ink); letter-spacing:-0.01em; }
+        .je .rb-title b{ color:var(--je-green-700); font-weight:800; }
+        .je .rb-sub{ font-size:12.5px; color:var(--je-muted); margin-top:3px; line-height:1.4; }
+        .je .slots{ display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+        @media (max-width:860px){ .je .slots{ grid-template-columns:1fr; } }
+        .je .slot{ background:#fff; border:1px solid var(--je-line); border-radius:16px; padding:18px; display:flex; flex-direction:column; gap:16px; box-shadow:0 1px 2px rgba(13,31,27,.03); }
+        .je .slot.best{ border-color:var(--je-green-500); box-shadow:0 0 0 2px var(--je-green-200),0 4px 16px rgba(31,138,91,.10); }
+        .je .slot.full{ background:#fcfbfb; } .je .slot.blocked{ background:#faf6f5; }
+        .je .slot-hd{ display:flex; align-items:center; gap:12px; }
+        .je .slot-ico{ width:40px; height:40px; border-radius:12px; flex:0 0 40px; display:flex; align-items:center; justify-content:center; font-size:20px; }
+        .je .slot-ico.am{ background:#fdeec3; color:#a8780f; } .je .slot-ico.pm{ background:var(--je-green-50); color:var(--je-green-600); }
+        .je .slot-head-txt{ flex:1; min-width:0; }
+        .je .slot-name{ font-size:16.5px; font-weight:800; letter-spacing:-0.015em; color:var(--je-ink); }
+        .je .slot-time{ font-size:12px; color:var(--je-muted); font-weight:500; }
+        .je .slot-badge{ display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:700; padding:6px 11px; border-radius:999px; white-space:nowrap; }
+        .je .slot-badge.open{ background:#eef1ef; color:var(--je-ink-2); }
+        .je .slot-badge.best{ background:#1f8a5b; color:#fff; }
+        .je .slot-badge.low{ background:var(--je-accent-soft); color:var(--je-accent-ink); }
+        .je .slot-badge.full{ background:var(--je-danger-soft); color:var(--je-danger); }
+        .je .slot-badge.blocked{ background:#e8e2e1; color:#7a6f6d; }
+        .je .slot-cap{ display:flex; align-items:center; gap:11px; }
+        .je .cap-dots{ display:flex; gap:5px; }
+        .je .cap-dot{ width:14px; height:14px; border-radius:50%; background:#fff; border:1.5px solid var(--je-line); }
+        .je .cap-dot.on{ background:var(--je-green-500); border-color:var(--je-green-500); }
+        .je .cap-dot.over{ background:var(--je-danger); border-color:var(--je-danger); }
+        .je .cap-text{ font-size:12.5px; color:var(--je-ink-2); font-weight:600; }
+        .je .slot-jobs{ display:flex; flex-wrap:wrap; gap:7px; min-height:26px; }
+        .je .slot-empty{ font-size:12.5px; color:var(--je-muted-2); }
+        .je .jchip{ display:inline-flex; align-items:center; gap:7px; height:28px; padding:0 11px 0 6px; border-radius:999px; border:1px solid var(--je-line); background:#fff; font-size:12.5px; font-weight:600; color:var(--je-ink); white-space:nowrap; }
+        .je .jchip.big{ opacity:.65; }
+        .je .jchip-sz{ font-size:9.5px; font-weight:800; padding:2px 5px; border-radius:5px; letter-spacing:.01em; flex:0 0 auto; }
+        .je .jchip-sz.sm{ background:#e4f2ec; color:#1c7a55; } .je .jchip-sz.md{ background:#fdeec3; color:#a8780f; }
+        .je .jchip-sz.lg{ background:#fbe0d3; color:#b5511f; } .je .jchip-sz.xl{ background:#f6dedb; color:#a4332a; }
+        .je .slot-ops{ display:flex; align-items:center; gap:10px; padding-top:14px; border-top:1px dashed var(--je-line); }
+        .je .ops-tag{ font-size:10px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; color:#fff; background:var(--je-green-700); padding:4px 7px; border-radius:6px; }
+        .je .ops-lbl{ font-size:12.5px; color:var(--je-ink-2); font-weight:600; flex:1; }
+        .je .stepper{ display:flex; align-items:center; border:1px solid var(--je-line); border-radius:8px; overflow:hidden; flex:0 0 auto; }
+        .je .stepper button{ width:28px; height:30px; border:0; background:#fafbfa; color:var(--je-ink-2); font-size:16px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+        .je .stepper button:hover{ background:#f0f2f1; color:var(--je-ink); }
+        .je .stepper span{ width:30px; text-align:center; font-size:14px; font-weight:800; color:var(--je-ink); font-variant-numeric:tabular-nums; }
+        .je .block-btn{ height:32px; padding:0 12px; border-radius:8px; border:1px solid var(--je-line); background:#fff; font:700 12px inherit; color:var(--je-ink-2); cursor:pointer; }
+        .je .block-btn:hover{ background:#fafbfa; }
+        .je .block-btn.on{ background:var(--je-danger-soft); border-color:#e7c4c0; color:var(--je-danger); }
+      </style>
+      <div class="je" id="jeRoot"></div>
     </section>
 
     <!-- ╔═══════════════ CUSTOMER CONFIRMATIONS ═══════════════╗ -->

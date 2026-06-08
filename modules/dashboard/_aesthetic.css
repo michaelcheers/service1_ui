@@ -166,3 +166,18 @@ body {
 .stat-group .stat-col { padding: 0 24px; }
 .stat-group .stat-col:first-child { padding-left: 0; }
 .stat-group .stat-col:last-child { padding-right: 0; }
+
+/* ── Sales Activity panel (Feature 1498) ─────────────────────────────
+   Full-width card below the Sales Leaders / Open Items two-col block.
+   Today / Week / Month metrics with a highlighted "Moves Booked" row. */
+.sa-card { margin-top: 16px; }
+.sa-tbl thead th {
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--ink-3); font-weight: 600;
+}
+.sa-tbl tbody td { padding: 14px 12px !important; }
+.sa-tbl .sa-lbl { font-weight: 600; color: var(--ink); }
+.sa-tbl td.num { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--terra); }
+.sa-tbl tbody tr:hover { background: var(--surface-2) !important; }
+.sa-tbl tbody tr.sa-hl { background: var(--terra-soft) !important; box-shadow: inset 3px 0 0 var(--terra); }
+.sa-tbl tbody tr.sa-hl:hover { background: var(--terra-soft) !important; }

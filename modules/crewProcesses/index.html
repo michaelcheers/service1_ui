@@ -73,7 +73,7 @@
            encode direction or severity. -->
       <div id="cpwList">
 
-        <div data-bind-attr="class:processes.0.cardClass">
+        <div data-bind-attr="class:processes.0.cardClass;data-process-id:processes.0.id">
           <div class="cpw-card-head">
             <div>
               <div class="cpw-card-title"><span data-bind-text="processes.0.title"></span></div>
@@ -97,7 +97,7 @@
           </div>
         </div>
 
-        <div data-bind-attr="class:processes.1.cardClass">
+        <div data-bind-attr="class:processes.1.cardClass;data-process-id:processes.1.id">
           <div class="cpw-card-head">
             <div>
               <div class="cpw-card-title"><span data-bind-text="processes.1.title"></span></div>
@@ -121,7 +121,7 @@
           </div>
         </div>
 
-        <div data-bind-attr="class:processes.2.cardClass">
+        <div data-bind-attr="class:processes.2.cardClass;data-process-id:processes.2.id">
           <div class="cpw-card-head">
             <div>
               <div class="cpw-card-title"><span data-bind-text="processes.2.title"></span></div>
@@ -145,7 +145,7 @@
           </div>
         </div>
 
-        <div data-bind-attr="class:processes.3.cardClass">
+        <div data-bind-attr="class:processes.3.cardClass;data-process-id:processes.3.id">
           <div class="cpw-card-head">
             <div>
               <div class="cpw-card-title"><span data-bind-text="processes.3.title"></span></div>
@@ -339,13 +339,6 @@
     </div>
   </div>
 </div>
-<!-- v12: CrewProcesses toolbar -->
-<div style="display:flex;gap:8px;padding:0 24px 16px;">
-  <button class="s1-btn pri" data-cp-open="newProcModal" type="button">+ New process</button>
-  <button class="s1-btn sec" data-cp-open="editProcModal" type="button">Edit process</button>
-</div>
-
-
 <script src="../../core/event-bus.js"></script>
 <script src="../../core/_log.js"></script>
 <script src="../../core/state-store.js"></script>
@@ -373,7 +366,7 @@ document.addEventListener('click', e => {
     const isActive  = !!card.querySelector('.cpw-pill.active');
     const isDefault = !!card.querySelector('.cpw-pill.default');
 
-    document.getElementById('epId').value = card.dataset.processId || title.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+    document.getElementById('epId').value = card.dataset.processId || '';
     document.getElementById('epName').value = title;
     document.getElementById('epDesc').value = desc;
     document.getElementById('epActive').checked = isActive;
