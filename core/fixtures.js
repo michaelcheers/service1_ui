@@ -86,6 +86,12 @@
       { stage: "Cancellations",     today: "0",  week: "1",  month: "4",   delta: "↓ 33%",  deltaDir: "down" },
       { stage: "Close rate",        today: "50%", week: "41%", month: "43%", delta: "↑ 3 pts", deltaDir: "up" }
     ],
+    topReferralSources: [
+      { name: "Customer referral", jobs: "22 jobs", revenue: "$48,600", percentage: "100", color: "#B85C38" },
+      { name: "Website / Google",  jobs: "14 jobs", revenue: "$34,200", percentage: "70",  color: "#0570DE" },
+      { name: "Facebook ads",      jobs: "8 jobs",  revenue: "$22,400", percentage: "46",  color: "#0EA770" },
+      { name: "Yelp",              jobs: "5 jobs",  revenue: "$14,100", percentage: "29",  color: "#E67E22" }
+    ],
     openItems: [
       { title: "Stale opportunities",              subtitle: "No contact in 7+ days",     count: "5" },
       { title: "Accepted Growth Plans not closed", subtitle: "Need deposit or schedule", count: "3" },
@@ -294,42 +300,48 @@
           yLabels: ["$6k","$4.5k","$3k","$1.5k"],
           xLabels: ["12a","2a","4a","6a","8a","10a","12p","2p","4p","6p","8p","10p"],
           values: [0.2, 0.1, 0.4, 1.2, 2.8, 4.5, 5.2, 4.8, 3.5, 1.8, 0.8, 0.3],
-          prev:   [0.15, 0.1, 0.35, 1.1, 2.5, 4.1, 4.8, 4.3, 3.1, 1.5, 0.7, 0.25]
+          prev:   [0.15, 0.1, 0.35, 1.1, 2.5, 4.1, 4.8, 4.3, 3.1, 1.5, 0.7, 0.25],
+          thisYear: "$25.6k", prevYear: "$23.1k", forecast: "—", rangeLabel: "Today"
         },
         "7d": {
           headline: "$50,400", yMax: 12,
           yLabels: ["$12k","$9k","$6k","$3k"],
           xLabels: ["5/18","5/19","5/20","5/21","5/22","5/23","Today"],
           values: [6.4, 7.2, 5.8, 8.1, 7.5, 6.9, 8.5],
-          prev:   [5.8, 6.5, 5.2, 7.4, 6.8, 6.2, 7.7]
+          prev:   [5.8, 6.5, 5.2, 7.4, 6.8, 6.2, 7.7],
+          thisYear: "$50.4k", prevYear: "$45.6k", forecast: "$2.6M", rangeLabel: "Last 7 days"
         },
         "30d": {
           headline: "$128,400", yMax: 12,
           yLabels: ["$12k","$9k","$6k","$3k"],
           xLabels: ["Apr 25","","","","","","May 1","","","","","","","May 8","","","","","","","May 15","","","","","","","May 22","",""],
           values: [3.1, 4.2, 5.5, 4.8, 6.1, 5.2, 4.5, 3.8, 5.4, 6.2, 7.1, 5.9, 4.8, 6.5, 7.3, 6.1, 5.4, 4.9, 6.8, 7.4, 5.8, 6.2, 7.5, 8.1, 6.9, 5.7, 7.8, 8.5, 6.4, 7.2],
-          prev:   [2.8, 3.8, 5.0, 4.3, 5.5, 4.7, 4.1, 3.4, 4.9, 5.6, 6.4, 5.3, 4.3, 5.9, 6.6, 5.5, 4.9, 4.4, 6.1, 6.7, 5.2, 5.6, 6.8, 7.3, 6.2, 5.1, 7.0, 7.7, 5.8, 6.5]
+          prev:   [2.8, 3.8, 5.0, 4.3, 5.5, 4.7, 4.1, 3.4, 4.9, 5.6, 6.4, 5.3, 4.3, 5.9, 6.6, 5.5, 4.9, 4.4, 6.1, 6.7, 5.2, 5.6, 6.8, 7.3, 6.2, 5.1, 7.0, 7.7, 5.8, 6.5],
+          thisYear: "$128.4k", prevYear: "$116.1k", forecast: "$1.56M", rangeLabel: "Last 30 days"
         },
         "90d": {
           headline: "$463,000", yMax: 60,
           yLabels: ["$60k","$45k","$30k","$15k"],
           xLabels: ["Mar","","","","Apr","","","","May","","","Now"],
           values: [28, 32, 26, 34, 38, 31, 42, 29, 35, 40, 44, 48],
-          prev:   [26, 29, 24, 31, 35, 28, 38, 26, 32, 36, 40, 44]
+          prev:   [26, 29, 24, 31, 35, 28, 38, 26, 32, 36, 40, 44],
+          thisYear: "$463k", prevYear: "$419k", forecast: "$1.88M", rangeLabel: "Last 90 days"
         },
         "12m": {
           headline: "$1,420,800", yMax: 200,
           yLabels: ["$200k","$150k","$100k","$50k"],
           xLabels: ["Jun","Jul","Aug","Sep","Oct","Nov","Dec","Jan","Feb","Mar","Apr","May"],
           values: [92, 105, 88, 118, 132, 122, 156, 82, 98, 124, 142, 162],
-          prev:   [85, 92, 78, 102, 115, 108, 138, 74, 88, 112, 128, 146]
+          prev:   [85, 92, 78, 102, 115, 108, 138, 74, 88, 112, 128, 146],
+          thisYear: "$1.42M", prevYear: "$1.18M", forecast: "$1.58M", rangeLabel: "Last 12 months"
         },
         "ytd": {
           headline: "$608,000", yMax: 200,
           yLabels: ["$200k","$150k","$100k","$50k"],
           xLabels: ["Jan","Feb","Mar","Apr","May"],
           values: [82, 98, 124, 142, 162],
-          prev:   [74, 88, 112, 128, 146]
+          prev:   [74, 88, 112, 128, 146],
+          thisYear: "$608k", prevYear: "$548k", forecast: "$1.46M", rangeLabel: "Year to date"
         }
       }
     },
@@ -1264,7 +1276,8 @@
     "num": "19",
     "class": "",
     "kind": "job",
-    "label": "7a \u00b7 Chen \u00b7 long dist"
+    "label": "2 moves",
+    "tentative": "1"
   },
   {
     "num": "20",
@@ -1282,7 +1295,8 @@
     "num": "22",
     "class": "",
     "kind": "job",
-    "label": "9a \u00b7 Diaz \u00b7 move"
+    "label": "3 moves",
+    "tentative": "2"
   },
   {
     "num": "23",

@@ -8,6 +8,18 @@ async function load() {
   const data = (window.S1.fixtures || {})["createDocument"] || {};
 
   window.S1.render.bind(document, data);
+
+  const wantType = new URLSearchParams(location.search).get('type');
+  if (wantType) {
+    const sel = document.querySelector('.cd-grid select[data-bind-options="optionsOptions"]');
+    if (sel) {
+      const opt = Array.from(sel.options).find(o => o.value === wantType);
+      if (opt) sel.value = wantType;
+    }
+    const title = document.querySelector('.cd-grid input[type="text"]');
+    if (title && !title.value) title.placeholder = 'e.g. ' + wantType + ' — customer name';
+  }
+
   document.dispatchEvent(new CustomEvent('s1ui:ready', { detail: { module: 'createDocument' } }));
 }
 load().catch(e => console.warn('[createDocument] init error', e));

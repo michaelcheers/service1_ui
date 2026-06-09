@@ -96,7 +96,7 @@ $$('[data-finance-open]').forEach(b => {
 });
 
 window.S1.modal.bindForm('#addExpenseModal',         'finance.expense.create',     { label: 'Add expense',     onSuccess: () => load() });
-window.S1.modal.bindForm('#newPeriodModal',          'finance.period.create',      { label: 'New period',      onSuccess: () => load() });
+window.S1.modal.bindForm('#newPeriodModal',          'finance.period.create',      { label: 'New period',      onSuccess: (r) => { if (r && r.state) applyPayrollState(r.state); if (r && r.message) flash(r.message); } });
 window.S1.modal.bindForm('#addStaffEntryModal',      'finance.staff.create',       { label: 'Add staff',       onSuccess: () => load() });
 window.S1.modal.bindForm('#miscPaymentModal',        'finance.miscPayment.create', { label: 'Misc payment',    onSuccess: () => load() });
 window.S1.modal.bindForm('#recordTransactionModal',  'finance.transaction.record', { label: 'Record txn',      onSuccess: () => load() });
@@ -147,6 +147,160 @@ if (receiptsInput) {
     receiptsInput.value = '';
   });
 }
+
+// ─────────────────────────────── PAYROLL ───────────────────────────────
+// Apply a server-pushed FinanceState: cache it, broadcast, and re-bind the DOM
+// so rows3/rows4/rows5/rows10/rows11/rows12 + wageStatement.* refresh in place.
+function applyPayrollState(state) {
+  if (!state) return;
+  try {
+    if (window.S1 && window.S1.fixtures) window.S1.fixtures['finance'] = state;
+    if (window.S1 && window.S1.store && typeof window.S1.store.replaceAll === 'function') window.S1.store.replaceAll(state);
+    if (window.S1 && window.S1.bus) window.S1.bus.emit('state:replaced', state);
+    if (window.S1 && window.S1.render && typeof window.S1.render.bind === 'function') window.S1.render.bind(document, state);
+  } catch (e) { console.warn('[finance] payroll state apply failed', e); }
+}
+// Open an app URL in a new browser tab. The module iframe is cross-origin, so
+// a relative <a href> would resolve against the static UI host (404). Ask the
+// business_card host to open it instead (s1ui:open-url → window.open new tab);
+// fall back to window.open when running standalone.
+function openHostUrl(url) {
+  if (!url) return;
+  let embedded = false;
+  try { embedded = (window.parent && window.parent !== window); } catch (_) { embedded = true; }
+  if (embedded) {
+    let origin = '*';
+    try { const m = document.querySelector('meta[name="s1ui-host-origin"]'); if (m && m.getAttribute('content')) origin = m.getAttribute('content'); } catch (_) {}
+    try { window.parent.postMessage({ type: 's1ui:open-url', url: url }, origin); return; } catch (_) {}
+  }
+  window.open(url, '_blank', 'noopener');
+}
+
+function currentWageStatement() {
+  return (window.S1 && window.S1.fixtures && window.S1.fixtures.finance && window.S1.fixtures.finance.wageStatement) || {};
+}
+function toggleWsEmpty(state) {
+  const rows11 = (state && state.rows11) || [];
+  const e = document.getElementById('wsJobsEmpty');
+  if (e) e.style.display = rows11.length ? 'none' : 'block';
+}
+
+const payroll = {
+  async openPeriod(periodId) {
+    await safe('Open period', async () => {
+      const r = await comm.action('finance.payroll.periodDetail', { periodId: Number(periodId) });
+      if (r && r.ok) {
+        applyPayrollState(r.state);
+        const t = document.getElementById('payrollDetailTitle'); if (t) t.textContent = r.title || 'Payroll Period';
+        const sub = document.getElementById('payrollDetailSub'); if (sub) sub.textContent = r.sub || '';
+        if (typeof showPayrollView === 'function') showPayrollView('detail');
+      }
+    });
+  },
+  async openStatement(periodId, userId) {
+    await safe('Open statement', async () => {
+      const r = await comm.action('finance.payroll.wageStatement', { periodId: Number(periodId), userId: Number(userId) });
+      if (r && r.ok) {
+        applyPayrollState(r.state);
+        toggleWsEmpty(r.state);
+        if (typeof showPayrollView === 'function') showPayrollView('statement');
+      }
+    });
+  },
+  async markPaid(entryId, periodId) {
+    await safe('Mark paid', async () => {
+      const r = await comm.action('finance.payroll.markPaid', { entryId: Number(entryId) });
+      if (r && r.ok) { flash('Marked as paid'); if (periodId) await payroll.openPeriod(periodId); }
+    });
+  },
+  async closePeriod(periodId) {
+    if (!confirm('Close this payroll period? Totals will be finalized.')) return;
+    await safe('Close period', async () => {
+      const r = await comm.action('finance.period.close', { periodId: Number(periodId) });
+      if (r && r.ok) { applyPayrollState(r.state); flash('Period closed'); }
+    });
+  },
+  async recompute() {
+    await safe('Recompute', async () => {
+      const r = await comm.action('finance.recompute-crew-wages-from-finalized-jobs', {});
+      if (r && r.ok) { applyPayrollState(r.state); flash(r.message || 'Recomputed crew wages'); }
+    });
+  },
+  async addDeduction() {
+    const ws = currentWageStatement();
+    const typeEl = document.getElementById('wsDedType');
+    const amtEl = document.getElementById('wsDedAmount');
+    const noteEl = document.getElementById('wsDedNote');
+    const type = typeEl ? typeEl.value : 'Deduct';
+    const amount = parseFloat(amtEl ? amtEl.value : '');
+    const notes = noteEl ? noteEl.value : '';
+    if (!amount || amount <= 0) { flash('Enter an amount greater than zero'); return; }
+    await safe('Add', async () => {
+      const r = await comm.action('finance.payroll.addDeduction', { periodId: Number(ws.periodId), userId: Number(ws.userId), type, amount, notes });
+      if (r && r.ok) {
+        applyPayrollState(r.state); toggleWsEmpty(r.state);
+        if (amtEl) amtEl.value = ''; if (noteEl) noteEl.value = '';
+        flash((type === 'Pay' ? 'Bonus' : 'Deduction') + ' added');
+      }
+    });
+  },
+  async removeDeduction(miscId) {
+    const ws = currentWageStatement();
+    await safe('Remove', async () => {
+      const r = await comm.action('finance.payroll.removeDeduction', { miscId: Number(miscId), periodId: Number(ws.periodId), userId: Number(ws.userId) });
+      if (r && r.ok) { applyPayrollState(r.state); toggleWsEmpty(r.state); flash('Removed'); }
+    });
+  }
+};
+window.S1FinancePayroll = payroll;
+
+// Capture-phase: intercept the period-row "Close" button before the row's
+// inline onclick (which would otherwise drill into the period).
+document.addEventListener('click', (ev) => {
+  const cb = ev.target.closest('.payroll-close-btn');
+  if (cb) { ev.preventDefault(); ev.stopPropagation(); payroll.closePeriod(cb.getAttribute('data-period-id')); }
+}, true);
+
+// Bubble-phase delegated handlers for the payroll detail + wage statement.
+document.addEventListener('click', (ev) => {
+  const link = ev.target.closest('.payroll-emp-link');
+  if (link) { ev.preventDefault(); payroll.openStatement(link.getAttribute('data-period-id'), link.getAttribute('data-user-id')); return; }
+
+  const mbtn = ev.target.closest('.payroll-menu-btn');
+  if (mbtn) {
+    ev.preventDefault(); ev.stopPropagation();
+    const menu = mbtn.parentElement.querySelector('.payroll-menu');
+    const isOpen = menu && menu.classList.contains('open');
+    document.querySelectorAll('.payroll-menu.open').forEach(m => m.classList.remove('open'));
+    if (menu && !isOpen) menu.classList.add('open');
+    return;
+  }
+
+  const item = ev.target.closest('.payroll-menu-item');
+  if (item) {
+    ev.preventDefault();
+    document.querySelectorAll('.payroll-menu.open').forEach(m => m.classList.remove('open'));
+    const act = item.getAttribute('data-payroll-act');
+    if (act === 'statement') payroll.openStatement(item.getAttribute('data-period-id'), item.getAttribute('data-user-id'));
+    else if (act === 'markPaid') payroll.markPaid(item.getAttribute('data-entry-id'), item.getAttribute('data-period-id'));
+    return;
+  }
+
+  const openLink = ev.target.closest('[data-open-url]');
+  if (openLink) { ev.preventDefault(); openHostUrl(openLink.getAttribute('data-open-url')); return; }
+
+  const rm = ev.target.closest('.ws-remove');
+  if (rm) { ev.preventDefault(); payroll.removeDeduction(rm.getAttribute('data-misc-id')); return; }
+
+  const recomputeBtn = ev.target.closest('#payrollRecomputeBtn');
+  if (recomputeBtn) { ev.preventDefault(); payroll.recompute(); return; }
+
+  const dedAdd = ev.target.closest('#wsDedAdd');
+  if (dedAdd) { ev.preventDefault(); payroll.addDeduction(); return; }
+
+  // Click outside any menu closes open menus.
+  if (!ev.target.closest('.payroll-menu')) document.querySelectorAll('.payroll-menu.open').forEach(m => m.classList.remove('open'));
+});
 
 // Install document-level click handlers ([data-comm-action] dispatcher,
 // tab/panel switcher, etc.) provided by core/standard-page.js.

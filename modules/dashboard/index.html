@@ -240,6 +240,7 @@ a { color: inherit; text-decoration: none; }
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
   line-height: 1.1;
+  color: var(--gold); /* logo gold #D4960A */
 }
 .chart-h-sub {
   margin-top: 6px;
@@ -757,7 +758,8 @@ a { color: inherit; text-decoration: none; }
 
         </div>
 
-        <!-- Sales Activity (Feature 1498) — full-width, below the two-col block -->
+        <!-- Sales Activity + Top Referral Sources (Feature 1557) — two-col row -->
+        <div class="two-col">
         <section class="section sa-card">
           <div class="section-head">
             <div class="section-title">Sales Activity</div>
@@ -800,6 +802,30 @@ a { color: inherit; text-decoration: none; }
             </tbody>
           </table>
         </section>
+
+        <!-- Top Referral Sources (Feature 1557) — fills the gap beside Sales Activity -->
+        <section class="section rf-card">
+          <div class="section-head">
+            <div class="section-title">Top Referral Sources</div>
+            <a class="section-link" data-host-nav href="/Reports/ReferralSources">Details →</a>
+          </div>
+          <div class="rf-list" data-bind="topReferralSources">
+            <template>
+              <div class="rf-row">
+                <div class="rf-top">
+                  <span class="rf-nm">{{name}}</span>
+                  <span class="rf-amt">{{revenue}}</span>
+                </div>
+                <div class="rf-meta">{{jobs}}</div>
+                <div class="rf-track">
+                  <div class="rf-bar" style="width:{{percentage}}%;background:{{color}};"></div>
+                </div>
+              </div>
+            </template>
+          </div>
+          <div class="rf-empty" data-empty-if="topReferralSources">No referral data yet</div>
+        </section>
+        </div>
       </section>
 
       <!-- ═══════════════ REALTIME ═══════════════ -->
@@ -903,46 +929,6 @@ a { color: inherit; text-decoration: none; }
 
 
 
-<!-- v12 auto-modal toolbar -->
-<div style="display:flex;gap:8px;flex-wrap:wrap;padding:0 24px 16px;">
-  <button class="s1-btn sec" data-dashboard-open="dbAddLeadModal" type="button">Add lead</button>
-  <button class="s1-btn sec" data-dashboard-open="dbAddTaskModal" type="button">Add task</button>
-  <button class="s1-btn sec" data-dashboard-open="dbMarkStaleModal" type="button">Mark stale</button>
-  <button class="s1-btn sec" data-dashboard-open="dbSnoozeModal" type="button">Snooze</button>
-</div>
-<div class="s1-overlay gm-overlay" id="dbAddLeadModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
-  <div class="s1-mhead"><div><div class="s1-mkicker">Dashboard</div><h4>Add lead</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
-  <div class="s1-mgrid">
-    <div><label class="s1-mlabel">Name</label><input class="s1-input" type="text" name="name"></div>
-    <div><label class="s1-mlabel">Source</label><select class="s1-select" name="source" data-bind-options="sources"><option value="">Choose…</option></select></div>
-    <div class="full"><label class="s1-mlabel">Notes</label><textarea class="s1-textarea" name="notes"></textarea></div>
-  </div>
-  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Add lead</button></div>
-</div></div>
-<div class="s1-overlay gm-overlay" id="dbAddTaskModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
-  <div class="s1-mhead"><div><div class="s1-mkicker">Dashboard</div><h4>Add task</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
-  <div class="s1-mgrid">
-    <div><label class="s1-mlabel">Title</label><input class="s1-input" type="text" name="title"></div>
-    <div><label class="s1-mlabel">Due</label><input class="s1-input" type="date" name="dueDate"></div>
-  </div>
-  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Add task</button></div>
-</div></div>
-<div class="s1-overlay gm-overlay" id="dbMarkStaleModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
-  <div class="s1-mhead"><div><div class="s1-mkicker">Dashboard</div><h4>Mark stale</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
-  <div class="s1-mgrid">
-    <div><label class="s1-mlabel">Lead id</label><input class="s1-input" type="text" name="id"></div>
-    <div><label class="s1-mlabel">Reason</label><input class="s1-input" type="text" name="reason"></div>
-  </div>
-  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Mark stale</button></div>
-</div></div>
-<div class="s1-overlay gm-overlay" id="dbSnoozeModal" role="dialog" aria-modal="true"><div class="s1-modal lg">
-  <div class="s1-mhead"><div><div class="s1-mkicker">Dashboard</div><h4>Snooze</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
-  <div class="s1-mgrid">
-    <div><label class="s1-mlabel">Lead id</label><input class="s1-input" type="text" name="id"></div>
-    <div><label class="s1-mlabel">Until</label><input class="s1-input" type="date" name="until"></div>
-  </div>
-  <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Snooze</button></div>
-</div></div>
 <script src="../../core/event-bus.js"></script>
 <script src="../../core/_log.js"></script>
 <script src="../../core/state-store.js"></script>
@@ -967,15 +953,8 @@ a { color: inherit; text-decoration: none; }
       });
     });
   })();
-
-  // Range toggle (visual)
-  document.querySelectorAll('.chart-tools').forEach(function(g){
-    g.querySelectorAll('button').forEach(function(b){
-      b.addEventListener('click', function(){
-        g.querySelectorAll('button').forEach(function(x){ x.classList.toggle('active', x===b); });
-      });
-    });
-  });
+  // Chart range toggle is owned by module.js (setChartRange) — it re-renders the
+  // bars, axes, headline and per-range header together. No duplicate handler here.
 </script>
 </body>
 </html>

@@ -104,6 +104,39 @@
   outline:none; font-family:inherit; color:var(--ink);
 }
 .payroll-paid input:focus { border-color:var(--terra); box-shadow:0 0 0 3px var(--terra-soft); }
+.payroll-emp-link { color:var(--terra); font-weight:600; cursor:pointer; text-decoration:none; }
+.payroll-emp-link:hover { text-decoration:underline; }
+.payroll-paid-pill { background:var(--ok-soft); color:var(--ok); margin-left:6px; }
+.payroll-menu-btn { border:none; background:transparent; cursor:pointer; font-size:18px; line-height:1; color:var(--ink-3); padding:2px 6px; border-radius:6px; }
+.payroll-menu-btn:hover { background:var(--surface-2); color:var(--ink); }
+.payroll-menu { position:absolute; right:8px; top:30px; z-index:30; min-width:170px; background:var(--surface-1,#fff); border:var(--hair); border-radius:8px; box-shadow:0 6px 20px rgba(0,0,0,.14); padding:4px 0; display:none; text-align:left; }
+.payroll-menu.open { display:block; }
+.payroll-menu-item { padding:8px 14px; font-size:12.5px; cursor:pointer; white-space:nowrap; color:var(--ink); }
+.payroll-menu-item:hover { background:var(--surface-2); }
+
+/* ── Wage statement ── */
+.ws-doc { border:var(--hair); border-radius:12px; padding:26px 28px; background:var(--surface-1,#fff); max-width:860px; }
+.ws-head { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; border-bottom:1px solid var(--surface-3); padding-bottom:16px; }
+.ws-name { font-size:20px; font-weight:700; color:var(--ink); }
+.ws-sub { font-size:12.5px; color:var(--ink-3); margin-top:3px; }
+.ws-total-box { text-align:right; }
+.ws-total-label { font-size:10.5px; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-3); }
+.ws-total-val { font-size:22px; font-weight:700; color:var(--ink); }
+.ws-kpis { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin:18px 0 6px; }
+.ws-kpi { border:var(--hair); border-radius:8px; padding:10px 12px; }
+.ws-kpi-label { font-size:10px; letter-spacing:.04em; text-transform:uppercase; color:var(--ink-3); }
+.ws-kpi-val { font-size:16px; font-weight:700; color:var(--ink); margin-top:2px; }
+.ws-section-title { font-size:13px; font-weight:600; color:var(--ink); margin:22px 0 8px; }
+.ws-tbl td, .ws-tbl th { vertical-align:middle; }
+.ws-link { color:var(--terra); text-decoration:none; }
+.ws-link:hover { text-decoration:underline; }
+.ws-remove { border:none; background:transparent; color:var(--bad); cursor:pointer; font-size:13px; padding:2px 6px; border-radius:5px; }
+.ws-remove:hover { background:var(--bad-soft); }
+.ws-empty { font-size:12.5px; color:var(--ink-3); padding:8px 2px; }
+.ws-add { display:flex; gap:8px; align-items:center; margin-top:12px; flex-wrap:wrap; }
+.ws-add .ws-add-type { width:130px; }
+.ws-add .ws-add-amt { width:120px; }
+.ws-add .ws-add-note { width:240px; }
 
 /* ── Petty cash ── */
 .petty-filters { display:flex; gap:10px; align-items:center; margin-bottom:14px; flex-wrap:wrap; }
@@ -211,7 +244,7 @@
           <div class="acct-header">
             <div class="acct-title-row"><span class="acct-title">Payroll Periods</span></div>
             <div style="display:flex;gap:8px;">
-              <button data-comm-action="action:finance.recompute-crew-wages-from-finalized-jobs" class="btn btn-secondary" title="Re-pull crew earnings from finalized jobs in each open period">Recompute crew wages from finalized jobs</button>
+              <button id="payrollRecomputeBtn" type="button" class="btn btn-secondary" title="Re-pull crew earnings from finalized jobs in each open period">Recompute crew wages from finalized jobs</button>
               <button class="btn btn-primary" onclick="document.getElementById('newPeriodModal').classList.add('open')">+ New Period</button>
             </div>
           </div>
@@ -225,7 +258,7 @@
                 <td class="num" style="color:var(--ok);">{{c4_text}}</td>
                 <td class="num" style="color:var(--bad);">{{c5_text}}</td>
                 <td class="num"><b>{{c6_text}}</b></td>
-                <td><button class="btn btn-secondary btn-sm" style="display:{{c7_btnDisplay}};">{{c7_btnLabel}}</button></td>
+                <td><button type="button" class="btn btn-secondary btn-sm payroll-close-btn" data-period-id="{{c0_period}}" style="display:{{c7_btnDisplay}};">{{c7_btnLabel}}</button></td>
               </tr></template></tbody>
           </table>
 
@@ -243,8 +276,8 @@
           <a href="#" onclick="closePayrollPeriod(event)" style="display:inline-flex;align-items:center;gap:4px;font-size:13px;color:var(--ink-3);margin-bottom:18px;text-decoration:none;font-weight:500;">← Back to Payroll</a>
           <div class="acct-header">
             <div class="acct-title-row" style="flex-direction:column;align-items:flex-start;gap:2px;">
-              <span class="acct-title" id="payrollDetailTitle">Pay April 26 – May 10</span>
-              <span class="acct-updated" style="margin-left:0;">Apr 26 – May 10, 2026 · Open</span>
+              <span class="acct-title" id="payrollDetailTitle">Payroll Period</span>
+              <span class="acct-updated" style="margin-left:0;" id="payrollDetailSub"></span>
             </div>
             <div style="display:flex;gap:8px;">
               <button class="btn btn-secondary" onclick="document.getElementById('addStaffEntryModal').classList.add('open')">+ Add Staff Entry</button>
@@ -254,9 +287,23 @@
 
           <table class="tbl payroll-detail-tbl">
             <thead><tr>
-              <th>Name</th><th class="num">Moves</th><th class="num">Earnings</th><th class="num">Tips</th><th class="num">Commission</th><th class="num">Bonuses</th><th class="num">Deductions</th><th class="num">Total Due</th><th class="num" style="width:160px;">Paid</th><th class="num">Balance</th>
+              <th>Name</th><th class="num">Total Hours</th><th class="num">Moves</th><th class="num">Bonuses</th><th class="num">Deductions</th><th class="num">Final Amount</th><th style="width:36px;"></th>
             </tr></thead>
-            <tbody data-bind="rows5"><template><tr><td><span class="payroll-caret">▸</span><b>{{c0_name}}</b><span class="payroll-hrs">{{c0_text}}</span></td><td>{{c1_text}}</td><td>{{c2_text}}</td><td>{{c3_text}}</td><td>{{c4_text}}</td><td>{{c5_text}}</td><td>{{c6_text}}</td><td><b>{{c7_name}}</b><div class="cell-light" style="font-size:11px;color:var(--ink-3);display:none"></div></td><td><div class="payroll-paid"><input type="number" placeholder="0.00" value="{{c8_amount}}"><button class="btn btn-secondary btn-sm">Save</button></div></td><td>{{c9_text}}</td></tr></template></tbody>
+            <tbody data-bind="rows5"><template><tr data-entry-id="{{c0_id}}" data-period-id="{{c0_period}}" data-user-id="{{c0_user}}">
+              <td><a class="payroll-emp-link" data-period-id="{{c0_period}}" data-user-id="{{c0_user}}">{{c0_name}}</a></td>
+              <td class="num">{{c1_text}}</td>
+              <td class="num">{{c2_text}}</td>
+              <td class="num" style="color:var(--ok);">{{c3_text}}</td>
+              <td class="num" style="color:var(--bad);">{{c4_text}}</td>
+              <td class="num"><b>{{c5_text}}</b> <span class="pill payroll-paid-pill" style="display:{{c0_menuPaid}};">Paid</span></td>
+              <td style="position:relative;text-align:center;">
+                <button type="button" class="payroll-menu-btn" data-entry-id="{{c0_id}}" data-period-id="{{c0_period}}" data-user-id="{{c0_user}}" aria-label="Actions">⋮</button>
+                <div class="payroll-menu">
+                  <div class="payroll-menu-item" data-payroll-act="statement" data-period-id="{{c0_period}}" data-user-id="{{c0_user}}">View wage statement</div>
+                  <div class="payroll-menu-item" data-payroll-act="markPaid" data-entry-id="{{c0_id}}" data-period-id="{{c0_period}}">Mark as paid</div>
+                </div>
+              </td>
+            </tr></template></tbody>
           </table>
 
           <div style="margin-top:32px;">
@@ -265,6 +312,68 @@
               <thead><tr><th>Department</th><th class="num">Staff</th><th class="num">Earnings</th><th class="num">Total Due</th><th class="num">Paid</th><th class="num">Balance</th></tr></thead>
               <tbody data-bind="rows10"><template><tr><td>{{c0_text}}</td><td class="num">{{c1_text}}</td><td class="num">{{c2_text}}</td><td class="num">{{c3_text}}</td><td class="num" style="color:var(--ok);">{{c4_text}}</td><td class="num" style="color:var(--bad);">{{c5_text}}</td></tr></template></tbody>
             </table>
+          </div>
+        </div>
+
+        <!-- ── Wage statement view ── -->
+        <div id="payrollWageStatement" style="display:none;">
+          <a href="#" onclick="closeWageStatement(event)" style="display:inline-flex;align-items:center;gap:4px;font-size:13px;color:var(--ink-3);margin-bottom:18px;text-decoration:none;font-weight:500;" data-bind-text="wageStatement.backLabel">← Back</a>
+          <div class="ws-doc">
+            <div class="ws-head">
+              <div>
+                <div class="ws-name" data-bind-text="wageStatement.employeeName">—</div>
+                <div class="ws-sub"><span data-bind-text="wageStatement.periodSub"></span> · <span data-bind-text="wageStatement.rate"></span></div>
+              </div>
+              <div class="ws-total-box">
+                <div class="ws-total-label">Total Due</div>
+                <div class="ws-total-val" data-bind-text="wageStatement.totalDue">—</div>
+              </div>
+            </div>
+
+            <div class="ws-kpis">
+              <div class="ws-kpi"><div class="ws-kpi-label">Jobs</div><div class="ws-kpi-val" data-bind-text="wageStatement.jobs">—</div></div>
+              <div class="ws-kpi"><div class="ws-kpi-label">Billed hrs</div><div class="ws-kpi-val" data-bind-text="wageStatement.billedHours">—</div></div>
+              <div class="ws-kpi"><div class="ws-kpi-label">Travel hrs</div><div class="ws-kpi-val" data-bind-text="wageStatement.travelHours">—</div></div>
+              <div class="ws-kpi"><div class="ws-kpi-label">Total hrs</div><div class="ws-kpi-val" data-bind-text="wageStatement.totalHours">—</div></div>
+              <div class="ws-kpi"><div class="ws-kpi-label">Earnings</div><div class="ws-kpi-val" data-bind-text="wageStatement.earnings">—</div></div>
+            </div>
+
+            <div class="ws-section-title">Jobs worked</div>
+            <table class="tbl ws-tbl">
+              <thead><tr><th>Date</th><th>Job #</th><th>Customer</th><th class="num">Billed</th><th class="num">Travel</th><th class="num">Total</th><th class="num">Rate</th><th class="num">Amount</th></tr></thead>
+              <tbody data-bind="rows11"><template><tr>
+                <td>{{c0_text}}</td>
+                <td><a class="ws-link" data-open-url="{{c1_url}}" title="Open job in new tab">{{c1_text}}</a></td>
+                <td><a class="ws-link" data-open-url="{{c2_url}}" title="Open customer in new tab">{{c2_text}}</a></td>
+                <td class="num">{{c3_text}}</td>
+                <td class="num">{{c4_text}}</td>
+                <td class="num">{{c5_text}}</td>
+                <td class="num">{{c6_text}}</td>
+                <td class="num"><b>{{c7_text}}</b></td>
+              </tr></template></tbody>
+            </table>
+            <div class="ws-empty" id="wsJobsEmpty" style="display:none;">No jobs recorded for this employee in this period.</div>
+
+            <div class="ws-section-title">Bonuses &amp; Deductions</div>
+            <table class="tbl ws-tbl">
+              <thead><tr><th>Type</th><th>Note</th><th class="num">Amount</th><th style="width:36px;"></th></tr></thead>
+              <tbody data-bind="rows12"><template><tr>
+                <td><span class="pill" style="background:{{c0_bg}};color:{{c0_fg}};">{{c0_label}}</span></td>
+                <td>{{c1_text}}</td>
+                <td class="num">{{c2_text}}</td>
+                <td style="text-align:center;"><button type="button" class="ws-remove" data-misc-id="{{c0_id}}" aria-label="Remove">✕</button></td>
+              </tr></template></tbody>
+            </table>
+
+            <div class="ws-add" id="wsAddDeduction">
+              <select class="s1-input ws-add-type" id="wsDedType">
+                <option value="Deduct">Deduction</option>
+                <option value="Pay">Bonus</option>
+              </select>
+              <input class="s1-input ws-add-amt" id="wsDedAmount" type="number" step="0.01" min="0" placeholder="Amount">
+              <input class="s1-input ws-add-note" id="wsDedNote" type="text" placeholder="Note (e.g. uniform)">
+              <button type="button" class="btn btn-primary btn-sm" id="wsDedAdd">Add</button>
+            </div>
           </div>
         </div>
 
@@ -414,31 +523,6 @@
     <div class="fm-actions">
       <button data-modal-close class="btn btn-secondary">Cancel</button>
       <button data-modal-save class="btn btn-primary">Save Expense</button>
-    </div>
-  </div>
-</div>
-
-<!-- New Payroll Period -->
-<div class="fm-overlay" id="newPeriodModal">
-  <div class="fm-modal" style="width:520px;">
-    <div class="fm-head"><div class="fm-title">Create Payroll Period</div><button data-modal-close class="fm-close">✕</button></div>
-    <div class="fm-body">
-      <div class="fm-grid">
-        <div class="fm-field full"><label class="fm-label">Period Name</label><input name="periodName" class="fm-input" type="text" placeholder="e.g., January 2026 Payroll"></div>
-        <div class="fm-field"><label class="fm-label">Start Date</label><input name="startDate" class="fm-input" type="date"></div>
-        <div class="fm-field"><label class="fm-label">End Date</label><input name="endDate" class="fm-input" type="date"></div>
-        <div class="fm-field full"><label class="fm-label">Department Filter (optional)</label><input name="departmentFilter" class="fm-input" type="text" placeholder="Leave blank for all departments"></div>
-        <div class="fm-field full">
-          <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;cursor:pointer;">
-            <input name="departmentFilter" type="checkbox" checked style="accent-color:var(--terra);">
-            Auto-import crew earnings from finalized jobs in this date range
-          </label>
-        </div>
-      </div>
-    </div>
-    <div class="fm-actions">
-      <button data-modal-close class="btn btn-secondary">Cancel</button>
-      <button data-modal-save class="btn btn-primary" onclick="document.getElementById('newPeriodModal').classList.remove('open')">Create Period</button>
     </div>
   </div>
 </div>
@@ -656,6 +740,7 @@
     <div><label class="s1-mlabel">Start</label><input class="s1-input" type="date" name="start"></div>
     <div><label class="s1-mlabel">End</label><input class="s1-input" type="date" name="end"></div>
     <div class="full"><label class="s1-mlabel">Copy categories from</label><select class="s1-select" name="copyCategoriesFrom" data-bind-options="periods"><option value="">— None —</option></select></div>
+    <div class="full" style="font-size:11.5px;color:var(--ink-3);line-height:1.4;margin-top:2px;">Auto-imports crew earnings from every finalized job in this date range, so each mover who worked shows up automatically.</div>
   </div>
   <div class="s1-mfoot"><button class="s1-btn sec" data-modal-close type="button">Cancel</button><button class="s1-btn pri" data-modal-save type="button">Create period</button></div>
 </div></div>
@@ -737,19 +822,26 @@ document.querySelectorAll('[data-period]').forEach(b => b.addEventListener('clic
   document.querySelectorAll('[data-period]').forEach(x => { if (x.tagName !== 'TR') x.classList.toggle('active', x === b); });
 }));
 
-// Payroll period drill-in
-function openPayrollPeriod(row) {
-  const title = row.dataset.period || 'Payroll Period';
-  document.getElementById('payrollDetailTitle').textContent = title;
-  document.getElementById('payrollList').style.display = 'none';
-  document.getElementById('payrollDetail').style.display = 'block';
+// Payroll view switching (list ↔ detail ↔ wage statement). Data fetching lives
+// in module.js (window.S1FinancePayroll); these helpers only toggle visibility.
+function showPayrollView(which) {
+  document.getElementById('payrollList').style.display = which === 'list' ? 'block' : 'none';
+  document.getElementById('payrollDetail').style.display = which === 'detail' ? 'block' : 'none';
+  document.getElementById('payrollWageStatement').style.display = which === 'statement' ? 'block' : 'none';
   window.scrollTo({ top: 0 });
+}
+// Period row click → fetch + show detail (delegates to module.js).
+function openPayrollPeriod(row) {
+  const periodId = row && row.dataset ? row.dataset.period : null;
+  if (window.S1FinancePayroll && periodId) window.S1FinancePayroll.openPeriod(periodId);
 }
 function closePayrollPeriod(e) {
   if (e) e.preventDefault();
-  document.getElementById('payrollDetail').style.display = 'none';
-  document.getElementById('payrollList').style.display = 'block';
-  window.scrollTo({ top: 0 });
+  showPayrollView('list');
+}
+function closeWageStatement(e) {
+  if (e) e.preventDefault();
+  showPayrollView('detail');
 }
 
 // Misc payment tab toggle

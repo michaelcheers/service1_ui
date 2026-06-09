@@ -166,3 +166,21 @@ body {
 .stat-group .stat-col { padding: 0 24px; }
 .stat-group .stat-col:first-child { padding-left: 0; }
 .stat-group .stat-col:last-child { padding-right: 0; }
+
+/* Feature #1505: Documents tab — field contracts list */
+.jd-doc-head { margin-bottom: 14px; }
+.jd-doc-title { font-size: 16px; font-weight: 700; color: var(--ink-1, #111827); }
+.jd-doc-sub { font-size: 12px; color: var(--ink-3, #6B7280); margin-top: 4px; }
+.jd-doc-empty { font-size: 13px; color: var(--ink-3, #6B7280); padding: 14px; text-align: center; background: var(--surface-2, #f9fafb); border-radius: 8px; }
+.jd-doc-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.jd-doc-th { text-align: left; padding: 8px 6px; color: #004D40; font-weight: 600; border-bottom: 1px solid var(--line, #e5e7eb); }
+.jd-doc-cell { padding: 9px 6px; border-bottom: 1px solid var(--line, #f3f4f6); vertical-align: middle; }
+.jd-doc-row:last-child .jd-doc-cell { border-bottom: 0; }
+.jd-doc-muted { color: var(--ink-3, #9ca3af); }
+.jd-doc-chip { display: inline-block; font-size: 10px; color: #3730a3; background: #eef2ff; padding: 1px 6px; border-radius: 4px; margin-left: 6px; font-weight: 600; }
+.jd-doc-pill { display: inline-block; padding: 2px 9px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+.jd-doc-pill.is-signed { background: #dcfce7; color: #15803d; }
+.jd-doc-pill.is-pending { background: #fef3c7; color: #92400e; }
+.jd-doc-pill.is-ack { background: #f3f4f6; color: #4b5563; }
+.jd-doc-view { color: #004D40; font-weight: 600; text-decoration: none; }
+.jd-doc-view:hover { text-decoration: underline; }

@@ -181,3 +181,16 @@ body {
 .sa-tbl tbody tr:hover { background: var(--surface-2) !important; }
 .sa-tbl tbody tr.sa-hl { background: var(--terra-soft) !important; box-shadow: inset 3px 0 0 var(--terra); }
 .sa-tbl tbody tr.sa-hl:hover { background: var(--terra-soft) !important; }
+
+/* ── Top Referral Sources (Feature 1557) ─────────────────────────────
+   Sits beside Sales Activity in the .two-col row, filling the right-hand
+   gap. Each source is a labeled revenue bar proportional to the top earner. */
+.rf-list { display: flex; flex-direction: column; gap: 16px; }
+.rf-row { display: flex; flex-direction: column; gap: 6px; }
+.rf-top { display: flex; align-items: baseline; justify-content: space-between; }
+.rf-nm  { font-weight: 600; color: var(--ink); font-size: 13px; }
+.rf-amt { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--terra); font-size: 13px; }
+.rf-meta { font-size: 12px; color: var(--ink-3); }
+.rf-track { height: 6px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.rf-bar { height: 100%; border-radius: 999px; min-width: 2px; transition: width .3s ease; }
+.rf-empty { font-size: 13px; color: var(--ink-3); padding: 8px 0; }

@@ -145,20 +145,38 @@ function renderChart(key) {
   }
   const head = document.querySelector('.chart-h-num');
   if (head) head.textContent = r.headline;
+  // Header follows the selected range: eyebrow ("Net revenue · Last 30 days")
+  // and the This year / Previous year / Forecast EOY legend all switch together
+  // with the bars, using the per-range fields the server now provides.
+  const eb = document.querySelector('.chart-h-eyebrow [data-bind-text="chart.rangeLabel"]');
+  if (eb && r.rangeLabel) eb.textContent = r.rangeLabel;
+  const ty = document.querySelector('[data-bind-text="chart.thisYear"]');
+  if (ty && r.thisYear) ty.textContent = r.thisYear;
+  const py = document.querySelector('[data-bind-text="chart.prevYear"]');
+  if (py && r.prevYear) py.textContent = r.prevYear;
+  const fc = document.querySelector('[data-bind-text="chart.forecast"]');
+  if (fc && r.forecast) fc.textContent = r.forecast;
 }
 const RANGE_LABELS = { '1d': 'Today', '7d': 'Last 7 days', '30d': 'Last 30 days', '90d': 'Last 90 days', '12m': 'Last 12 months', 'ytd': 'Year to date' };
-// Chart tabs (1D/7D/.../12M/YTD) — control only the revenue chart.
-function setChartRange(key, opts) {
-  opts = opts || {};
+// The user's explicit chart-range choice (null until they click a chart-tools
+// button). Preferred over the server's defaultRange in renderActiveRange so an
+// unrelated state refresh (lead added, KPI refresh, etc.) never snaps the chart
+// back to its default window.
+let selectedChartRange = null;
+// Chart tabs (1D/7D/.../12M/YTD) — control only the revenue chart. This is a
+// transient view toggle; we deliberately do NOT persist it server-side (the old
+// comm.save here triggered the host's refreshState, which re-pushed state with
+// defaultRange:"12m" and reverted the selection).
+function setChartRange(key) {
   if (!RANGE_LABELS[key]) return;
   $$('.chart-tools button').forEach(x => x.classList.toggle('active', x.getAttribute('data-range') === key));
   renderChart(key);
-  if (opts.persist !== false) {
-    try { comm.save('dashboard.chartRange', { range: key }); } catch {}
-  }
 }
 $$('.chart-tools button').forEach(b => {
-  b.addEventListener('click', () => setChartRange(b.getAttribute('data-range')));
+  b.addEventListener('click', () => {
+    selectedChartRange = b.getAttribute('data-range');
+    setChartRange(selectedChartRange);
+  });
 });
 // Top-right page range picker — dashboard-wide filter, independent of the chart.
 let currentPageRange = '30d';
@@ -232,13 +250,15 @@ let currentPageRange = '30d';
 })();
 function renderActiveRange() {
   const fx = (window.S1.fixtures || {}).dashboard || {};
-  // Prefer server's defaultRange (if present), then the locally active tab.
-  let key = fx.chart && fx.chart.defaultRange;
+  // Prefer the user's explicit chart choice, then the server's defaultRange,
+  // then the locally active tab. Honoring selectedChartRange first means an
+  // unrelated state replace doesn't revert the user's selected window.
+  let key = selectedChartRange || (fx.chart && fx.chart.defaultRange);
   if (!key) {
     const active = document.querySelector('.chart-tools button.active');
     key = (active && active.getAttribute('data-range')) || '12m';
   }
-  setChartRange(key, { persist: false });
+  setChartRange(key);
   // Sync picker label so it reflects the server-driven range. Prefer the
   // server's own rangeLabel (single source of truth) so the dropdown, chart
   // eyebrow and KPI subtext can never disagree; fall back to the static map.
@@ -274,16 +294,6 @@ document.addEventListener('click', (ev) => {
   } catch {}
   window.location.assign(href);
 });
-
-// v12 auto-modal toolbar bindings
-(function(){
-  const $$ = (s,r)=>Array.from((r||document).querySelectorAll(s));
-  $$('[data-dashboard-open]').forEach(b=>b.addEventListener('click',(e)=>{e.preventDefault();window.S1.modal.open('#'+b.getAttribute('data-dashboard-open'));}));
-  window.S1.modal.bindForm('#dbAddLeadModal', 'dashboard.lead.add', { label: 'Add lead' });
-  window.S1.modal.bindForm('#dbAddTaskModal', 'dashboard.task.add', { label: 'Add task' });
-  window.S1.modal.bindForm('#dbMarkStaleModal', 'dashboard.markStale', { label: 'Mark stale' });
-  window.S1.modal.bindForm('#dbSnoozeModal', 'dashboard.snooze', { label: 'Snooze' });
-})();
 
 // Install document-level click handlers ([data-comm-action] dispatcher,
 // tab/panel switcher, etc.) provided by core/standard-page.js.

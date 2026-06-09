@@ -267,7 +267,7 @@ function el(tag, opts, children) {
   return e;
 }
 
-function buildEmpty() {
+function buildEmpty(tab) {
   const wrap = el('div', { className: 'di-empty' });
   const svg = svgNS('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '1.5', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' });
   svg.appendChild(svgNS('path', { d: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z' }));
@@ -275,7 +275,15 @@ function buildEmpty() {
   wrap.appendChild(svg);
   wrap.appendChild(el('div', { className: 't', text: 'No documents in this view' }));
   wrap.appendChild(el('div', { className: 'h', text: 'Documents you create or receive will appear here.' }));
-  wrap.appendChild(el('a', { attrs: { href: '#' }, text: '+ New document' }));
+  const isFC = tab === 'fieldcontracts';
+  const qs = isFC ? '?type=' + encodeURIComponent('Field Contract') : '';
+  wrap.appendChild(el('a', {
+    text: isFC ? '+ New field contract' : '+ New document',
+    attrs: {
+      href: '../createDocument/index.html' + qs,
+      'data-s1-host-href': '/Documents/Create' + qs
+    }
+  }));
   return wrap;
 }
 
@@ -341,7 +349,7 @@ function render(tab) {
   const shown = getDocs().filter(d => d.tabs.includes(tab));
   while (list.firstChild) list.removeChild(list.firstChild);
   if (!shown.length) {
-    list.appendChild(buildEmpty());
+    list.appendChild(buildEmpty(tab));
     return;
   }
   for (const d of shown) list.appendChild(buildRow(d));

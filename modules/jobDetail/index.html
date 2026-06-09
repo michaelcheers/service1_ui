@@ -1062,11 +1062,21 @@ select.gp2-input {
 /* Stops */
 .gp2-stop {
   display: grid;
-  grid-template-columns: 48px 1fr;
+  grid-template-columns: auto 48px 1fr;
+  align-items: center;
   gap: 14px;
   padding: 16px;
   border-bottom: var(--hair);
 }
+.gp2-stop-drag {
+  color: var(--ink-4);
+  cursor: grab;
+  user-select: none;
+  font-size: 14px;
+  line-height: 1;
+}
+.gp2-stop-drag:active { cursor: grabbing; }
+.gp2-stop.gp2-dragging { opacity: .45; }
 .gp2-stop-tag {
   width: 32px; height: 32px;
   border-radius: 999px;
@@ -1106,7 +1116,7 @@ select.gp2-input {
 .gp2-stop:hover .gp2-stop-x { opacity: 1; }
 .gp2-stop-x:hover { background: var(--bad-bg); color: var(--bad); }
 /* #1447 — greyed, read-only office bookend row (no remove/edit). */
-.gp2-stop.is-office { background: var(--surface-2); border-style: dashed; }
+.gp2-stop.is-office { background: var(--surface-2); border-style: dashed; grid-template-columns: 48px 1fr; }
 .gp2-stop.is-office .gp2-stop-tag { background: #E5E7EB; color: #9CA3AF; }
 .gp2-stop.is-office .gp2-stop-kind,
 .gp2-stop.is-office .gp2-stop-addr { color: #9CA3AF; }
@@ -1388,6 +1398,72 @@ select.gp2-input {
   font-size: 10px; font-weight: 600;
   text-transform: uppercase; letter-spacing: 0.06em;
 }
+/* #1547: real photo thumbnail over the gradient fallback. */
+.file-thumb.photo { cursor: pointer; }
+.file-thumb-img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+}
+/* via Text / via Email provenance tag for customer-synced photos. */
+.file-via {
+  position: absolute; bottom: 8px; left: 8px;
+  padding: 3px 8px;
+  background: var(--ok, #2e7d32); color: #fff;
+  border-radius: 999px;
+  font-size: 10px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  z-index: 1;
+}
+.file-via:empty { display: none; }
+/* magnify hover affordance hinting click-to-enlarge. */
+.file-zoom {
+  position: absolute; bottom: 8px; right: 8px;
+  width: 22px; height: 22px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(17,24,22,0.6); color: #fff;
+  border-radius: 999px;
+  font-size: 12px; line-height: 1;
+  opacity: 0; transition: opacity .12s;
+  z-index: 1;
+}
+.file-thumb.photo:hover .file-zoom { opacity: 1; }
+/* #1547: full-screen photo lightbox. */
+.jd-lightbox {
+  position: fixed; inset: 0;
+  background: rgba(10,10,10,0.92);
+  z-index: 4000;
+  display: none;
+  align-items: center; justify-content: center;
+}
+.jd-lightbox.open { display: flex; }
+.jd-lightbox-img {
+  max-width: 92vw; max-height: 82vh;
+  border-radius: 8px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+  object-fit: contain;
+  background: #1a1a1a;
+}
+.jd-lightbox-caption {
+  position: absolute; bottom: 22px; left: 0; right: 0;
+  text-align: center; color: #fff; font-size: 13px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+.jd-lightbox-close {
+  position: absolute; top: 14px; right: 18px;
+  background: transparent; border: 0; color: #fff;
+  font-size: 26px; line-height: 1; cursor: pointer;
+}
+.jd-lightbox-nav {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  background: transparent; border: 0; color: #fff;
+  font-size: 34px; line-height: 1; cursor: pointer;
+  padding: 8px 14px;
+}
+.jd-lightbox-prev { left: 10px; }
+.jd-lightbox-next { right: 10px; }
+.jd-lightbox-nav[hidden] { display: none; }
 .file-meta { padding: 10px 12px; }
 .file-name { font-weight: 500; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .file-sub { color: var(--ink-3); font-size: 11px; margin-top: 2px; }
@@ -1829,7 +1905,7 @@ select.gp2-input {
         <span class="t" data-bind-text="claim.title">This lead isn't claimed yet.</span>
         <span class="s" data-bind-text="claim.sub">Follow-up reminders won't show in anyone's bell until claimed.</span>
         <span class="grow"></span>
-        <button data-comm-action="action:jobDetail.claim-lead" class="btn btn-primary">Claim lead</button>
+        <button data-comm-action="action:jobDetail.claim-lead" class="btn btn-primary" data-bind-text="claim.cta" data-bind-hide-empty="claim.cta">Claim lead</button>
       </div>
 
       <!-- Contacts -->
@@ -2401,7 +2477,8 @@ select.gp2-input {
                  the remove action, street address, and any 3rd+ stop). -->
             <div data-bind="route.stops" style="display:contents;">
               <template>
-                <div class="gp2-stop">
+                <div class="gp2-stop" draggable="true">
+                  <span class="gp2-stop-drag" title="Drag to reorder">⠿</span>
                   <span class="gp2-stop-tag">{{tag}}</span>
                   <div class="gp2-stop-body" data-record-id="{{id}}">
                     <div class="gp2-stop-top">
@@ -2736,7 +2813,7 @@ select.gp2-input {
             </div>
 
             <div class="files-grid">
-              <div data-bind="files.photos" data-files-group="photos" style="display:contents;"><template><div class="file"><div class="file-thumb" style="background:{{gradient}};"><span class="file-kind">Photo</span></div><div class="file-meta"><div class="file-name">{{name}}</div><div class="file-sub">{{sub}}</div><div class="file-actions" data-file-id="{{id}}"><button type="button" class="file-act" data-file-act="download">Download</button><button type="button" class="file-act" data-file-act="rename">Rename</button><button type="button" class="file-act" data-file-act="replace">Replace</button><button type="button" class="file-act file-act-del" data-file-act="delete">Delete</button></div></div></div></template></div>
+              <div data-bind="files.photos" data-files-group="photos" style="display:contents;"><template><div class="file"><div class="file-thumb photo" style="background:{{gradient}};" data-file-id="{{id}}" data-preview="1" title="Click to enlarge"><img class="file-thumb-img" src="{{thumb}}" alt="{{name}}" loading="lazy"><span class="file-kind">Photo</span><span class="file-via">{{via}}</span><span class="file-zoom" aria-hidden="true">⤢</span></div><div class="file-meta"><div class="file-name">{{name}}</div><div class="file-sub">{{sub}}</div><div class="file-actions" data-file-id="{{id}}"><button type="button" class="file-act" data-file-act="download">Download</button><button type="button" class="file-act" data-file-act="rename">Rename</button><button type="button" class="file-act" data-file-act="replace">Replace</button><button type="button" class="file-act file-act-del" data-file-act="delete">Delete</button></div></div></div></template></div>
               <div data-bind="files.pdfs" data-files-group="pdfs" style="display:contents;"><template><div class="file"><div class="file-thumb pdf"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span class="file-kind">PDF</span></div><div class="file-meta"><div class="file-name">{{name}}</div><div class="file-sub">{{sub}}</div><div class="file-actions" data-file-id="{{id}}"><button type="button" class="file-act" data-file-act="download">Download</button><button type="button" class="file-act" data-file-act="rename">Rename</button><button type="button" class="file-act" data-file-act="replace">Replace</button><button type="button" class="file-act file-act-del" data-file-act="delete">Delete</button></div></div></div></template></div>
               <div data-bind="files.signed" data-files-group="signed" style="display:contents;"><template><div class="file"><div class="file-thumb pdf signed"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span class="file-kind">PDF</span><span class="file-badge"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Signed</span></div><div class="file-meta"><div class="file-name">{{name}}</div><div class="file-sub">{{sub}}</div><div class="file-actions" data-file-id="{{id}}"><button type="button" class="file-act" data-file-act="download">Download</button><button type="button" class="file-act" data-file-act="rename">Rename</button><button type="button" class="file-act" data-file-act="replace">Replace</button><button type="button" class="file-act file-act-del" data-file-act="delete">Delete</button></div></div></div></template></div>
               <button class="file-upload">
@@ -2759,7 +2836,10 @@ select.gp2-input {
               <div style="display:flex;gap:8px;">
                 <button class="btn btn-secondary btn-sm" type="button" data-jd-open="sendInvoiceModal">Send invoice</button>
                 <button class="btn btn-secondary btn-sm" type="button" data-jd-open="addWagesModal">+ Add Wages</button>
-                <button class="btn btn-primary btn-sm" type="button" data-jd-open="finalizeModal">✓ Finalize Job</button>
+                <!-- #1536: state-aware finalize buttons (toggled in module.js). -->
+                <button class="btn btn-primary btn-sm" type="button" id="jdFinalizeBtn" data-jd-open="finalizeModal">✓ Finalize Job</button>
+                <button class="btn btn-primary btn-sm" type="button" id="jdFinalizedBtn" data-jd-open="finalizeModal" style="display:none;background:#ecfdf5;border-color:#6ee7b7;color:#047857;">✓ Finalized</button>
+                <button class="btn btn-secondary btn-sm" type="button" id="jdResetFinalizeBtn" style="display:none;border-color:#f0c8c8;color:#dc2626;">↺ Reset</button>
                 <!-- F27: job-lifecycle actions -->
                 <div class="jd-actions-menu" style="position:relative;">
                   <button class="btn btn-secondary btn-sm" type="button" id="jdJobActionsBtn" aria-haspopup="true" aria-expanded="false">Job actions ▾</button>
@@ -3154,7 +3234,16 @@ select.gp2-input {
 
         <!-- ╔══════════════ Generic placeholder panes ══════════════╗ -->
         <div class="tab-pane" data-pane="marketing"><div class="card empty-pane"><div class="empty-title">Marketing tab</div><div class="empty-sub">Campaign attribution, source, and audience tags for this customer.</div></div></div>
-        <div class="tab-pane" data-pane="documents"><div class="card empty-pane"><div class="empty-title">Documents tab</div><div class="empty-sub">Contracts, BOLs, COIs, and any other paperwork attached to this job.</div></div></div>
+        <div class="tab-pane" data-pane="documents">
+          <div class="card">
+            <div class="jd-doc-head">
+              <div class="jd-doc-title">Documents</div>
+              <div class="jd-doc-sub">Field contracts &amp; paperwork for this job and customer. Signed copies sync automatically when the crew signs in the Crew App.</div>
+            </div>
+            <div data-documents-host></div>
+            <div class="jd-doc-empty" data-documents-empty hidden>No documents yet for this job or customer.</div>
+          </div>
+        </div>
         <div class="tab-pane" data-pane="extras"><div class="card empty-pane"><div class="empty-title">Extras tab</div><div class="empty-sub">Custom fields and one-off add-ons specific to this deal.</div></div></div>
 
       </div>
@@ -3170,9 +3259,9 @@ select.gp2-input {
             <span class="jd-book-label" data-bind-text="deal.bookLeadLabel">Book this lead</span>
           </button>
           <div class="actions-secondary">
-            <button data-comm-action="action:jobDetail.mark-lost" class="btn btn-ghost" id="jdMarkLostBtn"
+            <button class="btn btn-ghost" id="jdMarkLostBtn"
                     data-bind-attr="disabled:deal.secMarkDisabled;aria-disabled:deal.secMarkDisabled">Mark lost</button>
-            <button data-comm-action="action:jobDetail.mark-bad-lead" class="btn btn-danger-text" id="jdMarkBadBtn"
+            <button class="btn btn-danger-text" id="jdMarkBadBtn"
                     data-bind-attr="disabled:deal.secMarkDisabled;aria-disabled:deal.secMarkDisabled">Mark bad lead</button>
           </div>
         </section>
@@ -3265,11 +3354,6 @@ select.gp2-input {
           </div>
           <div class="s-body" style="padding-top:0;padding-bottom:4px;">
             <div class="qa-list">
-              <a data-comm-action="action:jobDetail.send-discovery-call-confirmation" class="qa-item" href="#">
-                <span class="ic"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>
-                Send discovery call confirmation
-                <span class="arr">→</span>
-              </a>
               <a data-comm-action="action:jobDetail.send-portal-link" class="qa-item" href="#">
                 <span class="ic"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>
                 Send portal link
@@ -3277,7 +3361,7 @@ select.gp2-input {
               </a>
               <a data-comm-action="action:jobDetail.send-growth-plan" class="qa-item" href="#">
                 <span class="ic"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
-                Send <span data-bind-text="_terms.estimate">Estimate</span>
+                <span class="qa-label">Send <span data-bind-text="_terms.estimate">Estimate</span></span>
                 <span class="arr">→</span>
               </a>
               <a data-comm-action="action:jobDetail.request-a-card-on-file" class="qa-item" href="#">
@@ -3826,14 +3910,14 @@ select.gp2-input {
   <div class="jd-modal" style="width:440px;">
     <div class="jd-modal-head"><div class="jd-modal-title">Mark as Lost</div><button class="jd-modal-close" onclick="jdCloseModal('jdMarkLostModal')">✕</button></div>
     <div class="jd-modal-body">
-      <div class="jd-field"><label class="jd-label">Reason for losing this deal</label>
+      <div class="jd-field"><label class="jd-label">Reason for losing this deal <span class="req">*</span></label>
         <select name="reasonForLosingThisDeal" class="jd-select" data-bind-options="reasonForLosingThisDealOptions"><option value="">Select a reason…</option></select>
       </div>
       <div class="jd-field"><label class="jd-label">Notes (optional)</label><textarea name="notes" class="jd-textarea" placeholder="Anything we should remember about this one…"></textarea></div>
     </div>
     <div class="jd-modal-foot">
       <button data-modal-close class="btn btn-secondary" onclick="jdCloseModal('jdMarkLostModal')">Cancel</button>
-      <button data-modal-save class="btn btn-danger" style="background:#DC2626;color:#fff;border:0;" onclick="jdCloseModal('jdMarkLostModal')">Mark as Lost</button>
+      <button data-modal-save class="btn btn-danger" style="background:#DC2626;color:#fff;border:0;">Mark as Lost</button>
     </div>
   </div>
 </div>
@@ -3844,11 +3928,14 @@ select.gp2-input {
     <div class="jd-modal-head"><div class="jd-modal-title">Mark as Bad Lead</div><button class="jd-modal-close" onclick="jdCloseModal('jdMarkBadModal')">✕</button></div>
     <div class="jd-modal-body">
       <p style="color:var(--ink-3);font-size:13px;margin:0 0 12px;">Marks this customer as a bad lead so they're excluded from future outreach.</p>
-      <div class="jd-field"><label class="jd-label">Reason (optional)</label><textarea name="reason" class="jd-textarea" placeholder="Why is this a bad lead…"></textarea></div>
+      <div class="jd-field"><label class="jd-label">Reason <span class="req">*</span></label>
+        <select name="reason" class="jd-select" data-bind-options="badReasonOptions"><option value="">Select a reason…</option></select>
+      </div>
+      <div class="jd-field"><label class="jd-label">Notes (optional)</label><textarea name="notes" class="jd-textarea" placeholder="Why is this a bad lead…"></textarea></div>
     </div>
     <div class="jd-modal-foot">
       <button data-modal-close class="btn btn-secondary" onclick="jdCloseModal('jdMarkBadModal')">Cancel</button>
-      <button data-modal-save class="btn btn-danger" style="background:#DC2626;color:#fff;border:0;" onclick="jdCloseModal('jdMarkBadModal')">Mark as Bad Lead</button>
+      <button data-modal-save class="btn btn-danger" style="background:#DC2626;color:#fff;border:0;">Mark as Bad Lead</button>
     </div>
   </div>
 </div>
@@ -4031,7 +4118,7 @@ select.gp2-input {
         <div class="jd-field"><label class="jd-label">Heavy items</label><input name="heavyItems" class="jd-input" type="number" placeholder="0" min="0"></div>
         <div class="jd-field" style="grid-column:1/-1;"><label class="jd-label">Special handling</label><textarea name="specialHandling" class="jd-textarea" placeholder="e.g., Grand piano, antique armoire…"></textarea></div>
       </div>
-      <div style="margin-top:6px;font-size:12px;"><a data-jd-tab="growth-plan" href="#" style="color:var(--terra);font-weight:600;">Open full inventory editor →</a></div>
+      <div style="margin-top:6px;font-size:12px;"><a id="jdFullInventoryLink" href="#" style="color:var(--terra);font-weight:600;">Open full inventory editor →</a></div>
     </div>
     <div class="jd-modal-foot">
       <button data-modal-close class="btn btn-secondary" onclick="jdCloseModal('jdInventoryModal')">Cancel</button>
@@ -4263,6 +4350,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('jdAddContactBtn')?.addEventListener('click', e => { e.preventDefault(); jdOpenModal('jdAddContactModal'); });
   document.getElementById('jdRecordVideoBtn')?.addEventListener('click', e => { e.preventDefault(); jdOpenModal('jdVideoModal'); });
   document.getElementById('jdMarkLostBtn')?.addEventListener('click', e => { e.preventDefault(); jdOpenModal('jdMarkLostModal'); });
+  document.getElementById('jdMarkBadBtn')?.addEventListener('click', e => { e.preventDefault(); jdOpenModal('jdMarkBadModal'); });
 
   // Set follow-up popover
   const fuBtn = document.getElementById('jdSetFollowupBtn');
@@ -4400,6 +4488,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
 <!-- F22: hidden file picker used by the per-file Replace action -->
 <input type="file" id="jdReplaceFileInput" style="display:none;">
+
+<!-- #1547: full-screen photo lightbox (click a photo thumbnail to enlarge) -->
+<div id="jdPhotoLightbox" class="jd-lightbox" role="dialog" aria-modal="true" aria-label="Photo preview">
+  <button type="button" class="jd-lightbox-close" id="jdLightboxClose" aria-label="Close">✕</button>
+  <button type="button" class="jd-lightbox-nav jd-lightbox-prev" id="jdLightboxPrev" aria-label="Previous photo">‹</button>
+  <img class="jd-lightbox-img" id="jdLightboxImg" src="" alt="">
+  <button type="button" class="jd-lightbox-nav jd-lightbox-next" id="jdLightboxNext" aria-label="Next photo">›</button>
+  <div class="jd-lightbox-caption" id="jdLightboxCaption"></div>
+</div>
 
 <!-- F26: Reassign communication modal -->
 <div id="reassignCommModal" class="jd-overlay" style="display:none;">

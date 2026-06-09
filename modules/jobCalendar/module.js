@@ -164,7 +164,22 @@ function applyCalendarFilters() {
       else if (etVal === 'virtual') etOk = evt.classList.contains('virtual');
       else if (etVal === 'none')    etOk = evt.classList.contains('none');
     }
-    evt.style.display = (kindOk && quickOk && etOk) ? '' : 'none';
+    const show = (kindOk && quickOk && etOk);
+    evt.style.display = show ? '' : 'none';
+    // #1534: keep the tentative dashed-circle badge in sync — hide it when the
+    // day's event is filtered out so a hidden "2 moves" cell doesn't leave a
+    // floating badge; restore it (only if the day actually has tentatives) when shown.
+    const tb = cell.querySelector('.cal-tentative');
+    if (tb) tb.style.display = (show && tb.classList.contains('show')) ? 'inline-flex' : 'none';
+  });
+}
+// #1534: the template engine has no conditionals, so toggle the dashed-circle
+// tentative badge after each render based on the data-tentative count.
+function reflectTentativeBadges() {
+  $$('.cal-cell').forEach(cell => {
+    const b = cell.querySelector('.cal-tentative'); if (!b) return;
+    const n = parseInt(cell.getAttribute('data-tentative') || '', 10);
+    b.classList.toggle('show', Number.isFinite(n) && n > 0);
   });
 }
 document.addEventListener('change', (ev) => {
@@ -172,9 +187,9 @@ document.addEventListener('change', (ev) => {
     applyCalendarFilters();
   }
 });
-document.addEventListener('s1ui:ready', applyCalendarFilters);
+document.addEventListener('s1ui:ready', () => { reflectTentativeBadges(); applyCalendarFilters(); });
 if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
-  window.S1.bus.on('state:replaced', applyCalendarFilters);
+  window.S1.bus.on('state:replaced', () => { reflectTentativeBadges(); applyCalendarFilters(); });
 }
 // Persist quick-filter selection so the server can re-query if it wants to.
 document.addEventListener('change', async (ev) => {
