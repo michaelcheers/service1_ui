@@ -138,10 +138,22 @@
         r.onerror = function () { reject(r.error || new Error('read failed')); };
         r.readAsDataURL(file);
       });
+      // For images, build a 320px JPEG thumbnail client-side (HEIC routed
+      // through heic2any) so the server never has to decode pixel data.
+      // Failures fall back to null and the host's gradient placeholder.
+      let thumbnailDataUrl = null;
+      const isImage = file && (
+        (file.type && file.type.indexOf('image/') === 0) ||
+        (window.S1 && window.S1.imageThumb && window.S1.imageThumb.isHeic(file.type))
+      );
+      if (isImage && window.S1 && window.S1.imageThumb) {
+        try { thumbnailDataUrl = await window.S1.imageThumb.thumbnailDataUrl(file, 320); }
+        catch (_) { thumbnailDataUrl = null; }
+      }
       const resource = (meta && meta.resource) || 'file';
       const out = await rpc('upload', resource, {
         name: file && file.name, size: file && file.size, type: file && file.type,
-        meta: meta || null, dataUrl: dataUrl
+        meta: meta || null, dataUrl: dataUrl, thumbnailDataUrl: thumbnailDataUrl
       });
       this._record('upload', resource, { name: file && file.name, size: file && file.size }, out);
       return out;

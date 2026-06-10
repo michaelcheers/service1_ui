@@ -1833,22 +1833,51 @@ document.addEventListener('click', async function (ev) {
 //     jobDetail.file-preview (HEIC transcoded server-side), with ‹ › / Esc nav.
 //     All DOM built via createElement/attributes — no innerHTML (CLAUDE rule 2).
 (function () {
+  // Per-tab backfill cache so we never re-fetch the same attachment in a
+  // single page session, even if normalizeThumbs runs again after a re-render.
+  var backfillAttempted = new Set();
+
+  async function backfillThumb(fileId, img) {
+    if (!fileId || backfillAttempted.has(fileId)) return;
+    backfillAttempted.add(fileId);
+    if (!window.S1 || !window.S1.imageThumb) return;
+    try {
+      var r = await comm.action('jobDetail.file-preview', { fileId: fileId });
+      if (!r || r.ok === false || !r.dataBase64) return;
+      var bin = atob(r.dataBase64);
+      var bytes = new Uint8Array(bin.length);
+      for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      var blob = new Blob([bytes], { type: r.contentType || 'application/octet-stream' });
+      var dataUrl = await window.S1.imageThumb.thumbnailDataUrl(blob, 320);
+      if (!dataUrl) return;
+      img.setAttribute('src', dataUrl);
+      img.style.display = '';
+      // Persist so the next page load serves the cached thumbnail inline and
+      // skips this whole round-trip. Fire-and-forget — UI already updated.
+      try { comm.action('jobDetail.cache-thumbnail', { fileId: fileId, thumbnailDataUrl: dataUrl }); }
+      catch (_) {}
+    } catch (_) { /* leave gradient placeholder */ }
+  }
+
   function normalizeThumbs() {
     $$('.file-thumb-img').forEach(function (img) {
-      if (img.__jdWired) {
-        // re-render replaces nodes, but guard idempotently anyway
-      }
       var src = img.getAttribute('src') || '';
-      if (!src) {
-        img.removeAttribute('src');
-        img.style.display = 'none';
-        return;
-      }
-      img.style.display = '';
       if (!img.__jdWired) {
         img.__jdWired = true;
         img.addEventListener('error', function () { img.style.display = 'none'; });
       }
+      if (!src) {
+        img.removeAttribute('src');
+        img.style.display = 'none';
+        // Server-side has no image decoder anymore, so attachments that came in
+        // via MMS / inbound email arrive without a thumbnail. Fetch the full
+        // bytes once, canvas-resize, render, and POST the result back to cache.
+        var thumb = img.closest && img.closest('.file-thumb');
+        var fileId = thumb && thumb.getAttribute('data-file-id');
+        if (fileId) backfillThumb(fileId, img);
+        return;
+      }
+      img.style.display = '';
     });
   }
   document.addEventListener('s1ui:ready', function (e) {
@@ -1884,6 +1913,11 @@ document.addEventListener('click', async function (ev) {
       var bytes = new Uint8Array(len);
       for (var i = 0; i < len; i++) bytes[i] = bin.charCodeAt(i);
       var blob = new Blob([bytes], { type: r.contentType || 'image/jpeg' });
+      // HEIC arrives as raw bytes — transcode in the browser via heic2any so
+      // non-Safari engines can render it. Non-HEIC blobs pass through.
+      if (window.S1 && window.S1.imageThumb) {
+        try { blob = await window.S1.imageThumb.toDisplayableBlob(blob); } catch (_) {}
+      }
       revoke();
       curUrl = URL.createObjectURL(blob);
       lbImg.setAttribute('src', curUrl);
