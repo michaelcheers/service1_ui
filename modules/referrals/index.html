@@ -80,7 +80,7 @@
     <div class="ref-wrap">
       <div class="ref-header">
         <h1 data-bind-text="summary">Lead Referrals</h1>
-        <button class="ref-btn" onclick="document.getElementById('addReferrerModal').classList.add('open')">+ Add Referrer</button>
+        <button class="ref-btn" onclick="S1.modal.open('#addReferrerModal')">+ Add Referrer</button>
       </div>
 
       <div class="ref-stats">
@@ -144,7 +144,7 @@
       <div class="ref-section" data-rpanel="leads" style="display:none;">
         <div class="ref-section-head">
           <h2 class="ref-section-title" data-bind-text="headings.3">All Referral Leads</h2>
-          <button type="button" class="ref-btn" onclick="document.getElementById('addReferralModal').classList.add('open')">+ Add Referral</button>
+          <button type="button" class="ref-btn" onclick="S1.modal.open('#addReferralModal')">+ Add Referral</button>
         </div>
         <table class="ref-table">
           <thead><tr><th>Date</th><th>Referrer</th><th>Customer</th><th>Service</th><th>Est. Value</th><th>Status</th><th>Commission</th><th>Actions</th></tr></thead>

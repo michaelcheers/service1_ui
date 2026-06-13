@@ -745,6 +745,9 @@ iframe.cmx-editor-frame { width: 100%; min-height: 160px; border: 0; display: bl
 .tl-item:not(.tl-note) .tl-del { display: none !important; }
 .tl-item.tl-note .tl-pin-comm,
 .tl-item.tl-note .tl-reassign { display: none !important; }
+/* F#1588: Reply button shows only on email rows (kind "mail" → .tl-mail) */
+.tl-item:not(.tl-mail) .tl-reply { display: none !important; }
+.tl-actions .tl-reply { color: var(--terra); border-color: var(--terra); font-weight: 600; }
 /* F#1378: pinned strip surfacing pinned timeline items */
 .tl-pinned-strip { background: var(--surface-2, #f6f7f9); border: 1px solid var(--terra); border-radius: 10px; padding: 8px 10px; margin: 12px 16px 0; }
 .tl-pinned-hd { font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--terra); margin-bottom: 6px; }
@@ -2403,6 +2406,7 @@ select.gp2-input {
                         <button type="button" class="tl-del" data-jd-del-note="{{recordId}}" title="Delete note">Delete</button>
                         <button type="button" class="tl-pin-comm {{pinnedClass}}" data-jd-pin-comm="{{recordId}}" title="Pin">📌</button>
                         <button type="button" class="tl-reassign" data-jd-reassign="{{recordId}}" title="Reassign">Reassign</button>
+                        <button type="button" class="tl-reply" data-jd-reply="{{recordId}}" data-jd-reply-to="{{replyToAddress}}" data-jd-reply-subject="{{subject}}" title="Reply to this email">Reply</button>
                       </div>
                       <div class="tl-time">{{time}}</div>
                     </div>

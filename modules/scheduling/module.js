@@ -335,11 +335,37 @@ $$('.date-today, button.btn').filter(b => /^today$/i.test(b.textContent.trim()))
   document.head.appendChild(style);
 })();
 
+// #1587: lazy tab slices. The heavy day-off / truck-rental datasets are NOT in
+// the initial (core) state — they load on first tab open and are cached so a
+// re-open doesn't refetch. The server pushes the slice as a partial state which
+// the host merges into the fixture (see communication.mock.js apply()).
+const schedLazyTabs = { 'day-off': 'dayoff', 'truck-rentals': 'rentals' };
+const schedLoadedSlices = { dayoff: false, rentals: false };
+async function ensureTabSlice(dataTab) {
+  const tab = schedLazyTabs[dataTab];
+  if (!tab || schedLoadedSlices[tab]) return;
+  const pane = document.querySelector('.tab-pane[data-pane="' + dataTab + '"]');
+  let loadingEl = null;
+  if (pane) {
+    loadingEl = document.createElement('div');
+    loadingEl.className = 'sched-tab-loading';
+    loadingEl.textContent = 'Loading…';
+    loadingEl.style.cssText = 'padding:24px;text-align:center;color:#64748b;font-size:13px;';
+    pane.appendChild(loadingEl);
+  }
+  try {
+    const r = await comm.action('scheduling.tab.load', { tab });
+    if (r && r.ok) schedLoadedSlices[tab] = true;
+  } catch {}
+  if (loadingEl && loadingEl.parentNode) loadingEl.parentNode.removeChild(loadingEl);
+  recomputeCounts();
+}
+
 // Sched tabs (Resource Calendar / Scheduling / Customer Confirmations / etc.)
 $$('.sched-tab[data-tab]').forEach(b => {
   b.addEventListener('click', async () => {
     $$('.sched-tab[data-tab]').forEach(x => x.classList.toggle('active', x === b));
-    /* UI-only: visual toggle handled in-page; no server save */
+    await ensureTabSlice(b.getAttribute('data-tab'));
   });
 });
 
@@ -1705,16 +1731,24 @@ function recomputeCounts() {
     const el = document.querySelector(sel);
     if (el) el.textContent = String(n);
   }
-  // sched-tab counts
+  // sched-tab counts. Target the badge span by data-tab (robust to the tab
+  // order) and write the live DOM-derived count.
   const visibleJobs = $$('.lane[data-lane] > .job').filter(j => j.style.display !== 'none').length;
   const custRows = $$('.tableview[data-bulk-table="customer"] tbody tr, [data-bind="customerConfirmations"] > *:not(template)').length;
   const teamRows = $$('.tableview[data-bulk-table="team"] tbody tr, [data-bind="teamConfirmations"] > *:not(template)').length;
   const dayOff   = $$('.do-col.pending .do-req, [data-bind="dayOffPending"] > *:not(template)').length;
-  const tabs = $$('#schedTabs .sched-tab');
-  if (tabs[1]) { const s = tabs[1].querySelector('span'); if (s) s.textContent = String(visibleJobs); }
-  if (tabs[2]) { const s = tabs[2].querySelector('span'); if (s) s.textContent = String(custRows); }
-  if (tabs[3]) { const s = tabs[3].querySelector('span'); if (s) s.textContent = String(teamRows); }
-  if (tabs[4]) { const s = tabs[4].querySelector('span'); if (s) s.textContent = String(dayOff); }
+  function setTabBadge(dataTab, n) {
+    const t = document.querySelector('#schedTabs .sched-tab[data-tab="' + dataTab + '"]');
+    const s = t && t.querySelector('span');
+    if (s) s.textContent = String(n);
+  }
+  setTabBadge('scheduling', visibleJobs);
+  setTabBadge('customer-confirmations', custRows);
+  setTabBadge('team-confirmations', teamRows);
+  // #1587: the day-off slice is lazy-loaded. Until it has loaded its pane is
+  // empty, so DON'T overwrite the server-rendered badge (metrics.count.3) with
+  // a DOM count of 0 — keep the correct pending count until the slice arrives.
+  if (schedLoadedSlices.dayoff) setTabBadge('day-off', dayOff);
   // section counts (Leaders / Members / Fleet)
   const ldrs = (fx.rLeaders || []).length || $$('[data-bind="rLeaders"] > .r-row').length;
   const mbrs = (fx.rMembers || []).length || $$('[data-bind="rMembers"] > .r-row').length;

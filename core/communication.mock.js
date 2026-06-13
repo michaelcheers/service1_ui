@@ -221,18 +221,29 @@
   const qs = new URLSearchParams(location.search);
   const defaultFixture = qs.get('fixture');
 
-  function apply(fixtureName, state) {
+  // #1587: `partial` pushes (scoped mutation deltas / lazy tab slices) are
+  // shallow-merged into the existing fixture rather than replacing it — a
+  // replace would blank every key the delta doesn't carry (e.g. pushing only
+  // {timeline,teams,metrics} would wipe the rosters and any loaded tab). Full
+  // (non-partial) pushes keep replace semantics, preserving the prod-safety
+  // wipe behaviour the host relies on for a clean reload.
+  function apply(fixtureName, state, partial) {
     if (!state) return;
     try {
+      var effective = state;
+      if (partial && fixtureName && window.S1 && window.S1.fixtures) {
+        var cur = window.S1.fixtures[fixtureName] || {};
+        effective = Object.assign({}, cur, state);
+      }
       if (fixtureName && window.S1 && window.S1.fixtures) {
-        window.S1.fixtures[fixtureName] = state;
+        window.S1.fixtures[fixtureName] = effective;
       }
       if (window.S1 && window.S1.store && typeof window.S1.store.replaceAll === 'function') {
-        window.S1.store.replaceAll(state);
+        window.S1.store.replaceAll(effective);
       }
-      if (window.S1 && window.S1.bus) window.S1.bus.emit('state:replaced', state);
+      if (window.S1 && window.S1.bus) window.S1.bus.emit('state:replaced', effective);
       if (window.S1 && window.S1.render && typeof window.S1.render.bind === 'function') {
-        window.S1.render.bind(document, state);
+        window.S1.render.bind(document, effective);
       }
     } catch {}
   }
@@ -241,7 +252,7 @@
     const d = ev.data;
     if (!d || typeof d !== 'object' || d.type !== 's1ui:state') return;
     if (log) log.state(d.fixture || defaultFixture, d.state);
-    apply(d.fixture || defaultFixture, d.state);
+    apply(d.fixture || defaultFixture, d.state, !!d.partial);
   });
 
   // Tell the host we're ready to receive state. The host must wait for

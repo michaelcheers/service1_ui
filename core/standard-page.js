@@ -372,6 +372,39 @@
     });
   }
 
+  // Global modal-close delegation. Modules sometimes open overlays by
+  // toggling .open directly (bypassing modalOpen), so the per-open
+  // close-button wiring never runs and Close/Cancel/X buttons are dead.
+  // This delegated handler closes the nearest overlay for ANY
+  // [data-modal-close] / close-class click, however the modal was opened.
+  document.addEventListener('click', function (ev) {
+    var closer = ev.target.closest(
+      '[data-modal-close], .modal-close, .s1-x, .tm-close, .fm-close, .jd-close, .tk-close');
+    if (!closer) return;
+    // Match the OVERLAY element (which carries .open), never the inner
+    // .modal card — closest() returns the nearest matching ancestor, so
+    // including .modal here would resolve to the card (no .open) and no-op.
+    var overlay = closer.closest('.modal-overlay, .s1-overlay, [class*="-overlay"]');
+    if (!overlay) return;
+    ev.preventDefault();
+    modalClose(overlay);
+  });
+
+  // Backdrop click fallback for overlays opened outside modalOpen.
+  document.addEventListener('click', function (ev) {
+    var ov = ev.target;
+    if (ov && ov.classList && ov.classList.contains('open') &&
+        (ov.classList.contains('modal-overlay') || ov.classList.contains('s1-overlay'))) {
+      if (ev.target === ov) modalClose(ov);   // clicked the backdrop itself
+    }
+  });
+  // ESC fallback for overlays opened outside modalOpen.
+  document.addEventListener('keydown', function (ev) {
+    if (ev.key !== 'Escape') return;
+    var open = document.querySelector('.modal-overlay.open, .s1-overlay.open');
+    if (open) modalClose(open);
+  });
+
   // ─ Cross-area navigation. Module pages live in separate folders
   // (modules/<name>/index.html), so naive sibling-relative links like
   // "Documents.html" 404 against the static host. Links that jump between

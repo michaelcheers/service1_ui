@@ -79,7 +79,7 @@ function openShareLink(opts) {
   const canEmail = shareHasEmail && shareReferrerId != null;
   if (emailBtn) emailBtn.style.display = canEmail ? '' : 'none';
   if (emailNote) emailNote.style.display = canEmail ? '' : 'none';
-  if (modal) modal.classList.add('open');
+  if (modal) window.S1.modal.open(modal);   // wires X / backdrop / ESC
 }
 
 // Share-modal buttons.

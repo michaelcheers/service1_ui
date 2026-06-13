@@ -3552,6 +3552,86 @@ document.addEventListener('click', function (ev) {
     renderChips(role);
   }
 
+  // ── F#1588: reply mode ────────────────────────────────────────────────
+  // A single parent JobCommunication id is the source of truth. When armed the
+  // composer pre-fills To / "Re:" subject and the send payload carries replyToId
+  // so the server threads the reply (In-Reply-To/References, quoted original).
+  let __replyToId = null;
+
+  function showReplyBanner(toAddr, subject) {
+    const pane = document.querySelector('[data-cmx-body="email"] .cmx-pane');
+    if (!pane) return;
+    hideReplyBanner();
+    const banner = document.createElement('div');
+    banner.className = 'jd-reply-banner';
+    banner.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:10px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:12px;color:#065f46;';
+    const txt = document.createElement('span');
+    const lead = document.createElement('span');
+    lead.textContent = '↩ Replying to ';
+    const who = document.createElement('strong');
+    who.textContent = toAddr || '(unknown)';
+    const tail = document.createElement('span');
+    tail.textContent = (subject ? ' · "' + subject + '"' : '') + ' — original will be quoted automatically.';
+    txt.appendChild(lead);
+    txt.appendChild(who);
+    txt.appendChild(tail);
+    const x = document.createElement('span');
+    x.textContent = '×';
+    x.title = 'Cancel reply';
+    x.style.cssText = 'cursor:pointer;font-weight:700;color:#065f46;font-size:16px;line-height:1;flex:none;';
+    x.addEventListener('click', (ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      const to = document.querySelector('[data-bind-value="composer.email.to"]');
+      if (to) to.value = '';
+      const subj = document.querySelector('[data-bind-value="composer.email.subject"]');
+      if (subj) subj.value = '';
+      exitReplyMode();
+    });
+    banner.appendChild(txt);
+    banner.appendChild(x);
+    const firstField = pane.querySelector('.cmx-field');
+    if (firstField) pane.insertBefore(banner, firstField);
+    else pane.appendChild(banner);
+  }
+
+  function hideReplyBanner() {
+    document.querySelectorAll('.jd-reply-banner').forEach(b => b.remove());
+  }
+
+  function enterReplyMode(parentId, toAddr, subject) {
+    __replyToId = parentId;
+    const tab = document.querySelector('[data-cmx-tab="email"]');
+    if (tab) tab.click();
+    const to = document.querySelector('[data-bind-value="composer.email.to"]');
+    if (to && toAddr) to.value = toAddr;
+    const base = (subject || '').replace(/^\s*(re:\s*)+/i, '').trim();
+    const subj = document.querySelector('[data-bind-value="composer.email.subject"]');
+    if (subj) subj.value = 'Re: ' + base;
+    showReplyBanner(toAddr, base ? 'Re: ' + base : '');
+  }
+
+  function exitReplyMode() {
+    __replyToId = null;
+    hideReplyBanner();
+  }
+
+  function wireEmailReplyButtons() {
+    document.querySelectorAll('.tl-reply[data-jd-reply]').forEach(btn => {
+      if (btn.__s1Wired) return;
+      btn.__s1Wired = true;
+      btn.addEventListener('click', (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        enterReplyMode(
+          btn.getAttribute('data-jd-reply'),
+          btn.getAttribute('data-jd-reply-to'),
+          btn.getAttribute('data-jd-reply-subject')
+        );
+      });
+    });
+  }
+
   async function gatherEmailPayload() {
     const body = (window.__jobDetailEditors && window.__jobDetailEditors.get)
       ? await window.__jobDetailEditors.get('email')
@@ -3567,7 +3647,8 @@ document.addEventListener('click', function (ev) {
       isHtml:   true,
       templateId: readBind('email', 'templateId'),
       attachments: pendingAttachments.email.slice(),
-      followUp: !!(follow && follow.classList.contains('on'))
+      followUp: !!(follow && follow.classList.contains('on')),
+      replyToId: __replyToId  // F#1588: null for a fresh email, parent id when replying
     };
   }
   function gatherTextPayload() {
@@ -3651,6 +3732,7 @@ document.addEventListener('click', function (ev) {
                 if (el) el.value = '';
               });
               // Editor iframe content reset is handled by the host on next fixture load.
+              exitReplyMode();  // F#1588: clear reply target + banner so next email starts fresh
             } else {
               const ta = document.getElementById('cmxTextBody');
               if (ta) { ta.value = ''; ta.dispatchEvent(new Event('input')); }
@@ -3834,6 +3916,7 @@ document.addEventListener('click', function (ev) {
     wireCmxAttach();
     wireCmxTextCounter();
     wireCmxKeydownSend();
+    wireEmailReplyButtons();
   }
   wireAll();
   document.addEventListener('s1ui:ready', wireAll);
