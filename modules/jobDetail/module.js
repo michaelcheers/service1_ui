@@ -102,6 +102,24 @@ $$('.tab[data-tab]').forEach(btn => {
   });
 });
 
+// Feature #1565: open an explicitly-requested tab on boot. The host (Business-
+// CardPlatform JobDetail.cshtml) forwards the requested tab into the iframe src
+// as ?tab=… — but ONLY when one was explicitly asked for. A plain job-detail
+// load omits it, so we keep the hard-coded default (Communication). After the
+// user finalizes from the Accounting tab the host reloads the page with
+// tab=accounting; without this the freshly-booted module always landed on
+// Communication and the user had to switch back to Accounting by hand. Map the
+// host's tab keys onto this module's data-tab values (estimate → growth-plan).
+(function openInitialTab() {
+  let requested = null;
+  try { requested = new URLSearchParams(location.search).get('tab'); } catch (_) { requested = null; }
+  if (!requested) return;
+  const ALIASES = { estimate: 'growth-plan', inventory: 'growth-plan' };
+  const target = ALIASES[requested] || requested;
+  const btn = $$('.tab[data-tab]').find(b => b.dataset.tab === target);
+  if (btn) btn.click();
+})();
+
 // F32: removed dead composer wiring (old sections 2-7). The pre-cmx .composer
 // /.composer-tabs/.composer-foot markup no longer exists — the cmx composer
 // (#cmxTabs inline handler + the cmx IIFE in this file) owns tabs, send,
