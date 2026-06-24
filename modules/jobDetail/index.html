@@ -828,11 +828,11 @@ iframe.cmx-editor-frame { width: 100%; min-height: 160px; border: 0; display: bl
   background: #fff;
   overflow: hidden;
 }
-.tl-text-mail .s1-html-frame {
+.tl-text-mail .s1-html-frame,
+.tl-text-mail iframe[data-s1-wrap] {
   width: 100%;
   border: 0;
   display: block;
-  min-height: 60px;
   background: #fff;
 }
 .tl-meta {
@@ -1253,6 +1253,24 @@ select.gp2-input {
   background: var(--surface-2); border: 1px dashed var(--line);
   border-radius: 10px; padding: 12px 16px; text-align: center;
 }
+/* #1607: the always-present custom-charge group sits below the dynamic groups */
+.gp2-charge-picker > .gp2-quick-group { margin-top: 16px; }
+.gp2-quick-custom {
+  padding: 6px 14px;
+  border: 1px dashed var(--terra);
+  color: var(--terra); font-weight: 600;
+}
+.gp2-quick-custom:hover { border-color: var(--terra); background: var(--terra-soft); }
+
+/* #1597: persistent charge-template picker (always visible, even with charges) */
+.gp2-charge-picker { padding: 4px 0 8px; }
+.gp2-picker-hd {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 11px; font-weight: 700; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--ink-3);
+  margin: 6px 0 14px;
+}
+.gp2-picker-ln { flex: 1; height: 1px; background: var(--line); }
 
 /* ═════ Growth Plan (line-item table — used by Accounting) ═════ */
 .gp-table {
@@ -1891,6 +1909,26 @@ select.gp2-input {
               <a href="#" class="link" id="jdSetFollowupBtn" data-bind-text="header.followupCta">+ Set follow-up</a>
             </span>
           </div>
+
+          <!-- #1612: open follow-ups with a per-row "Done" button. The framework
+               clones one .jd-fuc-row per pendingFollowUps item; the Done button
+               carries data-record-id="{{id}}" so collectPayload emits {id} and the
+               document-level dispatcher fires action:jobDetail.complete-follow-up.
+               Empty list → host renders nothing. -->
+          <div class="jd-fuc-list" data-bind="pendingFollowUps">
+            <template>
+              <div class="jd-fuc-row" data-record-id="{{id}}">
+                <div class="jd-fuc-info">
+                  <span class="jd-fuc-when">{{dateLabel}}</span>
+                  <span class="jd-fuc-overdue">{{overdueLabel}}</span>
+                  <span class="jd-fuc-note">{{note}}</span>
+                </div>
+                <button type="button" class="jd-fuc-done"
+                        data-comm-action="action:jobDetail.complete-follow-up"
+                        title="Mark this follow-up complete">&#10003; Done</button>
+              </div>
+            </template>
+          </div>
         </div>
 
         <div class="h-actions">
@@ -2104,7 +2142,11 @@ select.gp2-input {
             <div class="cmx-pane">
               <div class="cmx-field">
                 <label class="cmx-lbl">From Line</label>
-                <input class="cmx-input tinted" type="text" data-bind-value="composer.text.from" value=".COM LANDING TORONTO (+16472518188)" />
+                <select class="cmx-input tinted" style="width:100%;"
+                        data-bind-options="composer.text.fromLines"
+                        data-bind-value="composer.text.fromLineId">
+                  <option value="">No phone line configured — add one in Settings › Phone</option>
+                </select>
               </div>
 
               <div class="cmx-actions">
@@ -2355,14 +2397,14 @@ select.gp2-input {
         <!-- Timeline -->
         <section class="card" style="margin-top:16px;">
           <div class="tl-pinned-strip" data-bind-hide-empty="timeline.pinnedItems">
-            <div class="tl-pinned-hd">📌 Pinned <span data-bind-text="timeline.pinnedCount"></span></div>
+            <div class="tl-pinned-hd"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1v3.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24z"/></svg> Pinned <span data-bind-text="timeline.pinnedCount"></span></div>
             <div class="tl-pinned-list" data-bind="timeline.pinnedItems">
               <template>
                 <div class="tl-pinned-item tl-{{kind}}" data-jd-pinned-record="{{recordId}}" data-jd-pinned-kind="{{kind}}">
                   <span class="tl-pinned-kind">{{kindLabel}}</span>
                   <span class="tl-pinned-body">{{preview}}</span>
                   <span class="tl-pinned-time">{{time}}</span>
-                  <button type="button" class="tl-pinned-unpin" data-jd-unpin="{{recordId}}" data-jd-unpin-kind="{{kind}}" title="Unpin">×</button>
+                  <button type="button" class="tl-pinned-unpin" data-jd-unpin="{{recordId}}" data-jd-unpin-kind="{{kind}}" title="Unpin"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
                 </div>
               </template>
             </div>
@@ -2404,7 +2446,7 @@ select.gp2-input {
                         </button>
                         <button type="button" class="tl-edit" data-jd-edit-note="{{recordId}}" title="Edit note">Edit</button>
                         <button type="button" class="tl-del" data-jd-del-note="{{recordId}}" title="Delete note">Delete</button>
-                        <button type="button" class="tl-pin-comm {{pinnedClass}}" data-jd-pin-comm="{{recordId}}" title="Pin">📌</button>
+                        <button type="button" class="tl-pin-comm {{pinnedClass}}" data-jd-pin-comm="{{recordId}}" title="Pin"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1v3.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24z"/></svg></button>
                         <button type="button" class="tl-reassign" data-jd-reassign="{{recordId}}" title="Reassign">Reassign</button>
                         <button type="button" class="tl-reply" data-jd-reply="{{recordId}}" data-jd-reply-to="{{replyToAddress}}" data-jd-reply-subject="{{subject}}" title="Reply to this email">Reply</button>
                       </div>
@@ -2427,6 +2469,18 @@ select.gp2-input {
 
         <!-- ╔══════════════ GROWTH PLAN ══════════════╗ -->
         <div class="tab-pane" data-pane="growth-plan">
+
+          <!-- #1618: expired-estimate notice + Refresh action (shown only when the
+               estimate is past its validity and can be refreshed). -->
+          <section class="card gp-expired-banner" data-bind-hide-empty="deal.estimateExpired"
+                   style="border-left:4px solid #ef4444;background:#fef2f2;display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+            <div style="flex:1;min-width:240px;">
+              <strong style="color:#b91c1c;" data-bind-text="deal.estimateExpired"></strong>
+            </div>
+            <button type="button" class="btn btn-primary btn-sm" data-comm-action="action:jobDetail.refresh-estimate">
+              ↻ Refresh <span data-bind-text="_terms.estimate">Estimate</span>
+            </button>
+          </section>
 
           <!-- Job parameters strip -->
           <section class="card gp2-params">
@@ -2578,30 +2632,28 @@ select.gp2-input {
           <section class="card" style="margin-top:16px;">
             <div class="s-head">
               <div class="s-title">Charges</div>
-              <button class="btn btn-secondary btn-sm" type="button" data-jd-open="addChargeModal">+ Add charge</button>
+              <div style="display:flex;gap:8px;">
+                <button class="btn btn-secondary btn-sm" type="button" data-comm-action="action:jobDetail.sync-charges">Sync Charges</button>
+                <button class="btn btn-secondary btn-sm" type="button" data-jd-open="addChargeModal">+ Add charge</button>
+              </div>
             </div>
 
+            <!-- Empty-state message: shown only while there are zero charges -->
             <div class="gp2-charges-empty" data-empty-unless="rows">
               <div class="gp2-empty-icon">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
               </div>
               <div class="gp2-empty-title">No charges added yet</div>
               <div class="gp2-empty-sub">Pick a category to start, or add a custom charge.</div>
-              <div class="gp2-quick-groups" data-quick-host></div>
-              <template data-quick-template>
-                <button type="button" class="gp2-quick">
-                  <span class="gp2-quick-ic" data-quick-icon></span>
-                  <span data-quick-label></span>
-                </button>
-              </template>
             </div>
 
+            <!-- Charges table: shown only when charges exist -->
             <div data-empty-if="rows">
               <table class="acct-table" id="gpChargesTable">
                 <thead>
                   <tr><th>Category</th><th>Description</th><th class="num">Amount</th><th></th><th></th></tr>
                 </thead>
-                <tbody data-bind="rows"><template><tr class="{{rowClass}}" data-record-id="{{id}}" data-edit-type="{{rawChargeType}}" data-edit-name="{{rawItemName}}" data-edit-desc="{{rawDescription}}" data-edit-rate="{{rawRate}}" data-edit-qty="{{rawQuantity}}" data-edit-crew="{{rawCrewCount}}" data-edit-vehicle="{{rawVehicleCount}}" data-edit-tax="{{rawTaxable}}"><td><span class="cat-dot" style="background:{{catColor}};"></span> {{category}}</td><td>{{description}}</td><td class="num">{{amount}}</td><td><button class="gp-row-edit" title="Edit charge">✎</button></td><td><button class="gp-row-x" title="Delete charge">×</button></td></tr></template></tbody>
+                <tbody data-bind="rows"><template><tr class="{{rowClass}}" data-record-id="{{id}}" data-edit-type="{{rawChargeType}}" data-edit-name="{{rawItemName}}" data-edit-desc="{{rawDescription}}" data-edit-rate="{{rawRate}}" data-edit-qty="{{rawQuantity}}" data-edit-crew="{{rawCrewCount}}" data-edit-vehicle="{{rawVehicleCount}}" data-edit-tax="{{rawTaxable}}"><td><span class="cat-dot" style="background:{{catColor}};"></span> {{category}}</td><td>{{description}}</td><td class="num">{{amount}}</td><td><button class="gp-row-edit" title="Edit charge"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/></svg></button></td><td><button class="gp-row-x" title="Delete charge"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></td></tr></template></tbody>
                 <tfoot>
                   <tr>
                     <td colspan="2" style="text-align:right;font-weight:600;">Subtotal · Tax</td>
@@ -2615,6 +2667,27 @@ select.gp2-input {
                   </tr>
                 </tfoot>
               </table>
+            </div>
+
+            <!-- #1597: Persistent charge-template picker. NO data-empty-* binding so it
+                 never disappears after a charge is added. Host + template relocated here. -->
+            <div class="gp2-charge-picker">
+              <div class="gp2-picker-hd"><span>Add a charge</span><span class="gp2-picker-ln"></span></div>
+              <div class="gp2-quick-groups" data-quick-host></div>
+              <template data-quick-template>
+                <button type="button" class="gp2-quick">
+                  <span class="gp2-quick-ic" data-quick-icon></span>
+                  <span data-quick-label></span>
+                </button>
+              </template>
+              <!-- #1607: always-present custom-charge entry, even when there are
+                   zero presets. Opens the Add Charge modal on the custom option. -->
+              <div class="gp2-quick-group">
+                <div class="gp2-quick-cat">More</div>
+                <div class="gp2-quick-row">
+                  <button type="button" class="gp2-quick gp2-quick-custom" data-quick-custom>+ Custom charge</button>
+                </div>
+              </div>
             </div>
           </section>
 
@@ -2841,8 +2914,8 @@ select.gp2-input {
                 <button class="btn btn-secondary btn-sm" type="button" data-jd-open="sendInvoiceModal">Send invoice</button>
                 <button class="btn btn-secondary btn-sm" type="button" data-jd-open="addWagesModal">+ Add Wages</button>
                 <!-- #1536: state-aware finalize buttons (toggled in module.js). -->
-                <button class="btn btn-primary btn-sm" type="button" id="jdFinalizeBtn" data-jd-open="finalizeModal">✓ Finalize Job</button>
-                <button class="btn btn-primary btn-sm" type="button" id="jdFinalizedBtn" data-jd-open="finalizeModal" style="display:none;background:#ecfdf5;border-color:#6ee7b7;color:#047857;">✓ Finalized</button>
+                <button class="btn btn-primary btn-sm" type="button" id="jdFinalizeBtn" data-jd-open="finalizeModal"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Finalize Job</button>
+                <button class="btn btn-primary btn-sm" type="button" id="jdFinalizedBtn" data-jd-open="finalizeModal" style="display:none;background:#ecfdf5;border-color:#6ee7b7;color:#047857;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Finalized</button>
                 <button class="btn btn-secondary btn-sm" type="button" id="jdResetFinalizeBtn" style="display:none;border-color:#f0c8c8;color:#dc2626;">↺ Reset</button>
                 <!-- F27: job-lifecycle actions -->
                 <div class="jd-actions-menu" style="position:relative;">
@@ -2853,7 +2926,6 @@ select.gp2-input {
                     <button type="button" role="menuitem" class="jd-action-item" data-comm-action="action:job.reset-plan" style="display:block;width:100%;text-align:left;padding:9px 13px;border:0;border-top:1px solid #f1efeb;background:#fff;cursor:pointer;font-size:13px;">Reset plan to draft<span style="display:block;font-size:11px;color:#8a857c;margin-top:2px;">Return the active quote to Draft</span></button>
                     <button type="button" role="menuitem" class="jd-action-item" data-comm-action="action:job.unmark-bad" style="display:block;width:100%;text-align:left;padding:9px 13px;border:0;border-top:1px solid #f1efeb;background:#fff;cursor:pointer;font-size:13px;">Unmark bad lead<span style="display:block;font-size:11px;color:#8a857c;margin-top:2px;">Customer status → Lead</span></button>
                     <button type="button" role="menuitem" class="jd-action-item" data-comm-action="action:job.reset" data-jd-confirm="Reset this job? All finalization is cleared and status returns to New Lead." style="display:block;width:100%;text-align:left;padding:9px 13px;border:0;border-top:1px solid #f1efeb;background:#fff;cursor:pointer;font-size:13px;color:#dc2626;">Reset job<span style="display:block;font-size:11px;color:#c98a8a;margin-top:2px;">Clear finalization → New Lead</span></button>
-                    <button type="button" role="menuitem" class="jd-action-item" data-comm-action="action:job.delete" data-jd-confirm="Delete this job and all related records? This cannot be undone." style="display:block;width:100%;text-align:left;padding:9px 13px;border:0;border-top:1px solid #f1efeb;background:#fff;cursor:pointer;font-size:13px;color:#dc2626;">Delete job<span style="display:block;font-size:11px;color:#c98a8a;margin-top:2px;">Remove job &amp; all related rows</span></button>
                   </div>
                 </div>
               </div>
@@ -2903,7 +2975,7 @@ select.gp2-input {
                 <thead>
                   <tr><th style="width:20px;"></th><th>Category</th><th>Description</th><th>Date</th><th class="num">Amount</th><th class="num">Tax</th><th></th><th></th></tr>
                 </thead>
-                <tbody data-bind="rows"><template><tr class="{{rowClass}}" data-record-id="{{id}}" draggable="true" data-edit-type="{{rawChargeType}}" data-edit-name="{{rawItemName}}" data-edit-desc="{{rawDescription}}" data-edit-rate="{{rawRate}}" data-edit-qty="{{rawQuantity}}" data-edit-crew="{{rawCrewCount}}" data-edit-vehicle="{{rawVehicleCount}}" data-edit-tax="{{rawTaxable}}"><td class="gp-drag" title="Drag to reorder">⠿</td><td><span class="cat-dot" style="background:{{catColor}};"></span> {{category}}</td><td>{{description}}</td><td>{{date}}</td><td>{{amount}}</td><td>{{tax}}</td><td><button class="gp-row-edit" title="Edit charge">✎</button></td><td><button class="gp-row-x" title="Delete charge">×</button></td></tr></template></tbody>
+                <tbody data-bind="rows"><template><tr class="{{rowClass}}" data-record-id="{{id}}" draggable="true" data-edit-type="{{rawChargeType}}" data-edit-name="{{rawItemName}}" data-edit-desc="{{rawDescription}}" data-edit-rate="{{rawRate}}" data-edit-qty="{{rawQuantity}}" data-edit-crew="{{rawCrewCount}}" data-edit-vehicle="{{rawVehicleCount}}" data-edit-tax="{{rawTaxable}}"><td class="gp-drag" title="Drag to reorder">⠿</td><td><span class="cat-dot" style="background:{{catColor}};"></span> {{category}}</td><td>{{description}}</td><td>{{date}}</td><td>{{amount}}</td><td>{{tax}}</td><td><button class="gp-row-edit" title="Edit charge"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/></svg></button></td><td><button class="gp-row-x" title="Delete charge"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></td></tr></template></tbody>
                 <tfoot>
                   <tr>
                     <td colspan="4" style="text-align:right;font-weight:600;">Subtotal · Tax</td>
@@ -2941,7 +3013,7 @@ select.gp2-input {
                 <thead>
                   <tr><th style="width:20px;"></th><th>Category</th><th>Description</th><th>Date</th><th class="num">Amount</th><th></th></tr>
                 </thead>
-                <tbody data-bind="expenses"><template><tr data-record-id="{{id}}"><td><span class="cat-dot" style="background:{{catColor}};"></span></td><td>{{category}}</td><td>{{description}}</td><td>{{date}}</td><td class="num">{{amount}}</td><td><button class="exp-row-x gp-row-x" title="Delete expense">×</button></td></tr></template></tbody>
+                <tbody data-bind="expenses"><template><tr data-record-id="{{id}}"><td><span class="cat-dot" style="background:{{catColor}};"></span></td><td>{{category}}</td><td>{{description}}</td><td>{{date}}</td><td class="num">{{amount}}</td><td><button class="exp-row-x gp-row-x" title="Delete expense"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></td></tr></template></tbody>
               </table>
               <div class="acct-empty" data-empty-unless="expenses" style="font-size:12px;color:var(--ink-3);font-style:italic;padding:10px 2px;">No expenses recorded yet.</div>
             </div>
@@ -2952,7 +3024,7 @@ select.gp2-input {
                 <thead>
                   <tr><th>Employee</th><th>Type</th><th class="num">Amount</th><th></th></tr>
                 </thead>
-                <tbody data-bind="wages"><template><tr data-record-id="{{id}}"><td>{{employee}}</td><td>{{type}}</td><td class="num">{{amount}}</td><td><button class="wage-row-x gp-row-x" title="Delete wage">×</button></td></tr></template></tbody>
+                <tbody data-bind="wages"><template><tr data-record-id="{{id}}"><td>{{employee}}</td><td>{{type}}</td><td class="num">{{amount}}</td><td><button class="wage-row-x gp-row-x" title="Delete wage"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></td></tr></template></tbody>
               </table>
               <div class="acct-empty" data-empty-unless="wages" style="font-size:12px;color:var(--ink-3);font-style:italic;padding:10px 2px;">No wages recorded yet.</div>
 
@@ -2995,7 +3067,7 @@ select.gp2-input {
         <!-- Finalize Job Modal — #1382: rebuilt to mirror the old "Final charges" flow -->
         <div id="finalizeModal" class="jd-overlay" style="display:none;">
           <div class="jd-modal" style="width:680px;">
-            <div class="jd-modal-head"><div class="jd-modal-title">Final charges</div><button data-modal-close class="jd-close">✕</button></div>
+            <div class="jd-modal-head"><div class="jd-modal-title">Final charges</div><button data-modal-close class="jd-close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
             <div class="jd-modal-body">
               <p style="font-size:13px;color:var(--ink-2);margin:0 0 16px;">Once finalized, the job is locked. Revenue, expenses, wages and tax post to the P&amp;L; status changes to Closed.</p>
 
@@ -3112,7 +3184,7 @@ select.gp2-input {
         <!-- Add Wages Modal -->
         <div id="addWagesModal" class="jd-overlay" style="display:none;">
           <div class="jd-modal" style="width:620px;">
-            <div class="jd-modal-head"><div class="jd-modal-title">Add Wages</div><button data-modal-close class="jd-close">✕</button></div>
+            <div class="jd-modal-head"><div class="jd-modal-title">Add Wages</div><button data-modal-close class="jd-close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
             <div class="jd-modal-body">
               <div class="jd-grid">
                 <div class="jd-field"><label class="jd-label">Employee <span class="req">*</span></label><select name="employee" class="jd-input" data-bind-options="optionsOptions5"></select></div>
@@ -3368,6 +3440,11 @@ select.gp2-input {
                 <span class="qa-label">Send <span data-bind-text="_terms.estimate">Estimate</span></span>
                 <span class="arr">→</span>
               </a>
+              <a data-comm-action="action:jobDetail.refresh-estimate" class="qa-item" href="#" data-bind-hide-empty="deal.estimateRefreshable">
+                <span class="ic"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></span>
+                <span class="qa-label">Refresh <span data-bind-text="_terms.estimate">Estimate</span></span>
+                <span class="arr">→</span>
+              </a>
               <a data-comm-action="action:jobDetail.request-a-card-on-file" class="qa-item" href="#">
                 <span class="ic"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></span>
                 Request a card on file
@@ -3408,7 +3485,7 @@ select.gp2-input {
               <span class="l">Cards on file</span>
               <span style="display:flex;gap:12px;align-items:center;">
                 <a data-jd-open="savedCardsModal" href="#" style="color:var(--terra);font-weight:500;font-size:12px;">Manage cards</a>
-                <a data-comm-action="action:jobDetail.send-link-to-customer" href="#" style="color:var(--terra);font-weight:500;font-size:12px;">+ Send link to customer</a>
+                <a data-comm-action="action:jobDetail.request-a-card-on-file" href="#" style="color:var(--terra);font-weight:500;font-size:12px;">+ Send link to customer</a>
               </span>
             </div>
             <div class="muted" style="font-size:11px;margin-top:4px;">Cards stored securely by Stripe.</div>
@@ -3461,7 +3538,7 @@ select.gp2-input {
 <!-- Add Stop Modal + Add Charge Modal (shared) -->
 <div id="addTagModal" class="jd-overlay" style="display:none;">
   <div class="jd-modal" style="width:420px;">
-    <div class="jd-modal-head"><div class="jd-modal-title">Add tag</div><button data-modal-close class="jd-close">✕</button></div>
+    <div class="jd-modal-head"><div class="jd-modal-title">Add tag</div><button data-modal-close class="jd-close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
     <div class="jd-modal-body">
       <div style="font-size:12px;color:var(--ink-3);margin-bottom:10px;">Pick a tag to add to this customer.</div>
       <div id="addTagPicker" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
@@ -3472,7 +3549,7 @@ select.gp2-input {
 </div>
 <div id="addNoteModal" class="jd-overlay" style="display:none;">
   <div class="jd-modal" style="width:480px;">
-    <div class="jd-modal-head"><div class="jd-modal-title">Add note</div><button data-modal-close class="jd-close">✕</button></div>
+    <div class="jd-modal-head"><div class="jd-modal-title">Add note</div><button data-modal-close class="jd-close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
     <div class="jd-modal-body">
       <div class="jd-field full" style="margin-bottom:10px;">
         <label class="jd-label">Note</label>
@@ -3494,7 +3571,7 @@ select.gp2-input {
 </div>
 <div id="addStopModal" class="jd-overlay" style="display:none;">
   <div class="jd-modal" style="width:580px;">
-    <div class="jd-modal-head"><div class="jd-modal-title">Add Stop</div><button data-modal-close class="jd-close">✕</button></div>
+    <div class="jd-modal-head"><div class="jd-modal-title">Add Stop</div><button data-modal-close class="jd-close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
     <div class="jd-modal-body">
       <div class="jd-grid">
         <div class="jd-field"><label class="jd-label">Stop type <span class="req">*</span></label><select name="stopType" class="jd-input" data-bind-options="optionsOptions6"></select></div>
@@ -3524,7 +3601,7 @@ select.gp2-input {
 <!-- #1423: Edit Address modal (mirrors Add Stop; hidden id carries the JobLocation row) -->
 <div id="editStopModal" class="jd-overlay" style="display:none;">
   <div class="jd-modal" style="width:580px;">
-    <div class="jd-modal-head"><div class="jd-modal-title">Edit Address</div><button data-modal-close class="jd-close">✕</button></div>
+    <div class="jd-modal-head"><div class="jd-modal-title">Edit Address</div><button data-modal-close class="jd-close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
     <div class="jd-modal-body">
       <input type="hidden" name="id" value="">
       <div class="jd-grid">
@@ -3553,7 +3630,7 @@ select.gp2-input {
 
 <div id="addChargeModal" class="jd-overlay" style="display:none;">
   <div class="jd-modal" style="width:560px;">
-    <div class="jd-modal-head"><div class="jd-modal-title">Add Charge</div><button data-modal-close class="jd-close">✕</button></div>
+    <div class="jd-modal-head"><div class="jd-modal-title">Add Charge</div><button data-modal-close class="jd-close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
     <div class="jd-modal-body">
       <div class="jd-grid">
         <div class="jd-field full"><label class="jd-label">Preset</label><select name="preset" class="jd-input" data-bind-options="presetOptions"><option value="— None (custom charge) —">— None (custom charge) —</option></select></div>
@@ -3579,10 +3656,28 @@ select.gp2-input {
   </div>
 </div>
 
+<!-- #1607: count-prompt modal — a mover/quantity-scaled preset chip opens this to
+     ask "How many movers?" / "How many boxes / units?" before adding the charge. -->
+<div id="quickCountModal" class="jd-overlay" style="display:none;">
+  <div class="jd-modal" style="width:320px;">
+    <div class="jd-modal-head"><div class="jd-modal-title" data-quick-count-title>Add charge</div><button data-modal-close class="jd-close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="jd-modal-body">
+      <div class="jd-field full">
+        <label class="jd-label" data-quick-count-label>How many?</label>
+        <input id="quickCountInput" class="jd-input" type="number" min="1" step="1" value="1">
+      </div>
+    </div>
+    <div class="jd-modal-actions">
+      <button data-modal-close class="btn btn-secondary">Cancel</button>
+      <button id="quickCountAdd" class="btn btn-primary">Add charge</button>
+    </div>
+  </div>
+</div>
+
 <!-- F20: Edit Charge modal (mirrors Add Charge; hidden chargeId carries the row) -->
 <div id="editChargeModal" class="jd-overlay" style="display:none;">
   <div class="jd-modal" style="width:560px;">
-    <div class="jd-modal-head"><div class="jd-modal-title">Edit Charge</div><button data-modal-close class="jd-close">✕</button></div>
+    <div class="jd-modal-head"><div class="jd-modal-title">Edit Charge</div><button data-modal-close class="jd-close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
     <div class="jd-modal-body">
       <input type="hidden" name="chargeId" value="">
       <div class="jd-grid">
@@ -3607,7 +3702,7 @@ select.gp2-input {
 <!-- F23: Add Expense modal -->
 <div id="addExpenseModal" class="jd-overlay" style="display:none;">
   <div class="jd-modal" style="width:480px;">
-    <div class="jd-modal-head"><div class="jd-modal-title">Add Expense</div><button data-modal-close class="jd-close">✕</button></div>
+    <div class="jd-modal-head"><div class="jd-modal-title">Add Expense</div><button data-modal-close class="jd-close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
     <div class="jd-modal-body">
       <div class="jd-grid">
         <div class="jd-field"><label class="jd-label">Category <span class="req">*</span></label>
@@ -3635,7 +3730,7 @@ select.gp2-input {
 <!-- F28: Send Invoice modal -->
 <div id="sendInvoiceModal" class="jd-overlay" style="display:none;">
   <div class="jd-modal" style="width:480px;">
-    <div class="jd-modal-head"><div class="jd-modal-title">Send Invoice</div><button data-modal-close class="jd-close">✕</button></div>
+    <div class="jd-modal-head"><div class="jd-modal-title">Send Invoice</div><button data-modal-close class="jd-close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
     <div class="jd-modal-body">
       <div class="jd-grid">
         <div class="jd-field full"><label class="jd-label">Recipient email <span class="req">*</span></label><input name="recipientEmail" class="jd-input" type="email" data-bind-value="customer.email" placeholder="customer@example.com"></div>
@@ -3655,7 +3750,7 @@ select.gp2-input {
   <div class="jd-modal" style="width:480px;">
     <div class="jd-modal-head">
       <div class="jd-modal-title">Saved cards</div>
-      <button data-modal-close class="jd-close">✕</button>
+      <button data-modal-close class="jd-close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="jd-modal-body">
       <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
@@ -3679,7 +3774,7 @@ select.gp2-input {
 
 <div id="jdPaymentModal" class="jd-overlay" style="display:none;">
   <div class="jd-modal" style="width:480px;">
-    <div class="jd-modal-head"><div class="jd-modal-title">Add Payment</div><button data-modal-close class="jd-close">✕</button></div>
+    <div class="jd-modal-head"><div class="jd-modal-title">Add Payment</div><button data-modal-close class="jd-close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
     <div class="jd-modal-body">
       <div class="jd-grid">
         <div class="jd-field full"><label class="jd-label">Payment Amount <span class="req">*</span></label><input name="amount" class="jd-input" type="number" step="0.01" min="0" placeholder="0.00"></div>
@@ -3714,7 +3809,7 @@ select.gp2-input {
 
 <div id="jdEditPaymentModal" class="jd-overlay" style="display:none;">
   <div class="jd-modal" style="width:520px;">
-    <div class="jd-modal-head"><div class="jd-modal-title">Edit Payment</div><button data-modal-close class="jd-close">✕</button></div>
+    <div class="jd-modal-head"><div class="jd-modal-title">Edit Payment</div><button data-modal-close class="jd-close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
     <div class="jd-modal-body">
       <input type="hidden" name="id">
       <div class="jd-grid">
@@ -3750,7 +3845,7 @@ select.gp2-input {
 
 <div id="jdScheduleModal" class="jd-overlay" style="display:none;">
   <div class="jd-modal" style="width:480px;">
-    <div class="jd-modal-head"><div class="jd-modal-title">Schedule</div><button data-modal-close class="jd-close">✕</button></div>
+    <div class="jd-modal-head"><div class="jd-modal-title">Schedule</div><button data-modal-close class="jd-close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
     <div class="jd-modal-body">
       <div class="jd-grid">
         <div class="jd-field"><label class="jd-label">Date <span class="req">*</span></label><input name="date" class="jd-input" type="date"></div>
@@ -3871,7 +3966,7 @@ select.gp2-input {
 <!-- Record Video -->
 <div class="jd-overlay" id="jdVideoModal">
   <div class="jd-modal" style="width:600px;">
-    <div class="jd-modal-head"><div class="jd-modal-title">Record Video Message</div><button class="jd-modal-close" onclick="jdCloseModal('jdVideoModal')">✕</button></div>
+    <div class="jd-modal-head"><div class="jd-modal-title">Record Video Message</div><button class="jd-modal-close" onclick="jdCloseModal('jdVideoModal')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
     <div class="jd-vid-tabs">
       <button class="jd-vid-tab active" data-vtab="record"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4" fill="currentColor"/></svg> Record</button>
       <button class="jd-vid-tab" data-vtab="library"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><polyline points="10 11 14 13 10 15 10 11" fill="currentColor"/></svg> Library</button>
@@ -3912,7 +4007,7 @@ select.gp2-input {
 <!-- Mark Lost -->
 <div class="jd-overlay" id="jdMarkLostModal">
   <div class="jd-modal" style="width:440px;">
-    <div class="jd-modal-head"><div class="jd-modal-title">Mark as Lost</div><button class="jd-modal-close" onclick="jdCloseModal('jdMarkLostModal')">✕</button></div>
+    <div class="jd-modal-head"><div class="jd-modal-title">Mark as Lost</div><button class="jd-modal-close" onclick="jdCloseModal('jdMarkLostModal')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
     <div class="jd-modal-body">
       <div class="jd-field"><label class="jd-label">Reason for losing this deal <span class="req">*</span></label>
         <select name="reasonForLosingThisDeal" class="jd-select" data-bind-options="reasonForLosingThisDealOptions"><option value="">Select a reason…</option></select>
@@ -3929,7 +4024,7 @@ select.gp2-input {
 <!-- Mark Bad Lead Modal (defect A2: was opening the lost modal) -->
 <div class="jd-overlay" id="jdMarkBadModal">
   <div class="jd-modal" style="width:440px;">
-    <div class="jd-modal-head"><div class="jd-modal-title">Mark as Bad Lead</div><button class="jd-modal-close" onclick="jdCloseModal('jdMarkBadModal')">✕</button></div>
+    <div class="jd-modal-head"><div class="jd-modal-title">Mark as Bad Lead</div><button class="jd-modal-close" onclick="jdCloseModal('jdMarkBadModal')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
     <div class="jd-modal-body">
       <p style="color:var(--ink-3);font-size:13px;margin:0 0 12px;">Marks this customer as a bad lead so they're excluded from future outreach.</p>
       <div class="jd-field"><label class="jd-label">Reason <span class="req">*</span></label>
@@ -3982,7 +4077,7 @@ select.gp2-input {
 <!-- Add Discount -->
 <div class="jd-overlay" id="jdAddDiscountModal">
   <div class="jd-modal" style="width:460px;">
-    <div class="jd-modal-head"><div class="jd-modal-title">Add Discount</div><button class="jd-modal-close" onclick="jdCloseModal('jdAddDiscountModal')">✕</button></div>
+    <div class="jd-modal-head"><div class="jd-modal-title">Add Discount</div><button class="jd-modal-close" onclick="jdCloseModal('jdAddDiscountModal')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
     <div class="jd-modal-body">
       <div class="jd-field"><label class="jd-label">Description</label><input name="description" class="jd-input" type="text" placeholder="e.g., Loyalty discount"></div>
       <div class="jd-field">
@@ -4012,7 +4107,7 @@ select.gp2-input {
 <!-- #1340: Add / Edit Surcharge (additive mirror of Add Discount) -->
 <div class="jd-overlay" id="jdAddSurchargeModal">
   <div class="jd-modal" style="width:460px;">
-    <div class="jd-modal-head"><div class="jd-modal-title" id="jdSurchargeTitle">Add Surcharge</div><button class="jd-modal-close" onclick="jdCloseModal('jdAddSurchargeModal')">✕</button></div>
+    <div class="jd-modal-head"><div class="jd-modal-title" id="jdSurchargeTitle">Add Surcharge</div><button class="jd-modal-close" onclick="jdCloseModal('jdAddSurchargeModal')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
     <div class="jd-modal-body">
       <input type="hidden" name="chargeId" id="jdSurchargeChargeId" value="">
       <div class="jd-field"><label class="jd-label">Description</label><input name="description" id="jdSurchargeDesc" class="jd-input" type="text" placeholder="e.g., Credit Card Fee"></div>
@@ -4041,7 +4136,7 @@ select.gp2-input {
 <!-- Not-to-Exceed -->
 <div class="jd-overlay" id="jdNteModal">
   <div class="jd-modal" style="width:440px;">
-    <div class="jd-modal-head"><div class="jd-modal-title">Set Not-to-Exceed</div><button class="jd-modal-close" onclick="jdCloseModal('jdNteModal')">✕</button></div>
+    <div class="jd-modal-head"><div class="jd-modal-title">Set Not-to-Exceed</div><button class="jd-modal-close" onclick="jdCloseModal('jdNteModal')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
     <div class="jd-modal-body">
       <p style="font-size:12.5px;color:var(--ink-3);margin:0 0 14px;line-height:1.5;">A binding cap on the customer's final invoice. We'll warn the crew before exceeding this amount on-site.</p>
       <div class="jd-field"><label class="jd-label">Maximum amount *</label>
@@ -4062,7 +4157,7 @@ select.gp2-input {
 <!-- Edit Job Details (Edit all) -->
 <div class="jd-overlay" id="jdJobDetailsModal">
   <div class="jd-modal" style="width:640px;">
-    <div class="jd-modal-head"><div class="jd-modal-title">Edit Job Details</div><button class="jd-modal-close" onclick="jdCloseModal('jdJobDetailsModal')">✕</button></div>
+    <div class="jd-modal-head"><div class="jd-modal-title">Edit Job Details</div><button class="jd-modal-close" onclick="jdCloseModal('jdJobDetailsModal')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
     <div class="jd-modal-body">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px 16px;">
         <div class="jd-field"><label class="jd-label">File number</label><input name="fileNumber" class="jd-input" type="text" data-bind-value="jobInfo.fileNumber" value="17826-1" readonly style="background:var(--surface-2);"></div>
@@ -4088,10 +4183,12 @@ select.gp2-input {
 <!-- Edit Contact Details -->
 <div class="jd-overlay" id="jdContactDetailsModal">
   <div class="jd-modal" style="width:520px;">
-    <div class="jd-modal-head"><div class="jd-modal-title">Edit Contact Details</div><button class="jd-modal-close" onclick="jdCloseModal('jdContactDetailsModal')">✕</button></div>
+    <div class="jd-modal-head"><div class="jd-modal-title">Edit Contact Details</div><button class="jd-modal-close" onclick="jdCloseModal('jdContactDetailsModal')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
     <div class="jd-modal-body">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px 16px;">
-        <div class="jd-field" style="grid-column:1/-1;"><label class="jd-label">Customer name</label><input name="customerName" class="jd-input" type="text" data-bind-value="deal.customer" value="Alice Johnson"></div>
+        <div class="jd-field"><label class="jd-label">First name</label><input name="firstName" class="jd-input" type="text" data-bind-value="customer.firstName"></div>
+        <div class="jd-field"><label class="jd-label">Last name</label><input name="lastName" class="jd-input" type="text" data-bind-value="customer.lastName"></div>
+        <div class="jd-field" style="grid-column:1/-1;"><label class="jd-label">Company name <span style="color:#94a3b8;font-weight:400;">(optional)</span></label><input name="companyName" class="jd-input" type="text" data-bind-value="customer.companyName" placeholder="Leave blank for an individual"></div>
         <div class="jd-field"><label class="jd-label">Primary phone</label><input name="primaryPhone" class="jd-input" type="tel" data-bind-value="customer.phone" value="(555) 987-6543"></div>
         <div class="jd-field"><label class="jd-label">Secondary phone</label><input name="secondaryPhone" class="jd-input" type="tel" data-bind-value="customer.secondaryPhone" placeholder="Optional"></div>
         <div class="jd-field"><label class="jd-label">Secondary contact name</label><input name="secondaryName" class="jd-input" type="text" data-bind-value="customer.secondaryName" placeholder="Optional"></div>
@@ -4112,7 +4209,7 @@ select.gp2-input {
 <!-- Edit Inventory -->
 <div class="jd-overlay" id="jdInventoryModal">
   <div class="jd-modal" style="width:480px;">
-    <div class="jd-modal-head"><div class="jd-modal-title">Edit Inventory</div><button class="jd-modal-close" onclick="jdCloseModal('jdInventoryModal')">✕</button></div>
+    <div class="jd-modal-head"><div class="jd-modal-title">Edit Inventory</div><button class="jd-modal-close" onclick="jdCloseModal('jdInventoryModal')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
     <div class="jd-modal-body">
       <p style="font-size:12.5px;color:var(--ink-3);margin:0 0 14px;line-height:1.5;">Override the inventory totals captured during walkthrough. Used for quoting only — the crew will still scan items on the day of the move.</p>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px 16px;">
@@ -4154,7 +4251,7 @@ select.gp2-input {
 </div>
 
 <div class="s1-overlay jd-overlay" id="jdAddContactModal" role="dialog"><div class="s1-modal">
-  <div class="s1-mhead"><div><div class="s1-mkicker">Deal</div><h4>Add contact</h4></div><button class="s1-x" data-modal-close type="button">×</button></div>
+  <div class="s1-mhead"><div><div class="s1-mkicker">Deal</div><h4>Add contact</h4></div><button class="s1-x" data-modal-close type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
   <div class="s1-mgrid">
     <div class="full"><label class="s1-mlabel">Name *</label><input class="s1-input" name="name"></div>
     <div><label class="s1-mlabel">Role</label><select class="s1-select" name="role" data-bind-options="contactRoles"><option value="">Choose…</option></select></div>
@@ -4174,6 +4271,7 @@ select.gp2-input {
 <script src="../../core/communication.api.js"></script>
 <script src="../../core/communication.js"></script>
 <script src="../../core/render.js"></script>
+<script src="../../core/icons.js"></script>
 <script src="../../core/standard-page.js"></script>
 <script src="../../core/google-places.js"></script>
 <script src="./module.js"></script>
@@ -4286,7 +4384,8 @@ select.gp2-input {
   document.querySelectorAll('.tb-claim').forEach(btn => btn.addEventListener('click', e => {
     e.preventDefault(); e.stopPropagation();
     btn.style.background = 'var(--ok)';
-    btn.textContent = '✓';
+    btn.textContent = '';
+    btn.appendChild(S1Icons.svg('check'));
     btn.title = 'Claimed';
   }));
 
@@ -4480,7 +4579,7 @@ document.addEventListener('DOMContentLoaded', () => {
 <!-- F22: Rename file modal -->
 <div id="renameFileModal" class="jd-overlay" style="display:none;">
   <div class="jd-modal" style="width:440px;">
-    <div class="jd-modal-head"><div class="jd-modal-title">Rename file</div><button data-modal-close class="jd-close">✕</button></div>
+    <div class="jd-modal-head"><div class="jd-modal-title">Rename file</div><button data-modal-close class="jd-close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
     <div class="jd-modal-body">
       <div class="jd-field full"><label class="jd-label">File name</label><input id="renameFileInput" class="jd-input" type="text" placeholder="filename.ext"></div>
     </div>
@@ -4496,7 +4595,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 <!-- #1547: full-screen photo lightbox (click a photo thumbnail to enlarge) -->
 <div id="jdPhotoLightbox" class="jd-lightbox" role="dialog" aria-modal="true" aria-label="Photo preview">
-  <button type="button" class="jd-lightbox-close" id="jdLightboxClose" aria-label="Close">✕</button>
+  <button type="button" class="jd-lightbox-close" id="jdLightboxClose" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
   <button type="button" class="jd-lightbox-nav jd-lightbox-prev" id="jdLightboxPrev" aria-label="Previous photo">‹</button>
   <img class="jd-lightbox-img" id="jdLightboxImg" src="" alt="">
   <button type="button" class="jd-lightbox-nav jd-lightbox-next" id="jdLightboxNext" aria-label="Next photo">›</button>
@@ -4506,7 +4605,7 @@ document.addEventListener('DOMContentLoaded', () => {
 <!-- F26: Reassign communication modal -->
 <div id="reassignCommModal" class="jd-overlay" style="display:none;">
   <div class="jd-modal" style="width:420px;">
-    <div class="jd-modal-head"><div class="jd-modal-title">Reassign communication to…</div><button data-modal-close class="jd-close">✕</button></div>
+    <div class="jd-modal-head"><div class="jd-modal-title">Reassign communication to…</div><button data-modal-close class="jd-close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
     <div class="jd-modal-body">
       <div id="reassignCommList" style="display:flex;flex-direction:column;gap:6px;"></div>
       <div id="reassignCommEmpty" style="display:none;color:var(--ink-3);font-size:13px;">No matching jobs found for this counterparty.</div>
@@ -4520,11 +4619,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 <!-- F18: AI assistant FAB + chat panel -->
 <button type="button" data-ai-fab id="jdAiFab" title="AI assistant" aria-label="AI assistant"
-  style="position:fixed;right:18px;bottom:18px;width:48px;height:48px;border-radius:50%;background:var(--terra,#004D40);color:#fff;border:0;font-size:22px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,0.22);z-index:3000;">✨</button>
+  style="position:fixed;right:18px;bottom:18px;width:48px;height:48px;border-radius:50%;background:var(--terra,#004D40);color:#fff;border:0;font-size:22px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,0.22);z-index:3000;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.8L19.7 10l-5.8 1.9L12 17.7l-1.9-5.8L4.3 10l5.8-1.9z"/><path d="M19 3v4M21 5h-4M5 17v2M6 18H4"/></svg></button>
 <div id="aiAssistantPanel" style="display:none;position:fixed;right:18px;bottom:76px;width:320px;max-width:92vw;height:440px;max-height:72vh;flex-direction:column;background:#fff;border:1px solid #e3e6ea;border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,0.18);z-index:3000;overflow:hidden;">
   <div style="background:var(--terra,#004D40);color:#fff;padding:10px 14px;font-size:13px;font-weight:600;display:flex;justify-content:space-between;align-items:center;">
     <span>AI Assistant</span>
-    <button type="button" id="jdAiClose" aria-label="Close" style="background:transparent;border:0;color:#fff;font-size:16px;cursor:pointer;line-height:1;">✕</button>
+    <button type="button" id="jdAiClose" aria-label="Close" style="background:transparent;border:0;color:#fff;font-size:16px;cursor:pointer;line-height:1;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
   </div>
   <div id="jdAiMessages" style="flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;font-size:13px;"></div>
   <div style="display:flex;gap:6px;padding:10px;border-top:1px solid #eee;">

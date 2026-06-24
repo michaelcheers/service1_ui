@@ -4888,28 +4888,28 @@
   missedHeading: "Missed Calls",
   missedPagination: { currentPage: 1, totalPages: 7, pageSize: 8, shown: 8, total: 52 },
   missedCalls: [
-    { id: 9001, name: "Harman", meta: "+1 (778) 816-2400 · Missed", time: "12:42 PM", iconCls: "list-icon miss", iconGlyph: "✕" },
-    { id: 9002, name: "Unknown · +1 (416) 822-9931", meta: "Missed", time: "11:58 AM", iconCls: "list-icon miss", iconGlyph: "✕" },
-    { id: 9003, name: "Vicky Milosevic-Hill", meta: "+1 (905) 616-3324 · Missed", time: "11:02 AM", iconCls: "list-icon miss", iconGlyph: "✕" },
-    { id: 9004, name: "Robert Fox", meta: "+1 (303) 555-0119 · Missed", time: "9:48 AM", iconCls: "list-icon miss", iconGlyph: "✕" },
-    { id: 9005, name: "Jane Cooper", meta: "+1 (415) 555-0142 · Missed", time: "Yesterday", iconCls: "list-icon miss", iconGlyph: "✕" },
-    { id: 9006, name: "Unknown · +1 (212) 555-7821", meta: "Missed", time: "Yesterday", iconCls: "list-icon miss", iconGlyph: "✕" },
-    { id: 9007, name: "Frances Knox", meta: "+1 (778) 318-2924 · Missed", time: "Yesterday", iconCls: "list-icon miss", iconGlyph: "✕" },
-    { id: 9008, name: "Keera Roberts", meta: "+1 (672) 208-2675 · Missed", time: "Mon", iconCls: "list-icon miss", iconGlyph: "✕" }
+    { id: 9001, name: "Harman", meta: "+1 (778) 816-2400 · Missed", time: "12:42 PM", iconCls: "list-icon miss", iconGlyph: "x" },
+    { id: 9002, name: "Unknown · +1 (416) 822-9931", meta: "Missed", time: "11:58 AM", iconCls: "list-icon miss", iconGlyph: "x" },
+    { id: 9003, name: "Vicky Milosevic-Hill", meta: "+1 (905) 616-3324 · Missed", time: "11:02 AM", iconCls: "list-icon miss", iconGlyph: "x" },
+    { id: 9004, name: "Robert Fox", meta: "+1 (303) 555-0119 · Missed", time: "9:48 AM", iconCls: "list-icon miss", iconGlyph: "x" },
+    { id: 9005, name: "Jane Cooper", meta: "+1 (415) 555-0142 · Missed", time: "Yesterday", iconCls: "list-icon miss", iconGlyph: "x" },
+    { id: 9006, name: "Unknown · +1 (212) 555-7821", meta: "Missed", time: "Yesterday", iconCls: "list-icon miss", iconGlyph: "x" },
+    { id: 9007, name: "Frances Knox", meta: "+1 (778) 318-2924 · Missed", time: "Yesterday", iconCls: "list-icon miss", iconGlyph: "x" },
+    { id: 9008, name: "Keera Roberts", meta: "+1 (672) 208-2675 · Missed", time: "Mon", iconCls: "list-icon miss", iconGlyph: "x" }
   ],
   recordings: [
     { id: 7001, name: "Johanna Kuyvenhoven", meta: "+1 (587) 920-4170 · Inbound",
       phoneDigits: "15879204170", dur: "0:00 / 4:21", time: "2:14 PM",
-      iconCls: "list-icon in",  iconGlyph: "▼" },
+      iconCls: "list-icon in",  iconGlyph: "arrow-down-left" },
     { id: 7002, name: "Frances Knox", meta: "+1 (778) 318-2924 · Outbound",
       phoneDigits: "17783182924", dur: "0:00 / 6:38", time: "Yesterday",
-      iconCls: "list-icon out", iconGlyph: "▲" },
+      iconCls: "list-icon out", iconGlyph: "arrow-up-right" },
     { id: 7003, name: "Vicky Milosevic-Hill", meta: "+1 (905) 616-3324 · Inbound",
       phoneDigits: "19056163324", dur: "0:00 / 2:05", time: "Yesterday",
-      iconCls: "list-icon in",  iconGlyph: "▼" },
+      iconCls: "list-icon in",  iconGlyph: "arrow-down-left" },
     { id: 7004, name: "Harman", meta: "+1 (778) 816-2400 · Outbound",
       phoneDigits: "17788162400", dur: "0:00 / 1:12", time: "Mon",
-      iconCls: "list-icon out", iconGlyph: "▲" }
+      iconCls: "list-icon out", iconGlyph: "arrow-up-right" }
   ],
   headings: {
   "1": "Phone system",

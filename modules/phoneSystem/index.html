@@ -68,7 +68,7 @@
       <div>
         <div class="dialer">
           <div class="dialer-disp">+1 (416) 555-<span style="opacity:.4;">____</span></div>
-          <div class="dialer-sub">Outbound · From <b>+1 (416) 555-0119</b> (Customer SMS)</div>
+          <div class="dialer-sub" data-bind-text="dialerFromLabel">Outbound · From your default line</div>
           <div class="dialer-grid">
             <button data-dialer="1" class="key">1<span class="sub"></span></button>
             <button data-dialer="2" class="key">2<span class="sub">ABC</span></button>
@@ -84,11 +84,12 @@
             <button class="key">#<span class="sub"></span></button>
           </div>
           <div class="dialer-call">
-            <button class="call">📞 Call</button>
-            <button class="del">⌫</button>
+            <button class="call"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>Call</button>
+            <button class="del"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg></button>
           </div>
           <div class="dialer-line">
-            <select data-bind-options="optionsOptions"></select>
+            <label class="s1-mlabel" for="dialerLineSelect">Call from</label>
+            <select id="dialerLineSelect" data-bind-options="lines" data-bind-value="defaultLineId"></select>
           </div>
         </div>
       </div>
@@ -109,16 +110,16 @@
             <div class="list-toolbar"><input placeholder="Search number or name…" autocomplete="off" data-list-filter="recent"><select data-bind-options="optionsOptions2"><option value="All directions">All directions</option></select></div>
             <div data-bind="recent"><template>
               <div class="list-row" data-record-id="{{id}}">
-                <div class="{{iconCls}}">{{iconGlyph}}</div>
+                <div class="{{iconCls}}" data-svg-icon="{{iconGlyph}}"></div>
                 <div>
                   <div class="list-num">{{name}}</div>
                   <div class="list-meta">{{meta}}</div>
                 </div>
                 <div class="list-time" data-utc="{{timeUtc}}"></div>
                 <div class="list-actions">
-                  <button data-comm-action="action:phone.call.back">📞</button>
-                  <button data-comm-action="action:phone.sms.reply">💬</button>
-                  <button data-comm-action="action:phone.contact.view">👤</button>
+                  <button data-comm-action="action:phone.call.back" aria-label="Call back"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></button>
+                  <button data-comm-action="action:phone.sms.reply" aria-label="Reply"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8z"/></svg></button>
+                  <button data-comm-action="action:phone.contact.view" aria-label="View contact"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></button>
                 </div>
               </div>
             </template></div>
@@ -138,16 +139,16 @@
             <div class="list-toolbar"><input type="search" placeholder="Search number or name…" autocomplete="off" data-list-filter="missed"></div>
             <div data-bind="missedCalls"><template>
               <div class="list-row" data-record-id="{{id}}">
-                <div data-bind-attr="class:iconCls" data-bind-text="iconGlyph">✕</div>
+                <div class="{{iconCls}}" data-svg-icon="{{iconGlyph}}"></div>
                 <div>
                   <div class="list-num">{{name}}</div>
                   <div class="list-meta">{{meta}}</div>
                 </div>
                 <div class="list-time" data-utc="{{timeUtc}}"></div>
                 <div class="list-actions">
-                  <button data-comm-action="action:phone.call.back">📞 Call back</button>
-                  <button data-comm-action="action:phone.sms.reply">💬</button>
-                  <button data-comm-action="action:phone.contact.view">👤</button>
+                  <button data-comm-action="action:phone.call.back"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>Call back</button>
+                  <button data-comm-action="action:phone.sms.reply" aria-label="Reply"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8z"/></svg></button>
+                  <button data-comm-action="action:phone.contact.view" aria-label="View contact"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></button>
                 </div>
               </div>
             </template></div>
@@ -164,8 +165,8 @@
           <div class="list-card">
             <h2 data-bind-text="headings.2">Voicemails</h2>
             <div class="list-toolbar"><input type="search" placeholder="Search voicemails…" autocomplete="off" data-list-filter="voicemails"></div>
-            <div class="list-row"><div data-bind-attr="class:voicemails.0.iconCls" data-bind-text="voicemails.0.iconGlyph">▶</div><div style="flex:1;"><div class="list-num" data-bind-text="voicemails.0.name">Danielle Melnyk</div><div class="list-meta" data-bind-text="voicemails.0.meta">+1 (403) 991-5973 · 38 sec</div><div class="audio-bar"><button class="play">▶</button><div class="progress"><div class="bar"></div></div><span class="dur" data-bind-text="voicemails.0.duration">0:38</span></div></div><div class="list-time" data-bind-text="voicemails.0.time">Today</div><div class="list-actions"><button data-comm-action="action:phoneSystem.call.back">📞 Call back</button></div></div>
-            <div class="list-row"><div data-bind-attr="class:voicemails.1.iconCls" data-bind-text="voicemails.1.iconGlyph">▶</div><div style="flex:1;"><div class="list-num" data-bind-text="voicemails.1.name">Unknown · +1 (647) 222-8801</div><div class="list-meta" data-bind-text="voicemails.1.meta">1m 02s</div><div class="audio-bar"><button class="play">▶</button><div class="progress"><div class="bar"></div></div><span class="dur" data-bind-text="voicemails.1.duration">1:02</span></div></div><div class="list-time" data-bind-text="voicemails.1.time">Yesterday</div><div class="list-actions"><button data-comm-action="action:phoneSystem.call.back">📞 Call back</button></div></div>
+            <div class="list-row"><div data-bind-attr="class:voicemails.0.iconCls" data-bind-icon="voicemails.0.iconGlyph"></div><div style="flex:1;"><div class="list-num" data-bind-text="voicemails.0.name">Danielle Melnyk</div><div class="list-meta" data-bind-text="voicemails.0.meta">+1 (403) 991-5973 · 38 sec</div><div class="audio-bar"><button class="play" aria-label="Play"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg></button><div class="progress"><div class="bar"></div></div><span class="dur" data-bind-text="voicemails.0.duration">0:38</span></div></div><div class="list-time" data-bind-text="voicemails.0.time">Today</div><div class="list-actions"><button data-comm-action="action:phoneSystem.call.back"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>Call back</button></div></div>
+            <div class="list-row"><div data-bind-attr="class:voicemails.1.iconCls" data-bind-icon="voicemails.1.iconGlyph"></div><div style="flex:1;"><div class="list-num" data-bind-text="voicemails.1.name">Unknown · +1 (647) 222-8801</div><div class="list-meta" data-bind-text="voicemails.1.meta">1m 02s</div><div class="audio-bar"><button class="play" aria-label="Play"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg></button><div class="progress"><div class="bar"></div></div><span class="dur" data-bind-text="voicemails.1.duration">1:02</span></div></div><div class="list-time" data-bind-text="voicemails.1.time">Yesterday</div><div class="list-actions"><button data-comm-action="action:phoneSystem.call.back"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>Call back</button></div></div>
             <div class="list-empty" id="voicemailsEmpty" style="display:none;">No voicemails match your search.</div>
           </div>
         </div>
@@ -174,24 +175,34 @@
           <div class="list-card">
             <h2 data-bind-text="headings.3">Call Recordings</h2>
             <div class="list-toolbar">
-              <input id="recSearch" type="search" placeholder="Search by phone number…" autocomplete="off" data-list-filter="recordings">
+              <input id="recSearch" type="search" placeholder="Search recordings by number or name…" autocomplete="off" data-list-filter="recordings">
+              <select id="recRange" data-recordings-range>
+                <option value="7">Last 7 days</option>
+                <option value="30">Last 30 days</option>
+                <option value="90" selected>Last 90 days</option>
+              </select>
             </div>
             <div data-bind="recordings"><template>
               <div class="list-row" data-record-id="{{id}}" data-phone="{{phoneDigits}}" data-name="{{name}}">
-                <div class="{{iconCls}}">{{iconGlyph}}</div>
+                <div class="{{iconCls}}" data-svg-icon="{{iconGlyph}}"></div>
                 <div style="flex:1;">
                   <div class="list-num">{{name}}</div>
                   <div class="list-meta">{{meta}}</div>
-                  <div class="audio-bar"><button class="play">▶</button>
+                  <div class="audio-bar"><button class="play" aria-label="Play"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg></button>
                     <div class="progress"><div class="bar"></div></div><span class="dur">{{dur}}</span></div>
                 </div>
-                <div class="list-time">{{time}}</div>
+                <div class="list-time" data-utc="{{timeUtc}}"></div>
                 <div class="list-actions">
-                  <button data-comm-action="action:phoneSystem.recording.download">⬇ Download</button>
+                  <button data-comm-action="action:phoneSystem.recording.download"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Download</button>
                 </div>
               </div>
             </template></div>
-            <div class="list-empty" id="recordingsEmpty" style="display:none;">No recordings match your search.</div>
+            <div class="list-empty" data-empty-unless="recordings.0.name">No recordings found.</div>
+            <div class="ph-pager-bar">
+              <span>Showing <span data-bind-text="recordingsPagination.shown">0</span>
+                of <span data-bind-text="recordingsPagination.total">0</span> recordings</span>
+              <div class="ph-pager" id="recordingsPager"></div>
+            </div>
           </div>
         </div>
 
@@ -199,9 +210,9 @@
           <div class="list-card">
             <h2 data-bind-text="headings.4">Texts</h2>
             <div class="list-toolbar"><input type="search" placeholder="Search texts…" autocomplete="off" data-list-filter="texts"></div>
-            <div class="list-row"><div data-bind-attr="class:texts.0.iconCls" data-bind-text="texts.0.iconGlyph">💬</div><div><div class="list-num" data-bind-text="texts.0.name">Keera Roberts</div><div class="list-meta" data-bind-text="texts.0.meta">"Sounds good — see you at 9 sharp tomorrow."</div></div><div class="list-time" data-bind-text="texts.0.time">1:08 PM</div><div class="list-actions"><button data-comm-action="action:phoneSystem.sms.reply">Reply</button></div></div>
-            <div class="list-row"><div data-bind-attr="class:texts.1.iconCls" data-bind-text="texts.1.iconGlyph">💬</div><div><div class="list-num" data-bind-text="texts.1.name">Emily M</div><div class="list-meta" data-bind-text="texts.1.meta">"Yes! Confirming for Saturday 8 AM."</div></div><div class="list-time" data-bind-text="texts.1.time">9:48 AM</div><div class="list-actions"><button data-comm-action="action:phoneSystem.sms.reply">Reply</button></div></div>
-            <div class="list-row"><div data-bind-attr="class:texts.2.iconCls" data-bind-text="texts.2.iconGlyph">💬</div><div><div class="list-num" data-bind-text="texts.2.name">Kim Th</div><div class="list-meta" data-bind-text="texts.2.meta">"Hi Kim, our crew is 15 min out — see you soon!"</div></div><div class="list-time" data-bind-text="texts.2.time">Yesterday</div><div class="list-actions"><button data-comm-action="action:phoneSystem.view">View</button></div></div>
+            <div class="list-row"><div data-bind-attr="class:texts.0.iconCls" data-svg-icon="message-circle"></div><div><div class="list-num" data-bind-text="texts.0.name">Keera Roberts</div><div class="list-meta" data-bind-text="texts.0.meta">"Sounds good — see you at 9 sharp tomorrow."</div></div><div class="list-time" data-bind-text="texts.0.time">1:08 PM</div><div class="list-actions"><button data-comm-action="action:phoneSystem.sms.reply">Reply</button></div></div>
+            <div class="list-row"><div data-bind-attr="class:texts.1.iconCls" data-svg-icon="message-circle"></div><div><div class="list-num" data-bind-text="texts.1.name">Emily M</div><div class="list-meta" data-bind-text="texts.1.meta">"Yes! Confirming for Saturday 8 AM."</div></div><div class="list-time" data-bind-text="texts.1.time">9:48 AM</div><div class="list-actions"><button data-comm-action="action:phoneSystem.sms.reply">Reply</button></div></div>
+            <div class="list-row"><div data-bind-attr="class:texts.2.iconCls" data-svg-icon="message-circle"></div><div><div class="list-num" data-bind-text="texts.2.name">Kim Th</div><div class="list-meta" data-bind-text="texts.2.meta">"Hi Kim, our crew is 15 min out — see you soon!"</div></div><div class="list-time" data-bind-text="texts.2.time">Yesterday</div><div class="list-actions"><button data-comm-action="action:phoneSystem.view">View</button></div></div>
             <div class="list-empty" id="textsEmpty" style="display:none;">No texts match your search.</div>
           </div>
         </div>
@@ -210,9 +221,9 @@
           <div class="list-card">
             <h2 data-bind-text="headings.5">Contacts</h2>
             <div class="list-toolbar"><input placeholder="Search contacts…" autocomplete="off" data-list-filter="contacts"></div>
-            <div class="list-row"><div data-bind-attr="class:contactList.0.iconCls;style:contactList.0.iconStyle" data-bind-text="contactList.0.initials">JK</div><div><div class="list-num"><span data-bind-text="contactList.0.name">Johanna Kuyvenhoven</span></div><div class="list-meta" data-bind-text="contactList.0.meta">+1 (587) 920-4170 · jkuyvenhoven94@gmail.com</div></div><div class="list-time"></div><div class="list-actions"><button>📞</button><button>💬</button></div></div>
-            <div class="list-row"><div data-bind-attr="class:contactList.1.iconCls;style:contactList.1.iconStyle" data-bind-text="contactList.1.initials">KR</div><div><div class="list-num" data-bind-text="contactList.1.name">Keera Roberts</div><div class="list-meta" data-bind-text="contactList.1.meta">+1 (672) 208-2675</div></div><div class="list-time"></div><div class="list-actions"><button>📞</button><button>💬</button></div></div>
-            <div class="list-row"><div data-bind-attr="class:contactList.2.iconCls;style:contactList.2.iconStyle" data-bind-text="contactList.2.initials">H</div><div><div class="list-num" data-bind-text="contactList.2.name">Harman</div><div class="list-meta" data-bind-text="contactList.2.meta">+1 (778) 816-2400</div></div><div class="list-time"></div><div class="list-actions"><button>📞</button><button>💬</button></div></div>
+            <div class="list-row"><div data-bind-attr="class:contactList.0.iconCls;style:contactList.0.iconStyle" data-bind-text="contactList.0.initials">JK</div><div><div class="list-num"><span data-bind-text="contactList.0.name">Johanna Kuyvenhoven</span></div><div class="list-meta" data-bind-text="contactList.0.meta">+1 (587) 920-4170 · jkuyvenhoven94@gmail.com</div></div><div class="list-time"></div><div class="list-actions"><button aria-label="Call"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></button><button aria-label="Message"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8z"/></svg></button></div></div>
+            <div class="list-row"><div data-bind-attr="class:contactList.1.iconCls;style:contactList.1.iconStyle" data-bind-text="contactList.1.initials">KR</div><div><div class="list-num" data-bind-text="contactList.1.name">Keera Roberts</div><div class="list-meta" data-bind-text="contactList.1.meta">+1 (672) 208-2675</div></div><div class="list-time"></div><div class="list-actions"><button aria-label="Call"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></button><button aria-label="Message"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8z"/></svg></button></div></div>
+            <div class="list-row"><div data-bind-attr="class:contactList.2.iconCls;style:contactList.2.iconStyle" data-bind-text="contactList.2.initials">H</div><div><div class="list-num" data-bind-text="contactList.2.name">Harman</div><div class="list-meta" data-bind-text="contactList.2.meta">+1 (778) 816-2400</div></div><div class="list-time"></div><div class="list-actions"><button aria-label="Call"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></button><button aria-label="Message"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8z"/></svg></button></div></div>
             <div class="list-empty" id="contactsEmpty" style="display:none;">No contacts match your search.</div>
           </div>
         </div>
@@ -262,6 +273,7 @@
 <script src="../../core/communication.api.js"></script>
 <script src="../../core/communication.js"></script>
 <script src="../../core/render.js"></script>
+<script src="../../core/icons.js"></script>
 <script src="../../core/standard-page.js"></script>
 <script src="../../core/google-places.js"></script>
 <script src="./module.js"></script>

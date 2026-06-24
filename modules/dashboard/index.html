@@ -579,30 +579,30 @@ a { color: inherit; text-decoration: none; }
 
         <!-- Top stat group -->
         <div class="stat-group">
-          <div class="stat-col">
+          <a class="stat-col" data-host-nav href="/Reports/BookedJobsByDate?period=month" style="cursor:pointer;text-decoration:none;color:inherit;">
             <div class="stat-eyebrow" data-bind-text="kpis.0.label">Deals booked this month</div>
             <div class="stat-number" data-bind-text="kpis.0.value">48 <span class="small">/ $128,400</span></div>
             <div class="stat-delta">
               <span class="pct" data-bind-attr="class:kpis.0.deltaClass"><span data-bind-text="kpis.0.delta">14.2%</span></span>
               vs <span data-bind-text="compareLabel">previous 30 days</span>
             </div>
-          </div>
-          <div class="stat-col">
+          </a>
+          <a class="stat-col" data-host-nav href="/Reports/JobsToday" style="cursor:pointer;text-decoration:none;color:inherit;">
             <div class="stat-eyebrow" data-bind-text="kpis.1.label">Discovery Calls today</div>
             <div class="stat-number" data-bind-text="kpis.1.value">12</div>
             <div class="stat-delta">
               <span class="pct" data-bind-attr="class:kpis.1.deltaClass"><span data-bind-text="kpis.1.delta">9.1%</span></span>
               vs <span data-bind-text="compareLabel">previous 30 days</span>
             </div>
-          </div>
-          <div class="stat-col">
+          </a>
+          <a class="stat-col" data-host-nav href="/Reports/MovesBookedToday" style="cursor:pointer;text-decoration:none;color:inherit;">
             <div class="stat-eyebrow" data-bind-text="kpis.2.label">Deals booked today</div>
             <div class="stat-number" data-bind-text="kpis.2.value">3</div>
             <div class="stat-delta">
               <span class="pct" data-bind-attr="class:kpis.2.deltaClass"><span data-bind-text="kpis.2.delta">6.2%</span></span>
               vs <span data-bind-text="compareLabel">previous 30 days</span>
             </div>
-          </div>
+          </a>
           <div class="stat-col">
             <div class="stat-eyebrow" data-bind-text="kpis.3.label">Average deal value</div>
             <div class="stat-number" data-bind-text="kpis.3.value"><span data-bind-text="amounts.0">$2,675</span></div>
@@ -776,25 +776,25 @@ a { color: inherit; text-decoration: none; }
             </thead>
             <tbody>
               <tr>
-                <td class="sa-lbl" data-bind-text="salesActivity.0.label">Leads</td>
+                <td class="sa-lbl"><a data-host-nav href="/Reports/LeadsToday" data-bind-text="salesActivity.0.label" style="color:inherit;cursor:pointer;">Leads</a></td>
                 <td class="num" data-bind-text="salesActivity.0.today">10</td>
                 <td class="num" data-bind-text="salesActivity.0.week">103</td>
                 <td class="num" data-bind-text="salesActivity.0.month">86</td>
               </tr>
               <tr>
-                <td class="sa-lbl" data-bind-text="salesActivity.1.label">Estimates Sent</td>
+                <td class="sa-lbl"><a data-host-nav href="/Reports/QuotesSent" data-bind-text="salesActivity.1.label" style="color:inherit;cursor:pointer;">Estimates Sent</a></td>
                 <td class="num" data-bind-text="salesActivity.1.today">4</td>
                 <td class="num" data-bind-text="salesActivity.1.week">72</td>
                 <td class="num" data-bind-text="salesActivity.1.month">58</td>
               </tr>
               <tr class="sa-hl">
-                <td class="sa-lbl" data-bind-text="salesActivity.2.label">Moves Booked</td>
+                <td class="sa-lbl"><a data-host-nav href="/Reports/BookedJobsByDate?period=month" data-bind-text="salesActivity.2.label" style="color:inherit;cursor:pointer;">Moves Booked</a></td>
                 <td class="num" data-bind-text="salesActivity.2.today">0</td>
                 <td class="num" data-bind-text="salesActivity.2.week">0</td>
                 <td class="num" data-bind-text="salesActivity.2.month">0</td>
               </tr>
               <tr>
-                <td class="sa-lbl" data-bind-text="salesActivity.3.label">Cancellations</td>
+                <td class="sa-lbl"><a data-host-nav href="/Reports/Cancellations" data-bind-text="salesActivity.3.label" style="color:inherit;cursor:pointer;">Cancellations</a></td>
                 <td class="num" data-bind-text="salesActivity.3.today">0</td>
                 <td class="num" data-bind-text="salesActivity.3.week">0</td>
                 <td class="num" data-bind-text="salesActivity.3.month">0</td>
@@ -832,46 +832,46 @@ a { color: inherit; text-decoration: none; }
       <section class="pane" data-pane="realtime">
 
         <div class="live-strip">
-          <div class="live-cell">
+          <a class="live-cell" data-host-nav href="/Reports/SalesPersonActivity" style="cursor:pointer;text-decoration:none;color:inherit;">
             <div class="stat-eyebrow" data-bind-text="metrics.stat_eyebrow.0">Online now</div>
             <div class="stat-number"><span data-bind-text="live.onlineNow">7</span><span class="small" data-bind-text="live.onlineTotal">/12</span></div>
             <div class="stat-delta"><span class="dot online"></span><span data-bind-text="live.onCalls">5</span> on calls</div>
-          </div>
-          <div class="live-cell">
+          </a>
+          <a class="live-cell" data-host-nav href="/Reports/SalesPersonActivity" style="cursor:pointer;text-decoration:none;color:inherit;">
             <div class="stat-eyebrow" data-bind-text="metrics.stat_eyebrow.1">Calls in last hour</div>
             <div class="stat-number" data-bind-text="kpis.4.value">38</div>
             <div class="stat-delta">Avg duration <strong style="color:var(--ink);font-weight:600;" data-bind-text="live.avgDuration">3m 42s</strong></div>
-          </div>
-          <div class="live-cell">
+          </a>
+          <a class="live-cell" data-host-nav href="/Reports/SalesPersonActivity" style="cursor:pointer;text-decoration:none;color:inherit;">
             <div class="stat-eyebrow" data-bind-text="metrics.stat_eyebrow.2">In queue</div>
             <div class="stat-number" style="color:var(--warn);" data-bind-text="kpis.5.value">3</div>
             <div class="stat-delta" data-bind-text="metrics.stat_delta.0">Longest wait · 42s</div>
-          </div>
-          <div class="live-cell">
+          </a>
+          <a class="live-cell" data-host-nav href="/Reports/SalesPersonActivity" style="cursor:pointer;text-decoration:none;color:inherit;">
             <div class="stat-eyebrow" data-bind-text="metrics.stat_eyebrow.3">Talk time today</div>
             <div class="stat-number" data-bind-text="live.talkTimeToday">—</div>
             <div class="stat-delta" data-bind-text="metrics.stat_delta.1">Avg per agent · 2h 04m</div>
-          </div>
-          <div class="live-cell">
+          </a>
+          <a class="live-cell" data-host-nav href="/Reports/LeadsToday" style="cursor:pointer;text-decoration:none;color:inherit;">
             <div class="stat-eyebrow" data-bind-text="metrics.stat_eyebrow.4">Leads today</div>
             <div class="stat-number" data-bind-text="kpis.6.value">21</div>
             <div class="stat-delta"><span class="pct up" data-bind-text="metrics.pct.0">↑ 18%</span> vs yesterday</div>
-          </div>
-          <div class="live-cell">
+          </a>
+          <a class="live-cell" data-host-nav href="/Reports/SalesPersonActivity" style="cursor:pointer;text-decoration:none;color:inherit;">
             <div class="stat-eyebrow" data-bind-text="metrics.stat_eyebrow.5">Emails sent</div>
             <div class="stat-number" data-bind-text="kpis.7.value">156</div>
             <div class="stat-delta" data-bind-text="metrics.stat_delta.2">42 opened · 27% open rate</div>
-          </div>
-          <div class="live-cell">
+          </a>
+          <a class="live-cell" data-host-nav href="/Reports/QuotesSent" style="cursor:pointer;text-decoration:none;color:inherit;">
             <div class="stat-eyebrow" data-bind-text="metrics.stat_eyebrow.6">Quotes sent</div>
             <div class="stat-number" data-bind-text="kpis.8.value">19</div>
             <div class="stat-delta" data-bind-text="metrics.stat_delta.3">8 viewed · 3 accepted</div>
-          </div>
-          <div class="live-cell">
+          </a>
+          <a class="live-cell" data-host-nav href="/Reports/MovesBookedToday" style="cursor:pointer;text-decoration:none;color:inherit;">
             <div class="stat-eyebrow" data-bind-text="metrics.stat_eyebrow.7">Moves booked</div>
             <div class="stat-number" style="color:var(--ok);" data-bind-text="kpis.9.value">7</div>
             <div class="stat-delta" data-bind-text="metrics.stat_delta.4">$18,450 booked today</div>
-          </div>
+          </a>
         </div>
 
         <div class="live-row">
@@ -886,12 +886,13 @@ a { color: inherit; text-decoration: none; }
                 <tr>
                   <th>Agent</th>
                   <th>Calls</th>
-                  <th>Connected</th>
+                  <th>Emails</th>
+                  <th>Texts</th>
                   <th>Talk time</th>
-                  <th>Deals</th>
+                  <th>Follow-ups today</th>
                 </tr>
               </thead>
-              <tbody data-bind="rows"><template><tr><td><div class="agent"><span class="agent-av" style="background:{{c0_avBg}};">{{c0_avInitials}}</span><div><div class="agent-nm">{{c0_name}}</div><div class="agent-st"><span class="dot {{c0_dotCls}}"></span>{{c0_sub}}</div></div></div></td><td>{{c1_text}}</td><td>{{c2_text}}</td><td>{{c3_text}}</td><td>{{c4_text}}</td></tr></template></tbody>
+              <tbody data-bind="rows"><template><tr><td><div class="agent"><span class="agent-av" style="background:{{c0_avBg}};">{{c0_avInitials}}</span><div><div class="agent-nm">{{c0_name}}</div><div class="agent-st"><span class="dot {{c0_dotCls}}"></span>{{c0_sub}}</div></div></div></td><td>{{c1_text}}</td><td>{{c2_text}}</td><td>{{c3_text}}</td><td>{{c4_text}}</td><td>{{c5_text}}</td></tr></template></tbody>
             </table>
           </section>
 

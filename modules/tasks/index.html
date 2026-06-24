@@ -179,7 +179,7 @@
   <div class="tm-modal">
     <div class="tm-head">
       <div class="tm-title">New Task</div>
-      <button data-modal-close class="tm-close" type="button">✕</button>
+      <button data-modal-close class="tm-close" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="tm-body">
       <div class="tm-grid">
@@ -224,7 +224,7 @@
   <div class="tm-modal" style="width:480px;">
     <div class="tm-head">
       <div class="tm-title">New Project</div>
-      <button data-modal-close class="tm-close" type="button">✕</button>
+      <button data-modal-close class="tm-close" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="tm-body">
       <div class="tm-field"><label class="tm-label">Name <span class="req">*</span></label><input name="name" class="tm-input" type="text" placeholder="e.g. Operations Q3"></div>
@@ -242,7 +242,7 @@
   <div class="tm-modal" style="width:560px;">
     <div class="tm-head">
       <div class="tm-title">AI Generate Tasks</div>
-      <button data-modal-close class="tm-close" type="button">✕</button>
+      <button data-modal-close class="tm-close" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="tm-body">
       <div class="tm-field full"><label class="tm-label">What do you want to plan?</label><textarea name="prompt" class="tm-textarea" placeholder="Describe a project or initiative — Claude will generate a task breakdown."></textarea></div>
@@ -262,6 +262,7 @@
 <script src="../../core/communication.api.js"></script>
 <script src="../../core/communication.js"></script>
 <script src="../../core/render.js"></script>
+<script src="../../core/icons.js"></script>
 <script src="../../core/standard-page.js"></script>
 <script src="../../core/google-places.js"></script>
 <script src="./module.js"></script>
@@ -486,7 +487,9 @@ function openTask(t) {
   statusSpan.appendChild(document.createTextNode(STATUS_LABEL[t.status]));
   pills.appendChild(statusSpan);
   if (t.snoozedUntil) {
-    const sn = el('span', { className: 'task-pill', cssText: 'background:#EFF6FF;color:#1D4ED8;', text: '💤 until ' + t.snoozedUntil });
+    const sn = el('span', { className: 'task-pill', cssText: 'background:#EFF6FF;color:#1D4ED8;' });
+    sn.appendChild(S1Icons.svg('moon-snooze', 14));
+    sn.appendChild(document.createTextNode(' until ' + t.snoozedUntil));
     pills.appendChild(sn);
   }
   if (Array.isArray(t.tags)) {
@@ -539,7 +542,9 @@ function openTask(t) {
         const now = new Date();
         const hh = String(now.getHours()).padStart(2,'0');
         const mm = String(now.getMinutes()).padStart(2,'0');
-        savedLabel.textContent = '✓ Saved · ' + hh + ':' + mm;
+        savedLabel.textContent = '';
+        savedLabel.appendChild(S1Icons.svg('check', 14));
+        savedLabel.appendChild(document.createTextNode(' Saved · ' + hh + ':' + mm));
         savedLabel.style.color = '#16a34a';
       } catch (e) {
         savedLabel.textContent = 'Save failed';
@@ -679,7 +684,8 @@ function renderTags() {
   tagsState.forEach(name => {
     const chip = el('span', { className: 'tm-chip tm-tag-chip', cssText: 'display:inline-flex;align-items:center;gap:4px;' });
     chip.appendChild(document.createTextNode(name));
-    const x = el('span', { cssText: 'cursor:pointer;color:#6b7280;font-weight:700;margin-left:2px;', text: '✕' });
+    const x = el('span', { cssText: 'cursor:pointer;color:#6b7280;font-weight:700;margin-left:2px;' });
+    x.appendChild(S1Icons.svg('x', 14));
     x.addEventListener('click', () => {
       const i = tagsState.indexOf(name);
       if (i >= 0) tagsState.splice(i, 1);
@@ -775,7 +781,8 @@ linkedSearchInp.addEventListener('input', () => {
             linkedIdHidden.value = row.id;
             const chip = el('span', { className: 'tm-chip', cssText: 'display:inline-flex;align-items:center;gap:4px;' });
             chip.appendChild(document.createTextNode((row.label || '') + (row.sub ? ' · ' + row.sub : '')));
-            const x = el('span', { cssText: 'cursor:pointer;color:#6b7280;font-weight:700;', text: '✕' });
+            const x = el('span', { cssText: 'cursor:pointer;color:#6b7280;font-weight:700;' });
+            x.appendChild(S1Icons.svg('x', 14));
             x.addEventListener('click', () => {
               linkedIdHidden.value = '';
               linkedPicked.replaceChildren();

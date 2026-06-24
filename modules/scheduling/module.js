@@ -610,9 +610,14 @@ document.addEventListener('s1ui:ready', renderTimes);
 function refreshBulkButton(btn, table) {
   const on  = table.classList.contains('select-mode');
   const sel = table.querySelectorAll('tbody tr.selected').length;
-  btn.textContent = on
-    ? (sel ? '✕ Cancel · ' + sel + ' selected' : '✕ Cancel select')
-    : '📋 Bulk select';
+  btn.textContent = '';
+  if (on) {
+    btn.appendChild(S1Icons.svg('x', 14));
+    btn.appendChild(document.createTextNode(sel ? ' Cancel · ' + sel + ' selected' : ' Cancel select'));
+  } else {
+    btn.appendChild(S1Icons.svg('clipboard-list', 14));
+    btn.appendChild(document.createTextNode(' Bulk select'));
+  }
 }
 document.addEventListener('click', (ev) => {
   const b = ev.target.closest('[data-bulk-select]'); if (!b) return;
@@ -1101,8 +1106,8 @@ if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
             recomputeConflicts(lane);
             if (sourceLane && sourceLane !== lane) recomputeConflicts(sourceLane);
             const stillConflicting = $$(':scope > .job.bad', lane).length;
-            if (stillConflicting) flash('⚠ Conflict: ' + stillConflicting + ' overlapping job' + (stillConflicting > 1 ? 's' : '') + ' on this crew');
-            else if (r.conflictWarning) flash('⚠ ' + r.conflictWarning);
+            if (stillConflicting) flash('Conflict: ' + stillConflicting + ' overlapping job' + (stillConflicting > 1 ? 's' : '') + ' on this crew');
+            else if (r.conflictWarning) flash(r.conflictWarning);
             else flash('Assigned at ' + startHour + ':00');
           }
         });
@@ -1182,14 +1187,15 @@ if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
         chip.className = 'truck-chip';
         if (tk.vehicleId != null) chip.setAttribute('data-veh-id', String(tk.vehicleId));
         const txt = document.createElement('span');
-        txt.textContent = '🚚 ' + String(tk.name || ('#' + tk.vehicleId));
+        txt.appendChild(S1Icons.svg('truck', 14));
+        txt.appendChild(document.createTextNode(' ' + String(tk.name || ('#' + tk.vehicleId))));
         chip.appendChild(txt);
         const x = document.createElement('button');
         x.type = 'button';
         x.className = 'truck-x';
         x.setAttribute('draggable', 'false');
         x.setAttribute('title', 'Remove truck');
-        x.textContent = '×';
+        x.appendChild(S1Icons.svg('x', 14));
         x.addEventListener('click', async (ev) => {
           ev.preventDefault(); ev.stopPropagation();
           const cid = parseInt(crewId, 10);
@@ -1247,7 +1253,7 @@ if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
           x.className = 'member-x';
           x.setAttribute('draggable', 'false');
           x.setAttribute('title', 'Remove member');
-          x.textContent = '×';
+          x.appendChild(S1Icons.svg('x', 14));
           x.addEventListener('click', async (ev) => {
             ev.preventDefault(); ev.stopPropagation();
             const cid = parseInt(crewId, 10);
@@ -1352,12 +1358,17 @@ if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
     chip.setAttribute('data-drag-label', label);
     chip.style.cursor = 'grab';
     const txt = document.createElement('span');
-    txt.textContent = label;
+    if (kind === 'job-vehicle') {
+      txt.appendChild(S1Icons.svg('truck', 14));
+      txt.appendChild(document.createTextNode(' ' + label));
+    } else {
+      txt.textContent = label;
+    }
     chip.appendChild(txt);
     const x = document.createElement('button');
     x.type = 'button';
     x.className = 'tj-chip-x';
-    x.textContent = '×';
+    x.appendChild(S1Icons.svg('x', 14));
     x.setAttribute('draggable', 'false');
     x.addEventListener('click', (ev) => {
       ev.preventDefault(); ev.stopPropagation();
@@ -1403,7 +1414,7 @@ if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
 
         const conf = document.createElement('span');
         conf.className = 'conf';
-        conf.textContent = '✓';
+        conf.appendChild(S1Icons.svg('check', 14));
         conf.style.color = slot.confStroke || ('var(--' + color + ')');
         conf.style.display = (slot.confDisplay === 'none') ? 'none' : '';
         job.appendChild(conf);
@@ -1418,7 +1429,7 @@ if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
             roster.appendChild(makeChip('job-member', slot.jobId, m.id, m.name || m.initials || ('#' + m.id), 'tj-member-chip' + (m.confirmed ? ' confirmed' : '')));
           });
           vehicles.forEach(v => {
-            roster.appendChild(makeChip('job-vehicle', slot.jobId, v.id, '🚚 ' + (v.name || ('#' + v.id)), 'tj-vehicle-chip'));
+            roster.appendChild(makeChip('job-vehicle', slot.jobId, v.id, (v.name || ('#' + v.id)), 'tj-vehicle-chip'));
           });
           job.appendChild(roster);
         }
@@ -1803,6 +1814,28 @@ if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
 }
 $$('.sched-tab[data-tab]').forEach(b => b.addEventListener('click', () => setTimeout(recomputeCounts, 50)));
 
+// Feature 1508 — "Account Management Meetings" is a marketing-CRM concept.
+// Hide that content-tab for non-marketing industries (e.g. moving), matching
+// how Pages/Scheduling/Daily.cshtml gates the same tab behind IsMarketingMode.
+function applyContentTabMode() {
+  const fx   = (window.S1.fixtures || {}).scheduling || {};
+  const mode = (fx._terms && fx._terms.modeCode) || 'moving';
+  const amTab = document.querySelector('.content-tab[data-content-tab="meetings"]');
+  if (!amTab) return;
+  const show = (mode === 'marketing');
+  amTab.style.display = show ? '' : 'none';
+  // If the (now hidden) meetings tab was active, fall back to Deal Opportunities.
+  if (!show && amTab.classList.contains('active')) {
+    amTab.classList.remove('active');
+    const deals = document.querySelector('.content-tab[data-content-tab="deals"]');
+    if (deals) deals.classList.add('active');
+  }
+}
+document.addEventListener('s1ui:ready', applyContentTabMode);
+if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
+  window.S1.bus.on('state:replaced', applyContentTabMode);
+}
+
 // ────────────────────────────────────────────────────────────────────────
 // Month grid — JS-built from scheduling.month.get. Replaces the hardcoded
 // 35-cell sample data.
@@ -1907,8 +1940,8 @@ if (window.S1 && window.S1.wireStandardPage) window.S1.wireStandardPage('schedul
   };
   const DOW_FULL = { Mon:'Monday', Tue:'Tuesday', Wed:'Wednesday', Thu:'Thursday', Fri:'Friday', Sat:'Saturday', Sun:'Sunday' };
   const SLOT_META = {
-    am: { label: 'Morning',   time: '8:00 – 12:00', ico: '☀' },
-    pm: { label: 'Afternoon', time: '1:00 – 5:00',  ico: '☾' },
+    am: { label: 'Morning',   time: '8:00 – 12:00', ico: 'sun' },
+    pm: { label: 'Afternoon', time: '1:00 – 5:00',  ico: 'moon' },
   };
   const WEEK = [
     { id: '2026-05-25', dow: 'Mon', day: 25 },
@@ -1968,12 +2001,17 @@ if (window.S1 && window.S1.wireStandardPage) window.S1.wireStandardPage('schedul
 
     // header
     const hd = el('div', 'slot-hd');
-    hd.appendChild(el('span', 'slot-ico ' + slot, meta.ico));
+    const slotIco = el('span', 'slot-ico ' + slot);
+    slotIco.appendChild(S1Icons.svg(meta.ico, 16));
+    hd.appendChild(slotIco);
     const ht = el('div', 'slot-head-txt');
     ht.appendChild(el('div', 'slot-name', meta.label));
     ht.appendChild(el('div', 'slot-time', meta.time));
     hd.appendChild(ht);
-    hd.appendChild(el('span', 'slot-badge ' + state, (state === 'best' ? '✓ ' : '') + label));
+    const badge = el('span', 'slot-badge ' + state);
+    if (state === 'best') { badge.appendChild(S1Icons.svg('check', 14)); badge.appendChild(document.createTextNode(' ')); }
+    badge.appendChild(document.createTextNode(label));
+    hd.appendChild(badge);
     card.appendChild(hd);
 
     // capacity meter
@@ -2074,7 +2112,9 @@ if (window.S1 && window.S1.wireStandardPage) window.S1.wireStandardPage('schedul
 
     // recommendation banner
     const banner = el('div', 'rec-banner ' + (rec ? '' : 'none'));
-    banner.appendChild(el('span', 'rb-ico', rec ? '✓' : '✦'));
+    const rbIco = el('span', 'rb-ico');
+    rbIco.appendChild(S1Icons.svg(rec ? 'check' : 'star', 16));
+    banner.appendChild(rbIco);
     const rbText = el('div', 'rb-text');
     if (rec === 'am') {
       const t = el('div', 'rb-title');

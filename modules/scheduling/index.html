@@ -92,7 +92,8 @@ a { color: inherit; text-decoration: none; }
   display: grid;
   grid-template-columns: 1fr;
   grid-template-rows: 1fr;
-  min-height: 100vh;
+  height: 100vh;
+  min-height: 0;
   min-width: 0;
 }
 .search {
@@ -131,7 +132,7 @@ a { color: inherit; text-decoration: none; }
 }
 
 /* ── Page ── */
-.page { grid-row: 1; grid-column: 1; min-width: 0; display: flex; flex-direction: column; }
+.page { grid-row: 1; grid-column: 1; min-width: 0; display: flex; flex-direction: column; min-height: 0; }
 
 /* ── Buttons (shared) ── */
 .btn {
@@ -267,6 +268,7 @@ a { color: inherit; text-decoration: none; }
   display: flex; align-items: center; justify-content: space-between;
   padding: 12px 16px;
   border-bottom: var(--hair);
+  flex-shrink: 0;
 }
 .r-title {
   font-size: var(--t-eyebrow);
@@ -279,10 +281,19 @@ a { color: inherit; text-decoration: none; }
   height: 32px; padding: 0 10px;
   background: var(--surface-2); border: var(--hair); border-radius: var(--r);
   color: var(--ink-3);
+  flex-shrink: 0;
 }
 .r-search input { border: 0; background: transparent; outline: none; flex: 1; font-size: 12px; }
 
-.r-list { overflow-y: auto; padding: 8px 8px 16px; flex: 1; }
+.r-list {
+  overflow-y: auto; padding: 8px 8px 16px; flex: 1; min-height: 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-2) transparent;
+}
+.r-list::-webkit-scrollbar { width: 8px; }
+.r-list::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 999px; }
+.r-list::-webkit-scrollbar-thumb:hover { background: var(--ink-4); }
+.r-list::-webkit-scrollbar-track { background: transparent; }
 .r-section-title {
   padding: 12px 8px 6px;
   font-size: var(--t-eyebrow);
@@ -512,7 +523,13 @@ a { color: inherit; text-decoration: none; }
   border-bottom: var(--hair);
   display: grid;
   grid-template-columns: repeat(24, var(--hr-w));
-  height: var(--lane-h);
+  /* Use min-height (a floor) instead of a fixed height so the lane stretches to
+     fill its grid row. The row track is sized by its paired .crew-cell (which
+     grows as members/trucks are added), and grid items stretch by default — so
+     the lane's bottom divider always lands on the same Y as the team card's
+     divider. A fixed height here kept the lane at 64px and the borders drifted
+     apart (feature #1586). */
+  min-height: var(--lane-h);
 }
 .lane-cell {
   border-right: 0;
@@ -1010,8 +1027,8 @@ a { color: inherit; text-decoration: none; }
         <div class="timeline">
           <div class="tl-bar">
             <div class="content-tabs">
-              <button class="content-tab active">Deal Opportunities <span class="ct-count" data-bind-text="metrics.ct_count.0"></span></button>
-              <button class="content-tab">Account Management Meetings <span class="ct-count" style="background:var(--info-bg);color:var(--info);" data-bind-text="metrics.ct_count.1"></span></button>
+              <button class="content-tab active" data-content-tab="deals">Deal Opportunities <span class="ct-count" data-bind-text="metrics.ct_count.0"></span></button>
+              <button class="content-tab" data-content-tab="meetings">Account Management Meetings <span class="ct-count" style="background:var(--info-bg);color:var(--info);" data-bind-text="metrics.ct_count.1"></span></button>
             </div>
             <div class="right">
               <button class="btn btn-secondary btn-sm">
@@ -1338,8 +1355,8 @@ a { color: inherit; text-decoration: none; }
         </div>
 
         <div style="display:flex;justify-content:flex-end;gap:8px;margin:14px 0 6px;">
-          <button type="button" class="btn btn-secondary" data-bulk-select="customer">📋 Bulk select</button>
-          <button data-comm-action="action:scheduling.bulk.sendAi.customer" data-bulk-scope="customer" class="btn btn-primary" style="display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#6366F1,#7C3AED);">✨ Send All via AI</button>
+          <button type="button" class="btn btn-secondary" data-bulk-select="customer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4M12 16h4M8 11h.01M8 16h.01"/></svg> Bulk select</button>
+          <button data-comm-action="action:scheduling.bulk.sendAi.customer" data-bulk-scope="customer" class="btn btn-primary" style="display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#6366F1,#7C3AED);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.8L19.7 10l-5.8 1.9L12 17.7l-1.9-5.8L4.3 10l5.8-1.9z"/><path d="M19 3v4M21 5h-4M5 17v2M6 18H4"/></svg> Send All via AI</button>
         </div>
 
         <div class="tableview" data-bulk-table="customer">
@@ -1386,8 +1403,8 @@ a { color: inherit; text-decoration: none; }
         </div>
 
         <div style="display:flex;justify-content:flex-end;gap:8px;margin:14px 0 6px;">
-          <button type="button" class="btn btn-secondary" data-bulk-select="team">📋 Bulk select</button>
-          <button data-comm-action="action:scheduling.bulk.sendAi.team" data-bulk-scope="team" class="btn btn-primary" style="display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#6366F1,#7C3AED);">✨ Send All via AI</button>
+          <button type="button" class="btn btn-secondary" data-bulk-select="team"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4M12 16h4M8 11h.01M8 16h.01"/></svg> Bulk select</button>
+          <button data-comm-action="action:scheduling.bulk.sendAi.team" data-bulk-scope="team" class="btn btn-primary" style="display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#6366F1,#7C3AED);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.8L19.7 10l-5.8 1.9L12 17.7l-1.9-5.8L4.3 10l5.8-1.9z"/><path d="M19 3v4M21 5h-4M5 17v2M6 18H4"/></svg> Send All via AI</button>
         </div>
 
         <div class="tableview" data-bulk-table="team">
@@ -1561,6 +1578,7 @@ a { color: inherit; text-decoration: none; }
 <script src="../../core/communication.api.js"></script>
 <script src="../../core/communication.js"></script>
 <script src="../../core/render.js"></script>
+<script src="../../core/icons.js"></script>
 <script src="../../core/standard-page.js"></script>
 <script src="../../core/google-places.js"></script>
 <script src="./module.js"></script>

@@ -181,6 +181,15 @@ body {
 .sa-tbl tbody tr:hover { background: var(--surface-2) !important; }
 .sa-tbl tbody tr.sa-hl { background: var(--terra-soft) !important; box-shadow: inset 3px 0 0 var(--terra); }
 .sa-tbl tbody tr.sa-hl:hover { background: var(--terra-soft) !important; }
+/* Feature 1562: the dashboard module does not link _system.css, so the
+   .tbl { width:100% } base never reaches .sa-tbl and the table collapses
+   to content width (bunched left, empty band on the right). Restore a
+   full-width, evenly distributed layout scoped to .sa-tbl only. */
+.sa-tbl { width: 100%; table-layout: fixed; }
+.sa-tbl th:first-child,
+.sa-tbl td.sa-lbl            { width: 40%; text-align: left; }
+.sa-tbl th.num,
+.sa-tbl td.num               { width: 20%; text-align: right; }
 
 /* ── Top Referral Sources (Feature 1557) ─────────────────────────────
    Sits beside Sales Activity in the .two-col row, filling the right-hand

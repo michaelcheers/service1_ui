@@ -243,25 +243,125 @@ $$('.tab[data-tab]').forEach(btn => {
 (function () {
   const modal = document.getElementById('addChargeModal');
   if (!modal) return;
-  const presetSel = modal.querySelector('[name="preset"]');
-  const rateInp   = modal.querySelector('[name="rate"]');
-  const qtyInp    = modal.querySelector('[name="quantity"]');
-  const totalEl   = document.getElementById('addChargeLineTotal');
+  const presetSel  = modal.querySelector('[name="preset"]');
+  const rateInp    = modal.querySelector('[name="rate"]');
+  const qtyInp     = modal.querySelector('[name="quantity"]');
+  const typeSel    = modal.querySelector('[name="chargeType"]');
+  const catSel     = modal.querySelector('[name="category"]');
+  const crewInp    = modal.querySelector('[name="crewCount"]');
+  const vehInp     = modal.querySelector('[name="vehicleCount"]');
+  const totalEl    = document.getElementById('addChargeLineTotal');
   const fmt = (n) => '$' + (Math.round(n * 100) / 100).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   function recomputeTotal() {
     const r = parseFloat((rateInp && rateInp.value) || '0') || 0;
     const q = parseFloat((qtyInp  && qtyInp.value)  || '0') || 0;
     if (totalEl) totalEl.textContent = fmt(r * q);
   }
+  // #1607: data-driven preset sync. The preset <option> value is the numeric
+  // preset id (built server-side from S1UiOption.Of(id, name)); look the full
+  // preset metadata up in state.chargePresets and pre-fill rate / type /
+  // category / qty / crew / vehicle. The custom option's value is the literal
+  // "— None (custom charge) —" string (not an int), which clears the line.
+  function setSelectValue(sel, val) {
+    if (!sel || val == null) return;
+    const want = String(val);
+    const opt = Array.prototype.find.call(sel.options || [], o =>
+      o.value === want || o.textContent.trim() === want);
+    if (opt) sel.value = opt.value;
+  }
+  function presetById(id) {
+    const state = (window.S1.fixtures || {}).jobDetail || {};
+    const list = Array.isArray(state.chargePresets) ? state.chargePresets : [];
+    return list.find(p => Number(p.id) === Number(id)) || null;
+  }
   function syncRateFromPreset() {
-    if (!presetSel || !rateInp) return;
-    const v = presetSel.value || '';
-    const m = v.match(/\$\s*([\d,]+(?:\.\d+)?)/);
-    if (m) { rateInp.value = m[1].replace(/,/g, ''); recomputeTotal(); }
+    if (!presetSel) return;
+    const raw = presetSel.value || '';
+    const id = parseInt(raw, 10);
+    if (!Number.isInteger(id) || String(id) !== raw.trim()) {
+      // Custom charge: clear the line so the user types a fresh charge.
+      if (rateInp) rateInp.value = '';
+      if (qtyInp)  qtyInp.value  = '1';
+      recomputeTotal();
+      return;
+    }
+    const p = presetById(id);
+    if (!p) { recomputeTotal(); return; }
+    if (rateInp) rateInp.value = (p.defaultRate != null) ? String(p.defaultRate) : '';
+    if (qtyInp)  qtyInp.value  = (p.defaultQty != null) ? String(p.defaultQty) : '1';
+    setSelectValue(typeSel, p.chargeType);
+    setSelectValue(catSel,  p.category || p.chargeType);
+    if (crewInp) crewInp.value = (p.crewCount != null) ? String(p.crewCount) : '0';
+    if (vehInp)  vehInp.value  = (p.vehicleCount != null) ? String(p.vehicleCount) : '0';
+    recomputeTotal();
   }
   if (presetSel) presetSel.addEventListener('change', syncRateFromPreset);
   if (rateInp)   rateInp.addEventListener('input', recomputeTotal);
   if (qtyInp)    qtyInp.addEventListener('input', recomputeTotal);
+
+  // #1607: the "+ Custom charge" picker chip opens this modal on the custom
+  // option with all fields cleared — a true blank custom charge.
+  window.__jdOpenCustomCharge = function () {
+    if (presetSel) {
+      const custom = Array.prototype.find.call(presetSel.options || [], o =>
+        /custom charge/i.test(o.textContent) || /custom charge/i.test(o.value));
+      if (custom) presetSel.value = custom.value;
+    }
+    const desc = modal.querySelector('[name="description"]');
+    if (desc) desc.value = '';
+    if (rateInp) rateInp.value = '';
+    if (qtyInp)  qtyInp.value  = '1';
+    if (crewInp) crewInp.value = '0';
+    if (vehInp)  vehInp.value  = '0';
+    recomputeTotal();
+    window.S1.modal.open('#addChargeModal');
+  };
+})();
+
+// #1607: count-prompt modal controller. A mover/quantity-scaled preset chip
+// fires window.__jdQuickCountPrompt(preset) which opens #quickCountModal asking
+// "How many movers?" / "How many boxes / units?" and, on confirm, fires
+// add-quick-charge with the chosen crewCount or quantity override.
+(function () {
+  const modal = document.getElementById('quickCountModal');
+  if (!modal) return;
+  const titleEl = modal.querySelector('[data-quick-count-title]');
+  const labelEl = modal.querySelector('[data-quick-count-label]');
+  const input   = document.getElementById('quickCountInput');
+  const addBtn  = document.getElementById('quickCountAdd');
+  let active = null; // { preset, unit }
+
+  window.__jdQuickCountPrompt = function (preset) {
+    if (!preset) return;
+    const unit = preset.promptUnit;
+    active = { preset, unit };
+    if (titleEl) titleEl.textContent = 'Add: ' + (preset.name || 'charge');
+    if (labelEl) labelEl.textContent = (unit === 'movers') ? 'How many movers?' : 'How many boxes / units?';
+    let preset_default = (unit === 'movers')
+      ? (preset.crewCount != null ? preset.crewCount : 1)
+      : (preset.defaultQty != null ? preset.defaultQty : 1);
+    if (!(Number(preset_default) >= 1)) preset_default = 1;
+    if (input) input.value = String(preset_default);
+    window.S1.modal.open('#quickCountModal');
+    if (input) { try { input.focus(); input.select(); } catch (_) {} }
+  };
+
+  if (addBtn) addBtn.addEventListener('click', async (ev) => {
+    ev.preventDefault();
+    if (!active) return;
+    let n = parseInt((input && input.value) || '', 10);
+    if (!(n >= 1)) n = 1;
+    const presetId = Number(active.preset.id);
+    const payload = (active.unit === 'movers') ? { presetId, crewCount: n } : { presetId, quantity: n };
+    const name = active.preset.name || 'charge';
+    await safe('Quick charge', async () => {
+      const res = await comm.action('jobDetail.add-quick-charge', payload);
+      if (res && res.ok) flash('Added ' + name);
+      else flash('Set up this category in Settings \u2192 Charge Presets', 'bad');
+    });
+    try { window.S1.modal.close('#quickCountModal'); } catch (_) {}
+    active = null;
+  });
 })();
 
 // + Add tag — opens addTagModal (via the generic data-jd-open handler) and
@@ -381,6 +481,30 @@ function jdMarkOverflowingRows() {
   });
 }
 document.addEventListener('s1ui:ready', () => setTimeout(jdMarkOverflowingRows, 60));
+// The wrapper sizes the email iframe asynchronously; re-mark overflow when
+// any timeline mail frame finishes loading or changes height. 'load' does not
+// bubble, so listen in the capture phase. Debounced to coalesce bursts.
+let _jdOverflowT = null;
+function jdScheduleOverflow() {
+  clearTimeout(_jdOverflowT);
+  _jdOverflowT = setTimeout(jdMarkOverflowingRows, 30);
+}
+document.addEventListener('load', (e) => {
+  const t = e.target;
+  if (t && t.tagName === 'IFRAME' && t.closest &&
+      t.closest('.tab-pane[data-pane="communication"] .tl-text-mail')) jdScheduleOverflow();
+}, true);
+// ResizeObserver: re-mark when a sized mail frame's box changes (late reflow,
+// width resize). Re-observe after each render pass.
+let _jdRO = (typeof ResizeObserver !== 'undefined')
+  ? new ResizeObserver(jdScheduleOverflow) : null;
+function jdObserveMailFrames() {
+  if (!_jdRO) return;
+  $$('.tab-pane[data-pane="communication"] .tl-text-mail iframe').forEach((fr) => {
+    if (fr.__jdRO) return; fr.__jdRO = true; _jdRO.observe(fr);
+  });
+}
+document.addEventListener('s1ui:ready', () => setTimeout(jdObserveMailFrames, 60));
 document.addEventListener('click', (e) => {
   const more = e.target.closest && e.target.closest('.tl-more');
   if (!more) return;
@@ -495,7 +619,7 @@ function refreshPinned() {
       const x = document.createElement('button'); x.type = 'button'; x.className = 'tl-pinned-unpin';
       x.setAttribute('data-jd-unpin', it.recordId == null ? '' : String(it.recordId));
       x.setAttribute('data-jd-unpin-kind', it.kind || '');
-      x.title = 'Unpin'; x.textContent = '×'; row.appendChild(x);
+      x.title = 'Unpin'; x.appendChild(S1Icons.svg('x')); row.appendChild(x);
       list.appendChild(row);
     }
   }
@@ -590,6 +714,7 @@ $$('[data-comm-action="action:jobDetail.claim-lead"]').forEach(b => {
 [
   ['jobDetail.send-portal-link',                 'Portal link sent'],
   ['jobDetail.send-growth-plan',                 'Estimate sent'],
+  ['jobDetail.refresh-estimate',                 'Estimate refreshed and resent'],
   ['jobDetail.request-a-card-on-file',           'Card request sent'],
   ['jobDetail.send-link-to-customer',            'Payment link sent to customer'],
 ].forEach(([action, okMsg]) => {
@@ -745,9 +870,19 @@ document.addEventListener('click', async (ev) => {
   const idEl = btn.closest('[data-record-id]');
   const id   = idEl ? idEl.getAttribute('data-record-id') : null;
   const stop = btn.closest('.gp2-stop');
-  if (!id) { flash('Cannot remove this stop (missing id)', 'bad'); return; }
+  // #1595: a synthetic stop renders data-record-id="0" (a truthy string), which the
+  // old `if (!id)` guard let through → the server got id=0 and 404'd. Treat "0"/empty
+  // as missing so a stop left in a tab opened before the server upgrade degrades to a
+  // clear toast instead of a silent failure.
+  if (!id || id === '0') { flash('Cannot remove this stop (missing id)', 'bad'); return; }
+  // #1595: include the stop's address so the server can match-by-address as a fallback
+  // when the posted id is unresolved (same pattern the edit handler uses).
+  const state = (window.S1.fixtures || {}).jobDetail || {};
+  const stops = (state.route && Array.isArray(state.route.stops)) ? state.route.stops : [];
+  const data  = stops.find(s => String(s.id) === String(id)) || {};
+  const address = data.address || data.addrShort || '';
   await safe('Remove stop', async () => {
-    const r = await comm.action('jobDetail.remove-stop', { id });
+    const r = await comm.action('jobDetail.remove-stop', { id, address });
     if (r && r.ok === false) { flash(r.error || 'Remove failed', 'bad'); return; }
     if (stop) stop.remove();
     relabelStops();
@@ -893,6 +1028,18 @@ $$('button').filter(b => /^\+\s*add line$/i.test(b.textContent.trim())).forEach(
   b.__s1Wired = true;
   b.addEventListener('click', addCharge);
 });
+$$('button').filter(b => /^sync charges$/i.test(b.textContent.trim())).forEach(b => {
+  b.removeAttribute('data-comm-action');
+  b.__s1Wired = true;
+  b.addEventListener('click', async (ev) => {
+    ev.preventDefault();
+    await safe('Sync charges', async () => {
+      const r = await comm.action('jobDetail.sync-charges', {});
+      if (r && r.ok && r.synced) flash('Estimate updated with the current charges');
+      else flash('No editable estimate to sync \u2014 send an estimate first', 'bad');
+    });
+  });
+});
 
 function renderQuickCharges() {
   const host = $('[data-quick-host]');
@@ -946,6 +1093,13 @@ function renderQuickCharges() {
     node.__s1Wired = true;
     node.addEventListener('click', async (ev) => {
       ev.preventDefault();
+      // #1607: a preset flagged 'movers'/'quantity' asks the user a count first
+      // (e.g. Protection Plan → "how many movers", a box → "how many boxes").
+      // Flat-fee presets (promptUnit null) add immediately as before.
+      const unit = p.promptUnit;
+      if (unit === 'movers' || unit === 'quantity') {
+        if (typeof window.__jdQuickCountPrompt === 'function') { window.__jdQuickCountPrompt(p); return; }
+      }
       const presetId = Number(node.getAttribute('data-preset-id'));
       await safe('Quick charge', async () => {
         const res = await comm.action('jobDetail.add-quick-charge', { presetId });
@@ -975,6 +1129,19 @@ if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
   window.S1.bus.on('state:replaced', renderQuickCharges);
 }
 renderQuickCharges();
+
+// #1607: the static "+ Custom charge" chip lives outside the dynamic host so it
+// survives re-renders. Wire it once to open the Add Charge modal blank/custom.
+(function () {
+  const btn = document.querySelector('[data-quick-custom]');
+  if (!btn || btn.__s1Wired) return;
+  btn.__s1Wired = true;
+  btn.addEventListener('click', (ev) => {
+    ev.preventDefault();
+    if (typeof window.__jdOpenCustomCharge === 'function') window.__jdOpenCustomCharge();
+    else window.S1.modal.open('#addChargeModal');
+  });
+})();
 
 // ────────────────────────────────────────────────────────────────────────
 // Feature #1505: Documents tab — field contracts + paperwork with signed status
@@ -1401,7 +1568,7 @@ document.addEventListener('click', async function (ev) {
 });
 
 // ── 22c) F27: job-lifecycle actions menu (close / unfinalize / reset-plan /
-// reset / unmark-bad / delete). The trigger toggles the menu; each item fires
+// reset / unmark-bad). The trigger toggles the menu; each item fires
 // its data-comm-action key through comm.action, honoring a data-jd-confirm
 // guard for the destructive ones. Items are marked __s1Wired so the generic
 // fallback (section 23) doesn't double-fire.
@@ -2142,7 +2309,7 @@ document.addEventListener('click', async function (ev) {
     taxWrap.appendChild(lblT); taxWrap.appendChild(tx);
     var del = document.createElement('div');
     if (!auto) {
-      var btn = document.createElement('button'); btn.type = 'button'; btn.textContent = '×';
+      var btn = document.createElement('button'); btn.type = 'button'; btn.appendChild(S1Icons.svg('x'));
       btn.style.cssText = 'background:none;border:none;cursor:pointer;color:#9ca3af;font-size:18px;padding:6px;';
       btn.addEventListener('click', function () { row.remove(); updateRevCatTotals(); updateLiveTotal(); });
       del.appendChild(btn);
@@ -2475,19 +2642,21 @@ document.addEventListener('click', async function (ev) {
     ['#jdNteModal',             'job.nte.set',            {}],
     ['#jdJobDetailsModal',      'job.details.update',     {}],
     // This modal edits the CUSTOMER record (name/phone/email), not a JobContact,
-    // so route to jobDetail.customer (S1EditCustomerAsync) and split the single
-    // name field into firstName / lastName.
+    // so route to jobDetail.customer (S1EditCustomerAsync). #1611: forward the
+    // discrete firstName / lastName / companyName fields verbatim (no fragile
+    // whitespace split) so individual AND company customers can be renamed.
     ['#jdContactDetailsModal',  'jobDetail.customer', {
       transform: function (p) {
-        var name = (p.customerName || '').trim();
-        var sp = name.indexOf(' ');
         return {
-          firstName:        sp === -1 ? name : name.slice(0, sp),
-          lastName:         sp === -1 ? ''   : name.slice(sp + 1).trim(),
+          firstName:        p.firstName || '',
+          lastName:         p.lastName || '',
+          companyName:      p.companyName || '',
           phone:            p.primaryPhone || '',
           email:            p.email || '',
           // C2: forward the rest of the modal so nothing is dropped.
           secondaryPhone:   p.secondaryPhone || '',
+          secondaryName:    p.secondaryName || '',
+          secondaryEmail:   p.secondaryEmail || '',
           preferredContact: p.preferredContact || '',
           language:         p.language || '',
           receivesMarketing: p.receivesMarketing ? 'true' : 'false'
@@ -3551,10 +3720,12 @@ document.addEventListener('click', function (ev) {
       chip.className = 'cmx-attach-chip';
       chip.style.cssText = 'display:inline-flex;align-items:center;gap:6px;background:#ecfeff;border:1px solid #67e8f9;border-radius:12px;padding:3px 10px;font-size:11px;';
       const name = document.createElement('span');
-      name.textContent = '📎 ' + a.name + ' · ' + Math.round((a.size || 0) / 1024) + ' KB';
+      name.style.cssText = 'display:inline-flex;align-items:center;gap:4px;';
+      name.appendChild(S1Icons.svg('paperclip', 14));
+      name.appendChild(document.createTextNode(' ' + a.name + ' · ' + Math.round((a.size || 0) / 1024) + ' KB'));
       const x = document.createElement('button');
       x.type = 'button';
-      x.textContent = '×';
+      x.appendChild(S1Icons.svg('x', 14));
       x.style.cssText = 'border:0;background:transparent;cursor:pointer;font-size:14px;line-height:1;color:#0e7490;';
       x.addEventListener('click', () => {
         pendingAttachments[role].splice(idx, 1);
@@ -3594,7 +3765,7 @@ document.addEventListener('click', function (ev) {
     txt.appendChild(who);
     txt.appendChild(tail);
     const x = document.createElement('span');
-    x.textContent = '×';
+    x.appendChild(S1Icons.svg('x', 14));
     x.title = 'Cancel reply';
     x.style.cssText = 'cursor:pointer;font-weight:700;color:#065f46;font-size:16px;line-height:1;flex:none;';
     x.addEventListener('click', (ev) => {
@@ -3674,8 +3845,8 @@ document.addEventListener('click', function (ev) {
     const follow = document.querySelector('.cmx-check[data-cmx-check="textFollow"]');
     return {
       composer: 'sms',
-      to:       readBind('text', 'to'),
-      from:     readBind('text', 'from'),
+      to:         readBind('text', 'to'),
+      fromLineId: readBind('text', 'fromLineId'),
       message:  (ta && ta.value) || readBind('text', 'body') || '',
       templateId: readBind('text', 'templateId'),
       attachments: pendingAttachments.text.slice(),

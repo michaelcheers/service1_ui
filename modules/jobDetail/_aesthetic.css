@@ -184,3 +184,24 @@ body {
 .jd-doc-pill.is-ack { background: #f3f4f6; color: #4b5563; }
 .jd-doc-view { color: #004D40; font-weight: 600; text-decoration: none; }
 .jd-doc-view:hover { text-decoration: underline; }
+
+/* #1612: open follow-ups list in the header rail with a per-row "Done" button.
+   Distinct jd-fuc-* prefix (the popover already owns .jd-fu-row). */
+.jd-fuc-list { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.jd-fuc-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 8px 12px; border: 1px solid var(--hair-line, #E6E8EC); border-radius: 8px;
+  background: #fff;
+}
+.jd-fuc-info { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; min-width: 0; }
+.jd-fuc-when { font-weight: 600; color: #1a1a1a; font-size: 13px; }
+.jd-fuc-note { color: #6b7280; font-size: 12px; overflow: hidden; text-overflow: ellipsis; }
+.jd-fuc-note:empty { display: none; }
+.jd-fuc-overdue { color: #ef4444; font-weight: 700; font-size: 11px; letter-spacing: .04em; }
+.jd-fuc-overdue:empty { display: none; }
+.jd-fuc-done {
+  flex: 0 0 auto; display: inline-flex; align-items: center; gap: 4px;
+  background: #16a34a; color: #fff; border: 0; border-radius: 6px;
+  padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer;
+}
+.jd-fuc-done:hover { background: #15803d; }

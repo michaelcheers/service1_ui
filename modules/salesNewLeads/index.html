@@ -149,6 +149,7 @@
 <script src="../../core/communication.api.js"></script>
 <script src="../../core/communication.js"></script>
 <script src="../../core/render.js"></script>
+<script src="../../core/icons.js"></script>
 <script src="../../core/standard-page.js"></script>
 <script src="../../core/google-places.js"></script>
 <script src="./module.js"></script>
@@ -389,7 +390,9 @@ document.getElementById('nlGrid').addEventListener('click', async e => {
     btnGrab.textContent = 'Grabbing…';
     try {
       await window.S1.comm.action('salesNewLeads.claim', { leadId: id });
-      btnGrab.textContent = '✓ Grabbed';
+      btnGrab.textContent = '';
+      btnGrab.appendChild(S1Icons.svg('check', 14));
+      btnGrab.appendChild(document.createTextNode(' Grabbed'));
       btnGrab.style.background = 'var(--ok)';
       if (card) setTimeout(() => card.style.opacity = '.5', 240);
       if (window.S1.flash) window.S1.flash('Lead grabbed');

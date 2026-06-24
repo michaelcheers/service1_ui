@@ -56,6 +56,15 @@
 
 .link-job { color:var(--terra); font-weight:500; display:inline-flex; align-items:center; gap:5px; }
 .link-job:hover { text-decoration:underline; }
+
+/* Due / Completed view toggle */
+.fu-viewtoggle { display:inline-flex; border:1px solid var(--terra); border-radius:999px; overflow:hidden; font-size:12.5px; font-weight:600; margin-bottom:16px; }
+.fu-view-btn { padding:6px 16px; border:0; background:#fff; color:var(--terra); cursor:pointer; font-weight:600; font-size:12.5px; display:inline-flex; align-items:center; gap:6px; }
+.fu-view-btn.active { background:var(--terra); color:#fff; }
+.fu-view-badge { background:var(--surface-3); color:var(--ink-2); border-radius:999px; padding:0 7px; font-size:11px; line-height:18px; min-width:18px; text-align:center; }
+.fu-view-btn.active .fu-view-badge { background:rgba(255,255,255,.25); color:#fff; }
+.fu-done-badge { display:inline-block; padding:3px 10px; border-radius:6px; font-size:11px; font-weight:600; color:var(--ok); background:var(--ok-soft); }
+.fu-hint { font-size:11px; color:var(--ink-3); font-style:italic; padding:8px 0 0; }
 </style>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -85,6 +94,11 @@
         <div class="stat-col"><div class="stat-eyebrow" data-bind-text="kpis.3.label">This week</div><div data-bind-attr="class:kpis.3.valueClass" data-bind-text="kpis.3.value">28</div><div class="stat-delta" data-bind-text="metrics.stat_delta.0">remaining after today</div></div>
       </div>
 
+      <div class="fu-viewtoggle" id="fuViewToggle">
+        <button type="button" class="fu-view-btn active" data-view="due">Due</button>
+        <button type="button" class="fu-view-btn" data-view="completed">Completed <span class="fu-view-badge" id="fuCompletedBadge">0</span></button>
+      </div>
+
       <div class="toolbar">
         <div class="fchips" id="fuChips">
           <button data-comm-action="action:salesFollowUps.all" class="fchip active" data-filter="all">All</button>
@@ -98,13 +112,20 @@
           <button data-comm-action="action:salesFollowUps.unassigned" class="fchip" data-filter="unassigned">Unassigned</button>
         </div>
         <div class="grow"></div>
-        <select class="field-select" style="width:140px;" data-bind-options="optionsOptions"><option value="All sources">All sources</option></select>
+        <select id="fuSource" class="field-select" style="width:140px;" data-bind-options="optionsOptions" data-bind-value="selectedSource"><option value="">All sources</option></select>
+        <select id="fuAssignee" class="field-select" style="width:150px;" data-bind-options="assigneeOptions" data-bind-value="selectedAssignee"><option value="">Anyone</option></select>
+        <select id="fuRange" class="field-select" style="width:130px;" data-bind-options="rangeOptions" data-bind-value="selectedRange"><option value="">Any date</option></select>
+        <span id="fuCustomRange" style="display:none;align-items:center;gap:6px;">
+          <input type="date" id="fuRangeFrom" class="field-select" style="width:140px;">
+          <span style="font-size:12px;color:var(--ink-3);">to</span>
+          <input type="date" id="fuRangeTo" class="field-select" style="width:140px;">
+        </span>
       </div>
 
       <!-- Bulk actions bar -->
       <div class="bulk-bar" id="fuBulkBar">
         <span class="ct"><span id="fuBulkCount">0</span> selected</span>
-        <button data-comm-action="action:salesFollowUps.mark-complete" class="btn primary">Mark Complete</button>
+        <button type="button" id="fuBulkComplete" class="btn primary js-fu-complete">Mark Complete</button>
         <button data-comm-action="action:salesFollowUps.claim-selected" class="btn" style="background:var(--gold);color:#fff;border-color:var(--gold);">Claim selected</button>
         <span style="font-size:12px;color:var(--ink-3);margin-left:4px;">Reassign to:</span>
         <select class="field-select" style="width:160px;" data-bind-options="optionsOptions2"><option value="Select user…">Select user…</option></select>
@@ -113,7 +134,7 @@
 
       <table class="tbl">
         <thead>
-          <tr>
+          <tr id="fuHeadRow">
             <th style="width:32px;"><input type="checkbox" id="fuSelectAll"></th>
             <th>Customer</th>
             <th>Job</th>
@@ -122,14 +143,15 @@
             <th>Status</th>
             <th>Lead</th>
             <th>Last contact</th>
-            <th>Owner</th>
+            <th>Assigned to</th>
           </tr>
         </thead>
         <tbody id="fuBody"></tbody>
       </table>
 
+      <div id="fuCompletedHint" class="fu-hint" style="display:none;">Showing follow-ups completed in the last 30 days.</div>
       <div class="pager salesFollowUps-pager" id="salesFollowUpsPager"></div>
-      <div style="text-align:center;font-size:12px;color:var(--ink-3);padding:4px 0 0;">Showing <span data-bind-text="pagination.shown">12</span> of <span data-bind-text="pagination.total">12</span></div>
+      <div id="fuPageInfo" style="text-align:center;font-size:12px;color:var(--ink-3);padding:4px 0 0;">Showing <span data-bind-text="pagination.shown">12</span> of <span data-bind-text="pagination.total">12</span></div>
     </div>
   </main>
 </div>
@@ -175,21 +197,24 @@
 <script src="./module.js"></script>
 <script>
 const INLINE_ROWS = ([
-  { id:2316, customer:'Testpauk',            job:'J2026-0001', followUp:'May 12, 2026', overdue:true,  service:'Jun 10, 2026', status:'booked',   lead:'Hot',       last:'May 09', owner:'Paul Kihara' },
-  { id:2317, customer:'Alice Johnson',       job:'J2026-0512', followUp:'May 16, 2026', overdue:false, service:'May 22, 2026', status:'booked',   lead:'Hot',       last:'Today',  owner:'John Sales' },
-  { id:2318, customer:'Northside Co.',       job:'J2026-0514', followUp:'May 16, 2026', overdue:false, service:'May 24, 2026', status:'accepted', lead:'Hot',       last:'2h ago', owner:'John Sales' },
-  { id:2319, customer:'Rebecca Chen',        job:'J2026-0511', followUp:'May 14, 2026', overdue:true,  service:'May 28, 2026', status:'active',   lead:'Follow Up', last:'2d ago', owner:'Jane Finance' },
-  { id:2320, customer:'Tao Anand',           job:'J2026-0509', followUp:'May 18, 2026', overdue:false, service:'May 30, 2026', status:'active',   lead:'Follow Up', last:'3d ago', owner:'John Sales' },
-  { id:2321, customer:'Sara Patel',          job:'J2026-0508', followUp:'May 16, 2026', overdue:false, service:'May 29, 2026', status:'new-lead', lead:'New',       last:'1d ago', owner:'A. Haylton' },
-  { id:2322, customer:'Maple Court Condos',  job:'J2026-0505', followUp:'May 13, 2026', overdue:true,  service:'Jun 08, 2026', status:'active',   lead:'Follow Up', last:'4d ago', owner:'John Sales' },
-  { id:2323, customer:'Daniel Park',         job:'J2026-0497', followUp:'May 19, 2026', overdue:false, service:'Jun 12, 2026', status:'active',   lead:'Follow Up', last:'1d ago', owner:'P. Kihara' },
-  { id:2324, customer:'Cedar Lane HOA',      job:'J2026-0499', followUp:'May 21, 2026', overdue:false, service:'Jun 04, 2026', status:'active',   lead:'On Ice',    last:'1 wk',   owner:'John Sales' },
-  { id:2325, customer:'Yorkdale Properties', job:'J2026-0501', followUp:'May 02, 2026', overdue:true,  service:'—',           status:'closed',   lead:'On Ice',    last:'2 wks',  owner:'Unassigned' },
-  { id:2326, customer:'M. Tran',             job:'J2026-0504', followUp:'May 20, 2026', overdue:false, service:'May 22, 2026', status:'booked',   lead:'Hot',       last:'Today',  owner:'A. Haylton' },
-  { id:2327, customer:'Pinewood Estates',    job:'J2026-0498', followUp:'May 17, 2026', overdue:false, service:'Jun 02, 2026', status:'active',   lead:'Follow Up', last:'5d ago', owner:'John Sales' }
+  { id:2316, customer:'Testpauk',            job:'J2026-0001', followUp:'May 12, 2026', overdue:true,  service:'Jun 10, 2026', status:'booked',   lead:'Hot',       last:'May 09', assignee:'Paul Kihara' },
+  { id:2317, customer:'Alice Johnson',       job:'J2026-0512', followUp:'May 16, 2026', overdue:false, service:'May 22, 2026', status:'booked',   lead:'Hot',       last:'Today',  assignee:'John Sales' },
+  { id:2318, customer:'Northside Co.',       job:'J2026-0514', followUp:'May 16, 2026', overdue:false, service:'May 24, 2026', status:'accepted', lead:'Hot',       last:'2h ago', assignee:'John Sales' },
+  { id:2319, customer:'Rebecca Chen',        job:'J2026-0511', followUp:'May 14, 2026', overdue:true,  service:'May 28, 2026', status:'active',   lead:'Follow Up', last:'2d ago', assignee:'Jane Finance' },
+  { id:2320, customer:'Tao Anand',           job:'J2026-0509', followUp:'May 18, 2026', overdue:false, service:'May 30, 2026', status:'active',   lead:'Follow Up', last:'3d ago', assignee:'John Sales' },
+  { id:2321, customer:'Sara Patel',          job:'J2026-0508', followUp:'May 16, 2026', overdue:false, service:'May 29, 2026', status:'new-lead', lead:'New',       last:'1d ago', assignee:'A. Haylton' },
+  { id:2322, customer:'Maple Court Condos',  job:'J2026-0505', followUp:'May 13, 2026', overdue:true,  service:'Jun 08, 2026', status:'active',   lead:'Follow Up', last:'4d ago', assignee:'John Sales' },
+  { id:2323, customer:'Daniel Park',         job:'J2026-0497', followUp:'May 19, 2026', overdue:false, service:'Jun 12, 2026', status:'active',   lead:'Follow Up', last:'1d ago', assignee:'P. Kihara' },
+  { id:2324, customer:'Cedar Lane HOA',      job:'J2026-0499', followUp:'May 21, 2026', overdue:false, service:'Jun 04, 2026', status:'active',   lead:'On Ice',    last:'1 wk',   assignee:'John Sales' },
+  { id:2325, customer:'Yorkdale Properties', job:'J2026-0501', followUp:'May 02, 2026', overdue:true,  service:'—',           status:'closed',   lead:'On Ice',    last:'2 wks',  assignee:'Unassigned' },
+  { id:2326, customer:'M. Tran',             job:'J2026-0504', followUp:'May 20, 2026', overdue:false, service:'May 22, 2026', status:'booked',   lead:'Hot',       last:'Today',  assignee:'A. Haylton' },
+  { id:2327, customer:'Pinewood Estates',    job:'J2026-0498', followUp:'May 17, 2026', overdue:false, service:'Jun 02, 2026', status:'active',   lead:'Follow Up', last:'5d ago', assignee:'John Sales' }
 ]);
 
-const STATUS_LBL = { active:'Active', hot:'Hot', booked:'Booked', accepted:'Accepted', 'new-lead':'New Lead', closed:'Closed' };
+const STATUS_LBL = { active:'Active', hot:'Hot', booked:'Booked', accepted:'Accepted', 'new-lead':'New Lead', closed:'Closed', completed:'Done' };
+
+// Which list is showing: 'due' (pending follow-ups) or 'completed' (history).
+let currentView = 'due';
 
 // Read fresh on every render so host state-pushes land. The live backend POCO
 // (SalesFollowUpsStateRow) only ships `id`/`name`, so when those rows arrive
@@ -197,9 +222,13 @@ const STATUS_LBL = { active:'Active', hot:'Hot', booked:'Booked', accepted:'Acce
 // undefined; rows without `lead`/`status` simply don't match status chips.
 function getRows() {
   const IS_PROD = /(^|\.)service1\.app$/i.test(location.hostname);
-  const raw = (window.S1 && window.S1.fixtures && window.S1.fixtures["salesFollowUps"] && Array.isArray(window.S1.fixtures["salesFollowUps"].rows) && window.S1.fixtures["salesFollowUps"].rows.length)
-    ? window.S1.fixtures["salesFollowUps"].rows
-    : (IS_PROD ? [] : INLINE_ROWS);
+  const fx = (window.S1 && window.S1.fixtures && window.S1.fixtures["salesFollowUps"]) || {};
+  let raw;
+  if (currentView === 'completed') {
+    raw = Array.isArray(fx.completedRows) ? fx.completedRows : [];
+  } else {
+    raw = (Array.isArray(fx.rows) && fx.rows.length) ? fx.rows : (IS_PROD ? [] : INLINE_ROWS);
+  }
   return raw.map(r => Object.assign({}, r, {
     customer: r.customer || r.name || '',
     job:      r.job      || '',
@@ -208,7 +237,7 @@ function getRows() {
     status:   r.status   || '',
     lead:     r.lead     || '',
     last:     r.last     || '',
-    owner:    r.owner    || ''
+    assignee: r.assignee || ''
   }));
 }
 function leadCls(l) {
@@ -239,10 +268,69 @@ function svgEl(attrs, children) {
   }
   return svg;
 }
+function buildHead(view) {
+  const row = document.getElementById('fuHeadRow');
+  if (!row) return;
+  while (row.firstChild) row.removeChild(row.firstChild);
+  const cols = (view === 'completed')
+    ? ['Customer', 'Job', 'Completed on', 'Originally due', 'Status', 'Assigned to']
+    : null;
+  if (cols) {
+    for (const c of cols) row.appendChild(makeEl('th', { text: c }));
+    return;
+  }
+  const cb = makeEl('th', { style: 'width:32px;' });
+  cb.appendChild(makeEl('input', { attrs: { type: 'checkbox', id: 'fuSelectAll' } }));
+  row.appendChild(cb);
+  for (const c of ['Customer', 'Job', 'Follow-up date', 'Service date', 'Status', 'Lead', 'Last contact', 'Assigned to'])
+    row.appendChild(makeEl('th', { text: c }));
+}
+
+function renderCompleted() {
+  buildHead('completed');
+  const shown = getRows();
+  const tb = document.getElementById('fuBody');
+  while (tb.firstChild) tb.removeChild(tb.firstChild);
+  if (shown.length === 0) {
+    const tr = document.createElement('tr');
+    tr.appendChild(makeEl('td', { text: 'No completed follow-ups in the last 30 days.', style: 'text-align:center;padding:40px;color:var(--ink-3);', attrs: { colspan: '6' } }));
+    tb.appendChild(tr);
+    return;
+  }
+  for (const r of shown) {
+    const tr = document.createElement('tr');
+    tr.setAttribute('data-id', String(r.id));
+
+    const tdCust = document.createElement('td');
+    tdCust.appendChild(makeEl('div', { style: 'font-weight:600;', text: r.customer }));
+    tr.appendChild(tdCust);
+
+    tr.appendChild(makeEl('td', { style: 'font-variant-numeric:tabular-nums;', text: r.job }));
+    tr.appendChild(makeEl('td', { text: r.followUp }));
+    tr.appendChild(makeEl('td', { className: 'cell-light', text: r.service }));
+
+    const tdStatus = document.createElement('td');
+    tdStatus.appendChild(makeEl('span', { className: 'fu-done-badge', text: '\u2713 Done' }));
+    tr.appendChild(tdStatus);
+
+    const tdOwner = document.createElement('td');
+    if (r.assignee === 'Unassigned') {
+      tdOwner.appendChild(makeEl('span', { className: 'cell-light', style: 'font-style:italic;', text: 'Unassigned' }));
+    } else {
+      tdOwner.textContent = r.assignee;
+    }
+    tr.appendChild(tdOwner);
+
+    tb.appendChild(tr);
+  }
+}
+
 function render(filter) {
+  if (currentView === 'completed') { renderCompleted(); return; }
+  buildHead('due');
   const shown = getRows().filter(r => {
     if (filter === 'all') return true;
-    if (filter === 'unassigned') return r.owner === 'Unassigned';
+    if (filter === 'unassigned') return r.assignee === 'Unassigned';
     if (filter === 'hot') return r.lead === 'Hot';
     if (filter === 'follow-up') return r.lead === 'Follow Up';
     if (filter === 'on-ice') return r.lead === 'On Ice';
@@ -297,10 +385,10 @@ function render(filter) {
     tr.appendChild(makeEl('td', { className: 'cell-light', text: r.last }));
 
     const td9 = document.createElement('td');
-    if (r.owner === 'Unassigned') {
+    if (r.assignee === 'Unassigned') {
       td9.appendChild(makeEl('span', { className: 'cell-light', style: 'font-style:italic;', text: 'Unassigned' }));
     } else {
-      td9.textContent = r.owner;
+      td9.textContent = r.assignee;
     }
     tr.appendChild(td9);
 
@@ -322,6 +410,48 @@ function updateBulk() {
   document.getElementById('fuBulkBar').classList.toggle('show', n > 0);
 }
 
+// Keep the Completed pill badge in sync with the server-pushed count.
+function updateCompletedBadge() {
+  const fx = (window.S1 && window.S1.fixtures && window.S1.fixtures["salesFollowUps"]) || {};
+  const n = (fx.counts && (fx.counts.completed != null)) ? fx.counts.completed : 0;
+  const badge = document.getElementById('fuCompletedBadge');
+  if (badge) badge.textContent = String(n);
+}
+
+// Re-render the active list (respecting the current Due/Completed view).
+function rerenderCurrent() {
+  if (currentView === 'completed') { render('completed'); return; }
+  const active = document.querySelector('#fuChips .fchip.active');
+  render(active ? active.dataset.filter : 'all');
+}
+
+// Show/hide the Due-only chrome (status chips, bulk bar, pager) for the view.
+function applyViewChrome() {
+  const completed = currentView === 'completed';
+  const chips = document.getElementById('fuChips');
+  const bulk  = document.getElementById('fuBulkBar');
+  const hint  = document.getElementById('fuCompletedHint');
+  const pager = document.getElementById('salesFollowUpsPager');
+  const pageInfo = document.getElementById('fuPageInfo');
+  if (chips) chips.style.display = completed ? 'none' : '';
+  if (bulk && completed) bulk.classList.remove('show');
+  if (hint) hint.style.display = completed ? 'block' : 'none';
+  if (pager) pager.style.display = completed ? 'none' : '';
+  if (pageInfo) pageInfo.style.display = completed ? 'none' : '';
+}
+
+function setView(view) {
+  currentView = (view === 'completed') ? 'completed' : 'due';
+  document.querySelectorAll('#fuViewToggle .fu-view-btn')
+    .forEach(b => b.classList.toggle('active', b.dataset.view === currentView));
+  applyViewChrome();
+  rerenderCurrent();
+}
+
+document.querySelectorAll('#fuViewToggle .fu-view-btn').forEach(b =>
+  b.addEventListener('click', () => setView(b.dataset.view)));
+
+updateCompletedBadge();
 render('all');
 
 document.querySelectorAll('#fuChips .fchip').forEach(c => c.addEventListener('click', () => {
@@ -329,8 +459,25 @@ document.querySelectorAll('#fuChips .fchip').forEach(c => c.addEventListener('cl
   render(c.dataset.filter);
 }));
 
-// Row click → open follow-up drawer
+// Bulk "Mark Complete": collect the checked rows' job ids and complete them via
+// the working RPC, then refresh state so the rows drop and the completed count bumps.
+document.getElementById('fuBulkComplete').addEventListener('click', async (e) => {
+  e.preventDefault();
+  const ids = Array.from(document.querySelectorAll('#fuBody .fu-row-check:checked'))
+    .map(c => c.closest('tr[data-id]'))
+    .filter(Boolean)
+    .map(tr => +tr.dataset.id);
+  if (!ids.length) { flash('Select at least one follow-up.'); return; }
+  try {
+    await comm.action('salesFollowUps.mark.contacted', { selectedIds: ids });
+    flash('Completed ' + ids.length + ' follow-up(s).');
+    await load();
+  } catch (err) { flash('Could not complete: ' + (err && err.message ? err.message : err)); }
+});
+
+// Row click → open follow-up drawer (disabled in the Completed/history view).
 document.getElementById('fuBody').addEventListener('click', e => {
+  if (currentView === 'completed') return;
   const tr = e.target.closest('tr[data-id]'); if (!tr) return;
   const r = getRows().find(x => x.id === +tr.dataset.id); if (!r) return;
   const m = document.createElement('div');
@@ -361,7 +508,7 @@ document.getElementById('fuBody').addEventListener('click', e => {
   grid.appendChild(mkInfo('Job', r.job, 'font-variant-numeric:tabular-nums;'));
   grid.appendChild(mkInfo('Service date', r.service));
   grid.appendChild(mkInfo('Last contact', r.last));
-  grid.appendChild(mkInfo('Owner', r.owner));
+  grid.appendChild(mkInfo('Assigned to', r.assignee));
   body.appendChild(grid);
 
   body.appendChild(makeEl('div', { style: 'font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:8px;', text: 'Notes' }));
@@ -374,7 +521,8 @@ document.getElementById('fuBody').addEventListener('click', e => {
   footRow.appendChild(footLeft);
   const footRight = makeEl('div', { style: 'display:flex;gap:8px;' });
   footRight.appendChild(makeEl('button', { className: 'btn btn-secondary x', text: 'Cancel' }));
-  footRight.appendChild(makeEl('button', { className: 'btn btn-primary', text: 'Mark complete', attrs: { 'data-comm-action': 'action:salesFollowUps.mark-complete' } }));
+  const markBtn = makeEl('button', { className: 'btn btn-primary js-fu-complete', text: 'Mark complete' });
+  footRight.appendChild(markBtn);
   footRow.appendChild(footRight);
   body.appendChild(footRow);
 
@@ -384,13 +532,24 @@ document.getElementById('fuBody').addEventListener('click', e => {
   const close = () => m.remove();
   m.addEventListener('click', e2 => { if (e2.target === m) close(); });
   m.querySelectorAll('.x').forEach(b => b.addEventListener('click', close));
+
+  // Drawer "Mark complete": complete this single follow-up, close, then refresh.
+  markBtn.addEventListener('click', async (ev) => {
+    ev.preventDefault();
+    try {
+      await comm.action('salesFollowUps.mark.contacted', { jobId: r.id });
+      flash('Follow-up completed.');
+      close();
+      await load();
+    } catch (err) { flash('Could not complete: ' + (err && err.message ? err.message : err)); }
+  });
 });
 
-// Re-render when the host pushes fresh state.
+// Re-render when the host pushes fresh state (respecting the active view).
 if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
   window.S1.bus.on('state:replaced', () => {
-    const active = document.querySelector('#fuChips .fchip.active');
-    render(active ? active.dataset.filter : 'all');
+    updateCompletedBadge();
+    rerenderCurrent();
   });
 }
 

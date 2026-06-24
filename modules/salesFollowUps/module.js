@@ -20,11 +20,21 @@ window.S1.wireStandardPage('salesFollowUps');
 
 // --- Server-side pagination wiring -----------------------------------------
 function getFilterValues() {
-  const chip   = document.querySelector('#fuChips .fchip.active');
-  const source = document.querySelector('.toolbar .field-select');
+  const chip     = document.querySelector('#fuChips .fchip.active');
+  const source   = document.getElementById('fuSource');
+  const assignee = document.getElementById('fuAssignee');
+  const range    = document.getElementById('fuRange');
+  const rFrom    = document.getElementById('fuRangeFrom');
+  const rTo      = document.getElementById('fuRangeTo');
+  const rangeVal = range ? (range.value || '') : '';
+  const chipVal  = chip ? (chip.dataset.filter || '') : '';
   return {
-    filter: chip ? (chip.dataset.filter || '') : '',
-    source: source ? (source.value || '') : ''
+    filter:     chipVal === 'all' ? '' : chipVal,
+    source:     source ? (source.value || '') : '',
+    assignedTo: assignee ? (assignee.value || '') : '',
+    range:      rangeVal,
+    rangeFrom:  rangeVal === 'custom' && rFrom ? (rFrom.value || '') : '',
+    rangeTo:    rangeVal === 'custom' && rTo   ? (rTo.value   || '') : ''
   };
 }
 function buildPageList(current, total) {
@@ -104,7 +114,63 @@ if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
   window.S1.bus.on('state:replaced', renderPager);
 }
 document.addEventListener('click', (ev) => { if (ev.target.closest('#fuChips .fchip')) goToPage(1); });
-document.addEventListener('change', (ev) => { if (ev.target.closest('.toolbar .field-select')) goToPage(1); });
+// Generic toolbar select change → reload. #fuRange is owned by its dedicated
+// handler below (custom toggle), so skip it here to avoid a double goToPage.
+document.addEventListener('change', (ev) => {
+  const sel = ev.target.closest('.toolbar .field-select');
+  if (!sel) return;
+  if (sel.id === 'fuRange' || sel.id === 'fuRangeFrom' || sel.id === 'fuRangeTo') return;
+  goToPage(1);
+});
+
+// Date-range select: "Custom…" reveals the date inputs without reloading; any
+// preset reloads immediately and clears any stale custom window.
+function syncCustomRange() {
+  const range = document.getElementById('fuRange');
+  const wrap  = document.getElementById('fuCustomRange');
+  if (!range || !wrap) return;
+  wrap.style.display = (range.value === 'custom') ? 'inline-flex' : 'none';
+}
+document.addEventListener('change', (ev) => {
+  if (!ev.target.closest('#fuRange')) return;
+  const range = document.getElementById('fuRange');
+  if (range.value === 'custom') {
+    syncCustomRange();
+    return; // wait for a date before reloading
+  }
+  const rFrom = document.getElementById('fuRangeFrom');
+  const rTo   = document.getElementById('fuRangeTo');
+  if (rFrom) rFrom.value = '';
+  if (rTo)   rTo.value = '';
+  syncCustomRange();
+  goToPage(1);
+});
+document.addEventListener('change', (ev) => {
+  if (ev.target.id === 'fuRangeFrom' || ev.target.id === 'fuRangeTo') goToPage(1);
+});
+
+// Restore active status chip + custom-range visibility from server-echoed state
+// so the toolbar survives a server reload.
+function restoreToolbarState() {
+  const data = (window.S1.fixtures || {}).salesFollowUps || {};
+  const sf = data.selectedFilter || 'all';
+  const want = (sf === '' ? 'all' : sf);
+  const chips = document.querySelectorAll('#fuChips .fchip');
+  let matched = false;
+  chips.forEach(c => {
+    const on = (c.dataset.filter === want);
+    c.classList.toggle('active', on);
+    if (on) matched = true;
+  });
+  if (!matched) {
+    chips.forEach(c => c.classList.toggle('active', c.dataset.filter === 'all'));
+  }
+  syncCustomRange();
+}
+document.addEventListener('s1ui:ready', restoreToolbarState);
+if (window.S1 && window.S1.bus && typeof window.S1.bus.on === 'function') {
+  window.S1.bus.on('state:replaced', restoreToolbarState);
+}
 
 // v12 modal triggers + bindings.
 $$('[data-salesFollowUps-open]').forEach(b => b.addEventListener('click', (e) => { e.preventDefault(); window.S1.modal.open('#' + b.getAttribute('data-salesFollowUps-open')); }));

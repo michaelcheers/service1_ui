@@ -217,6 +217,85 @@ document.addEventListener('click', (ev) => {
   if (ev.target.closest('[data-ptab="recent"]')) renderRecentPager();
 });
 
+// --- Call Recordings server-side pagination (feature #1602) -----------------
+// Namespaced clone of the Recent/Missed pagers above. The page object lives at
+// window.S1.fixtures.phoneSystem.recordingsPagination; each page change posts
+// save:phone.recordings.page and re-binds via load().
+const PHONE_RECORDINGS_PAGE_SIZE = 15; // named constant (CLAUDE rule #11)
+
+function buildRecordingsPageList(current, total) {
+  const out = [];
+  const add = (v) => { if (out[out.length - 1] !== v) out.push(v); };
+  add(1);
+  for (let p = current - 1; p <= current + 1; p++) {
+    if (p > 1 && p < total) add(p);
+  }
+  if (total > 1) add(total);
+  const withGaps = [];
+  for (let i = 0; i < out.length; i++) {
+    withGaps.push(out[i]);
+    if (i < out.length - 1 && out[i + 1] - out[i] > 1) withGaps.push('…');
+  }
+  return withGaps;
+}
+
+function renderRecordingsPager() {
+  const host = document.getElementById('recordingsPager');
+  if (!host) return;
+  const p = ((window.S1.fixtures || {}).phoneSystem || {}).recordingsPagination || {};
+  const current = +p.currentPage || 1;
+  const total   = Math.max(1, +p.totalPages || 1);
+  while (host.firstChild) host.removeChild(host.firstChild);
+  if (total <= 1) { host.style.display = 'none'; return; }
+  const mk = (text, attrs, cls) => {
+    const b = document.createElement('button');
+    b.textContent = text;
+    if (cls) b.className = cls;
+    for (const k in (attrs || {})) {
+      if (k === 'disabled') { if (attrs[k]) b.disabled = true; }
+      else b.setAttribute(k, attrs[k]);
+    }
+    return b;
+  };
+  if (current > 1) host.appendChild(mk('Previous', { 'data-page': 'prev' }));
+  for (const it of buildRecordingsPageList(current, total)) {
+    if (it === '…') { host.appendChild(mk('…', { disabled: true })); continue; }
+    host.appendChild(mk(String(it), { 'data-page': String(it) }, it === current ? 'primary' : ''));
+  }
+  if (current < total) host.appendChild(mk('Next', { 'data-page': 'next' }));
+  host.style.display = 'flex';
+}
+
+async function goToRecordingsPage(page) {
+  const p = ((window.S1.fixtures || {}).phoneSystem || {}).recordingsPagination || {};
+  const current  = +p.currentPage || 1;
+  const total    = Math.max(1, +p.totalPages || 1);
+  const pageSize = +p.pageSize || PHONE_RECORDINGS_PAGE_SIZE;
+  let next;
+  if (page === 'prev')      next = Math.max(1, current - 1);
+  else if (page === 'next') next = Math.min(total, current + 1);
+  else                      next = Math.max(1, +page || 1);
+  try {
+    await comm.save('phone.recordings.page', { page: next, pageSize });
+    await load();
+  } catch (e) { flash('Page change failed: ' + (e.message || e)); }
+}
+
+document.addEventListener('click', (ev) => {
+  const b = ev.target.closest('#recordingsPager [data-page]');
+  if (!b || b.disabled) return;
+  ev.preventDefault();
+  goToRecordingsPage(b.getAttribute('data-page'));
+});
+document.addEventListener('s1ui:ready', renderRecordingsPager);
+if (window.S1.bus && typeof window.S1.bus.on === 'function') {
+  window.S1.bus.on('state:replaced', renderRecordingsPager);
+}
+// Redraw the pager when the Call Recordings tab becomes visible.
+document.addEventListener('click', (ev) => {
+  if (ev.target.closest('[data-ptab="recordings"]')) renderRecordingsPager();
+});
+
 // --- Generic per-tab list search (feature #1376) ---------------------------
 // Generalized from the Recordings filter (feature #1430): a single client-side
 // filter that works on every Phone tab. For a given panel it hides rows whose
@@ -224,10 +303,11 @@ document.addEventListener('click', (ev) => {
 // (.list-num + .list-meta) don't contain the term, and toggles that panel's
 // empty state. Re-runs on every keystroke, after each bind
 // (s1ui:ready / state:replaced), and when a tab is opened.
-const PHONE_SEARCH_PANELS = ['recent', 'voicemails', 'recordings', 'texts', 'contacts']; // 'missed' is server-side (#1434), CLAUDE rule #11
+const PHONE_SEARCH_PANELS = ['recent', 'voicemails', 'texts', 'contacts']; // 'missed' (#1434) and 'recordings' (#1602) are server-side, CLAUDE rule #11
 
 function filterList(panel) {
   if (panel === 'missed') return; // #1434: Missed Calls searches server-side over the full paginated history
+  if (panel === 'recordings') return; // #1602: Call Recordings searches server-side over the full 90-day window
   const input = document.querySelector('[data-list-filter="' + panel + '"]');
   if (!input) return;
   const raw    = (input.value || '').trim().toLowerCase();
@@ -286,6 +366,46 @@ function restoreMissedSearch() {
   inp.value = st.missedSearch || '';
 }
 
+// --- Call Recordings server-side search (feature #1602) --------------------
+// The recordings list is server-paginated (15/page) and windowed to 90 days,
+// so a client-side filter would only see the rendered page. The #recSearch
+// input posts the term to the server, which filters the FULL window, resets to
+// page 1 and returns fresh state.
+const PHONE_RECORDINGS_SEARCH_DEBOUNCE_MS = 250; // CLAUDE rule #11
+let recordingsSearchTimer = null;
+
+async function submitRecordingsSearch(q) {
+  try {
+    await comm.save('phone.recordings.search', { q: q });
+    await load();
+  } catch (e) { flash('Search failed: ' + (e.message || e)); }
+}
+
+// Re-seed the recordings search input from server state after each refresh.
+// The input lives in the static toolbar, so it survives re-bind. Never clobber
+// it while the user is actively typing.
+function restoreRecordingsSearch() {
+  const inp = document.querySelector('[data-list-filter="recordings"]');
+  if (!inp || document.activeElement === inp) return;
+  const st = (window.S1.fixtures || {}).phoneSystem || {};
+  inp.value = st.recordingsSearch || '';
+}
+
+// Re-seed the recordings date-window select from server state (default 90).
+function restoreRecordingsRange() {
+  const sel = document.getElementById('recRange');
+  if (!sel) return;
+  const st = (window.S1.fixtures || {}).phoneSystem || {};
+  sel.value = String(st.recordingsRange || 90);
+}
+
+async function submitRecordingsRange(days) {
+  try {
+    await comm.save('phone.recordings.range', { days: days });
+    await load();
+  } catch (e) { flash('Range change failed: ' + (e.message || e)); }
+}
+
 document.addEventListener('input', (ev) => {
   const el = ev.target.closest('[data-list-filter]');
   if (!el) return;
@@ -296,13 +416,28 @@ document.addEventListener('input', (ev) => {
     missedSearchTimer = setTimeout(() => submitMissedSearch(q), PHONE_MISSED_SEARCH_DEBOUNCE_MS);
     return;
   }
+  if (panel === 'recordings') {
+    clearTimeout(recordingsSearchTimer);
+    const q = el.value;
+    recordingsSearchTimer = setTimeout(() => submitRecordingsSearch(q), PHONE_RECORDINGS_SEARCH_DEBOUNCE_MS);
+    return;
+  }
   filterList(panel);
+});
+document.addEventListener('change', (ev) => {
+  const sel = ev.target.closest('[data-recordings-range]');
+  if (!sel) return;
+  submitRecordingsRange(+sel.value || 90);
 });
 document.addEventListener('s1ui:ready', filterAll);
 document.addEventListener('s1ui:ready', restoreMissedSearch);
+document.addEventListener('s1ui:ready', restoreRecordingsSearch);
+document.addEventListener('s1ui:ready', restoreRecordingsRange);
 if (window.S1.bus && typeof window.S1.bus.on === 'function') {
   window.S1.bus.on('state:replaced', filterAll);
   window.S1.bus.on('state:replaced', restoreMissedSearch);
+  window.S1.bus.on('state:replaced', restoreRecordingsSearch);
+  window.S1.bus.on('state:replaced', restoreRecordingsRange);
 }
 // Re-apply a tab's active filter when that tab becomes visible.
 document.addEventListener('click', (ev) => {
@@ -323,6 +458,17 @@ document.addEventListener('click', (ev) => {
                      + (buf.slice(3,6).padEnd(3,'_')) + '-'
                      + (buf.slice(6,10).padEnd(4,'_'));
   };
+  // Feature #1592: the "Call from" selector chooses which line becomes the
+  // outbound caller ID. Its selected line Id is sent as phoneLineId with the
+  // call, and changing it live-updates the "From" sub-line label.
+  const lineSel = document.getElementById('dialerLineSelect');
+  const sub = document.querySelector('.dialer-sub');
+  if (lineSel && sub) {
+    lineSel.addEventListener('change', () => {
+      const opt = lineSel.selectedOptions[0];
+      sub.textContent = opt ? 'Outbound · From ' + opt.textContent : 'No phone line configured';
+    });
+  }
   document.addEventListener('click', (ev) => {
     const k = ev.target.closest('[data-dialer]');
     if (k) { ev.preventDefault(); if (buf.length < 10) buf += k.getAttribute('data-dialer'); render(); return; }
@@ -335,7 +481,8 @@ document.addEventListener('click', (ev) => {
         if (window.S1 && window.S1.flash) window.S1.flash('Enter a 10-digit number to call.');
         return;
       }
-      window.parent.postMessage({ type: 's1ui:dial', number: '+1' + buf, autoDial: true }, '*');
+      const lineId = lineSel && lineSel.value ? lineSel.value : '';
+      window.parent.postMessage({ type: 's1ui:dial', number: '+1' + buf, phoneLineId: lineId, autoDial: true }, '*');
       buf = '';
       render();
     }

@@ -361,7 +361,7 @@
                 <td><span class="pill" style="background:{{c0_bg}};color:{{c0_fg}};">{{c0_label}}</span></td>
                 <td>{{c1_text}}</td>
                 <td class="num">{{c2_text}}</td>
-                <td style="text-align:center;"><button type="button" class="ws-remove" data-misc-id="{{c0_id}}" aria-label="Remove">✕</button></td>
+                <td style="text-align:center;"><button type="button" class="ws-remove" data-misc-id="{{c0_id}}" style="display:{{c3_btnDisplay}};" aria-label="Remove"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></td>
               </tr></template></tbody>
             </table>
 
@@ -400,7 +400,7 @@
 
         <table class="tbl" id="pettyTable">
           <thead><tr><th class="num">Date</th><th>Recorded By</th><th>Category</th><th>Description</th><th class="num">Amount</th><th>Receipt</th><th class="num">Balance</th></tr></thead>
-          <tbody data-bind="rows6"><template><tr><td>{{c0_text}}</td><td>{{c1_text}}</td><td><span class="pill" style="background:var(--cream);color:var(--ink-2);">Office</span></td><td>{{c3_text}}</td><td>{{c4_text}}</td><td><a href="#" style="color:var(--terra);font-size:12px;">📎 View</a></td><td><b>{{c6_name}}</b><div class="cell-light" style="font-size:11px;color:var(--ink-3);display:none"></div></td></tr></template></tbody>
+          <tbody data-bind="rows6"><template><tr><td>{{c0_text}}</td><td>{{c1_text}}</td><td><span class="pill" style="background:var(--cream);color:var(--ink-2);">Office</span></td><td>{{c3_text}}</td><td>{{c4_text}}</td><td><a href="#" style="color:var(--terra);font-size:12px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg> View</a></td><td><b>{{c6_name}}</b><div class="cell-light" style="font-size:11px;color:var(--ink-3);display:none"></div></td></tr></template></tbody>
         </table>
         <div id="pettyEmpty" style="display:none;padding:60px 20px;text-align:center;color:var(--ink-3);background:#fff;border:var(--hair);border-radius:8px;margin-top:8px;">No transactions found. <a href="#" onclick="event.preventDefault();document.getElementById('recordTransactionModal').classList.add('open');" style="color:var(--terra);font-weight:600;">Record one →</a></div>
 
@@ -499,7 +499,7 @@
 </style>
 <div class="fm-overlay" id="addExpenseModal">
   <div class="fm-modal">
-    <div class="fm-head"><div class="fm-title">Add Expense</div><button data-modal-close class="fm-close">✕</button></div>
+    <div class="fm-head"><div class="fm-title">Add Expense</div><button data-modal-close class="fm-close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
     <div class="fm-body">
       <div class="fm-grid">
         <div class="fm-field"><label class="fm-label">Vendor <span class="req">*</span></label><input name="vendor" class="fm-input" type="text" placeholder="e.g. Shell"></div>
@@ -515,7 +515,7 @@
         <div class="fm-field full"><label class="fm-label">Description</label><textarea name="description" class="fm-textarea" placeholder="What was this for?"></textarea></div>
         <div class="fm-field full">
           <label class="fm-label">Receipt</label>
-          <div style="padding:14px;border:2px dashed var(--line-2);border-radius:6px;text-align:center;color:var(--ink-3);font-size:12.5px;">📎 Drag receipt PDF / image here or <span style="color:var(--terra);font-weight:600;cursor:pointer;">browse…</span></div>
+          <div style="padding:14px;border:2px dashed var(--line-2);border-radius:6px;text-align:center;color:var(--ink-3);font-size:12.5px;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg> Drag receipt PDF / image here or <span style="color:var(--terra);font-weight:600;cursor:pointer;">browse…</span></div>
         </div>
         <div class="fm-field full"><label style="display:flex;align-items:center;gap:8px;font-size:12.5px;cursor:pointer;"><input name="receipt" type="checkbox" checked style="accent-color:var(--terra);">Tax-deductible</label></div>
       </div>
@@ -530,7 +530,7 @@
 <!-- Add Staff Entry -->
 <div class="fm-overlay" id="addStaffEntryModal">
   <div class="fm-modal" style="width:560px;">
-    <div class="fm-head"><div class="fm-title">Add Staff Entry</div><button data-modal-close class="fm-close">✕</button></div>
+    <div class="fm-head"><div class="fm-title">Add Staff Entry</div><button data-modal-close class="fm-close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
     <div class="fm-body">
       <div class="fm-grid">
         <div class="fm-field"><label class="fm-label">Employee</label><select name="employee" class="fm-select" data-bind-options="employeeOptions"><option value="Select employee…">Select employee…</option></select></div>
@@ -553,7 +553,7 @@
 <!-- Misc Payment -->
 <div class="fm-overlay" id="miscPaymentModal">
   <div class="fm-modal" style="width:480px;">
-    <div class="fm-head"><div class="fm-title">Add employee payment</div><button data-modal-close class="fm-close">✕</button></div>
+    <div class="fm-head"><div class="fm-title">Add employee payment</div><button data-modal-close class="fm-close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
     <div style="display:flex;gap:24px;padding:0 22px;border-bottom:var(--hair);">
       <button class="mp-tab active" data-mptab="amount" style="background:transparent;border:0;padding:12px 0 14px;font-size:13.5px;font-weight:700;color:var(--terra);border-bottom:2px solid var(--terra);cursor:pointer;margin-bottom:-1px;">Amount</button>
       <button class="mp-tab" data-mptab="rate" style="background:transparent;border:0;padding:12px 0 14px;font-size:13.5px;font-weight:500;color:var(--ink-3);border-bottom:2px solid transparent;cursor:pointer;margin-bottom:-1px;">Hourly rate</button>
@@ -588,7 +588,7 @@
 <!-- Record Petty Cash Transaction -->
 <div class="fm-overlay" id="recordTransactionModal">
   <div class="fm-modal" style="width:560px;">
-    <div class="fm-head"><div class="fm-title">Record Petty Cash Transaction</div><button data-modal-close class="fm-close">✕</button></div>
+    <div class="fm-head"><div class="fm-title">Record Petty Cash Transaction</div><button data-modal-close class="fm-close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
     <div class="fm-body">
       <div class="fm-grid">
         <div class="fm-field"><label class="fm-label">Type</label><select name="type" class="fm-select" data-bind-options="typeOptions"></select></div>
@@ -598,7 +598,7 @@
         <div class="fm-field full"><label class="fm-label">Description</label><input name="description" class="fm-input" type="text" placeholder="e.g., Bought office supplies"></div>
         <div class="fm-field full">
           <label class="fm-label">Receipt (optional)</label>
-          <div style="padding:14px;border:2px dashed var(--line-2);border-radius:6px;text-align:center;color:var(--ink-3);font-size:12.5px;">📎 Drag receipt or <span style="color:var(--terra);font-weight:600;cursor:pointer;">browse…</span></div>
+          <div style="padding:14px;border:2px dashed var(--line-2);border-radius:6px;text-align:center;color:var(--ink-3);font-size:12.5px;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg> Drag receipt or <span style="color:var(--terra);font-weight:600;cursor:pointer;">browse…</span></div>
         </div>
       </div>
     </div>
@@ -612,7 +612,7 @@
 <!-- Add Category -->
 <div class="fm-overlay" id="addCategoryModal">
   <div class="fm-modal" style="width:440px;">
-    <div class="fm-head"><div class="fm-title">Add Petty Cash Category</div><button data-modal-close class="fm-close">✕</button></div>
+    <div class="fm-head"><div class="fm-title">Add Petty Cash Category</div><button data-modal-close class="fm-close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
     <div class="fm-body">
       <div class="fm-grid">
         <div class="fm-field full"><label class="fm-label">Category Name</label><input name="categoryName" class="fm-input" type="text" placeholder="e.g., Vehicle Maintenance"></div>
@@ -637,7 +637,7 @@
 
 <div class="fm-overlay" id="addMetricModal">
   <div class="fm-modal" style="width:520px;">
-    <div class="fm-head"><div class="fm-title">Add Metric</div><button data-modal-close class="fm-close">✕</button></div>
+    <div class="fm-head"><div class="fm-title">Add Metric</div><button data-modal-close class="fm-close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
     <div class="fm-body">
       <p style="font-size:12.5px;color:var(--ink-3);margin:0 0 14px;line-height:1.5;">Pin a derived ratio or KPI to the P&amp;L footer. Calculated automatically from your accounts each period.</p>
       <div class="fm-grid">
@@ -667,7 +667,7 @@
 
 <div class="fm-overlay" id="addTaxModal">
   <div class="fm-modal">
-    <div class="fm-head"><div class="fm-title">Add Tax Record</div><button data-modal-close class="fm-close">✕</button></div>
+    <div class="fm-head"><div class="fm-title">Add Tax Record</div><button data-modal-close class="fm-close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
     <div class="fm-body">
       <div class="fm-grid">
         <div class="fm-field"><label class="fm-label">Tax type <span class="req">*</span></label><select name="taxType" class="fm-select" data-bind-options="optionsOptions8"></select></div>
@@ -685,7 +685,7 @@
         <div class="fm-field full"><label class="fm-label">Notes</label><textarea name="notes" class="fm-textarea" placeholder="e.g. Refund claim, ITC details…"></textarea></div>
         <div class="fm-field full">
           <label class="fm-label">Supporting docs</label>
-          <div style="padding:14px;border:2px dashed var(--line-2);border-radius:6px;text-align:center;color:var(--ink-3);font-size:12.5px;">📎 Upload filing PDFs, receipts, supporting schedules</div>
+          <div style="padding:14px;border:2px dashed var(--line-2);border-radius:6px;text-align:center;color:var(--ink-3);font-size:12.5px;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg> Upload filing PDFs, receipts, supporting schedules</div>
         </div>
       </div>
     </div>

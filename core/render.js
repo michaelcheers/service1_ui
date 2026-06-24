@@ -90,7 +90,21 @@
   // and Reports/Custom.cshtml.cs. The iframe is inert (sandbox=""), so even if
   // the data contained <script> or onclick=, it cannot execute or escape into
   // the host page.
+  // True only under the Service1 UI security wrapper, whose Trusted Types
+  // 'default' policy already wraps every HTML sink into ONE sandboxed,
+  // auto-sized <iframe data-s1-wrap>. When wrapped, building our OWN iframe
+  // causes a broken double-wrap (the wrapper's outer frame has no
+  // allow-scripts, so our inner onload sizer is dead -> stuck at ~1.4em).
+  function s1Wrapped() {
+    try { return !!(window.trustedTypes && window.trustedTypes.defaultPolicy); }
+    catch (e) { return false; }
+  }
+
   function buildHtmlSrcdocIframe(html) {
+    // Under the wrapper, return raw HTML: the TT 'default' policy will create
+    // exactly one sandboxed, auto-sized <iframe data-s1-wrap> around it. Building
+    // our own iframe here would be re-wrapped (no allow-scripts) and never size.
+    if (s1Wrapped()) return String(html);
     var srcdoc = '<!DOCTYPE html><html><head><meta charset="utf-8">'
       + '<style>html,body{margin:0;padding:0;background:transparent;color:inherit;}body{font:13px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}*{box-sizing:border-box;}</style>'
       + '</head><body>' + String(html) + '</body></html>';
@@ -134,6 +148,32 @@
       var path = el.getAttribute('data-bind-text');
       var fmt  = el.getAttribute('data-fmt') || '';
       el.textContent = format(get(state, path), fmt);
+    }
+  }
+
+  // data-bind-icon / data-svg-icon — render a real inline SVG icon (from
+  // core/icons.js) instead of an emoji glyph. Builds the node via createElementNS
+  // (no innerHTML). data-icon-size sets px (default 16).
+  //   data-bind-icon="statePath" — icon NAME read from state (static rows).
+  //   data-svg-icon="name"        — literal icon NAME; used inside cloned <template>
+  //                                 list rows where applyTemplate fills {{iconGlyph}}.
+  function setIconNode(el, name, sizeAttr) {
+    el.textContent = ''; // clear any placeholder glyph
+    if (name == null || String(name) === '') return;
+    var resolved = window.S1Icons.resolveName(String(name), null);
+    if (resolved) el.appendChild(window.S1Icons.svg(resolved, +sizeAttr || 16));
+  }
+  function bindIcons(root, state) {
+    if (!window.S1Icons) return; // module didn't load icons.js — nothing to do
+    var byState = root.querySelectorAll('[data-bind-icon]');
+    for (var i = 0; i < byState.length; i++) {
+      var el = byState[i];
+      setIconNode(el, get(state, el.getAttribute('data-bind-icon')), el.getAttribute('data-icon-size'));
+    }
+    var literal = root.querySelectorAll('[data-svg-icon]');
+    for (var j = 0; j < literal.length; j++) {
+      var le = literal[j];
+      setIconNode(le, le.getAttribute('data-svg-icon'), le.getAttribute('data-icon-size'));
     }
   }
 
@@ -374,6 +414,7 @@
     bindText(root, state);
     bindLists(root, state);
     bindText(root, state); // re-bind for nodes injected from templates
+    bindIcons(root, state); // after list expansion so cloned rows get their SVG icons
     bindOptions(root, state);  // options must exist before values are assigned (Bug 1400/#3)
     bindValues(root, state);
     bindAttrs(root, state);
